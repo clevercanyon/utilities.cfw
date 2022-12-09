@@ -1,0 +1,19 @@
+##
+# GitHub funding configuration.
+#
+# @since 1.0.0
+#
+# @note GitHub is aware of this config file's location.
+#
+# @note CUSTOM EDITS ONLY PLEASE!
+# In the future this file will be updated automatically.
+# Only `<custom:start.../custom:end>` will be preserved below.
+##
+
+github : clevercanyon
+
+##
+# Customizations
+# <custom:start>
+
+# </custom:end>

@@ -1,0 +1,264 @@
+##
+# Git attributes file.
+#
+# @note Git is aware of this config file's location.
+#
+# @note CUSTOM EDITS ONLY PLEASE!
+# In the future this file will be updated automatically.
+# Only `<custom:start.../custom:end>` will be preserved below.
+##
+
+##
+# Text/Binary
+##
+
+# Default
+
+* text=auto
+
+# Text
+
+*.md text
+*.txt text
+
+# Logs
+
+*.log text
+
+# YAML
+
+*.yaml text
+*.yml text
+
+# TOML
+
+*.toml text
+
+# Properties.
+
+*.properties text
+
+# Translations
+
+*.pot text
+
+# SQL
+
+*.sql text
+*.sqlite text
+
+# Templates
+
+*.liq text
+*.liquid text
+*.tmpl text
+*.tpl text
+
+# Config
+
+*.admins text
+*.cfg text
+*.cnf text
+*.conf text
+*.htaccess text
+*.htaccess-apache text
+*.htpasswd text
+*.ini text
+
+# CSS
+
+*.css text
+*.css.map text
+
+*.less text
+*.less.map text
+
+*.sass text
+*.sass.map text
+
+*.scss text
+*.scss.map text
+
+# JavaScript
+
+*.js text
+*.js.map text
+
+*.jsx text
+*.jsx.map text
+
+*.mjs text
+*.mjs.map text
+
+*.cjs text
+*.cjs.map text
+
+*.ts text
+*.ts.map text
+
+*.tsx text
+*.tsx.map text
+
+*.mts text
+*.mts.map text
+
+*.cts text
+*.cts.map text
+
+*.ejs text
+
+*.json text
+*.json5 text
+
+*.npmrc text
+*.yarnrc text
+*.babelrc text
+
+*.node binary
+
+.yarn/releases/** binary
+.yarn/plugins/** binary
+
+# Applescript
+
+*.applescript text
+*.scpt binary
+
+# PHP
+
+*.inc text
+*.php text
+*.php4 text
+*.php5 text
+*.php6 text
+*.phps text
+*.x-php text
+
+# ASP
+
+*.asp text
+*.aspx text
+
+# Perl
+
+*.cgi text
+*.pl text
+
+# HTML/XML
+
+*.dtd text
+*.hta text
+*.htc text
+*.htm text
+*.html text
+*.shtml text
+*.xhtml text
+*.xml text
+*.xsd text
+*.xsl text
+*.xslt text
+
+# Documents
+
+*.csv text
+*.doc binary
+*.docx binary
+*.odt binary
+*.pdf binary
+*.pptx binary
+*.rtf binary
+*.tsv text
+*.xls binary
+*.xlsx binary
+
+# Images
+
+*.ai binary
+*.bmp binary
+*.eps binary
+*.gif binary
+*.ico binary
+*.jpe binary
+*.jpeg binary
+*.jpg binary
+*.png binary
+*.psd binary
+*.pspimage binary
+*.svg text
+*.tif binary
+*.tiff binary
+*.webp binary
+
+# Audio
+
+*.mid binary
+*.midi binary
+*.mp3 binary
+*.ogg binary
+*.wav binary
+*.wma binary
+
+# Video
+
+*.avi binary
+*.blend binary
+*.fla binary
+*.flv binary
+*.mov binary
+*.mp4 binary
+*.mpeg binary
+*.mpg binary
+*.ogv binary
+*.qt binary
+*.swf binary
+*.webm binary
+*.wmv binary
+
+# Fonts
+
+*.eot binary
+*.otf binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+
+# Archives
+
+*.7z binary
+*.dmg binary
+*.gtar binary
+*.gz binary
+*.iso binary
+*.jar binary
+*.phar binary
+*.rar binary
+*.tar binary
+*.tgz binary
+*.zip binary
+
+# Other
+
+*.bash text
+*.bat text
+*.bin binary
+*.class binary
+*.com binary
+*.dll binary
+*.exe binary
+*.pem text
+*.sh text
+*.so binary
+*.zsh text
+
+##
+# LFS Storage
+##
+
+lfs/** filter=lfs diff=lfs merge=lfs -text
+lfs-*/** filter=lfs diff=lfs merge=lfs -text
+
+##
+# Customizations
+# <custom:start>
+
+# </custom:end>

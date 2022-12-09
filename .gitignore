@@ -1,0 +1,178 @@
+##
+# Git ignore file.
+#
+# @note Git is aware of this config file's location.
+#
+# @note CUSTOM EDITS ONLY PLEASE!
+# In the future this file will be updated automatically.
+# Only `<custom:start.../custom:end>` will be preserved below.
+##
+
+# Local
+
+.#*
+._*
+.~*
+*.local
+
+# Logs
+
+*.log
+
+# Backups
+
+*~
+*.bak
+
+# Patches
+
+*.rej
+*.orig
+*.patch
+*.diff
+
+# Dists
+
+dist/
+
+# IntelliJ
+
+.idea/
+
+# Sublime
+
+*.sublime-project
+*.sublime-workspace
+
+# Netbeans
+
+*.nbproject
+
+# VS Code
+
+.vscode/
+*.code-workspace
+
+# NPM
+
+npm-debug.log
+
+# Yarn
+
+.yarn/
+
+# Vendor
+
+vendor/
+
+# NodeJS
+
+node_modules/
+
+# JSPM
+
+jspm_packages/
+
+# Bower
+
+bower_components/
+
+# TypeScript
+
+typings/
+.tscache/
+*.tsbuildinfo
+
+# Vite
+
+.vite/
+
+# Wrangler
+
+.wrangler/
+
+# Rollup
+
+.rollup/
+
+# Webpack
+
+.webpack/
+
+# Linaria
+
+.linaria-cache/
+
+# SASS
+
+.sass-cache/
+
+# Docker
+
+.docker/
+
+# Vagrant
+
+.vagrant/
+
+# Elastic Beanstalk
+
+.elasticbeanstalk/
+
+# CTAGs
+
+*.ctags
+*.tags
+
+# VCS
+
+.git/
+.git-dir/
+
+.svn/
+_svn/
+
+CVS/
+.cvsignore
+
+.bzr/
+.bzrignore
+
+.hg/
+.hgignore
+
+SCCS/
+RCS/
+
+# PC Files
+
+$RECYCLE.BIN/
+Desktop.ini
+Thumbs.db
+ehthumbs.db
+
+# Mac Files
+
+.AppleDB
+.AppleDouble
+.AppleDesktop
+.com.apple.timemachine.donotpresent
+Network Trash Folder
+Temporary Items
+.LSOverride
+.Spotlight-V100
+.VolumeIcon.icns
+.TemporaryItems
+.fseventsd
+.DS_Store
+.Trashes
+.apdisk
+Icon?
+!Icons
+._*
+
+##
+# Customizations
+# <custom:start>
+
+# </custom:end>

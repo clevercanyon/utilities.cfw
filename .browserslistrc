@@ -1,0 +1,81 @@
+##
+# Browserslist config file.
+#
+# @note Many packages are aware of this config file's location.
+#
+# @note CUSTOM EDITS ONLY PLEASE!
+# In the future this file will be updated automatically.
+# Only `<custom:start.../custom:end>` will be preserved below.
+#
+# @note Generated using <https://www.npmjs.com/package/browserslist-generator>.
+#       The final list was compiled after carefully reviewing these two browserslist-generator outputs.
+#       tl;dr ... Targets browsers that support all es2021 features + top-level await in es2022.
+#
+# 	const blg = require( 'browserslist-generator' );
+#
+# 	const es2021Browsers              = blg.browsersWithSupportForEcmaVersion( 'es2021' );
+# 	const es2022TopLevelAwaitBrowsers = blg.browsersWithSupportForFeatures( 'javascript.operators.await.top_level' );
+#
+# 	console.log( es2021Browsers.join( '\n' ) );
+# 	console.log( es2022TopLevelAwaitBrowsers.join( '\n' ) );
+#
+# @see  https://node.green/
+# @see  https://browsersl.ist/
+# @see  https://browserslist.dev/
+# @see  https://caniuse.com/?search=es2021
+# @see  https://kangax.github.io/compat-table
+# @see  https://developers.cloudflare.com/workers/runtime-apis/web-standards/
+# @see  https://github.com/wessberg/browserslist-generator/blob/master/src/browserslist-generator/ecma-version.ts
+##
+
+[production]
+last 1 chrome versions
+node >= 18.5.0 and node < 19.0.0
+and_chr >= 89
+chrome >= 89
+and_ff >= 89
+android >= 107
+edge >= 89
+samsung >= 15.0
+safari >= 15
+ios_saf >= 15.1
+opera >= 75
+firefox >= 89
+
+[any]
+last 1 chrome versions
+node >= 18.5.0 and node < 19.0.0
+and_chr >= 89
+chrome >= 89
+and_ff >= 89
+android >= 107
+edge >= 89
+samsung >= 15.0
+safari >= 15
+ios_saf >= 15.1
+opera >= 75
+firefox >= 89
+
+[cfw]
+last 1 chrome versions
+
+[node]
+node >= 18.5.0 and node < 19.0.0
+
+[web]
+and_chr >= 89
+chrome >= 89
+and_ff >= 89
+android >= 107
+edge >= 89
+samsung >= 15.0
+safari >= 15
+ios_saf >= 15.1
+opera >= 75
+firefox >= 89
+
+##
+# Customizations
+# <custom:start>
+
+# </custom:end>
