@@ -2,5 +2,5 @@
 
 ## Two Basic `appType` Options
 
-- `mpa` Multipage app. Must use `index.html` entry points.
-- `cma` Custom-made app. Must use `.{tsx,ts,jsx,mjs,js}` entry points.
+-   `mpa` Multipage app. Must use `index.html` entry points.
+-   `cma` Custom-made app. Must use `.{tsx,ts,jsx,mjs,js}` entry points.

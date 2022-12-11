@@ -1,36 +1,38 @@
 {
-	"type"            : "module",
+	"type": "module",
 
-	"author"          : {
-		"name" : "Clever Canyon",
-		"url"  : "https://clevercanyon.com"
+	"author": {
+		"name": "Clever Canyon",
+		"url": "https://clevercanyon.com"
 	},
-	"funding"         : "https://github.com/sponsors/clevercanyon",
-	"devDependencies" : {
-		"@clevercanyon/skeleton-dev-deps" : "*"
+	"funding": "https://github.com/sponsors/clevercanyon",
+
+	"sideEffects": ["./src/*.{html,scss,css,tsx,ts,jsx,mjs,js}"],
+	"devDependencies": {
+		"@clevercanyon/skeleton-dev-deps": "*"
 	},
 
-	"cpu"             : [ "x64", "arm64" ],
-	"os"              : [ "darwin", "linux" ],
-	"engines"         : { "node" : "^19.2.0", "npm" : "^8.19.3" },
+	"cpu": ["x64", "arm64"],
+	"os": ["darwin", "linux"],
+	"engines": { "node": "^19.2.0", "npm": "^8.19.3" },
 
-	"scripts"         : {
-		"preview"         : "npx vite preview",
-		"dev"             : "npx vite dev --mode=dev",
-		"build:dev"       : "npx tsc && npx vite build --mode=dev",
-		"build:stage"     : "npx tsc && npx vite build --mode=stage",
-		"build:prod"      : "npx tsc && npx vite build --mode=prod",
-		"dotfiles:update" : "./dev/.files/bin/update.js"
+	"scripts": {
+		"preview": "npx vite preview",
+		"dev": "npx vite dev --mode=dev",
+		"build:dev": "npx vite build --mode=dev && npx tsc",
+		"build:stage": "npx vite build --mode=stage && npx tsc",
+		"build:prod": "npx vite build --mode=prod && npx tsc",
+		"dotfiles:update": "./dev/.files/bin/update.js"
 	},
-	"workspaces"      : [ ],
-	"publishConfig"   : {
-		"registry" : "https://npm.pkg.github.com"
+	"workspaces": [],
+	"publishConfig": {
+		"registry": "https://npm.pkg.github.com"
 	},
-	"config"          : {
-		"c10n" : {
-			"&" : {
-				"dotfiles" : { },
-				"build"    : { }
+	"config": {
+		"c10n": {
+			"&": {
+				"dotfiles": {},
+				"build": {}
 			}
 		}
 	}

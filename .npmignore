@@ -1,12 +1,15 @@
 ##
 # NPM ignore file.
 #
-# @note NPM is aware of this config file's location.
-# @note Run `npm pack --dry-run` to test configuration.
+# NPM is aware of this config file's location.
+#
+# Run the following to test configuration:
+#
+#     $ npm pack --dry-run
 #
 # @note CUSTOM EDITS ONLY PLEASE!
-# In the future this file will be updated automatically.
-# Only `<custom:start.../custom:end>` will be preserved below.
+# @note In the future this file will be updated automatically.
+# @note Only `<custom:start.../custom:end>` will be preserved below.
 ##
 
 ##
@@ -132,7 +135,6 @@ typings/
 # VCS
 
 .git/
-.git-dir/
 
 .svn/
 _svn/
