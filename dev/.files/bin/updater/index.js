@@ -87,11 +87,7 @@ export default async ({ projDir }) => {
 			const oldFileContents = await fsp.readFile(path.resolve(projDir, relPath), 'utf8');
 			const oldFileMatches = customRegexp.exec(oldFileContents); // See: `./data/custom-regexp.js`.
 			const oldFileCustomCode = oldFileMatches ? oldFileMatches[2] : ''; // We'll preserve any custom code.
-
-			newFileContents = (await fsp.readFile(path.resolve(tmpDir, relPath), 'utf8')).replace(
-				customRegexp,
-				($_, $1, $2, $3) => $1 + oldFileCustomCode + $3,
-			);
+			newFileContents = (await fsp.readFile(path.resolve(tmpDir, relPath), 'utf8')).replace(customRegexp, ($_, $1, $2, $3) => $1 + oldFileCustomCode + $3);
 		} else {
 			newFileContents = await fsp.readFile(path.resolve(tmpDir, relPath), 'utf8');
 		}

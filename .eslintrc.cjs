@@ -16,6 +16,6 @@ const baseConfig = require('./dev/.files/eslint/config.cjs');
  * Customizations
  * <custom:start> */
 
-module.exports = mc.merge( {}, baseConfig, {} );
+module.exports = mc.merge({}, baseConfig, {});
 
 /** </custom:end> */

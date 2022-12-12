@@ -25,7 +25,7 @@ module.exports = {
 		'prettier-plugin-jsdoc',
 		'prettier-plugin-organize-imports',
 	],
-	printWidth: 120,
+	printWidth: 180,
 	tabWidth: 4,
 	useTabs: true,
 	semi: true,
@@ -86,7 +86,7 @@ module.exports = {
 	jsdocSeparateTagGroups: true,
 	jsdocPreferCodeFences: false,
 	tsdoc: false,
-	jsdocPrintWidth: 80,
+	jsdocPrintWidth: 120,
 	jsdocLineWrappingStyle: 'greedy',
 
 	/**

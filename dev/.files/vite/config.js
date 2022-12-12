@@ -35,10 +35,7 @@ import aliases from './includes/aliases.js';
  */
 const validateProjConfig = (config) => {
 	if (typeof config?.appType !== 'undefined') {
-		throw new Error(
-			'Modifying `appType` is not permitted at this time.' +
-				' Instead, use `config.c10n.&.build.appType` in `package.json`.',
-		);
+		throw new Error('Modifying `appType` is not permitted at this time. Instead, use `config.c10n.&.build.appType` in `package.json`.');
 	}
 	if (typeof config.build?.formats !== 'undefined') {
 		throw new Error('Modifying `build.formats` is not permitted at this time.');
@@ -155,10 +152,8 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
 
 	console.log(
-		chalk.blue('Updated `package.json` properties: ') +
-			chalk.green(
-				JSON.stringify(_.pick(pkg, ['exports', 'module', 'main', 'unpkg', 'browser', 'types']), null, 4),
-			),
+		chalk.blue('Updated `package.json` properties: ') + //
+			chalk.green(JSON.stringify(_.pick(pkg, ['exports', 'module', 'main', 'unpkg', 'browser', 'types']), null, 4)),
 	);
 
 	/**
@@ -170,6 +165,10 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 		input: isCma // Absolute paths.
 			? cmaAbsEntries
 			: mpaAbsIndexes,
+
+		// Peer dependencies are flagged as external as they'll be installed by a peer.
+		...(Object.keys(pkg.peerDependencies || {}).length ? { external: Object.keys(pkg.peerDependencies) } : {}),
+
 		output: {
 			extend: true, // Global || checks.
 			interop: 'auto', // Like `tsconfig.json`.
@@ -196,8 +195,8 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	const pluginBasicSSLConfig = pluginBasicSSL();
 	const pluginMinifyHTMLConfig = isProd ? pluginMinifyHTML() : null;
 	const pluginEJSConfig = pluginEJS(
-		{ NODE_ENV: nodeEnv, isProd, isDev, env, pkg },
-		{ ejs: { root: srcDir, views: [srcDir + '/assets/ejs'], strict: true, localsName: '$' } },
+		{ NODE_ENV: nodeEnv, isProd, isDev, env, pkg }, //
+		{ ejs: { root: srcDir, views: [srcDir + '/resources/ejs-views'], strict: true, localsName: '$' } },
 	);
 	const plugins = [pluginBasicSSLConfig, pluginEJSConfig, pluginMinifyHTMLConfig];
 
@@ -218,7 +217,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 			$$__APP_PKG_BUGS__$$: pkg.bugs || '',
 		},
 		root: srcDir, // Absolute. Where entry indexes live.
-		publicDir: './public', // Static assets relative to `root`.
+		publicDir: './cargo', // Static assets relative to `root`.
 		base: '/', // Analagous to `<base href="/">` — use trailing slash.
 
 		appType: isCma ? 'custom' : 'mpa', // MPA = multipage app: <https://o5p.me/ZcTkEv>.
@@ -246,8 +245,8 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 			target: 'es2021', // Matches `tsconfig.json`.
 
 			outDir: '../dist', // Relative to `root`.
-			assetsDir: './assets/a19s', // Relative to `outDir`.
-			// `a19s` = numeronym for 'auto-generated assets'.
+			assetsDir: './assets/a16s', // Relative to `outDir`.
+			// Note: `a16s` = numeronym for 'acquired resources'.
 
 			ssr: isSSR, // Server-side rendering?
 			...(isSSR ? { ssrManifest: isDev } : {}),

@@ -15,12 +15,9 @@
 	 * Customizations
 	 * <custom:start> */
 
-	"compilerOptions" : {
-		"lib"   : [ "es2021" ],
-		"types" : [
-			"vite/client",
-			"@cloudflare/workers-types/2022-08-04"
-		]
+	"compilerOptions": {
+		"lib": ["es2021"],
+		"types": ["vite/client", "@cloudflare/workers-types/2022-08-04"]
 	}
 	/** </custom:end> */
 }

@@ -17,11 +17,7 @@ Skeleton variants should use a `.` separator preceding their slug.
 
 ## All Possible Combinations
 
-Our build system supports `appType` on `targetEnv` directives. However, not all combinations
-actually make sense. For example, we're not likely to create a `mpa` app and target a
-`webw` environment. The same with a `mpa` on `any`, because a multipage app needs to target
-something that will serve it as HTML. Likewise, creating a `cma` on `cfp` makes little sense.
-Instead, we'd create a `mpa` on `cfp` app.
+Our build system supports `appType` on `targetEnv` directives. However, not all combinations actually make sense. For example, we're not likely to create a `mpa` app and target a `webw` environment. The same with a `mpa` on `any`, because a multipage app needs to target something that will serve it as HTML. Likewise, creating a `cma` on `cfp` makes little sense. Instead, we'd create a `mpa` on `cfp` app.
 
 ### Multipage Apps
 
@@ -69,9 +65,7 @@ What do we really care about most, or will likely need?
 
 ### Multipage Apps
 
--   [clevercanyon/skeleton.mpa.cfp](#): Multipage or single-page React apps with static assets,
-    functions, routes, middleware, and more. This covers most of our needs for general sites,
-    services, and even purpose-built apps.
+-   [clevercanyon/skeleton.mpa.cfp](#): Multipage or single-page React apps with static assets, functions, routes, middleware, and more. This covers most of our needs for general sites, services, and even purpose-built apps.
 
 ### Custom Apps
 
@@ -81,18 +75,15 @@ What do we really care about most, or will likely need?
 
 -   [clevercanyon/skeleton.cma.cfw](#)
 
-    -   Purpose-built Cloudflare workers for backend APIs and microservices. Let's create this
-        skeleton along with variants that cover common use cases; e.g., scheduled events.
+    -   Purpose-built Cloudflare workers for backend APIs and microservices. Let's create this skeleton along with variants that cover common use cases; e.g., scheduled events.
 
 -   [clevercanyon/skeleton.cma.node](#)
 
-    -   NPM packages targeting Node. Let's create this skeleton along with variants that cover common
-        use cases; e.g., CLI tools.
+    -   NPM packages targeting Node. Let's create this skeleton along with variants that cover common use cases; e.g., CLI tools.
 
 -   [clevercanyon/skeleton.cma.web](#)
 
-    -   NPM packages targeting web browsers. Let's create this skeleton along with variants that cover
-        common use cases; e.g., UI, React components.
+    -   NPM packages targeting web browsers. Let's create this skeleton along with variants that cover common use cases; e.g., UI, React components.
 
 -   [clevercanyon/skeleton.cma.webw](#)
     -   NPM packages. Scaffolding for workers that run in a browser.
