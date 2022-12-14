@@ -11,7 +11,7 @@
 
 import defineConfig from './dev/.files/vite/config.js';
 
-/**
+/*
  * Customizations
  * <custom:start> */
 
@@ -19,4 +19,4 @@ export default async (vite) => {
 	return await defineConfig(vite, {});
 };
 
-/** </custom:end> */
+/* </custom:end> */

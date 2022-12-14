@@ -11,7 +11,6 @@
 # Local
 
 .#*
-._*
 .~*
 *.local
 
@@ -30,10 +29,6 @@
 *.orig
 *.patch
 *.diff
-
-# Dists
-
-dist/
 
 # IntelliJ
 
@@ -56,6 +51,10 @@ dist/
 # NPM
 
 npm-debug.log
+
+# Dists
+
+dist/
 
 # Yarn
 
@@ -130,6 +129,7 @@ typings/
 
 .svn/
 _svn/
+.svnignore
 
 CVS/
 .cvsignore
@@ -145,30 +145,40 @@ RCS/
 
 # PC Files
 
-$RECYCLE.BIN/
-Desktop.ini
 Thumbs.db
 ehthumbs.db
+Desktop.ini
+
+# PC Directories
+
+$RECYCLE.BIN/
 
 # Mac Files
 
-.AppleDB
-.AppleDouble
-.AppleDesktop
-.com.apple.timemachine.donotpresent
-Network Trash Folder
-Temporary Items
-.LSOverride
-.Spotlight-V100
-.VolumeIcon.icns
-.TemporaryItems
-.fseventsd
-.DS_Store
-.Trashes
-.apdisk
+._*
 Icon?
 !Icons
-._*
+*.icloud
+.DS_Store
+.disk_label
+.LSOverride
+.VolumeIcon.icns
+.com.apple.timemachine.*
+
+# Mac Directories
+
+.apdisk/
+*.icloud/
+.fseventsd/
+.AppleDB/
+.AppleDesktop/
+.AppleDouble/
+.Trashes/
+.TemporaryItems/
+.Spotlight-V100/
+.DocumentRevisions-V100/
+Network Trash Folder/
+Temporary Items/
 
 ##
 # Customizations

@@ -28,6 +28,7 @@ module.exports = {
 
 	ignoreFiles: (commonIgnoreFiles = [
 		'**/dist/**', //
+		'**/.yarn/**',
 		'**/vendor/**',
 		'**/node_modules/**',
 		'**/jspm_packages/**',

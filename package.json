@@ -1,89 +1,89 @@
 {
-	"private": false,
-	"version": "1.0.2",
-	"license": "GPL-3.0-or-later",
-	"name": "@clevercanyon/utilities.cfw",
-	"description": "Another great project by Clever Canyon.",
-	"repository": "https://github.com/clevercanyon/utilities.cfw",
-	"homepage": "https://github.com/clevercanyon/utilities.cfw#readme",
-	"bugs": "https://github.com/clevercanyon/utilities.cfw/issues",
-	"funding": "https://github.com/sponsors/clevercanyon",
-	"keywords": [
-		"clevercanyon"
-	],
-	"author": {
-		"name": "Clever Canyon",
-		"url": "https://clevercanyon.com"
-	},
-	"contributors": [],
-	"type": "module",
-	"files": [
-		"/dist"
-	],
-	"bin": {},
-	"imports": {},
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/index.cjs"
-		}
-	},
-	"sideEffects": [
-		"./src/*.{html,scss,css,tsx,ts,jsx,mjs,js}"
-	],
-	"module": "./dist/index.js",
-	"main": "./dist/index.cjs",
-	"unpkg": "./dist/index.js",
-	"browser": "",
-	"types": "./dist/types/index.d.ts",
-	"dependencies": {},
-	"peerDependencies": {
-		"@clevercanyon/utilities": "^1.0.13",
-		"@cloudflare/kv-asset-handler": "^0.2.0"
-	},
-	"peerDependenciesMeta": {},
-	"optionalDependencies": {},
-	"bundleDependencies": [],
-	"devDependencies": {
-		"@clevercanyon/skeleton-dev-deps": "*",
-		"@cloudflare/workers-types": "^4.20221111.1"
-	},
-	"overrides": {},
-	"cpu": [
-		"x64",
-		"arm64"
-	],
-	"os": [
-		"darwin",
-		"linux"
-	],
-	"engines": {
-		"node": "^19.2.0",
-		"npm": "^8.19.3"
-	},
-	"scripts": {
-		"preview": "npx vite preview",
-		"dev": "npx vite dev --mode=dev",
-		"build:dev": "npx vite build --mode=dev && npx tsc",
-		"build:stage": "npx vite build --mode=stage && npx tsc",
-		"build:prod": "npx vite build --mode=prod && npx tsc",
-		"dotfiles:update": "./dev/.files/bin/update.js"
-	},
-	"workspaces": [],
-	"publishConfig": {
-		"registry": "https://npm.pkg.github.com"
-	},
-	"config": {
-		"c10n": {
-			"&": {
-				"dotfiles": {
-					"lock": []
-				},
-				"build": {
-					"appType": "cma",
-					"targetEnv": "cfw"
-				}
-			}
-		}
-	}
+    "private": false,
+    "version": "1.0.2",
+    "license": "GPL-3.0-or-later",
+    "name": "@clevercanyon/utilities.cfw",
+    "description": "Another great project by Clever Canyon.",
+    "repository": "https://github.com/clevercanyon/utilities.cfw",
+    "homepage": "https://github.com/clevercanyon/utilities.cfw#readme",
+    "bugs": "https://github.com/clevercanyon/utilities.cfw/issues",
+    "funding": "https://github.com/sponsors/clevercanyon",
+    "keywords": [
+        "clevercanyon"
+    ],
+    "author": {
+        "name": "Clever Canyon",
+        "url": "https://clevercanyon.com"
+    },
+    "contributors": [],
+    "type": "module",
+    "files": [
+        "/dist"
+    ],
+    "bin": {},
+    "imports": {},
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "sideEffects": [
+        "./src/*.{html,scss,css,tsx,ts,jsx,mjs,js}"
+    ],
+    "module": "./dist/index.js",
+    "main": "./dist/index.cjs",
+    "unpkg": "./dist/index.js",
+    "browser": "",
+    "types": "./dist/types/index.d.ts",
+    "dependencies": {},
+    "peerDependencies": {
+        "@clevercanyon/utilities": "^1.0.13",
+        "@cloudflare/kv-asset-handler": "^0.2.0"
+    },
+    "peerDependenciesMeta": {},
+    "optionalDependencies": {},
+    "bundleDependencies": [],
+    "devDependencies": {
+        "@clevercanyon/skeleton-dev-deps": "*",
+        "@cloudflare/workers-types": "^4.20221111.1"
+    },
+    "overrides": {},
+    "cpu": [
+        "x64",
+        "arm64"
+    ],
+    "os": [
+        "darwin",
+        "linux"
+    ],
+    "engines": {
+        "node": "^19.2.0",
+        "npm": "^8.19.3"
+    },
+    "scripts": {
+        "preview": "npx vite preview",
+        "dev": "npx vite dev --mode=dev",
+        "build:dev": "npx vite build --mode=dev && npx tsc",
+        "build:stage": "npx vite build --mode=stage && npx tsc",
+        "build:prod": "npx vite build --mode=prod && npx tsc",
+        "dotfiles:update": "./dev/.files/bin/update.js"
+    },
+    "workspaces": [],
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
+    "config": {
+        "c10n": {
+            "&": {
+                "dotfiles": {
+                    "lock": []
+                },
+                "build": {
+                    "appType": "cma",
+                    "targetEnv": "cfw"
+                }
+            }
+        }
+    }
 }

@@ -11,7 +11,7 @@
 
 {
 	"extends": "./dev/.files/typescript/config.json",
-	/**
+	/*
 	 * Customizations
 	 * <custom:start> */
 
@@ -19,5 +19,5 @@
 		"lib": ["es2021"],
 		"types": ["vite/client", "@cloudflare/workers-types/2022-08-04"]
 	}
-	/** </custom:end> */
+	/* </custom:end> */
 }

@@ -12,10 +12,10 @@
 const mc = require('@clevercanyon/js-object-mc');
 const baseConfig = require('./dev/.files/stylelint/config.cjs');
 
-/**
+/*
  * Customizations
  * <custom:start> */
 
 module.exports = mc.merge({}, baseConfig, {});
 
-/** </custom:end> */
+/* </custom:end> */

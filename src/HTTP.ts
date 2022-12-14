@@ -19,10 +19,10 @@ export default class HTTPs {
 	/**
 	 * Handles fetch.
 	 *
-	 * @param event  Event.
-	 * @param routes Routes.
+	 * @param   event  Event.
+	 * @param   routes Routes.
 	 *
-	 * @returns Response promise.
+	 * @returns        Response promise.
 	 */
 	public static async handleFetch(event: FetchEvent, routes: HTTPRoutes): Promise<Response> {
 		const request = $HTTP.prepareRequest(event.request, {});
@@ -45,13 +45,13 @@ export default class HTTPs {
 	/**
 	 * Handles statics.
 	 *
-	 * @param url   URL.
-	 * @param event Event.
-	 * @param request Request.
+	 * @param   url     URL.
+	 * @param   event   Event.
+	 * @param   request Request.
 	 *
-	 * @returns Response promise.
+	 * @returns         Response promise.
 	 *
-	 * @throws Error when static asset is missing.
+	 * @throws          Error when static asset is missing.
 	 */
 	protected static async handleStatics(url: URL, event: FetchEvent, request: Request): Promise<Response> {
 		let response = await getAssetFromKV(event, {
@@ -66,12 +66,12 @@ export default class HTTPs {
 	/**
 	 * Handles dynamics.
 	 *
-	 * @param url    URL.
-	 * @param event  Event.
-	 * @param request Request.
-	 * @param routes Routes.
+	 * @param   url     URL.
+	 * @param   event   Event.
+	 * @param   request Request.
+	 * @param   routes  Routes.
 	 *
-	 * @returns Response promise.
+	 * @returns         Response promise.
 	 */
 	protected static async handleDynamics(url: URL, event: FetchEvent, request: Request, routes: HTTPRoutes): Promise<Response> {
 		for (const [routePattern, routHandler] of Object.entries(routes)) {
@@ -85,11 +85,11 @@ export default class HTTPs {
 	/**
 	 * Gets geo property.
 	 *
-	 * @since 2022-02-26
+	 * @since 2022-02-26.
 	 *
-	 * @param request Request.
+	 * @param   request Request.
 	 *
-	 * @returns Geo property value.
+	 * @returns         Geo property value.
 	 */
 	public static geoProp(request: Request, prop: string): string {
 		return String(request.cf && prop in request.cf ? request.cf[prop as keyof typeof request.cf] || '' : '');

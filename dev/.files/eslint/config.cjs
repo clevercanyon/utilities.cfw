@@ -54,6 +54,7 @@ module.exports = {
 	ignorePatterns: (commonIgnorePatterns = [
 		'!**/.*', //
 		'**/dist/**',
+		'**/.yarn/**',
 		'**/vendor/**',
 		'**/node_modules/**',
 		'**/jspm_packages/**',

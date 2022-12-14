@@ -32,8 +32,7 @@ export default async ({ projDir }) => {
 	 *
 	 * @param   {string}  relPath Relative dotfile path.
 	 *
-	 * @returns {boolean}         True if relative path is locked by
-	 *   `package.json`.
+	 * @returns {boolean}         True if relative path is locked by `package.json`.
 	 */
 	const isLocked = (relPath) => {
 		// Compares absolute paths to each other.
