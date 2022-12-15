@@ -2,4 +2,4 @@
  * Utility exports.
  */
 
-export { default as HTTP } from './HTTP';
+export { default as CFW } from './CFW';

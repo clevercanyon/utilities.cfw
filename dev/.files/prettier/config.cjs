@@ -86,7 +86,7 @@ module.exports = {
 	jsdocDescriptionWithDot: true,
 	jsdocDescriptionTag: false,
 	jsdocVerticalAlignment: true,
-	jsdocKeepUnParseAbleExampleIndent: true,
+	jsdocKeepUnParseAbleExampleIndent: false,
 	jsdocSingleLineComment: false,
 	jsdocCapitalizeDescription: true,
 	jsdocSeparateReturnsFromParam: true,
@@ -94,5 +94,6 @@ module.exports = {
 	jsdocPreferCodeFences: false,
 	tsdoc: false,
 	jsdocPrintWidth: 120,
+	jsdocAddDefaultToDescription: false,
 	jsdocLineWrappingStyle: 'greedy',
 };
