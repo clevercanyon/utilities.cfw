@@ -43,7 +43,19 @@ export interface CFWFetchData extends CFWInitialFetchData {
  */
 export default class CFW {
 	/**
-	 * Handles fetch.
+	 * Gets geo property.
+	 *
+	 * @param   fd Fetch data.
+	 *
+	 * @returns    Geo property value.
+	 */
+	public static geoProp(fd: CFWFetchData, prop: string): string {
+		const { request: r } = fd; // Request extraction.
+		return String(r.cf && prop in r.cf ? r.cf[prop as keyof typeof r.cf] || '' : '');
+	}
+
+	/**
+	 * Handles fetch events.
 	 *
 	 * @param   fd Fetch data.
 	 *
@@ -63,7 +75,7 @@ export default class CFW {
 		if ($HTTP.requestPathIsForbidden(fd.request, fd.url)) {
 			return $HTTP.prepareResponse(fd.request, { status: 403 });
 		}
-		if (!$HTTP.requestMethodSupported(fd.request)) {
+		if (!$HTTP.requestHasSupportedMethod(fd.request)) {
 			return $HTTP.prepareResponse(fd.request, { status: 405 });
 		}
 		if (
@@ -72,19 +84,35 @@ export default class CFW {
 			$Str.matches(fd.url.pathname, fd.routes.basePath + 'assets/**') &&
 			!$Str.matches(fd.url.pathname, fd.routes.basePath + 'assets/a16s/**')
 		) {
-			return CFW.handlePublicStaticAssets(fd);
+			return CFW.handleFetchPublicStaticAssets(fd);
 		}
-		return CFW.handleDynamics(fd);
+		return CFW.handleFetchDynamics(fd);
 	}
 
 	/**
-	 * Handles public static assets.
+	 * Handles fetching of dynamics.
 	 *
 	 * @param   fd Fetch data.
 	 *
 	 * @returns    Response promise.
 	 */
-	protected static async handlePublicStaticAssets(fd: CFWFetchData): Promise<Response> {
+	protected static async handleFetchDynamics(fd: CFWFetchData): Promise<Response> {
+		for (const [routePattern, routeHandler] of Object.entries(fd.routes.subPaths)) {
+			if ($Str.matches(fd.url.pathname, fd.routes.basePath + routePattern)) {
+				return routeHandler(fd);
+			}
+		}
+		return $HTTP.prepareResponse(fd.request, { status: 404 });
+	}
+
+	/**
+	 * Handles fetching of public static assets.
+	 *
+	 * @param   fd Fetch data.
+	 *
+	 * @returns    Response promise.
+	 */
+	protected static async handleFetchPublicStaticAssets(fd: CFWFetchData): Promise<Response> {
 		try {
 			const eventProps = {
 				request: fd.request,
@@ -122,33 +150,5 @@ export default class CFW {
 			}
 			return $HTTP.prepareResponse(fd.request, { status: 500 });
 		}
-	}
-
-	/**
-	 * Handles dynamics.
-	 *
-	 * @param   fd Fetch data.
-	 *
-	 * @returns    Response promise.
-	 */
-	protected static async handleDynamics(fd: CFWFetchData): Promise<Response> {
-		for (const [routePattern, routeHandler] of Object.entries(fd.routes.subPaths)) {
-			if ($Str.matches(fd.url.pathname, fd.routes.basePath + routePattern)) {
-				return routeHandler(fd);
-			}
-		}
-		return $HTTP.prepareResponse(fd.request, { status: 404 });
-	}
-
-	/**
-	 * Gets geo property.
-	 *
-	 * @param   fd Fetch data.
-	 *
-	 * @returns    Geo property value.
-	 */
-	public static geoProp(fd: CFWFetchData, prop: string): string {
-		const { request: r } = fd; // Request extraction.
-		return String(r.cf && prop in r.cf ? r.cf[prop as keyof typeof r.cf] || '' : '');
 	}
 }
