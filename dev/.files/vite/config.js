@@ -125,6 +125,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 			'.': {
 				import: './dist/' + cmaEntryIndexSubPathNoExt + '.js',
 				require: './dist/' + cmaEntryIndexSubPathNoExt + '.cjs',
+				types: './dist/types/' + cmaEntryIndexSubPathNoExt + '.d.ts',
 			},
 		});
 		pkg.module = './dist/' + cmaEntryIndexSubPathNoExt + '.js';
@@ -144,6 +145,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 				['./' + cmaEntrySubPathNoExt]: {
 					import: './dist/' + cmaEntrySubPathNoExt + '.js',
 					require: './dist/' + cmaEntrySubPathNoExt + '.cjs',
+					types: './dist/types/' + cmaEntrySubPathNoExt + '.d.ts',
 				},
 			});
 		}
@@ -152,6 +154,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 			'.': {
 				import: './dist/' + cmaEntryIndexSubPathNoExt + '.js',
 				require: './dist/' + cmaEntryIndexSubPathNoExt + '.umd.cjs',
+				types: './dist/types/' + cmaEntryIndexSubPathNoExt + '.d.ts',
 			},
 		});
 		pkg.module = './dist/' + cmaEntryIndexSubPathNoExt + '.js';

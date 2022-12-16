@@ -2,7 +2,7 @@
  * Utility class.
  */
 
-import type { FetchEventData } from '.';
+import type { FetchEventData } from './index.js';
 
 /**
  * Gets geo property.
