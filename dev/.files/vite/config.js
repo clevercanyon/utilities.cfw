@@ -77,8 +77,8 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	const appType = pkg.config?.c10n?.['&'].build?.appType || 'cma';
 	const targetEnv = pkg.config?.c10n?.['&'].build?.targetEnv || 'any';
 
-	const isMpa = 'mpa' === appType,
-		isCma = 'cma' === appType;
+	const isMpa = 'mpa' === appType;
+	const isCma = 'cma' === appType || !isMpa;
 
 	let cmaName = (pkg.name || '').toLowerCase();
 	cmaName = cmaName.replace(/\bclevercanyon\b/gu, 'c10n');
@@ -86,15 +86,17 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	cmaName = cmaName.replace(/[^a-z.0-9]([^.])/gu, (m0, m1) => m1.toUpperCase());
 	cmaName = cmaName.replace(/^\.|\.$/u, '');
 
-	const mpaAbsPathIndexes = await globby('**/index.html', { expandDirectories: false, cwd: srcDir, absolute: true });
-	const mpaSubPathIndexes = mpaAbsPathIndexes.map((absPath) => path.relative(srcDir, absPath));
+	const mpaIndexes = await globby('**/index.html', { expandDirectories: false, cwd: srcDir, absolute: true });
+	const mpaIndexesSubPaths = mpaIndexes.map((absPath) => path.relative(srcDir, absPath));
 
-	const cmaAbsPathEntries = await globby('*.{tsx,ts,jsx,mjs,js}', { expandDirectories: false, cwd: srcDir, absolute: true });
-	const cmaRelPathEntries = cmaAbsPathEntries.map((absPath) => './' + path.relative(srcDir, absPath));
-	const cmaSubPathEntries = cmaAbsPathEntries.map((absPath) => path.relative(srcDir, absPath));
+	const cmaEntries = await globby('*.{tsx,ts,jsx,mjs,js}', { expandDirectories: false, cwd: srcDir, absolute: true });
+	const cmaEntriesRelPaths = cmaEntries.map((absPath) => './' + path.relative(srcDir, absPath));
+	const cmaEntriesSubPaths = cmaEntries.map((absPath) => path.relative(srcDir, absPath));
+	const cmaEntriesSubPathsNoExt = cmaEntriesSubPaths.map((subPath) => subPath.replace(/\.[^.]+$/u, ''));
 
-	const mpaEntryIndex = mpaSubPathIndexes.find((subPath) => mm.isMatch(subPath, 'index.html'));
-	const cmaEntryIndex = cmaSubPathEntries.find((subPath) => mm.isMatch(subPath, 'index.{tsx,ts,jsx,mjs,js}'));
+	const mpaEntryIndexSubPath = mpaIndexesSubPaths.find((subPath) => mm.isMatch(subPath, 'index.html'));
+	const cmaEntryIndexSubPath = cmaEntriesSubPaths.find((subPath) => mm.isMatch(subPath, 'index.{tsx,ts,jsx,mjs,js}'));
+	const cmaEntryIndexSubPathNoExt = cmaEntryIndexSubPath.replace(/\.[^.]+$/u, '');
 
 	const isWeb = ['web', 'webw'].includes(targetEnv);
 	const isSSR = ['cfp', 'cfw', 'node'].includes(targetEnv);
@@ -106,53 +108,70 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	if (!['any', 'cfp', 'cfw', 'node', 'web', 'webw', 'opl'].includes(targetEnv)) {
 		throw new Error('Must have a valid `config.c10n.&.build.targetEnv` in `package.json`.');
 	}
-	if (isMpa && !mpaEntryIndex) {
-		throw new Error('Multipage apps must have an `./index.{tsx,ts,jsx,mjs,js}` entry point.');
+	if (isMpa && !mpaEntryIndexSubPath) {
+		throw new Error('Multipage apps must have an `./index.html` entry point.');
 	}
-	if (isCma && !cmaEntryIndex) {
+	if (isCma && !cmaEntryIndexSubPath) {
 		throw new Error('Custom apps must have an `./index.{tsx,ts,jsx,mjs,js}` entry point.');
 	}
 
 	/**
 	 * Updates `package.json` accordingly.
 	 */
-	pkg.exports = pkg.exports || {};
-	pkg.exports['.'] = pkg.exports['.'] || {};
+	pkg.exports = pkg.exports || {}; // Ensure exists.
+	pkg.exports = Array.isArray(pkg.exports) ? {} : pkg.exports;
 
-	if (isCma && (isSSR || cmaAbsPathEntries.length > 1)) {
+	if (isCma && (isSSR || cmaEntriesSubPathsNoExt.length > 1)) {
 		mc.patch(pkg.exports, {
 			'.': {
-				import: './dist/index.js',
-				require: './dist/index.cjs',
+				import: './dist/' + cmaEntryIndexSubPathNoExt + '.js',
+				require: './dist/' + cmaEntryIndexSubPathNoExt + '.cjs',
 			},
 		});
-		pkg.module = './dist/index.js';
-		pkg.main = './dist/index.cjs';
-		pkg.types = './dist/types/index.d.ts';
+		pkg.module = './dist/' + cmaEntryIndexSubPathNoExt + '.js';
+		pkg.main = './dist/' + cmaEntryIndexSubPathNoExt + '.cjs';
+
 		pkg.browser = isWeb ? pkg.module : '';
 		pkg.unpkg = pkg.module;
+
+		pkg.types = './dist/types/' + cmaEntryIndexSubPathNoExt + '.d.ts';
+		pkg.typesVersions = { '>=3.1': { './*': ['./dist/types/*'] } };
+
+		for (const cmaEntrySubPathNoExt of cmaEntriesSubPathsNoExt) {
+			if (cmaEntrySubPathNoExt === cmaEntryIndexSubPathNoExt) {
+				continue; // Don't remap the entry index.
+			}
+			mc.patch(pkg.exports, {
+				['./' + cmaEntrySubPathNoExt]: {
+					import: './dist/' + cmaEntrySubPathNoExt + '.js',
+					require: './dist/' + cmaEntrySubPathNoExt + '.cjs',
+				},
+			});
+		}
 	} else if (isCma) {
 		mc.patch(pkg.exports, {
 			'.': {
-				import: './dist/index.js',
-				require: './dist/index.umd.cjs',
+				import: './dist/' + cmaEntryIndexSubPathNoExt + '.js',
+				require: './dist/' + cmaEntryIndexSubPathNoExt + '.umd.cjs',
 			},
 		});
-		pkg.module = './dist/index.js';
-		pkg.main = './dist/index.umd.cjs';
-		pkg.types = './dist/types/index.d.ts';
+		pkg.module = './dist/' + cmaEntryIndexSubPathNoExt + '.js';
+		pkg.main = './dist/' + cmaEntryIndexSubPathNoExt + '.umd.cjs';
+
 		pkg.browser = isWeb ? pkg.main : '';
 		pkg.unpkg = pkg.main;
+
+		pkg.types = './dist/types/' + cmaEntryIndexSubPathNoExt + '.d.ts';
+		pkg.typesVersions = { '>=3.1': { './*': ['./dist/types/*'] } };
 	} else {
-		// It's not a CMA. It's an MPA.
-		pkg.exports = {}; // Clear these out entirely.
-		pkg.module = pkg.main = pkg.unpkg = pkg.browser = pkg.types = '';
+		(pkg.exports = []), (pkg.typesVersions = {});
+		pkg.module = pkg.main = pkg.browser = pkg.unpkg = pkg.types = '';
 	}
 	await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
 
 	console.log(
 		chalk.blue('Updated `package.json` properties: ') + //
-			chalk.green(JSON.stringify(_.pick(pkg, ['exports', 'module', 'main', 'unpkg', 'browser', 'types']), null, 4)),
+			chalk.green(JSON.stringify(_.pick(pkg, ['exports', 'module', 'main', 'browser', 'unpkg', 'types', 'typesVersions']), null, 4)),
 	);
 
 	/**
@@ -162,16 +181,19 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	 */
 	const rollupConfig = {
 		input: isCma // Absolute paths.
-			? cmaAbsPathEntries
-			: mpaAbsPathIndexes,
+			? cmaEntries
+			: mpaIndexes,
 
 		external: [
 			'__STATIC_CONTENT_MANIFEST', // CF workers.
 			...Object.keys(pkg.peerDependencies || {}),
 		],
 		output: {
+			interop: 'auto', // Matches TypeScript.
+			exports: 'named', // Matches TypeScript.
+			esModule: true, // Matches TypeScript.
+
 			extend: true, // Global || checks.
-			interop: 'auto', // Like `tsconfig.json`.
 			noConflict: true, // Like `jQuery.noConflict()`.
 		},
 	};
@@ -179,8 +201,11 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 		// Imported web workers; e.g., `?worker`.
 		// See: <https://vitejs.dev/guide/features.html#web-workers>.
 		output: {
+			interop: 'auto', // Matches TypeScript.
+			exports: 'named', // Matches TypeScript.
+			esModule: true, // Matches TypeScript.
+
 			extend: true, // Global || checks.
-			interop: 'auto', // Like `tsconfig.json`.
 			noConflict: true, // Like `jQuery.noConflict()`.
 		},
 	};
@@ -254,7 +279,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 			sourcemap: isDev, // Enables creation of sourcemaps.
 			manifest: isDev, // Enables creation of manifest for assets.
 
-			...(isCma ? { lib: { name: cmaName, entry: cmaRelPathEntries } } : {}),
+			...(isCma ? { lib: { name: cmaName, entry: cmaEntriesRelPaths } } : {}),
 			rollupOptions: rollupConfig, // See: <https://o5p.me/5Vupql>.
 		},
 		...(isSSR
