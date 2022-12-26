@@ -24,8 +24,8 @@ let commonParserOptions = {};
 let commonSettings = {};
 let commonRules = {};
 
-const path = require('node:path');
 const fs = require('node:fs');
+const path = require('node:path');
 
 const projDir = path.resolve(__dirname, '../../..');
 const pkg = JSON.parse(fs.readFileSync(path.resolve(projDir, './package.json')));

@@ -8,12 +8,13 @@
  */
 /* eslint-env es2021, node */
 
-import chalk from 'chalk';
-import desm from 'desm';
-import crypto from 'node:crypto';
-import fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import crypto from 'node:crypto';
+import fsp from 'node:fs/promises';
+
+import desm from 'desm';
+import chalk from 'chalk';
 import spawn from 'spawn-please';
 
 (async () => {

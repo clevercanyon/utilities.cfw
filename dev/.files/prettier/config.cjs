@@ -22,7 +22,6 @@ module.exports = {
 		'@prettier/plugin-xml', //
 		'@prettier/plugin-php',
 		'@prettier/plugin-ruby',
-		'prettier-plugin-organize-imports',
 		'prettier-plugin-jsdoc',
 	],
 	printWidth: 180,
@@ -69,13 +68,6 @@ module.exports = {
 	 */
 	rubyPlugins: '',
 	rubySingleQuote: true,
-
-	/**
-	 * Prettier imports plugin options.
-	 *
-	 * @see https://o5p.me/kQriWW
-	 */
-	organizeImportsSkipDestructiveCodeActions: true,
 
 	/**
 	 * Prettier JSDoc plugin options.

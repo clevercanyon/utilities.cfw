@@ -2,13 +2,14 @@
  * Utility class.
  */
 
-import { $http, $str, $url } from '@clevercanyon/utilities';
 import {
 	getAssetFromKV as cfKVAGetAssetFromKV,
 	mapRequestToAsset as cfKVAMapRequestToAsset,
 	MethodNotAllowedError as CFKVAMethodNotAllowedError,
 	NotFoundError as CFKVANotFoundError,
 } from '@cloudflare/kv-asset-handler';
+
+import { $env, $http, $str, $url } from '@clevercanyon/utilities';
 
 /**
  * Environment.
@@ -18,6 +19,7 @@ export interface Environment {
 	readonly KV?: KVNamespace;
 	readonly DO?: DurableObjectNamespace;
 	readonly __STATIC_CONTENT?: KVNamespace;
+	readonly [x: string]: unknown;
 }
 
 /**
@@ -50,6 +52,8 @@ export interface FetchEventData extends InitialFetchEventData {
  * @returns     Response promise.
  */
 export async function handleFetchEvent(fed: FetchEventData | InitialFetchEventData): Promise<Response> {
+	$env.captureVars(fed.env); // Captures env vars.
+
 	const url = $url.parse(fed.request.url);
 
 	if (!url) {
@@ -67,7 +71,7 @@ export async function handleFetchEvent(fed: FetchEventData | InitialFetchEventDa
 		return $http.prepareResponse(fed.request, { status: 405 });
 	}
 	if (
-		fed.env.__STATIC_CONTENT && // Worker site?
+		$env.getVar('__STATIC_CONTENT') && // Worker site?
 		$http.requestPathHasStaticExtension(fed.request, fed.url) &&
 		$str.matches(fed.url.pathname, fed.routes.basePath + 'assets/**') &&
 		!$str.matches(fed.url.pathname, fed.routes.basePath + 'assets/a16s/**')
@@ -109,7 +113,7 @@ async function handleFetchPublicStaticAssets(fed: FetchEventData): Promise<Respo
 			},
 		};
 		const response = await cfKVAGetAssetFromKV(eventProps, {
-			ASSET_NAMESPACE: fed.env.__STATIC_CONTENT,
+			ASSET_NAMESPACE: $env.getVar('__STATIC_CONTENT'),
 			// @ts-ignore: This is dynamically resolved by Cloudflare.
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, import/no-unresolved
 			ASSET_MANIFEST: JSON.parse(await import('__STATIC_CONTENT_MANIFEST')) as { [x: string]: string },

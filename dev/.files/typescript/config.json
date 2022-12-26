@@ -12,17 +12,9 @@
  */
 
 {
-	"include": [
-		"../../../src/*", //
-		"../../../src/**/*"
-	],
+	"include": ["../../../src/**/*"],
+
 	"compilerOptions": {
-		"noEmit": false,
-		"emitDeclarationOnly": true,
-
-		"declaration": true,
-		"declarationMap": false,
-
 		"baseUrl": "../../../src",
 		"rootDir": "../../../src",
 		"declarationDir": "../../../dist/types",
@@ -45,6 +37,11 @@
 
 		"paths": {
 			"@/~*": ["./*"] // Relative to `baseUrl`.
-		}
+		},
+		"noEmit": false,
+		"emitDeclarationOnly": true,
+
+		"declaration": true,
+		"declarationMap": false
 	}
 }

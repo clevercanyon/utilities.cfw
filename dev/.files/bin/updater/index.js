@@ -7,13 +7,15 @@
  */
 /* eslint-env es2021, node */
 
-import mc from '@clevercanyon/js-object-mc';
-import chalk from 'chalk';
-import desm from 'desm';
 import fs from 'node:fs';
-import fsp from 'node:fs/promises';
 import path from 'node:path';
+import fsp from 'node:fs/promises';
+
+import desm from 'desm';
+import chalk from 'chalk';
+import mc from 'merge-change';
 import spawn from 'spawn-please';
+
 import customRegexp from './data/custom-regexp.js';
 
 export default async ({ projDir }) => {

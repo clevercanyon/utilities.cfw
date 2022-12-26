@@ -203,8 +203,16 @@ Temporary Items/
 # Source Code
 
 dev/
+bench/
+
+doc/
 docs/
+
+test/
 tests/
+
+example/
+examples/
 
 .*
 __*

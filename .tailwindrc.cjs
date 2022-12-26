@@ -1,7 +1,7 @@
 /**
- * PostCSS config file.
+ * Tailwind config file.
  *
- * PostCSS is aware of this config file's location.
+ * Tailwind is aware of this config file's location.
  *
  * @note CUSTOM EDITS ONLY PLEASE!
  * @note In the future this file will be updated automatically.
@@ -9,7 +9,7 @@
  */
 /* eslint-env es2021, node */
 
-const mc = require('@clevercanyon/js-object-mc');
+const mc = require('merge-change');
 const baseConfig = require('./dev/.files/tailwind/config.cjs');
 
 /*
