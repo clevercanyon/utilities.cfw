@@ -52,7 +52,7 @@ export interface FetchEventData extends InitialFetchEventData {
  * @returns     Response promise.
  */
 export async function handleFetchEvent(fed: FetchEventData | InitialFetchEventData): Promise<Response> {
-	$env.captureVars(fed.env); // Captures env vars.
+	$env.capture(fed.env); // Captures environment vars.
 
 	const url = $url.parse(fed.request.url);
 
@@ -71,7 +71,7 @@ export async function handleFetchEvent(fed: FetchEventData | InitialFetchEventDa
 		return $http.prepareResponse(fed.request, { status: 405 });
 	}
 	if (
-		$env.getVar('__STATIC_CONTENT') && // Worker site?
+		$env.get('__STATIC_CONTENT') && // Worker site?
 		$http.requestPathHasStaticExtension(fed.request, fed.url) &&
 		$str.matches(fed.url.pathname, fed.routes.basePath + 'assets/**') &&
 		!$str.matches(fed.url.pathname, fed.routes.basePath + 'assets/a16s/**')
@@ -113,7 +113,7 @@ async function handleFetchPublicStaticAssets(fed: FetchEventData): Promise<Respo
 			},
 		};
 		const response = await cfKVAꓺgetAssetFromKV(eventProps, {
-			ASSET_NAMESPACE: $env.getVar('__STATIC_CONTENT'),
+			ASSET_NAMESPACE: $env.get('__STATIC_CONTENT'),
 			// @ts-ignore: This is dynamically resolved by Cloudflare.
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, import/no-unresolved
 			ASSET_MANIFEST: JSON.parse(await import('__STATIC_CONTENT_MANIFEST')) as { [x: string]: string },
