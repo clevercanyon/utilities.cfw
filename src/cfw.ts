@@ -31,7 +31,7 @@ interface InitialFetchEventData {
 	readonly ctx: ExecutionContext;
 	readonly routes: {
 		basePath: string;
-		subPaths: {
+		subpathGlobs: {
 			[x: string]: (x: FetchEventData) => Promise<Response>;
 		};
 	};
@@ -47,69 +47,70 @@ export interface FetchEventData extends InitialFetchEventData {
 /**
  * Handles fetch events.
  *
- * @param   fed Fetch event data.
+ * @param   feData Fetch event data.
  *
- * @returns     Response promise.
+ * @returns        Response promise.
  */
-export async function handleFetchEvent(fed: FetchEventData | InitialFetchEventData): Promise<Response> {
-	$env.capture(fed.env); // Captures env vars.
-
-	const url = $url.parse(fed.request.url);
+export async function handleFetchEvent({ request, env, ctx, routes }: FetchEventData | InitialFetchEventData): Promise<Response> {
+	$env.capture(env); // Environment vars.
+	const url = $url.parse(request.url);
 
 	if (!url) {
-		return $http.prepareResponse(fed.request, { status: 400 });
+		// Catches unparseable URLs.
+		return $http.prepareResponse(request, { status: 400 });
 	}
-	fed = { ...fed, url, request: $http.prepareRequest(fed.request) };
+	request = $http.prepareRequest(request);
+	const feData = { request, env, ctx, routes, url };
 
-	if ($http.requestPathIsInvalid(fed.request, fed.url)) {
-		return $http.prepareResponse(fed.request, { status: 400 });
+	if ($http.requestPathIsInvalid(request, url)) {
+		return $http.prepareResponse(request, { status: 400 });
 	}
-	if ($http.requestPathIsForbidden(fed.request, fed.url)) {
-		return $http.prepareResponse(fed.request, { status: 403 });
+	if ($http.requestPathIsForbidden(request, url)) {
+		return $http.prepareResponse(request, { status: 403 });
 	}
-	if (!$http.requestHasSupportedMethod(fed.request)) {
-		return $http.prepareResponse(fed.request, { status: 405 });
+	if (!$http.requestHasSupportedMethod(request)) {
+		return $http.prepareResponse(request, { status: 405 });
 	}
 	if (
 		$env.get('__STATIC_CONTENT') && // Worker site?
-		$http.requestPathHasStaticExtension(fed.request, fed.url) &&
-		$str.matches(fed.url.pathname, fed.routes.basePath + 'assets/**') &&
-		!$str.matches(fed.url.pathname, fed.routes.basePath + 'assets/a16s/**')
+		$http.requestPathHasStaticExtension(request, url) &&
+		$str.matches(url.pathname, routes.basePath + 'assets/**') &&
+		!$str.matches(url.pathname, routes.basePath + 'assets/a16s/**')
 	) {
-		return handleFetchPublicStaticAssets(fed);
+		return handleFetchPublicStaticAssets(feData);
 	}
-	return handleFetchDynamics(fed);
+	return handleFetchDynamics(feData);
 }
 
 /**
  * Handles fetching of dynamics.
  *
- * @param   fed Fetch event data.
+ * @param   feData Fetch event data.
  *
- * @returns     Response promise.
+ * @returns        Response promise.
  */
-async function handleFetchDynamics(fed: FetchEventData): Promise<Response> {
-	for (const [routePattern, routeHandler] of Object.entries(fed.routes.subPaths)) {
-		if ($str.matches(fed.url.pathname, fed.routes.basePath + routePattern)) {
-			return routeHandler(fed);
+async function handleFetchDynamics({ request, env, ctx, routes, url }: FetchEventData): Promise<Response> {
+	for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
+		if ($str.matches(url.pathname, routes.basePath + routeSubpathGlob)) {
+			return routeSubpathHandler({ request, env, ctx, routes, url });
 		}
 	}
-	return $http.prepareResponse(fed.request, { status: 404 });
+	return $http.prepareResponse(request, { status: 404 });
 }
 
 /**
  * Handles fetching of public static assets.
  *
- * @param   fed Fetch event data.
+ * @param   feData Fetch event data.
  *
- * @returns     Response promise.
+ * @returns        Response promise.
  */
-async function handleFetchPublicStaticAssets(fed: FetchEventData): Promise<Response> {
+async function handleFetchPublicStaticAssets({ request, ctx, routes }: FetchEventData): Promise<Response> {
 	try {
 		const eventProps = {
-			request: fed.request,
-			waitUntil(promise: Promise<void>) {
-				return fed.ctx.waitUntil(promise);
+			request, // For asset handler.
+			waitUntil(promise: Promise<void>): void {
+				ctx.waitUntil(promise);
 			},
 		};
 		const response = await cfKVAꓺgetAssetFromKV(eventProps, {
@@ -122,24 +123,24 @@ async function handleFetchPublicStaticAssets(fed: FetchEventData): Promise<Respo
 			defaultMimeType: 'application/octet-stream',
 			cacheControl: { edgeTTL: 31536000, browserTTL: 31536000 },
 
-			mapRequestToAsset: (request: Request): Request => {
-				const url = new URL(fed.url); // We're rewriting URL for asset mapping.
-				const regexp = new RegExp('^' + $str.escRegExp(fed.routes.basePath + 'assets/'), 'u');
+			mapRequestToAsset: (rewriteRequest: Request): Request => {
+				const rewriteURL = new URL(rewriteRequest.url); // Rewrites URL for asset mapping.
+				const rewriteRegExp = new RegExp('^' + $str.escRegExp(routes.basePath + 'assets/'), 'u');
 
-				url.pathname = url.pathname.replace(regexp, '/');
-				return cfKVAꓺmapRequestToAsset(new Request(url, request));
+				rewriteURL.pathname = rewriteURL.pathname.replace(rewriteRegExp, '/');
+				return cfKVAꓺmapRequestToAsset(new Request(rewriteURL, rewriteRequest));
 			},
 		});
-		return $http.prepareResponse(fed.request, {
+		return $http.prepareResponse(request, {
 			response: new Response(response.body, response),
 		});
 	} catch (error) {
 		if (error instanceof cfKVAꓺNotFoundError) {
-			return $http.prepareResponse(fed.request, { status: 404 });
+			return $http.prepareResponse(request, { status: 404 });
 		}
 		if (error instanceof cfKVAꓺMethodNotAllowedError) {
-			return $http.prepareResponse(fed.request, { status: 405 });
+			return $http.prepareResponse(request, { status: 405 });
 		}
-		return $http.prepareResponse(fed.request, { status: 500 });
+		return $http.prepareResponse(request, { status: 500 });
 	}
 }
