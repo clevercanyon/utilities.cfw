@@ -52,7 +52,7 @@ export interface FetchEventData extends InitialFetchEventData {
  * @returns     Response promise.
  */
 export async function handleFetchEvent(fed: FetchEventData | InitialFetchEventData): Promise<Response> {
-	$env.capture(fed.env); // Captures environment vars.
+	$env.capture(fed.env); // Captures env vars.
 
 	const url = $url.parse(fed.request.url);
 
