@@ -7,23 +7,48 @@
 # @note In the future this file will be updated automatically.
 # @note Only `<custom:start.../custom:end>` will be preserved below.
 ##
-compatibility_date = "2022-08-04"
-compatibility_flags = ["global_navigator"]
 
-main = "./dst/index.js"
-build = { command = "npm run build:prod" }
-vars = { IS_C10N = "cf=prod&cfw=prod" }
+compatibility_date = "2023-01-01"
+
 account_id = "f1176464a976947aa5665d989814a4b1"
+# Note: CF zone ID can be inferred from routes.
+send_metrics = false # Don't share usage metrics.
+
+workers_dev = false
+env.dev.workers_dev = true
+
+main = "./dist/index.js"
+rules = [
+  { type = "Text", globs = [
+    "**/*.md",
+    "**/*.txt",
+    "**/*.xml",
+    "**/*.html",
+    "**/*.shtml",
+    "**/*.ejs",
+  ], fallthrough = false },
+]
+site.bucket = "./dist/assets"
+site.exclude = [
+  "/a16s/",
+  "dist/",
+  ".yarn/",
+  "vendor/",
+  "node_modules/",
+  "jspm_packages/",
+  "bower_components/",
+]
+build.cwd = "./"
+build.watch_dir = "./src"
+
+build.command = "npm run build:prod"
+env.dev.build.command = "npm run build:dev"
 
 ##
 # Customizations
 # <custom:start>
 
-name = "clevercanyon.utilities.cfw"
+name = "clevercanyon-utilities-cfw"
 routes = ["clevercanyon.utilities.cfw/*"]
 
 # </custom:end>
-
-[env.dev]
-workers_dev = true
-vars = { IS_C10N = "cf=dev&cfw=dev" }

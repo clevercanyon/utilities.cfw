@@ -30,7 +30,6 @@ interface InitialFetchEventData {
 	readonly env: Environment;
 	readonly ctx: ExecutionContext;
 	readonly routes: {
-		basePath: string;
 		subpathGlobs: {
 			[x: string]: (x: FetchEventData) => Promise<Response>;
 		};
@@ -57,6 +56,7 @@ export async function handleFetchEvent(feData: InitialFetchEventData | FetchEven
 	const { env, ctx, routes } = feData;
 
 	$env.capture(env); // Captures environment vars.
+	const basePath = ($env.get('APP_BASE_PATH') as string) || '/';
 
 	try {
 		request = $http.prepareRequest(request, {});
@@ -69,7 +69,7 @@ export async function handleFetchEvent(feData: InitialFetchEventData | FetchEven
 	if (
 		$http.requestPathIsStatic(request, url) &&
 		$env.get('__STATIC_CONTENT') && // Worker site?
-		$str.matches(url.pathname, routes.basePath + 'assets/**')
+		$str.matches(url.pathname, basePath + 'assets/**')
 	) {
 		return handleFetchStaticAssets(feData);
 	}
@@ -85,9 +85,10 @@ export async function handleFetchEvent(feData: InitialFetchEventData | FetchEven
  */
 async function handleFetchDynamics(feData: FetchEventData): Promise<Response> {
 	const { request, routes, url } = feData;
+	const basePath = ($env.get('APP_BASE_PATH') as string) || '/';
 
 	for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
-		if ($str.matches(url.pathname, routes.basePath + routeSubpathGlob)) {
+		if ($str.matches(url.pathname, basePath + routeSubpathGlob)) {
 			return routeSubpathHandler(feData);
 		}
 	}
@@ -102,7 +103,9 @@ async function handleFetchDynamics(feData: FetchEventData): Promise<Response> {
  * @returns        Response promise.
  */
 async function handleFetchStaticAssets(feData: FetchEventData): Promise<Response> {
-	const { request, ctx, routes } = feData;
+	const { request, ctx } = feData;
+	const basePath = ($env.get('APP_BASE_PATH') as string) || '/';
+
 	try {
 		const eventProps = {
 			request: request, // Rewritten below.
@@ -123,7 +126,7 @@ async function handleFetchStaticAssets(feData: FetchEventData): Promise<Response
 			mapRequestToAsset: (request: Request): Request => {
 				const url = new URL(request.url); // URL is rewritten below.
 
-				const regExp = new RegExp('^' + $str.escRegExp(routes.basePath + 'assets/'), 'u');
+				const regExp = new RegExp('^' + $str.escRegExp(basePath + 'assets/'), 'u');
 				url.pathname = url.pathname.replace(regExp, '/'); // Removes `/assets` prefix.
 
 				return cfKVAꓺmapRequestToAsset(new Request(url, request));

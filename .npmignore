@@ -97,6 +97,8 @@ typings/
 # Wrangler
 
 .wrangler/
+.dev.vars
+.dev.vars.*
 
 # Rollup
 

@@ -30,22 +30,6 @@ import { ViteMinifyPlugin as pluginMinifyHTML } from 'vite-plugin-minify';
 import aliases from './includes/aliases.js';
 
 /**
- * Validates project config.
- *
- * @param   config Project config.
- *
- * @returns        True on successful validation.
- */
-const validateProjConfig = (config) => {
-	if (typeof config?.appType !== 'undefined') {
-		throw new Error('Modifying `appType` is not permitted at this time. Instead, use `config.c10n.&.build.appType` in `package.json`.');
-	}
-	if (typeof config.build?.formats !== 'undefined') {
-		throw new Error('Modifying `build.formats` is not permitted at this time.');
-	}
-};
-
-/**
  * Defines Vite configuration.
  *
  * @param   vite       Data passed in by Vite.
@@ -54,21 +38,26 @@ const validateProjConfig = (config) => {
  * @returns            Vite configuration object properties.
  */
 export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {}) => {
-	validateProjConfig(projConfig);
 	/**
-	 * Initializes vars.
+	 * Directory vars.
 	 */
 	const __dirname = desm(import.meta.url);
 	const projDir = path.resolve(__dirname, '../../..');
 	const srcDir = path.resolve(__dirname, '../../../src');
 	const envsDir = path.resolve(__dirname, '../../../src/.envs');
 
+	/**
+	 * Package-related vars.
+	 */
 	const pkgFile = path.resolve(projDir, './package.json');
 	const pkg = JSON.parse(await fsp.readFile(pkgFile));
 	const pkgPrettierCfg = { ...(await prettier.resolveConfig(pkgFile)), parser: 'json' };
 
-	const publicEnvPrefix = 'APP_PUBLIC_'; // Used below also.
-	const env = loadEnv(mode, envsDir, publicEnvPrefix);
+	/**
+	 * Environment & mode-related vars.
+	 */
+	const appEnvPrefix = 'APP_'; // Part of app.
+	const env = loadEnv(mode, envsDir, appEnvPrefix);
 
 	const isDev = /^dev(elopment)?$/iu.test(mode);
 	const isProd = !isDev; // Always opposite.
@@ -77,10 +66,11 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	process.env.NODE_ENV = nodeEnv; // <https://o5p.me/DscTVM>.
 
 	/**
-	 * App type and target env.
+	 * App type, target, path, and related vars.
 	 */
 	const appType = pkg.config?.c10n?.['&'].build?.appType || 'cma';
 	const targetEnv = pkg.config?.c10n?.['&'].build?.targetEnv || 'any';
+	const appBasePath = env.APP_BASE_PATH || '/'; // From environment vars.
 
 	const isMPA = 'mpa' === appType;
 	const isCMA = 'cma' === appType || !isMPA;
@@ -107,6 +97,15 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	const isSSR = ['cfp', 'cfw', 'node'].includes(targetEnv);
 	const isSSRWorker = isSSR && ['cfw'].includes(targetEnv);
 
+	/**
+	 * Validates all of the above.
+	 */
+	if (typeof projConfig?.appType !== 'undefined') {
+		throw new Error('Modifying `appType` is not permitted at this time. Instead, use `config.c10n.&.build.appType` in `package.json`.');
+	}
+	if (typeof projConfig.build?.formats !== 'undefined') {
+		throw new Error('Modifying `build.formats` is not permitted at this time.');
+	}
 	if ((!isMPA && !isCMA) || !['mpa', 'cma'].includes(appType)) {
 		throw new Error('Must have a valid `config.c10n.&.build.appType` in `package.json`.');
 	}
@@ -125,7 +124,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	 */
 	pkg.exports = {}; // Ensure exists as object.
 
-	if (isCMA && (isSSR || cmaEntriesSubpathsNoExt.length > 1)) {
+	if (isCMA && (isSSR || cmaEntries.length > 1)) {
 		mc.patch(pkg.exports, {
 			'.': {
 				import: './dist/' + cmaEntryIndexSubpathNoExt + '.js',
@@ -250,14 +249,14 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 			$$__APP_PKG_BUGS__$$: pkg.bugs || '',
 		},
 		root: srcDir, // Absolute. Where entry indexes live.
-		publicDir: './cargo', // Static assets relative to `root`.
-		base: '/', // Analagous to `<base href="/">` — use trailing slash.
+		publicDir: './cargo', // Public cargo directory. Relative to `root` directory.
+		base: appBasePath, // Analagous to `<base href="/">` — leading & trailing slash.
 
 		appType: isCMA ? 'custom' : 'mpa', // MPA = multipage app: <https://o5p.me/ZcTkEv>.
 		resolve: { alias: aliases }, // See: `../typescript/config.json` and `./includes/aliases.js`.
 
-		envDir: './' + path.relative(srcDir, envsDir), // Relative to `root`.
-		envPrefix: publicEnvPrefix, // Part of app; i.e., visible client-side.
+		envDir: './' + path.relative(srcDir, envsDir), // Relative to `root` directory.
+		envPrefix: appEnvPrefix, // Environment vars w/ this prefix become a part of the app.
 
 		server: { open: true, https: true }, // Vite dev server.
 		plugins, // Additional Vite plugins that were configured above.
@@ -287,7 +286,16 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 			sourcemap: isDev, // Enables creation of sourcemaps.
 			manifest: isDev, // Enables creation of manifest for assets.
 
-			...(isCMA ? { lib: { name: cmaName, entry: cmaEntriesRelPaths } } : {}),
+			...(isCMA // Custom-made apps = library code.
+				? {
+						lib: {
+							name: cmaName,
+							entry: cmaEntriesRelPaths,
+							// Default formats explicitly. See: <https://o5p.me/v0FR3s>.
+							formats: cmaEntries.length > 1 ? ['es', 'cjs'] : ['es', 'umd'],
+						},
+				  }
+				: {}),
 			rollupOptions: rollupConfig, // See: <https://o5p.me/5Vupql>.
 		},
 		...(isSSR
