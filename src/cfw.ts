@@ -47,68 +47,65 @@ export interface FetchEventData extends InitialFetchEventData {
 /**
  * Handles fetch events.
  *
- * @param   feData Fetch event data.
+ * @param   feData Initial fetch event data.
  *
  * @returns        Response promise.
  */
-export async function handleFetchEvent({ request, env, ctx, routes }: FetchEventData | InitialFetchEventData): Promise<Response> {
-	$env.capture(env); // Environment vars.
-	const url = $url.parse(request.url);
+export async function handleFetchEvent(feData: InitialFetchEventData | FetchEventData): Promise<Response> {
+	let { request } = feData;
+	let url: URL | null = null;
+	const { env, ctx, routes } = feData;
 
-	if (!url) {
-		// Catches unparseable URLs.
-		return $http.prepareResponse(request, { status: 400 });
-	}
-	request = $http.prepareRequest(request);
-	const feData = { request, env, ctx, routes, url };
+	$env.capture(env); // Captures environment vars.
 
-	if ($http.requestPathIsInvalid(request, url)) {
-		return $http.prepareResponse(request, { status: 400 });
+	try {
+		request = $http.prepareRequest(request, {});
+		url = $url.parse(request.url, null, true) as URL;
+	} catch (error) {
+		return error instanceof Response ? error : $http.prepareResponse(request, { status: 500 });
 	}
-	if ($http.requestPathIsForbidden(request, url)) {
-		return $http.prepareResponse(request, { status: 403 });
-	}
-	if (!$http.requestHasSupportedMethod(request)) {
-		return $http.prepareResponse(request, { status: 405 });
-	}
+	feData = { request, env, ctx, routes, url }; // Recompiles data.
+
 	if (
+		$http.requestPathIsStatic(request, url) &&
 		$env.get('__STATIC_CONTENT') && // Worker site?
-		$http.requestPathHasStaticExtension(request, url) &&
-		$str.matches(url.pathname, routes.basePath + 'assets/**') &&
-		!$str.matches(url.pathname, routes.basePath + 'assets/a16s/**')
+		$str.matches(url.pathname, routes.basePath + 'assets/**')
 	) {
-		return handleFetchPublicStaticAssets(feData);
+		return handleFetchStaticAssets(feData);
 	}
 	return handleFetchDynamics(feData);
 }
 
 /**
- * Handles fetching of dynamics.
+ * Fetches dynamics.
  *
  * @param   feData Fetch event data.
  *
  * @returns        Response promise.
  */
-async function handleFetchDynamics({ request, env, ctx, routes, url }: FetchEventData): Promise<Response> {
+async function handleFetchDynamics(feData: FetchEventData): Promise<Response> {
+	const { request, routes, url } = feData;
+
 	for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
 		if ($str.matches(url.pathname, routes.basePath + routeSubpathGlob)) {
-			return routeSubpathHandler({ request, env, ctx, routes, url });
+			return routeSubpathHandler(feData);
 		}
 	}
 	return $http.prepareResponse(request, { status: 404 });
 }
 
 /**
- * Handles fetching of public static assets.
+ * Fetches static assets.
  *
  * @param   feData Fetch event data.
  *
  * @returns        Response promise.
  */
-async function handleFetchPublicStaticAssets({ request, ctx, routes }: FetchEventData): Promise<Response> {
+async function handleFetchStaticAssets(feData: FetchEventData): Promise<Response> {
+	const { request, ctx, routes } = feData;
 	try {
 		const eventProps = {
-			request, // For asset handler.
+			request: request, // Rewritten below.
 			waitUntil(promise: Promise<void>): void {
 				ctx.waitUntil(promise);
 			},
@@ -123,12 +120,13 @@ async function handleFetchPublicStaticAssets({ request, ctx, routes }: FetchEven
 			defaultMimeType: 'application/octet-stream',
 			cacheControl: { edgeTTL: 31536000, browserTTL: 31536000 },
 
-			mapRequestToAsset: (rewriteRequest: Request): Request => {
-				const rewriteURL = new URL(rewriteRequest.url); // Rewrites URL for asset mapping.
-				const rewriteRegExp = new RegExp('^' + $str.escRegExp(routes.basePath + 'assets/'), 'u');
+			mapRequestToAsset: (request: Request): Request => {
+				const url = new URL(request.url); // URL is rewritten below.
 
-				rewriteURL.pathname = rewriteURL.pathname.replace(rewriteRegExp, '/');
-				return cfKVAꓺmapRequestToAsset(new Request(rewriteURL, rewriteRequest));
+				const regExp = new RegExp('^' + $str.escRegExp(routes.basePath + 'assets/'), 'u');
+				url.pathname = url.pathname.replace(regExp, '/'); // Removes `/assets` prefix.
+
+				return cfKVAꓺmapRequestToAsset(new Request(url, request));
 			},
 		});
 		return $http.prepareResponse(request, {
