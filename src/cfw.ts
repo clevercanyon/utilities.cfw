@@ -23,17 +23,22 @@ export interface Environment {
 }
 
 /**
+ * Routes interface.
+ */
+export interface Routes {
+	readonly subpathGlobs: {
+		readonly [x: string]: (x: FetchEventData) => Promise<Response>;
+	};
+}
+
+/**
  * Initial fetch event data.
  */
 interface InitialFetchEventData {
 	readonly request: Request;
 	readonly env: Environment;
 	readonly ctx: ExecutionContext;
-	readonly routes: {
-		subpathGlobs: {
-			[x: string]: (x: FetchEventData) => Promise<Response>;
-		};
-	};
+	readonly routes: Routes;
 }
 
 /**
