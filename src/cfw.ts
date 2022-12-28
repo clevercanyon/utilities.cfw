@@ -23,11 +23,16 @@ export interface Environment {
 }
 
 /**
+ * Route interface.
+ */
+export type Route = (x: FetchEventData) => Promise<Response>;
+
+/**
  * Routes interface.
  */
 export interface Routes {
 	readonly subpathGlobs: {
-		readonly [x: string]: (x: FetchEventData) => Promise<Response>;
+		readonly [x: string]: Route;
 	};
 }
 
