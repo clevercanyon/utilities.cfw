@@ -76,6 +76,14 @@ jspm_packages/
 
 bower_components/
 
+# Dotenv
+
+.env*
+.flaskenv*
+
+!.env.vault
+!.env.project
+
 # TypeScript
 
 typings/

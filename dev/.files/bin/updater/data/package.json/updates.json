@@ -11,23 +11,43 @@
 	"devDependencies": {
 		"@clevercanyon/skeleton-dev-deps": "*"
 	},
-
 	"cpu": ["x64", "arm64"],
 	"os": ["darwin", "linux"],
 	"engines": { "node": "^19.2.0", "npm": "^8.19.3" },
 
 	"scripts": {
+		"env": "npx dotenv-vault",
 		"preview": "npx vite preview",
 		"dev": "npx vite dev --mode=dev",
+
+		"build": "npx vite build --mode=prod && npx tsc",
 		"build:dev": "npx vite build --mode=dev && npx tsc",
+		"build:ci": "npx vite build --mode=ci && npx tsc",
 		"build:stage": "npx vite build --mode=stage && npx tsc",
 		"build:prod": "npx vite build --mode=prod && npx tsc",
+
+		"env:push:main": "npx dotenv-vault push main ./dev/.envs/.env --yes",
+		"env:push:dev": "npx dotenv-vault push dev ./dev/.envs/.env.dev --yes",
+		"env:push:ci": "npx dotenv-vault push ci ./dev/.envs/.env.ci --yes",
+		"env:push:stage": "npx dotenv-vault push stage ./dev/.envs/.env.stage --yes",
+		"env:push:prod": "npx dotenv-vault push prod ./dev/.envs/.env.prod --yes",
+
+		"env:pull:main": "mkdir -p ./dev/.envs && npx dotenv-vault pull main ./dev/.envs/.env --yes && rm -f ./dev/.envs/.env.previous",
+		"env:pull:dev": "mkdir -p ./dev/.envs && npx dotenv-vault pull dev ./dev/.envs/.env.dev --yes && rm -f ./dev/.envs/.env.dev.previous",
+		"env:pull:ci": "mkdir -p ./dev/.envs && npx dotenv-vault pull ci ./dev/.envs/.env.ci --yes && rm -f ./dev/.envs/.env.ci.previous",
+		"env:pull:stage": "mkdir -p ./dev/.envs && npx dotenv-vault pull stage ./dev/.envs/.env.stage --yes && rm -f ./dev/.envs/.env.stage.previous",
+		"env:pull:prod": "mkdir -p ./dev/.envs && npx dotenv-vault pull prod ./dev/.envs/.env.prod --yes && rm -f ./dev/.envs/.env.prod.previous",
+
+		"envs:push": "npm run env:push:main && npm run env:push:dev && npm run env:push:ci && npm run env:push:stage && npm run env:push:prod",
+		"envs:pull": "npm run env:pull:main && npm run env:pull:dev && npm run env:pull:ci && npm run env:pull:stage && npm run env:pull:prod",
+
+		"envs:setup": "npx dotenv-vault login --yes && npx dotenv-vault build --yes && npx dotenv-vault open --yes && npm run envs:pull",
+		"envs:setup:new": "rm -rf ./.env.me && rm -rf ./.env.vault && rm -rf ./dev/.envs && npx dotenv-vault new --yes && npm run envs:setup",
+
+		"wrangler": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler",
 		"dotfiles:update": "./dev/.files/bin/update.js"
 	},
 	"workspaces": [],
-	"publishConfig": {
-		"registry": "https://npm.pkg.github.com"
-	},
 	"config": {
 		"c10n": {
 			"&": {

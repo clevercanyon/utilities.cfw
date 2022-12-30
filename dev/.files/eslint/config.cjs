@@ -73,6 +73,7 @@ module.exports = {
 	settings: (commonSettings = {}),
 
 	rules: (commonRules = {
+		'import/no-named-as-default-member': ['off'],
 		'no-empty': ['warn', { allowEmptyCatch: true }],
 	}),
 	overrides: [

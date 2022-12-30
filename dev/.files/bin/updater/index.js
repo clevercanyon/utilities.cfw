@@ -71,6 +71,7 @@ export default async ({ projDir }) => {
 		'./.npmignore',
 		'./.npmrc',
 		'./.postcssrc.cjs',
+		'./.prettierignore',
 		'./.prettierrc.cjs',
 		'./.shellcheckrc',
 		'./.stylelintrc.cjs',

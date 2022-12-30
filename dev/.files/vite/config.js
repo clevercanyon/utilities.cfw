@@ -43,8 +43,13 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	 */
 	const __dirname = desm(import.meta.url);
 	const projDir = path.resolve(__dirname, '../../..');
+
 	const srcDir = path.resolve(__dirname, '../../../src');
-	const envsDir = path.resolve(__dirname, '../../../src/.envs');
+	const envsDir = path.resolve(__dirname, '../../../dev/.envs');
+	const cargoDir = path.resolve(__dirname, '../../../src/cargo');
+
+	const distDir = path.resolve(__dirname, '../../../dist');
+	const a16sDir = path.resolve(__dirname, '../../../dist/assets/a16s');
 
 	/**
 	 * Package-related vars.
@@ -59,7 +64,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	const appEnvPrefix = 'APP_'; // Part of app.
 	const env = loadEnv(mode, envsDir, appEnvPrefix);
 
-	const isDev = /^dev(elopment)?$/iu.test(mode);
+	const isDev = /^dev(?:elopment)?$/iu.test(mode);
 	const isProd = !isDev; // Always opposite.
 
 	const nodeEnv = isDev ? 'development' : 'production';
@@ -184,9 +189,6 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	/**
 	 * Configures plugins for Vite.
 	 *
-	 * Also configures plugins for imported web workers; e.g., `?worker`. See:
-	 * {@link https://vitejs.dev/guide/features.html#web-workers}.
-	 *
 	 * @see https://github.com/vitejs/vite-plugin-basic-ssl
 	 * @see https://github.com/trapcodeio/vite-plugin-ejs
 	 * @see https://github.com/zhuweiyou/vite-plugin-minify
@@ -199,16 +201,12 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	const pluginMinifyHTMLConfig = isProd ? pluginMinifyHTML() : null;
 
 	const plugins = [pluginBasicSSLConfig, pluginEJSConfig, pluginMinifyHTMLConfig];
-	const importedWorkerPlugins = []; // None applicable at this time.
+	const importedWorkerPlugins = []; // <https://vitejs.dev/guide/features.html#web-workers>.
 
 	/**
 	 * Configures rollup for Vite.
 	 *
-	 * Also configures rollup for imported web workers; e.g., `?worker`. See:
-	 * {@link https://vitejs.dev/guide/features.html#web-workers}.
-	 *
-	 * @see https://rollupjs.org/guide/en/#input
-	 * @see https://rollupjs.org/guide/en/#outputdir
+	 * @see https://vitejs.dev/config/build-options.html#build-rollupoptions
 	 * @see https://rollupjs.org/guide/en/#big-list-of-options
 	 */
 	const rollupConfig = {
@@ -225,12 +223,12 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 			exports: 'named', // Matches TypeScript.
 			esModule: true, // Matches TypeScript.
 
-			extend: true, // Global || checks.
+			extend: true, // i.e., Global `||` checks.
 			noConflict: true, // Like `jQuery.noConflict()`.
 		},
 	};
-	const importedWorkerRollupConfig = { ...rollupConfig };
-	delete importedWorkerRollupConfig.input; // Not applicable.
+	// <https://vitejs.dev/guide/features.html#web-workers>
+	const importedWorkerRollupConfig = { ..._.omit(rollupConfig, ['input']) };
 
 	/**
 	 * Vite config base.
@@ -249,13 +247,13 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 			$$__APP_PKG_BUGS__$$: pkg.bugs || '',
 		},
 		root: srcDir, // Absolute. Where entry indexes live.
-		publicDir: './cargo', // Public cargo directory. Relative to `root` directory.
+		publicDir: path.relative(srcDir, cargoDir), // Relative to `root` directory.
 		base: appBasePath, // Analagous to `<base href="/">` — leading & trailing slash.
 
 		appType: isCMA ? 'custom' : 'mpa', // MPA = multipage app: <https://o5p.me/ZcTkEv>.
 		resolve: { alias: aliases }, // See: `../typescript/config.json` and `./includes/aliases.js`.
 
-		envDir: './' + path.relative(srcDir, envsDir), // Relative to `root` directory.
+		envDir: path.relative(srcDir, envsDir), // Relative to `root` directory.
 		envPrefix: appEnvPrefix, // Environment vars w/ this prefix become a part of the app.
 
 		server: { open: true, https: true }, // Vite dev server.
@@ -264,20 +262,17 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 		esbuild: { jsx: 'automatic' }, // ← Not necessary in Vite 4.0.x.
 		// See: <https://o5p.me/240y9w>, where `jsx` will be picked up from `tsconfig.json`.
 
-		worker: {
-			// Imported web workers; e.g., `?worker`.
-			// See: <https://vitejs.dev/guide/features.html#web-workers>.
+		worker: /* <https://vitejs.dev/guide/features.html#web-workers> */ {
 			format: 'es',
 			plugins: importedWorkerPlugins,
 			rollupOptions: importedWorkerRollupConfig,
 		},
-		build: {
-			// <https://vitejs.dev/config/build-options.html>
-			emptyOutDir: true, // Must set as `true` explicitly.
+		build: /* <https://vitejs.dev/config/build-options.html> */ {
 			target: 'es2021', // Matches `tsconfig.json`.
+			emptyOutDir: true, // Must set as `true` explicitly.
 
-			outDir: '../dist', // Relative to `root`.
-			assetsDir: './assets/a16s', // Relative to `outDir`.
+			outDir: path.relative(srcDir, distDir), // Relative to `root` directory.
+			assetsDir: path.relative(distDir, a16sDir), // Relative to `outDir` directory.
 			// Note: `a16s` = numeronym for 'acquired resources'.
 
 			ssr: isSSR, // Server-side rendering?
@@ -298,7 +293,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 				: {}),
 			rollupOptions: rollupConfig, // See: <https://o5p.me/5Vupql>.
 		},
-		...(isSSR
+		...(isSSR // <https://vitejs.dev/config/ssr-options.html>.
 			? {
 					ssr: {
 						noExternal: true, // All server side.

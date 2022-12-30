@@ -26,11 +26,12 @@ const path = require('node:path');
 const projDir = path.resolve(__dirname, '../../..');
 
 module.exports = {
+	plugins: [require('@tailwindcss/typography')],
 	theme: {
 		fontFamily: {
 			sans: ['Georama', 'sans-serif'],
 			serif: ['Georgia', 'serif'],
 		},
 	},
-	content: [path.resolve(projDir, './src/**/*.{md,xml,html,shtml,php,js,cjs,mjs,jsx,ts,tsx,ejs}')],
+	content: [path.resolve(projDir, './src/**/*.{md,xml,html,shtml,php,ejs,js,cjs,mjs,jsx,ts,tsx}')],
 };
