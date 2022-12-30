@@ -18,6 +18,9 @@ import spawn from 'spawn-please';
 
 import customRegexp from './data/custom-regexp.js';
 
+const { log } = console;
+const echo = process.stdout.write.bind(process.stdout);
+
 export default async ({ projDir }) => {
 	/**
 	 * Initializes vars.
@@ -136,11 +139,11 @@ export default async ({ projDir }) => {
 	/**
 	 * Updates `@clevercanyon/skeleton-dev-deps` in project dir.
 	 */
-	console.log(chalk.green('Updating project to latest `clevercanyon/skeleton-dev-deps`.'));
+	log(chalk.green('Updating project to latest `clevercanyon/skeleton-dev-deps`.'));
 
 	await spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps', '--silent'], {
 		cwd: projDir, // Displays output while running.
-		stdout: (buffer) => console.log(chalk.blue(buffer.toString())),
-		stderr: (buffer) => console.log(chalk.redBright(buffer.toString())),
+		stdout: (buffer) => echo(chalk.blue(buffer.toString())),
+		stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
 	});
 };
