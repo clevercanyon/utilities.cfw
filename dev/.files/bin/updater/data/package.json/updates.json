@@ -1,41 +1,50 @@
 {
-	"type": "module",
+	"$set": {
+		"type": "module",
 
-	"author": {
-		"name": "Clever Canyon",
-		"url": "https://clevercanyon.com"
+		"author": {
+			"name": "Clever Canyon",
+			"url": "https://clevercanyon.com"
+		},
+		"funding": "https://github.com/sponsors/clevercanyon",
+
+		"sideEffects": ["./src/*.{html,scss,css,tsx,ts,jsx,mjs,js}"],
+
+		"cpu": ["x64", "arm64"],
+		"os": ["darwin", "linux"],
+		"engines": { "node": "^19.2.0", "npm": "^8.19.3" },
+
+		"scripts": {
+			"preview": "npx vite preview",
+			"dev": "npx vite dev --mode=dev",
+
+			"envs:push": "./dev/.files/bin/envs.js push",
+			"envs:pull": "./dev/.files/bin/envs.js pull",
+
+			"envs:setup": "./dev/.files/bin/envs.js setup",
+			"envs:setup:new": "./dev/.files/bin/envs.js setup --new",
+
+			"build": "npx vite build --mode=prod && npx tsc",
+			"build:dev": "npx vite build --mode=dev && npx tsc",
+			"build:ci": "npx vite build --mode=ci && npx tsc",
+			"build:stage": "npx vite build --mode=stage && npx tsc",
+			"build:prod": "npx vite build --mode=prod && npx tsc",
+
+			"update:projects": "./dev/.files/bin/update.js projects --update=project",
+			"update:projects:repos": "./dev/.files/bin/update.js projects --update=project --repos",
+			"update:projects:dotfiles": "./dev/.files/bin/update.js projects --update=dotfiles",
+
+			"update:project": "./dev/.files/bin/update.js project",
+			"update:project:repos": "./dev/.files/bin/update.js project --repos",
+			"update:dotfiles": "./dev/.files/bin/update.js dotfiles",
+
+			"wrangler": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler"
+		},
+		"workspaces": []
 	},
-	"funding": "https://github.com/sponsors/clevercanyon",
-
-	"sideEffects": ["./src/*.{html,scss,css,tsx,ts,jsx,mjs,js}"],
 	"devDependencies": {
 		"@clevercanyon/skeleton-dev-deps": "*"
 	},
-	"cpu": ["x64", "arm64"],
-	"os": ["darwin", "linux"],
-	"engines": { "node": "^19.2.0", "npm": "^8.19.3" },
-
-	"scripts": {
-		"preview": "npx vite preview",
-		"dev": "npx vite dev --mode=dev",
-
-		"envs:push": "./dev/.files/bin/envs.js push",
-		"envs:pull": "./dev/.files/bin/envs.js pull",
-
-		"envs:setup": "./dev/.files/bin/envs.js setup",
-		"envs:setup:new": "./dev/.files/bin/envs.js setup --new",
-
-		"build": "npx vite build --mode=prod && npx tsc",
-		"build:dev": "npx vite build --mode=dev && npx tsc",
-		"build:ci": "npx vite build --mode=ci && npx tsc",
-		"build:stage": "npx vite build --mode=stage && npx tsc",
-		"build:prod": "npx vite build --mode=prod && npx tsc",
-
-		"wrangler": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler",
-
-		"update:dotfiles": "./dev/.files/bin/update.js dotfiles"
-	},
-	"workspaces": [],
 	"config": {
 		"c10n": {
 			"&": {

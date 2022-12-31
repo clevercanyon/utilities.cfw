@@ -8,23 +8,137 @@
  */
 /* eslint-env es2021, node */
 
+import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import fsp from 'node:fs/promises';
 
-import desm from 'desm';
+import _ from 'lodash';
 import chalk from 'chalk';
 import spawn from 'spawn-please';
+import { dirname, filename } from 'desm';
+import { globbyStream } from 'globby';
 
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-const __dirname = desm(import.meta.url);
+const __dirname = dirname(import.meta.url);
+const __filename = filename(import.meta.url);
+
+const projsDir = path.resolve(__dirname, '../../../..');
 const projDir = path.resolve(__dirname, '../../..');
+
+const envsDir = path.resolve(__dirname, '../../../dev/.envs');
+const binDir = path.resolve(__dirname, '../../../dev/.files/bin');
+
+const pkgFile = path.resolve(projDir, './package.json');
+const pkg = JSON.parse(fs.readFileSync(pkgFile));
 
 const { log } = console;
 const echo = process.stdout.write.bind(process.stdout);
+
+const spawnCfg = {
+	cwd: projDir, // Displays output while running.
+	stdout: (buffer) => echo(chalk.blue(buffer.toString())),
+	stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
+};
+
+/**
+ * Projects command.
+ */
+class Projects {
+	constructor(args) {
+		this.args = args;
+
+		(async () => {
+			await this.update();
+		})();
+	}
+
+	async update() {
+		const globStream = globbyStream('*', {
+			expandDirectories: false,
+			onlyDirectories: true,
+			absolute: true,
+			cwd: projsDir,
+			dot: false,
+		});
+		for await (const projDir of globStream) {
+			const projUpdateFile = // Project's update file.
+				path.resolve(projDir, './dev/.files/bin/update.js');
+
+			if (fs.existsSync(projUpdateFile)) {
+				switch (true) {
+					case 'project' === this.args.update && this.args.repos:
+						log(chalk.green('Updating project:') + ' ' + chalk.yellow(path.basename(projDir)));
+						await spawn(projUpdateFile, [this.args.update, '--repos', '--mode', this.args.mode], { ...spawnCfg, cwd: projDir });
+						break;
+
+					case 'project' === this.args.update:
+						log(chalk.green('Updating project:') + ' ' + chalk.yellow(path.basename(projDir)));
+						await spawn(projUpdateFile, [this.args.update, '--mode', this.args.mode], { ...spawnCfg, cwd: projDir });
+						break;
+
+					case 'dotfiles' === this.args.update:
+						log(chalk.green('Updating dotfiles in:') + ' ' + chalk.yellow(path.basename(projDir)));
+						await spawn(projUpdateFile, [this.args.update], { ...spawnCfg, cwd: projDir });
+						break;
+				}
+			}
+		}
+		log(chalk.green('Project updates complete.'));
+	}
+}
+
+/**
+ * Project command.
+ */
+class Project {
+	constructor(args) {
+		this.args = args;
+
+		(async () => {
+			await this.update();
+		})();
+	}
+
+	async update() {
+		log(chalk.green('Updating dotfiles.'));
+		await spawn(__filename, ['dotfiles'], spawnCfg);
+
+		log(chalk.green('Updating NPM packages.'));
+		await spawn('npm', ['update', '--include=dev', '--silent'], spawnCfg);
+
+		log(chalk.green('Updating project build; `' + this.args.mode + '` mode.'));
+		await spawn('npx', ['vite', 'build', '--mode', this.args.mode], spawnCfg);
+		await spawn('npx', ['tsc'], spawnCfg); // TypeScript types.
+
+		if (this.args.repos) {
+			if (await u.isGitRepo()) {
+				log(chalk.green('Updating git repo; `' + (await u.gitCurrentBranch()) + '` branch.'));
+				await u.gitAddCommitPush();
+			} else {
+				log(chalk.gray('Not a git repo.'));
+			}
+
+			if (await u.isEnvsRepo()) {
+				log(chalk.green('Updating envs repo.'));
+				await u.envsPush();
+			} else {
+				log(chalk.gray('Not an envs repo.'));
+			}
+
+			if (await u.isNPMRepo(this.args.mode)) {
+				log(chalk.green('Updating NPM repo.'));
+				await u.npmVerionPatchPublish();
+			} else {
+				log(chalk.gray('Not an NPM repo; or not in a publishable state.'));
+			}
+		}
+		log(chalk.green('Project update complete.'));
+	}
+}
 
 /**
  * Dotfiles command.
@@ -40,72 +154,169 @@ class Dotfiles {
 
 	async update() {
 		/**
-		 * Validates environment vars.
+		 * Don't lose skeleton changes!
 		 */
-		if (!process.env.C10N_GITHUB_TOKEN) {
-			throw new Error('`C10N_GITHUB_TOKEN` is a required environment variable.');
+		if ('@clevercanyon/skeleton' === pkg.name && (await u.isGitRepo())) {
+			log(chalk.green('Updating `clevercanyon/skeleton` git repo; `' + (await u.gitCurrentBranch()) + '` branch.'));
+			log(chalk.green('    ... i.e., Saving skeleton changes before self-update.'));
+			await u.gitAddCommitPush();
 		}
-
-		/**
-		 * Creates temp directory.
-		 */
-		const tmpDir = await fsp.mkdtemp(path.resolve(os.tmpdir(), './' + crypto.randomUUID()));
 
 		/**
 		 * Downloads latest skeleton.
 		 */
 		log(chalk.green('Downloading latest `clevercanyon/skeleton`.'));
-
-		const skeletonRepoURL =
-			'https://' + // Requires personal access token.
-			(process.env.C10N_GITHUB_TOKEN || '') +
-			'@github.com/clevercanyon/skeleton';
-
-		await spawn('git', ['clone', '--quiet', '--depth=1', skeletonRepoURL, tmpDir], {
-			cwd: projDir, // Displays output while running.
-			stdout: (buffer) => echo(chalk.blue(buffer.toString())),
-			stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
-		});
+		const tmpDir = await fsp.mkdtemp(path.resolve(os.tmpdir(), './' + crypto.randomUUID()));
+		await spawn('git', ['clone', '--quiet', '--depth=1', 'git@github.com:clevercanyon/skeleton.git', tmpDir], { ...spawnCfg, cwd: tmpDir });
 		await fsp.rm(path.resolve(tmpDir, './.git'), { recursive: true, force: true });
 
 		/**
 		 * Runs `npm clean-install` in latest skeleton directory.
 		 */
 		log(chalk.green('Installing `clevercanyon/skeleton`’s dependencies.'));
-
-		await spawn('npm', ['clean-install', '--include=dev', '--silent'], {
-			cwd: tmpDir, // Displays output while running.
-			stdout: (buffer) => echo(chalk.blue(buffer.toString())),
-			stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
-		});
+		await spawn('npm', ['clean-install', '--include=dev', '--silent'], { ...spawnCfg, cwd: tmpDir });
 
 		/**
 		 * Runs updater using files from latest skeleton.
 		 */
 		log(chalk.green('Running updater using latest `clevercanyon/skeleton`.'));
-
 		await (await import(path.resolve(tmpDir, './dev/.files/bin/updater/index.js'))).default({ projDir });
 
 		/**
 		 * Runs cleanup tasks prior to completion.
 		 */
-		log(chalk.green('Running cleanup tasks.'));
-
+		log(chalk.green('Running dotfile cleanup tasks.'));
 		await fsp.rm(tmpDir, { recursive: true, force: true });
 
 		/**
-		 * Completes update.
+		 * Completes dotfiles update.
 		 */
-		log(chalk.green('Update complete.'));
+		log(chalk.green('Dotfiles update complete.'));
+	}
+}
+
+/**
+ * Utilities.
+ */
+class u {
+	static async isGitRepo() {
+		try {
+			return 'true' === String(await spawn('git', ['rev-parse', '--is-inside-work-tree'], _.pick(spawnCfg, ['cwd']))).trim();
+		} catch {
+			return false;
+		}
+	}
+
+	static async isEnvsRepo() {
+		return (
+			(await u.isGitRepo()) &&
+			fs.existsSync(path.resolve(projDir, './.env.me')) &&
+			fs.existsSync(path.resolve(projDir, './.env.vault')) &&
+			fs.existsSync(path.resolve(envsDir, './.env'))
+		);
+	}
+
+	static async isNPMRepo(mode = '') {
+		return (await u.isGitRepo()) && 'main' === (await u.gitCurrentBranch()) && (!mode || 'prod' === mode) && false === pkg.private;
+	}
+
+	static async gitCurrentBranch() {
+		return (await u.isGitRepo()) ? String(await spawn('git', ['symbolic-ref', '--short', '--quiet', 'HEAD'], _.pick(spawnCfg, ['cwd']))).trim() : '';
+	}
+
+	static async gitChange() {
+		if (!(await u.isGitRepo())) return;
+		await fsp.writeFile(path.resolve(projDir, './.gitchange'), String(Date.now()));
+	}
+
+	static async gitAddCommitPush(message = 'Update.') {
+		if (!(await u.isGitRepo())) return;
+		await u.gitChange(); // Force a change.
+		const branch = await u.gitCurrentBranch();
+		await spawn('git', ['add', '--all'], spawnCfg);
+		await spawn('git', ['commit', '--message', message], spawnCfg);
+		await spawn('git', ['push', '--set-upstream', 'origin', branch], spawnCfg);
+	}
+
+	static async envsPush() {
+		if (!(await u.isEnvsRepo())) return;
+		await spawn(path.resolve(binDir, './envs.js'), ['push'], spawnCfg);
+	}
+
+	static async npmVerionPatchPublish() {
+		if (!(await u.isNPMRepo())) return;
+		await spawn('npm', ['version', 'patch'], spawnCfg);
+		await spawn('npm', ['publish'], spawnCfg);
 	}
 }
 
 /**
  * Yargs ⛵🏴‍☠
+ *
+ * @see http://yargs.js.org/docs/
  */
 (async () => {
 	await yargs(hideBin(process.argv))
-		.command(['*', 'dotfiles'], 'Updates dotfiles.', {}, (args) => new Dotfiles(args))
+		.command(
+			['projects'],
+			'Updates projects.',
+			{
+				update: {
+					type: 'string',
+					requiresArg: true,
+					demandOption: true,
+					choices: ['project', 'dotfiles'],
+					description: 'What to update in each project.',
+				},
+				repos: {
+					type: 'boolean',
+					requiresArg: false,
+					demandOption: false,
+					default: false,
+					description: 'Update project repos?',
+				},
+				mode: {
+					type: 'string',
+					requiresArg: true,
+					demandOption: false,
+					default: 'prod',
+					choices: ['dev', 'ci', 'stage', 'prod'],
+					description: 'Build & env mode.',
+				},
+			},
+			(args) => new Projects(args),
+		)
+		.command(
+			['project'],
+			'Updates project.',
+			{
+				repos: {
+					type: 'boolean',
+					requiresArg: false,
+					demandOption: false,
+					default: false,
+					description: 'Update project repos?',
+				},
+				mode: {
+					type: 'string',
+					requiresArg: true,
+					demandOption: false,
+					default: 'prod',
+					choices: ['dev', 'ci', 'stage', 'prod'],
+					description: 'Build & env mode.',
+				},
+			},
+			(args) => new Project(args),
+		)
+		.command(
+			['dotfiles'],
+			'Updates dotfiles.',
+			{
+				// No options at this time.
+			},
+			(args) => new Dotfiles(args),
+		)
+		.strict()
 		.help()
 		.parse();
 })();

@@ -11,10 +11,10 @@
  */
 /* eslint-env es2021, node */
 
-import desm from 'desm';
 import path from 'node:path';
+import { dirname } from 'desm';
 
-const __dirname = desm(import.meta.url);
+const __dirname = dirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../../..');
 const srcDir = path.resolve(projDir, './src');
 

@@ -22,6 +22,7 @@ import { hideBin } from 'yargs/helpers';
 const __dirname = desm(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
 
+const { log } = console;
 const echo = process.stdout.write.bind(process.stdout);
 
 const spawnCfg = {
@@ -54,18 +55,22 @@ class Setup {
 	}
 
 	async setupNew() {
+		log(chalk.green('Setting up new envs.'));
+
 		await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
 		await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
 
 		await spawn('npx', ['dotenv-vault', 'new', '--yes'], spawnCfg);
 		await spawn('npx', ['dotenv-vault', 'login', '--yes'], spawnCfg);
-		await spawn('npx', ['dotenv-vault', 'build', '--yes'], spawnCfg);
 		await spawn('npx', ['dotenv-vault', 'open', '--yes'], spawnCfg);
 
 		await Utilities.push(); // Maybe existing files; else new files.
+		await spawn('npx', ['dotenv-vault', 'build', '--yes'], spawnCfg);
 	}
 
 	async setup() {
+		log(chalk.green('Setting up envs.'));
+
 		await spawn('npx', ['dotenv-vault', 'login', '--yes'], spawnCfg);
 		await spawn('npx', ['dotenv-vault', 'open', '--yes'], spawnCfg);
 
@@ -79,7 +84,10 @@ class Setup {
 class Push {
 	constructor(args) {
 		this.args = args;
-		(async () => await Utilities.push())();
+		(async () => {
+			log(chalk.green('Pushing envs.'));
+			await Utilities.push();
+		})();
 	}
 }
 
@@ -89,7 +97,10 @@ class Push {
 class Pull {
 	constructor(args) {
 		this.args = args;
-		(async () => await Utilities.pull())();
+		(async () => {
+			log(chalk.green('Pulling envs.'));
+			await Utilities.pull();
+		})();
 	}
 }
 
@@ -100,6 +111,7 @@ class Utilities {
 	static async push() {
 		for (const [envName, envFile] of Object.entries(envFiles)) {
 			if (!fs.existsSync(envFile)) {
+				await fsp.mkdir(path.dirname(envFile), { recursive: true });
 				await fsp.writeFile(envFile, '# ' + envName);
 			}
 			await spawn('npx', ['dotenv-vault', 'push', envName, envFile, '--yes'], spawnCfg);
@@ -117,6 +129,8 @@ class Utilities {
 
 /**
  * Yargs ⛵🏴‍☠
+ *
+ * @see http://yargs.js.org/docs/
  */
 (async () => {
 	await yargs(hideBin(process.argv))
@@ -126,13 +140,17 @@ class Utilities {
 			{
 				'new': {
 					type: 'boolean',
+					requiresArg: false,
+					demandOption: false,
 					default: false,
+					description: 'Set up *new* envs?',
 				},
 			},
 			(args) => new Setup(args),
 		)
 		.command('push', 'Pushes to dotenv vault.', {}, (args) => new Push(args))
 		.command('pull', 'Pulls from dotenv vault.', {}, (args) => new Pull(args))
+		.strict()
 		.help()
 		.parse();
 })();

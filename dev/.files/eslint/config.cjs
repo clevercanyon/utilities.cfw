@@ -28,7 +28,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const projDir = path.resolve(__dirname, '../../..');
-const pkg = JSON.parse(fs.readFileSync(path.resolve(projDir, './package.json')));
+const pkgFile = path.resolve(projDir, './package.json');
+const pkg = JSON.parse(fs.readFileSync(pkgFile));
 
 module.exports = {
 	root: true,

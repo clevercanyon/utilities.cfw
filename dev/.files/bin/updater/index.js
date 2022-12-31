@@ -11,9 +11,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
 
-import desm from 'desm';
 import chalk from 'chalk';
 import mc from 'merge-change';
+import { dirname } from 'desm';
 import spawn from 'spawn-please';
 
 import customRegexp from './data/custom-regexp.js';
@@ -25,9 +25,16 @@ export default async ({ projDir }) => {
 	/**
 	 * Initializes vars.
 	 */
-	const __dirname = desm(import.meta.url);
+	const spawnCfg = {
+		cwd: projDir, // Displays output while running.
+		stdout: (buffer) => echo(chalk.blue(buffer.toString())),
+		stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
+	};
+	const __dirname = dirname(import.meta.url);
 	const tmpDir = path.resolve(__dirname, '../../../..');
-	const pkg = JSON.parse(await fsp.readFile(path.resolve(projDir, './package.json')));
+
+	const pkgFile = path.resolve(projDir, './package.json');
+	const pkg = JSON.parse(await fsp.readFile(pkgFile));
 
 	let locks = pkg.config?.c10n?.['&']?.dotfiles?.lock || [];
 	locks = locks.map((relPath) => path.resolve(projDir, relPath));
@@ -140,10 +147,5 @@ export default async ({ projDir }) => {
 	 * Updates `@clevercanyon/skeleton-dev-deps` in project dir.
 	 */
 	log(chalk.green('Updating project to latest `clevercanyon/skeleton-dev-deps`.'));
-
-	await spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps', '--silent'], {
-		cwd: projDir, // Displays output while running.
-		stdout: (buffer) => echo(chalk.blue(buffer.toString())),
-		stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
-	});
+	await spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps', '--silent'], spawnCfg);
 };

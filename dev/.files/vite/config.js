@@ -15,10 +15,10 @@ import path from 'node:path';
 import fsp from 'node:fs/promises';
 
 import _ from 'lodash';
-import desm from 'desm';
 import chalk from 'chalk';
 import mm from 'micromatch';
 import mc from 'merge-change';
+import { dirname } from 'desm';
 import prettier from 'prettier';
 import { globby } from 'globby';
 
@@ -41,7 +41,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	/**
 	 * Directory vars.
 	 */
-	const __dirname = desm(import.meta.url);
+	const __dirname = dirname(import.meta.url);
 	const projDir = path.resolve(__dirname, '../../..');
 
 	const srcDir = path.resolve(__dirname, '../../../src');
