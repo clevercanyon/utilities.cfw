@@ -33,7 +33,7 @@ const envsDir = path.resolve(__dirname, '../../../dev/.envs');
 const binDir = path.resolve(__dirname, '../../../dev/.files/bin');
 
 const pkgFile = path.resolve(projDir, './package.json');
-const pkg = JSON.parse(fs.readFileSync(pkgFile));
+const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
 const { log } = console;
 const echo = process.stdout.write.bind(process.stdout);
@@ -68,23 +68,32 @@ class Projects {
 			const projUpdateFile = // Project's update file.
 				path.resolve(projDir, './dev/.files/bin/update.js');
 
-			if (fs.existsSync(projUpdateFile)) {
-				switch (true) {
-					case 'project' === this.args.update && this.args.repos:
-						log(chalk.green('Updating project:') + ' ' + chalk.yellow(path.basename(projDir)));
-						await spawn(projUpdateFile, [this.args.update, '--repos', '--mode', this.args.mode], { ...spawnCfg, cwd: projDir });
-						break;
+			if (!fs.existsSync(projUpdateFile)) {
+				continue; // False positive. No `projUpdateFile`.
+			}
+			if (!fs.existsSync(path.resolve(projDir, './package.json'))) {
+				continue; // False positive. No `package.json` file.
+			}
+			switch (true /* Against case-based conditions. */) {
+				case 'project' === this.args.update && this.args.repos:
+					log(chalk.green('Updating project:') + ' ' + chalk.yellow(path.basename(projDir)));
+					await spawn(projUpdateFile, [this.args.update, '--repos', '--mode', this.args.mode], { ...spawnCfg, cwd: projDir });
+					break;
 
-					case 'project' === this.args.update:
-						log(chalk.green('Updating project:') + ' ' + chalk.yellow(path.basename(projDir)));
-						await spawn(projUpdateFile, [this.args.update, '--mode', this.args.mode], { ...spawnCfg, cwd: projDir });
-						break;
+				case 'project' === this.args.update:
+					log(chalk.green('Updating project:') + ' ' + chalk.yellow(path.basename(projDir)));
+					await spawn(projUpdateFile, [this.args.update, '--mode', this.args.mode], { ...spawnCfg, cwd: projDir });
+					break;
 
-					case 'dotfiles' === this.args.update:
-						log(chalk.green('Updating dotfiles in:') + ' ' + chalk.yellow(path.basename(projDir)));
-						await spawn(projUpdateFile, [this.args.update], { ...spawnCfg, cwd: projDir });
-						break;
-				}
+				case 'dotfiles' === this.args.update && 'skeleton' === path.basename(projDir):
+					log(chalk.green('Updating dotfiles in:') + ' ' + chalk.yellow(path.basename(projDir)));
+					await spawn(projUpdateFile, [this.args.update, '--skeletonUpdatesOthers'], { ...spawnCfg, cwd: projDir });
+					break;
+
+				case 'dotfiles' === this.args.update:
+					log(chalk.green('Updating dotfiles in:') + ' ' + chalk.yellow(path.basename(projDir)));
+					await spawn(projUpdateFile, [this.args.update], { ...spawnCfg, cwd: projDir });
+					break;
 			}
 		}
 		log(chalk.green('Project updates complete.'));
@@ -105,14 +114,13 @@ class Project {
 
 	async update() {
 		log(chalk.green('Updating dotfiles.'));
-		await spawn(__filename, ['dotfiles'], spawnCfg);
+		await u.updateDotfiles();
 
 		log(chalk.green('Updating NPM packages.'));
-		await spawn('npm', ['update', '--include=dev', '--silent'], spawnCfg);
+		await u.npmUpdate();
 
 		log(chalk.green('Updating project build; `' + this.args.mode + '` mode.'));
-		await spawn('npx', ['vite', 'build', '--mode', this.args.mode], spawnCfg);
-		await spawn('npx', ['tsc'], spawnCfg); // TypeScript types.
+		await u.viteBuild({ npmVersionPatch: this.args.repos, mode: this.args.mode });
 
 		if (this.args.repos) {
 			if (await u.isGitRepo()) {
@@ -129,11 +137,11 @@ class Project {
 				log(chalk.gray('Not an envs repo.'));
 			}
 
-			if (await u.isNPMRepo(this.args.mode)) {
+			if (await u.isNPMRepo({ mode: this.args.mode })) {
 				log(chalk.green('Updating NPM repo.'));
-				await u.npmVerionPatchPublish();
+				await u.npmPublish();
 			} else {
-				log(chalk.gray('Not an NPM repo; or not in a publishable state.'));
+				log(chalk.gray('Not an NPM repo. Or, not in a publishable state.'));
 			}
 		}
 		log(chalk.green('Project update complete.'));
@@ -180,7 +188,7 @@ class Dotfiles {
 		 * Runs updater using files from latest skeleton.
 		 */
 		log(chalk.green('Running updater using latest `clevercanyon/skeleton`.'));
-		await (await import(path.resolve(tmpDir, './dev/.files/bin/updater/index.js'))).default({ projDir });
+		await (await import(path.resolve(tmpDir, './dev/.files/bin/updater/index.js'))).default({ projDir, args: this.args });
 
 		/**
 		 * Runs cleanup tasks prior to completion.
@@ -199,6 +207,10 @@ class Dotfiles {
  * Utilities.
  */
 class u {
+	static async updateDotfiles() {
+		await spawn(__filename, ['dotfiles'], spawnCfg);
+	}
+
 	static async isGitRepo() {
 		try {
 			return 'true' === String(await spawn('git', ['rev-parse', '--is-inside-work-tree'], _.pick(spawnCfg, ['cwd']))).trim();
@@ -216,8 +228,8 @@ class u {
 		);
 	}
 
-	static async isNPMRepo(mode = '') {
-		return (await u.isGitRepo()) && 'main' === (await u.gitCurrentBranch()) && (!mode || 'prod' === mode) && false === pkg.private;
+	static async isNPMRepo(opts = { mode: '' }) {
+		return (await u.isGitRepo()) && 'main' === (await u.gitCurrentBranch()) && (!opts.mode || 'prod' === opts.mode) && false === pkg.private;
 	}
 
 	static async gitCurrentBranch() {
@@ -243,10 +255,28 @@ class u {
 		await spawn(path.resolve(binDir, './envs.js'), ['push'], spawnCfg);
 	}
 
-	static async npmVerionPatchPublish() {
+	static async npmUpdate() {
+		await spawn('npm', ['update', '--include=dev', '--silent'], spawnCfg);
+	}
+
+	static async npmVersionPatch() {
 		if (!(await u.isNPMRepo())) return;
 		await spawn('npm', ['version', 'patch'], spawnCfg);
+	}
+
+	static async npmPublish() {
+		if (!(await u.isNPMRepo())) return;
 		await spawn('npm', ['publish'], spawnCfg);
+	}
+
+	static async viteBuild(opts = { npmVersionPatch: false, mode: 'prod' }) {
+		const { mode, npmVersionPatch } = opts;
+
+		if (npmVersionPatch && (await u.isNPMRepo({ mode }))) {
+			await u.npmVersionPatch();
+		}
+		await spawn('npx', ['vite', 'build', '--mode', mode], spawnCfg);
+		await spawn('npx', ['tsc'], spawnCfg); // TypeScript types.
 	}
 }
 
@@ -312,7 +342,13 @@ class u {
 			['dotfiles'],
 			'Updates dotfiles.',
 			{
-				// No options at this time.
+				skeletonUpdatesOthers: {
+					type: 'boolean',
+					requiresArg: false,
+					demandOption: false,
+					default: false,
+					description: 'Updating `@clevercanyon/skeleton` also updates others? Such as `skeleton-dev-deps` and `*.fork`s.',
+				},
 			},
 			(args) => new Dotfiles(args),
 		)

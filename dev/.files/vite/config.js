@@ -55,7 +55,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	 * Package-related vars.
 	 */
 	const pkgFile = path.resolve(projDir, './package.json');
-	const pkg = JSON.parse(await fsp.readFile(pkgFile));
+	const pkg = JSON.parse((await fsp.readFile(pkgFile)).toString());
 	const pkgPrettierCfg = { ...(await prettier.resolveConfig(pkgFile)), parser: 'json' };
 
 	/**

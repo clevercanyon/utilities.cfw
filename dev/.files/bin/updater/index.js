@@ -15,29 +15,35 @@ import chalk from 'chalk';
 import mc from 'merge-change';
 import { dirname } from 'desm';
 import spawn from 'spawn-please';
+import { globbyStream } from 'globby';
 
 import customRegexp from './data/custom-regexp.js';
 
 const { log } = console;
 const echo = process.stdout.write.bind(process.stdout);
 
-export default async ({ projDir }) => {
+export default async ({ projDir, args }) => {
 	/**
 	 * Initializes vars.
 	 */
+	args = args || {}; // @todo Remove.
+	// ↑ Only here while we update the updaters.
+
+	const projsDir = path.dirname(projDir);
+	const __dirname = dirname(import.meta.url);
+	const tmpDir = path.resolve(__dirname, '../../../..');
+
+	const pkgFile = path.resolve(projDir, './package.json');
+	const pkg = JSON.parse((await fsp.readFile(pkgFile)).toString());
+
+	let locks = pkg.config?.c10n?.['&']?.dotfiles?.lock || [];
+	locks = locks.map((relPath) => path.resolve(projDir, relPath));
+
 	const spawnCfg = {
 		cwd: projDir, // Displays output while running.
 		stdout: (buffer) => echo(chalk.blue(buffer.toString())),
 		stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
 	};
-	const __dirname = dirname(import.meta.url);
-	const tmpDir = path.resolve(__dirname, '../../../..');
-
-	const pkgFile = path.resolve(projDir, './package.json');
-	const pkg = JSON.parse(await fsp.readFile(pkgFile));
-
-	let locks = pkg.config?.c10n?.['&']?.dotfiles?.lock || [];
-	locks = locks.map((relPath) => path.resolve(projDir, relPath));
 
 	/**
 	 * Checks dotfile locks.
@@ -91,20 +97,43 @@ export default async ({ projDir }) => {
 		'./wrangler.toml',
 	]) {
 		if (isLocked(relPath)) {
-			return; // Locked 🔒.
+			continue; // Locked 🔒.
 		}
 		let newFileContents = ''; // Initialize.
 
 		if (fs.existsSync(path.resolve(projDir, relPath))) {
-			const oldFileContents = await fsp.readFile(path.resolve(projDir, relPath), 'utf8');
+			const oldFileContents = (await fsp.readFile(path.resolve(projDir, relPath))).toString();
 			const oldFileMatches = customRegexp.exec(oldFileContents); // See: `./data/custom-regexp.js`.
 			const oldFileCustomCode = oldFileMatches ? oldFileMatches[2] : ''; // We'll preserve any custom code.
-			newFileContents = (await fsp.readFile(path.resolve(tmpDir, relPath), 'utf8')).replace(customRegexp, ($_, $1, $2, $3) => $1 + oldFileCustomCode + $3);
+			newFileContents = (await fsp.readFile(path.resolve(tmpDir, relPath))).toString().replace(customRegexp, ($_, $1, $2, $3) => $1 + oldFileCustomCode + $3);
 		} else {
-			newFileContents = await fsp.readFile(path.resolve(tmpDir, relPath), 'utf8');
+			newFileContents = (await fsp.readFile(path.resolve(tmpDir, relPath))).toString();
 		}
 		await fsp.mkdir(path.dirname(path.resolve(projDir, relPath)), { recursive: true });
 		await fsp.writeFile(path.resolve(projDir, relPath), newFileContents);
+
+		if ('@clevercanyon/skeleton' === pkg.name && args.skeletonUpdatesOthers && ['./.gitattributes', './.gitignore', './.npmignore', './.npmrc'].includes(relPath)) {
+			const otherGlobs = '{skeleton-dev-deps,*.fork,forks/*.fork}'; // The "others" we'll update.
+			const globStream = globbyStream(otherGlobs, { expandDirectories: false, onlyDirectories: true, absolute: true, cwd: projsDir, dot: false });
+
+			for await (const projDir of globStream) {
+				if (!fs.existsSync(path.resolve(projDir, './package.json'))) {
+					continue; // False positive. No `package.json` file.
+				}
+				let newFileContents = ''; // Initialize.
+
+				if (fs.existsSync(path.resolve(projDir, relPath))) {
+					const oldFileContents = (await fsp.readFile(path.resolve(projDir, relPath))).toString();
+					const oldFileMatches = customRegexp.exec(oldFileContents); // See: `./data/custom-regexp.js`.
+					const oldFileCustomCode = oldFileMatches ? oldFileMatches[2] : ''; // We'll preserve any custom code.
+					newFileContents = (await fsp.readFile(path.resolve(tmpDir, relPath))).toString().replace(customRegexp, ($_, $1, $2, $3) => $1 + oldFileCustomCode + $3);
+				} else {
+					newFileContents = (await fsp.readFile(path.resolve(tmpDir, relPath))).toString();
+				}
+				await fsp.mkdir(path.dirname(path.resolve(projDir, relPath)), { recursive: true });
+				await fsp.writeFile(path.resolve(projDir, relPath), newFileContents);
+			}
+		}
 	}
 
 	/**
@@ -115,7 +144,7 @@ export default async ({ projDir }) => {
 		'./README.md',
 	]) {
 		if (isLocked(relPath)) {
-			return; // Locked 🔒.
+			continue; // Locked 🔒.
 		}
 		if (!fs.existsSync(path.resolve(projDir, relPath))) {
 			await fsp.cp(path.resolve(tmpDir, relPath), path.resolve(projDir, relPath));
@@ -129,16 +158,16 @@ export default async ({ projDir }) => {
 		'./package.json', //
 	]) {
 		if (isLocked(relPath)) {
-			return; // Locked 🔒.
+			continue; // Locked 🔒.
 		}
 		if (!fs.existsSync(path.resolve(projDir, relPath))) {
 			await fsp.cp(path.resolve(tmpDir, relPath), path.resolve(projDir, relPath));
 		}
-		const json = JSON.parse(await fsp.readFile(path.resolve(projDir, relPath)));
+		const json = JSON.parse((await fsp.readFile(path.resolve(projDir, relPath))).toString());
 		const updatesFile = path.resolve(tmpDir, './dev/.files/bin/updater/data', relPath, './updates.json');
 
 		if (fs.existsSync(updatesFile)) {
-			mc.patch(json, JSON.parse(await fsp.readFile(updatesFile)));
+			mc.patch(json, JSON.parse((await fsp.readFile(updatesFile)).toString()));
 			await fsp.writeFile(path.resolve(projDir, relPath), JSON.stringify(json, null, 4));
 		}
 	}
@@ -146,6 +175,6 @@ export default async ({ projDir }) => {
 	/**
 	 * Updates `@clevercanyon/skeleton-dev-deps` in project dir.
 	 */
-	log(chalk.green('Updating project to latest `clevercanyon/skeleton-dev-deps`.'));
+	log(chalk.green('Updating project to latest `@clevercanyon/skeleton-dev-deps`.'));
 	await spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps', '--silent'], spawnCfg);
 };
