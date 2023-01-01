@@ -12,7 +12,7 @@
 {
 	"extends": "./dev/.files/typescript/config.json",
 	/*
-	 * Customizations
+	 * Customizations.
 	 * <custom:start> */
 
 	"compilerOptions": {

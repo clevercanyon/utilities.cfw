@@ -32,10 +32,12 @@
 
 			"update:projects": "./dev/.files/bin/update.js projects --update=project",
 			"update:projects:repos": "./dev/.files/bin/update.js projects --update=project --repos",
+			"update:projects:repos:pkgs": "./dev/.files/bin/update.js projects --update=project --repos --pkgs",
 			"update:projects:dotfiles": "./dev/.files/bin/update.js projects --update=dotfiles",
 
 			"update:project": "./dev/.files/bin/update.js project",
 			"update:project:repos": "./dev/.files/bin/update.js project --repos",
+			"update:project:repos:pkgs": "./dev/.files/bin/update.js project --repos --pkgs",
 			"update:dotfiles": "./dev/.files/bin/update.js dotfiles",
 
 			"wrangler": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler"

@@ -20,7 +20,6 @@ import { globbyStream } from 'globby';
 import customRegexp from './data/custom-regexp.js';
 
 const { log } = console;
-const echo = process.stdout.write.bind(process.stdout);
 
 export default async ({ projDir, args }) => {
 	/**
@@ -39,11 +38,7 @@ export default async ({ projDir, args }) => {
 	let locks = pkg.config?.c10n?.['&']?.dotfiles?.lock || [];
 	locks = locks.map((relPath) => path.resolve(projDir, relPath));
 
-	const spawnCfg = {
-		cwd: projDir, // Displays output while running.
-		stdout: (buffer) => echo(chalk.blue(buffer.toString())),
-		stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
-	};
+	const quietSpawnCfg = { cwd: projDir };
 
 	/**
 	 * Checks dotfile locks.
@@ -176,5 +171,5 @@ export default async ({ projDir, args }) => {
 	 * Updates `@clevercanyon/skeleton-dev-deps` in project dir.
 	 */
 	log(chalk.green('Updating project to latest `@clevercanyon/skeleton-dev-deps`.'));
-	await spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps', '--silent'], spawnCfg);
+	await spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps', '--silent'], quietSpawnCfg);
 };

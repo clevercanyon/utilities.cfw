@@ -22,7 +22,7 @@ max_line_length = 180
 trim_trailing_whitespace = true
 
 ##
-# Customizations
+# Customizations.
 # <custom:start>
 
 # </custom:end>

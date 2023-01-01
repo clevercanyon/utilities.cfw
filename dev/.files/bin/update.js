@@ -14,7 +14,6 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import fsp from 'node:fs/promises';
 
-import _ from 'lodash';
 import chalk from 'chalk';
 import spawn from 'spawn-please';
 import { dirname, filename } from 'desm';
@@ -38,11 +37,12 @@ const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 const { log } = console;
 const echo = process.stdout.write.bind(process.stdout);
 
-const spawnCfg = {
+const noisySpawnCfg = {
 	cwd: projDir, // Displays output while running.
 	stdout: (buffer) => echo(chalk.blue(buffer.toString())),
 	stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
 };
+const quietSpawnCfg = { cwd: projDir };
 
 /**
  * Projects command.
@@ -57,42 +57,48 @@ class Projects {
 	}
 
 	async update() {
-		const globStream = globbyStream('*', {
+		const globStream = globbyStream(this.args.glob, {
 			expandDirectories: false,
 			onlyDirectories: true,
-			absolute: true,
+			absolute: false,
 			cwd: projsDir,
 			dot: false,
 		});
-		for await (const projDir of globStream) {
-			const projUpdateFile = // Project's update file.
-				path.resolve(projDir, './dev/.files/bin/update.js');
+		for await (const projDirSubPath of globStream) {
+			const projDir = path.resolve(projsDir, projDirSubPath);
+			const binDir = path.resolve(projDir, './dev/.files/bin');
+			const binDirUpdate = path.resolve(binDir, './update.js');
 
-			if (!fs.existsSync(projUpdateFile)) {
-				continue; // False positive. No `projUpdateFile`.
+			if (!fs.existsSync(binDirUpdate)) {
+				continue; // False positive. No `binDirUpdate`.
 			}
 			if (!fs.existsSync(path.resolve(projDir, './package.json'))) {
 				continue; // False positive. No `package.json` file.
 			}
 			switch (true /* Against case-based conditions. */) {
+				case 'project' === this.args.update && this.args.repos && this.args.pkgs:
+					log(chalk.green('Updating project:') + ' ' + chalk.yellow(projDirSubPath));
+					await spawn(binDirUpdate, [this.args.update, '--repos', '--pkgs', '--mode', this.args.mode], { ...noisySpawnCfg, cwd: projDir });
+					break;
+
 				case 'project' === this.args.update && this.args.repos:
-					log(chalk.green('Updating project:') + ' ' + chalk.yellow(path.basename(projDir)));
-					await spawn(projUpdateFile, [this.args.update, '--repos', '--mode', this.args.mode], { ...spawnCfg, cwd: projDir });
+					log(chalk.green('Updating project:') + ' ' + chalk.yellow(projDirSubPath));
+					await spawn(binDirUpdate, [this.args.update, '--repos', '--mode', this.args.mode], { ...noisySpawnCfg, cwd: projDir });
 					break;
 
 				case 'project' === this.args.update:
-					log(chalk.green('Updating project:') + ' ' + chalk.yellow(path.basename(projDir)));
-					await spawn(projUpdateFile, [this.args.update, '--mode', this.args.mode], { ...spawnCfg, cwd: projDir });
+					log(chalk.green('Updating project:') + ' ' + chalk.yellow(projDirSubPath));
+					await spawn(binDirUpdate, [this.args.update, '--mode', this.args.mode], { ...noisySpawnCfg, cwd: projDir });
 					break;
 
 				case 'dotfiles' === this.args.update && 'skeleton' === path.basename(projDir):
-					log(chalk.green('Updating dotfiles in:') + ' ' + chalk.yellow(path.basename(projDir)));
-					await spawn(projUpdateFile, [this.args.update, '--skeletonUpdatesOthers'], { ...spawnCfg, cwd: projDir });
+					log(chalk.green('Updating dotfiles in:') + ' ' + chalk.yellow(projDirSubPath));
+					await spawn(binDirUpdate, [this.args.update, '--skeletonUpdatesOthers'], { ...noisySpawnCfg, cwd: projDir });
 					break;
 
 				case 'dotfiles' === this.args.update:
-					log(chalk.green('Updating dotfiles in:') + ' ' + chalk.yellow(path.basename(projDir)));
-					await spawn(projUpdateFile, [this.args.update], { ...spawnCfg, cwd: projDir });
+					log(chalk.green('Updating dotfiles in:') + ' ' + chalk.yellow(projDirSubPath));
+					await spawn(binDirUpdate, [this.args.update], { ...noisySpawnCfg, cwd: projDir });
 					break;
 			}
 		}
@@ -119,8 +125,12 @@ class Project {
 		log(chalk.green('Updating NPM packages.'));
 		await u.npmUpdate();
 
-		log(chalk.green('Updating project build; `' + this.args.mode + '` mode.'));
-		await u.viteBuild({ npmVersionPatch: this.args.repos, mode: this.args.mode });
+		if (this.args.repos && this.args.pkgs && (await u.isNPMPkgPublishable({ mode: this.args.mode }))) {
+			log(chalk.green('NPM package will publish, so patching NPM version prior to build.'));
+			await u.npmVersionPatch(); // Git commit(s) + git tag.
+		}
+		log(chalk.green('Updating build; `' + this.args.mode + '` mode.'));
+		await u.viteBuild({ mode: this.args.mode });
 
 		if (this.args.repos) {
 			if (await u.isGitRepo()) {
@@ -137,11 +147,11 @@ class Project {
 				log(chalk.gray('Not an envs repo.'));
 			}
 
-			if (await u.isNPMRepo({ mode: this.args.mode })) {
-				log(chalk.green('Updating NPM repo.'));
+			if (this.args.pkgs && (await u.isNPMPkgPublishable({ mode: this.args.mode }))) {
+				log(chalk.green('Publishing NPM package.'));
 				await u.npmPublish();
 			} else {
-				log(chalk.gray('Not an NPM repo. Or, not in a publishable state.'));
+				log(chalk.gray('Not an NPM package. Or, not in a publishable state.'));
 			}
 		}
 		log(chalk.green('Project update complete.'));
@@ -162,32 +172,36 @@ class Dotfiles {
 
 	async update() {
 		/**
-		 * Don't lose skeleton changes!
+		 * Don't lose skeleton changes.
 		 */
-		if ('@clevercanyon/skeleton' === pkg.name && (await u.isGitRepo())) {
-			log(chalk.green('Updating `clevercanyon/skeleton` git repo; `' + (await u.gitCurrentBranch()) + '` branch.'));
-			log(chalk.green('    ... i.e., Saving skeleton changes before self-update.'));
+		if ('@clevercanyon/skeleton' === pkg.name && (await u.isGitRepoDirty())) {
+			log(chalk.green('Updating `@clevercanyon/skeleton` git repo; `' + (await u.gitCurrentBranch()) + '` branch.'));
+			log('    ' + chalk.green('i.e., saving latest skeleton changes before self-update.'));
 			await u.gitAddCommitPush();
 		}
 
 		/**
 		 * Downloads latest skeleton.
+		 *
+		 * @review Optimize by not re-downloading every time.
 		 */
-		log(chalk.green('Downloading latest `clevercanyon/skeleton`.'));
+		log(chalk.green('Git-cloning latest `@clevercanyon/skeleton`.'));
 		const tmpDir = await fsp.mkdtemp(path.resolve(os.tmpdir(), './' + crypto.randomUUID()));
-		await spawn('git', ['clone', '--quiet', '--depth=1', 'git@github.com:clevercanyon/skeleton.git', tmpDir], { ...spawnCfg, cwd: tmpDir });
+		await spawn('git', ['clone', '--quiet', '--depth=1', 'git@github.com:clevercanyon/skeleton.git', tmpDir], { ...noisySpawnCfg, cwd: tmpDir });
 		await fsp.rm(path.resolve(tmpDir, './.git'), { recursive: true, force: true });
 
 		/**
 		 * Runs `npm clean-install` in latest skeleton directory.
+		 *
+		 * @review Optimize by not reinstalling every time.
 		 */
-		log(chalk.green('Installing `clevercanyon/skeleton`’s dependencies.'));
-		await spawn('npm', ['clean-install', '--include=dev', '--silent'], { ...spawnCfg, cwd: tmpDir });
+		log(chalk.green('Installing `@clevercanyon/skeleton`’s dependencies.'));
+		await spawn('npm', ['clean-install', '--include=dev', '--silent'], { ...noisySpawnCfg, cwd: tmpDir });
 
 		/**
 		 * Runs updater using files from latest skeleton.
 		 */
-		log(chalk.green('Running updater using latest `clevercanyon/skeleton`.'));
+		log(chalk.green('Running updater using latest `@clevercanyon/skeleton`.'));
 		await (await import(path.resolve(tmpDir, './dev/.files/bin/updater/index.js'))).default({ projDir, args: this.args });
 
 		/**
@@ -208,12 +222,20 @@ class Dotfiles {
  */
 class u {
 	static async updateDotfiles() {
-		await spawn(__filename, ['dotfiles'], spawnCfg);
+		await spawn(__filename, ['dotfiles'], noisySpawnCfg);
 	}
 
 	static async isGitRepo() {
 		try {
-			return 'true' === String(await spawn('git', ['rev-parse', '--is-inside-work-tree'], _.pick(spawnCfg, ['cwd']))).trim();
+			return 'true' === String(await spawn('git', ['rev-parse', '--is-inside-work-tree'], quietSpawnCfg)).trim();
+		} catch {
+			return false;
+		}
+	}
+
+	static async isGitRepoDirty() {
+		try {
+			return (await u.isGitRepo()) && '' !== String(await spawn('git', ['status', '--short'], quietSpawnCfg)).trim();
 		} catch {
 			return false;
 		}
@@ -228,55 +250,59 @@ class u {
 		);
 	}
 
-	static async isNPMRepo(opts = { mode: '' }) {
-		return (await u.isGitRepo()) && 'main' === (await u.gitCurrentBranch()) && (!opts.mode || 'prod' === opts.mode) && false === pkg.private;
+	static async isNPMPkg() {
+		return (await u.isGitRepo()) && false === pkg.private;
+	}
+
+	static async isNPMPkgPublishable(opts = { mode: 'prod' }) {
+		return (await u.isNPMPkg()) && 'main' === (await u.gitCurrentBranch()) && 'prod' === opts.mode;
 	}
 
 	static async gitCurrentBranch() {
-		return (await u.isGitRepo()) ? String(await spawn('git', ['symbolic-ref', '--short', '--quiet', 'HEAD'], _.pick(spawnCfg, ['cwd']))).trim() : '';
+		return (await u.isGitRepo()) ? String(await spawn('git', ['symbolic-ref', '--short', '--quiet', 'HEAD'], quietSpawnCfg)).trim() : '';
 	}
 
 	static async gitChange() {
-		if (!(await u.isGitRepo())) return;
 		await fsp.writeFile(path.resolve(projDir, './.gitchange'), String(Date.now()));
 	}
 
-	static async gitAddCommitPush(message = 'Update.') {
-		if (!(await u.isGitRepo())) return;
+	static async gitAddCommit(message = 'Robotic update.') {
+		await u.gitChange(); // Force a change.
+		await spawn('git', ['add', '--all'], noisySpawnCfg);
+		await spawn('git', ['commit', '--message', message], noisySpawnCfg);
+	}
+
+	static async gitAddCommitPush(message = 'Robotic update.') {
 		await u.gitChange(); // Force a change.
 		const branch = await u.gitCurrentBranch();
-		await spawn('git', ['add', '--all'], spawnCfg);
-		await spawn('git', ['commit', '--message', message], spawnCfg);
-		await spawn('git', ['push', '--set-upstream', 'origin', branch], spawnCfg);
+
+		await spawn('git', ['add', '--all'], noisySpawnCfg);
+		await spawn('git', ['commit', '--message', message], noisySpawnCfg);
+
+		await spawn('git', ['push', '--set-upstream', 'origin', branch], noisySpawnCfg);
+		await spawn('git', ['push', 'origin', '--tags'], noisySpawnCfg);
 	}
 
 	static async envsPush() {
-		if (!(await u.isEnvsRepo())) return;
-		await spawn(path.resolve(binDir, './envs.js'), ['push'], spawnCfg);
+		await spawn(path.resolve(binDir, './envs.js'), ['push'], quietSpawnCfg);
 	}
 
 	static async npmUpdate() {
-		await spawn('npm', ['update', '--include=dev', '--silent'], spawnCfg);
+		await spawn('npm', ['update', '--include=dev', '--silent'], quietSpawnCfg);
 	}
 
 	static async npmVersionPatch() {
-		if (!(await u.isNPMRepo())) return;
-		await spawn('npm', ['version', 'patch'], spawnCfg);
+		if (await u.isGitRepoDirty()) await u.gitAddCommit();
+		await spawn('npm', ['version', 'patch'], noisySpawnCfg);
 	}
 
 	static async npmPublish() {
-		if (!(await u.isNPMRepo())) return;
-		await spawn('npm', ['publish'], spawnCfg);
+		await spawn('npm', ['publish'], noisySpawnCfg);
 	}
 
-	static async viteBuild(opts = { npmVersionPatch: false, mode: 'prod' }) {
-		const { mode, npmVersionPatch } = opts;
-
-		if (npmVersionPatch && (await u.isNPMRepo({ mode }))) {
-			await u.npmVersionPatch();
-		}
-		await spawn('npx', ['vite', 'build', '--mode', mode], spawnCfg);
-		await spawn('npx', ['tsc'], spawnCfg); // TypeScript types.
+	static async viteBuild(opts = { mode: 'prod' }) {
+		await spawn('npx', ['vite', 'build', '--mode', opts.mode], noisySpawnCfg);
+		await spawn('npx', ['tsc'], noisySpawnCfg); // TypeScript types.
 	}
 }
 
@@ -291,6 +317,16 @@ class u {
 			['projects'],
 			'Updates projects.',
 			{
+				glob: {
+					type: 'string',
+					requiresArg: true,
+					demandOption: false,
+					default: '*', // Default is all projects.
+					description:
+						'Update only specific project directories?' + //
+						' Glob matching is relative to projects directory.' + //
+						' Glob matching is against project directories only.',
+				},
 				update: {
 					type: 'string',
 					requiresArg: true,
@@ -304,6 +340,14 @@ class u {
 					demandOption: false,
 					default: false,
 					description: 'Update project repos?',
+				},
+				pkgs: {
+					type: 'boolean',
+					requiresArg: false,
+					demandOption: false,
+					default: false,
+					implies: ['repos'],
+					description: 'Update project packages?',
 				},
 				mode: {
 					type: 'string',
@@ -326,6 +370,14 @@ class u {
 					demandOption: false,
 					default: false,
 					description: 'Update project repos?',
+				},
+				pkgs: {
+					type: 'boolean',
+					requiresArg: false,
+					demandOption: false,
+					default: false,
+					implies: ['repos'],
+					description: 'Update project packages?',
 				},
 				mode: {
 					type: 'string',

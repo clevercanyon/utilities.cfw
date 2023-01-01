@@ -25,7 +25,7 @@ const projDir = path.resolve(__dirname, '../../..');
 const { log } = console;
 const echo = process.stdout.write.bind(process.stdout);
 
-const spawnCfg = {
+const noisySpawnCfg = {
 	cwd: projDir, // Displays output while running.
 	stdout: (buffer) => echo(chalk.blue(buffer.toString())),
 	stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
@@ -60,19 +60,19 @@ class Setup {
 		await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
 		await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
 
-		await spawn('npx', ['dotenv-vault', 'new', '--yes'], spawnCfg);
-		await spawn('npx', ['dotenv-vault', 'login', '--yes'], spawnCfg);
-		await spawn('npx', ['dotenv-vault', 'open', '--yes'], spawnCfg);
+		await spawn('npx', ['dotenv-vault', 'new', '--yes'], noisySpawnCfg);
+		await spawn('npx', ['dotenv-vault', 'login', '--yes'], noisySpawnCfg);
+		await spawn('npx', ['dotenv-vault', 'open', '--yes'], noisySpawnCfg);
 
 		await Utilities.push(); // Maybe existing files; else new files.
-		await spawn('npx', ['dotenv-vault', 'build', '--yes'], spawnCfg);
+		await spawn('npx', ['dotenv-vault', 'build', '--yes'], noisySpawnCfg);
 	}
 
 	async setup() {
 		log(chalk.green('Setting up envs.'));
 
-		await spawn('npx', ['dotenv-vault', 'login', '--yes'], spawnCfg);
-		await spawn('npx', ['dotenv-vault', 'open', '--yes'], spawnCfg);
+		await spawn('npx', ['dotenv-vault', 'login', '--yes'], noisySpawnCfg);
+		await spawn('npx', ['dotenv-vault', 'open', '--yes'], noisySpawnCfg);
 
 		await Utilities.pull(); // Latest and greatest!
 	}
@@ -114,14 +114,14 @@ class Utilities {
 				await fsp.mkdir(path.dirname(envFile), { recursive: true });
 				await fsp.writeFile(envFile, '# ' + envName);
 			}
-			await spawn('npx', ['dotenv-vault', 'push', envName, envFile, '--yes'], spawnCfg);
+			await spawn('npx', ['dotenv-vault', 'push', envName, envFile, '--yes'], noisySpawnCfg);
 		}
 	}
 
 	static async pull() {
 		for (const [envName, envFile] of Object.entries(envFiles)) {
 			await fsp.mkdir(path.dirname(envFile), { recursive: true });
-			await spawn('npx', ['dotenv-vault', 'pull', envName, envFile, '--yes'], spawnCfg);
+			await spawn('npx', ['dotenv-vault', 'pull', envName, envFile, '--yes'], noisySpawnCfg);
 			await fsp.rm(envFile + '.previous', { force: true });
 		}
 	}

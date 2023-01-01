@@ -13,7 +13,7 @@ const mc = require('merge-change');
 const baseConfig = require('./dev/.files/tailwind/config.cjs');
 
 /*
- * Customizations
+ * Customizations.
  * <custom:start> */
 
 module.exports = mc.merge({}, baseConfig, {});

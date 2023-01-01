@@ -16,75 +16,76 @@
 # This part follows `.gitignore` exactly.
 ##
 
-# Local
+# Locals.
 
 .#*
 .~*
 *.local
 
-# Logs
+# Logs.
 
 *.log
 
-# Backups
+# Backups.
 
 *~
 *.bak
 
-# Patches
+# Patches.
 
 *.rej
 *.orig
 *.patch
 *.diff
 
-# IntelliJ
+# IntelliJ.
 
 .idea/
 
-# Sublime
+# Sublime.
 
 *.sublime-project
 *.sublime-workspace
 
-# Netbeans
+# Netbeans.
 
 *.nbproject
 
-# VS Code
+# VS Code.
 
 .vscode/
 *.code-workspace
 
-# NPM
+# NPM.
 
 npm-debug.log
 
-# Dists
+# Dists (must exclude).
+# May contain `APP_` env vars.
 
 dist/
 
-# Yarn
+# Yarn.
 
 .yarn/
 
-# Vendor
+# Vendor.
 
 vendor/
 
-# NodeJS
+# NodeJS.
 
 node_modules/
 
-# JSPM
+# JSPM.
 
 jspm_packages/
 
-# Bower
+# Bower.
 
 bower_components/
 
-# Dotenv
+# Dotenv.
 
 .env*
 .flaskenv*
@@ -92,56 +93,56 @@ bower_components/
 !.env.vault
 !.env.project
 
-# TypeScript
+# TypeScript.
 
 typings/
 .tscache/
 *.tsbuildinfo
 
-# Vite
+# Vite.
 
 .vite/
 
-# Wrangler
+# Wrangler.
 
 .wrangler/
 .dev.vars
 .dev.vars.*
 
-# Rollup
+# Rollup.
 
 .rollup/
 
-# Webpack
+# Webpack.
 
 .webpack/
 
-# Linaria
+# Linaria.
 
 .linaria-cache/
 
-# SASS
+# SASS.
 
 .sass-cache/
 
-# Docker
+# Docker.
 
 .docker/
 
-# Vagrant
+# Vagrant.
 
 .vagrant/
 
-# Elastic Beanstalk
+# Elastic Beanstalk.
 
 .elasticbeanstalk/
 
-# CTAGs
+# CTAGs.
 
 *.ctags
 *.tags
 
-# VCS
+# VCS.
 
 .git/
 
@@ -161,17 +162,17 @@ CVS/
 SCCS/
 RCS/
 
-# PC Files
+# PC files.
 
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# PC Directories
+# PC directories.
 
 $RECYCLE.BIN/
 
-# Mac Files
+# Mac files.
 
 ._*
 Icon?
@@ -183,7 +184,7 @@ Icon?
 .VolumeIcon.icns
 .com.apple.timemachine.*
 
-# Mac Directories
+# Mac directories.
 
 .apdisk/
 *.icloud/
@@ -202,45 +203,45 @@ Temporary Items/
 # These are in addition to what we have in `.gitignore`.
 ##
 
-# Dev
+# Dev.
 
 dev/
 
-# Docs
+# Docs.
 
 doc/
 docs/
 
-# Tests
+# Tests.
 
 test/
 tests/
 
-# Examples
+# Examples.
 
 example/
 examples/
 
-# Benchmarks
+# Benchmarks.
 
 bench/
 benchmark/
 benchmarks/
 
-# Dotenv
+# Dotenv.
 
 .env.vault
 .env.project
 
-# GitHub
+# GitHub.
 
 .github/
 
-# Dists
+# Dists.
 
 !dist/
 
-# Source
+# Source.
 
 .*
 __*
@@ -271,7 +272,7 @@ tailwind.config.*
 ##
 
 ##
-# Customizations
+# Customizations.
 # <custom:start>
 
 # </custom:end>
