@@ -51,30 +51,43 @@ class Setup {
 			} else {
 				await this.setup();
 			}
+			if (this.args.dryRun) {
+				log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			}
 		})();
 	}
 
 	async setupNew() {
 		log(chalk.green('Setting up new envs.'));
 
-		await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
-		await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
+		log(chalk.gray('Deleting `.env.me`, `.env.vault`.'));
+		if (!this.args.dryRun) {
+			await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
+			await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
+		}
+		log(chalk.gray('Running `dotenv-vault new`, `login`, `open`.'));
+		if (!this.args.dryRun) {
+			await spawn('npx', ['dotenv-vault', 'new', '--yes'], noisySpawnCfg);
+			await spawn('npx', ['dotenv-vault', 'login', '--yes'], noisySpawnCfg);
+			await spawn('npx', ['dotenv-vault', 'open', '--yes'], noisySpawnCfg);
+		}
+		log(chalk.gray('Pushing envs.'));
+		await Utilities.push({ dryRun: this.args.dryRun });
 
-		await spawn('npx', ['dotenv-vault', 'new', '--yes'], noisySpawnCfg);
-		await spawn('npx', ['dotenv-vault', 'login', '--yes'], noisySpawnCfg);
-		await spawn('npx', ['dotenv-vault', 'open', '--yes'], noisySpawnCfg);
-
-		await Utilities.push(); // Maybe existing files; else new files.
-		await spawn('npx', ['dotenv-vault', 'build', '--yes'], noisySpawnCfg);
+		log(chalk.gray('Building envs.'));
+		await Utilities.build({ dryRun: this.args.dryRun });
 	}
 
 	async setup() {
 		log(chalk.green('Setting up envs.'));
 
-		await spawn('npx', ['dotenv-vault', 'login', '--yes'], noisySpawnCfg);
-		await spawn('npx', ['dotenv-vault', 'open', '--yes'], noisySpawnCfg);
-
-		await Utilities.pull(); // Latest and greatest!
+		log(chalk.gray('Running `dotenv-vault login`, `open`.'));
+		if (!this.args.dryRun) {
+			await spawn('npx', ['dotenv-vault', 'login', '--yes'], noisySpawnCfg);
+			await spawn('npx', ['dotenv-vault', 'open', '--yes'], noisySpawnCfg);
+		}
+		log(chalk.gray('Pulling envs.'));
+		await Utilities.pull({ dryRun: this.args.dryRun });
 	}
 }
 
@@ -84,9 +97,14 @@ class Setup {
 class Push {
 	constructor(args) {
 		this.args = args;
+
 		(async () => {
 			log(chalk.green('Pushing envs.'));
-			await Utilities.push();
+			await Utilities.push({ dryRun: this.args.dryRun });
+
+			if (this.args.dryRun) {
+				log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			}
 		})();
 	}
 }
@@ -97,9 +115,32 @@ class Push {
 class Pull {
 	constructor(args) {
 		this.args = args;
+
 		(async () => {
 			log(chalk.green('Pulling envs.'));
-			await Utilities.pull();
+			await Utilities.pull({ dryRun: this.args.dryRun });
+
+			if (this.args.dryRun) {
+				log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			}
+		})();
+	}
+}
+
+/**
+ * Build command.
+ */
+class Build {
+	constructor(args) {
+		this.args = args;
+
+		(async () => {
+			log(chalk.green('Building envs.'));
+			await Utilities.build({ dryRun: this.args.dryRun });
+
+			if (this.args.dryRun) {
+				log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			}
 		})();
 	}
 }
@@ -108,21 +149,40 @@ class Pull {
  * Misc. utilities.
  */
 class Utilities {
-	static async push() {
+	static async push(opts = { dryRun: false }) {
 		for (const [envName, envFile] of Object.entries(envFiles)) {
 			if (!fs.existsSync(envFile)) {
-				await fsp.mkdir(path.dirname(envFile), { recursive: true });
-				await fsp.writeFile(envFile, '# ' + envName);
+				log(chalk.gray('Creating file for `' + envName + '` env.'));
+				if (!opts.dryRun) {
+					await fsp.mkdir(path.dirname(envFile), { recursive: true });
+					await fsp.writeFile(envFile, '# ' + envName);
+				}
 			}
-			await spawn('npx', ['dotenv-vault', 'push', envName, envFile, '--yes'], noisySpawnCfg);
+			log(chalk.gray('Running `dotenv-vault push` for `' + envName + '` env.'));
+			if (!opts.dryRun) {
+				await spawn('npx', ['dotenv-vault', 'push', envName, envFile, '--yes'], noisySpawnCfg);
+			}
 		}
 	}
 
-	static async pull() {
+	static async pull(opts = { dryRun: false }) {
 		for (const [envName, envFile] of Object.entries(envFiles)) {
-			await fsp.mkdir(path.dirname(envFile), { recursive: true });
-			await spawn('npx', ['dotenv-vault', 'pull', envName, envFile, '--yes'], noisySpawnCfg);
-			await fsp.rm(envFile + '.previous', { force: true });
+			log(chalk.gray('Running `dotenv-vault pull` for `' + envName + '` env.'));
+			if (!opts.dryRun) {
+				await fsp.mkdir(path.dirname(envFile), { recursive: true });
+				await spawn('npx', ['dotenv-vault', 'pull', envName, envFile, '--yes'], noisySpawnCfg);
+			}
+			log(chalk.gray('Deleting previous file for `' + envName + '` env.'));
+			if (!opts.dryRun) {
+				await fsp.rm(envFile + '.previous', { force: true });
+			}
+		}
+	}
+
+	static async build(opts = { dryRun: false }) {
+		log(chalk.gray('Running `dotenv-vault build`.'));
+		if (!opts.dryRun) {
+			await spawn('npx', ['dotenv-vault', 'build', '--yes'], noisySpawnCfg);
 		}
 	}
 }
@@ -145,11 +205,58 @@ class Utilities {
 					default: false,
 					description: 'Set up *new* envs?',
 				},
+				dryRun: {
+					type: 'boolean',
+					requiresArg: false,
+					demandOption: false,
+					default: false,
+					description: 'Dry run?',
+				},
 			},
 			(args) => new Setup(args),
 		)
-		.command('push', 'Pushes to dotenv vault.', {}, (args) => new Push(args))
-		.command('pull', 'Pulls from dotenv vault.', {}, (args) => new Pull(args))
+		.command(
+			'push',
+			'Pushes to dotenv vault.',
+			{
+				dryRun: {
+					type: 'boolean',
+					requiresArg: false,
+					demandOption: false,
+					default: false,
+					description: 'Dry run?',
+				},
+			},
+			(args) => new Push(args),
+		)
+		.command(
+			'pull',
+			'Pulls from dotenv vault.',
+			{
+				dryRun: {
+					type: 'boolean',
+					requiresArg: false,
+					demandOption: false,
+					default: false,
+					description: 'Dry run?',
+				},
+			},
+			(args) => new Pull(args),
+		)
+		.command(
+			'build',
+			'Builds dotenv vault.',
+			{
+				dryRun: {
+					type: 'boolean',
+					requiresArg: false,
+					demandOption: false,
+					default: false,
+					description: 'Dry run?',
+				},
+			},
+			(args) => new Build(args),
+		)
 		.strict()
 		.help()
 		.parse();

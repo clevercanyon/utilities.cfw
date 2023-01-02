@@ -25,12 +25,10 @@ export default async ({ projDir, args }) => {
 	/**
 	 * Initializes vars.
 	 */
-	args = args || {}; // @todo Remove.
-	// ↑ Only here while we update the updaters.
+	const __dirname = dirname(import.meta.url);
 
 	const projsDir = path.dirname(projDir);
-	const __dirname = dirname(import.meta.url);
-	const tmpDir = path.resolve(__dirname, '../../../..');
+	const thisS6nDir = path.resolve(__dirname, '../../../..');
 
 	const pkgFile = path.resolve(projDir, './package.json');
 	const pkg = JSON.parse((await fsp.readFile(pkgFile)).toString());
@@ -65,7 +63,7 @@ export default async ({ projDir, args }) => {
 	for (const relPath of ['./dev/.files']) {
 		await fsp.rm(path.resolve(projDir, relPath), { recursive: true, force: true });
 		await fsp.mkdir(path.resolve(projDir, relPath), { recursive: true });
-		await fsp.cp(path.resolve(tmpDir, relPath), path.resolve(projDir, relPath), { recursive: true });
+		await fsp.cp(path.resolve(thisS6nDir, relPath), path.resolve(projDir, relPath), { recursive: true });
 	}
 	await fsp.chmod(path.resolve(projDir, './dev/.files/bin/update.js'), 0o700);
 
@@ -100,9 +98,9 @@ export default async ({ projDir, args }) => {
 			const oldFileContents = (await fsp.readFile(path.resolve(projDir, relPath))).toString();
 			const oldFileMatches = customRegexp.exec(oldFileContents); // See: `./data/custom-regexp.js`.
 			const oldFileCustomCode = oldFileMatches ? oldFileMatches[2] : ''; // We'll preserve any custom code.
-			newFileContents = (await fsp.readFile(path.resolve(tmpDir, relPath))).toString().replace(customRegexp, ($_, $1, $2, $3) => $1 + oldFileCustomCode + $3);
+			newFileContents = (await fsp.readFile(path.resolve(thisS6nDir, relPath))).toString().replace(customRegexp, ($_, $1, $2, $3) => $1 + oldFileCustomCode + $3);
 		} else {
-			newFileContents = (await fsp.readFile(path.resolve(tmpDir, relPath))).toString();
+			newFileContents = (await fsp.readFile(path.resolve(thisS6nDir, relPath))).toString();
 		}
 		await fsp.mkdir(path.dirname(path.resolve(projDir, relPath)), { recursive: true });
 		await fsp.writeFile(path.resolve(projDir, relPath), newFileContents);
@@ -121,9 +119,9 @@ export default async ({ projDir, args }) => {
 					const oldFileContents = (await fsp.readFile(path.resolve(projDir, relPath))).toString();
 					const oldFileMatches = customRegexp.exec(oldFileContents); // See: `./data/custom-regexp.js`.
 					const oldFileCustomCode = oldFileMatches ? oldFileMatches[2] : ''; // We'll preserve any custom code.
-					newFileContents = (await fsp.readFile(path.resolve(tmpDir, relPath))).toString().replace(customRegexp, ($_, $1, $2, $3) => $1 + oldFileCustomCode + $3);
+					newFileContents = (await fsp.readFile(path.resolve(thisS6nDir, relPath))).toString().replace(customRegexp, ($_, $1, $2, $3) => $1 + oldFileCustomCode + $3);
 				} else {
-					newFileContents = (await fsp.readFile(path.resolve(tmpDir, relPath))).toString();
+					newFileContents = (await fsp.readFile(path.resolve(thisS6nDir, relPath))).toString();
 				}
 				await fsp.mkdir(path.dirname(path.resolve(projDir, relPath)), { recursive: true });
 				await fsp.writeFile(path.resolve(projDir, relPath), newFileContents);
@@ -142,7 +140,7 @@ export default async ({ projDir, args }) => {
 			continue; // Locked 🔒.
 		}
 		if (!fs.existsSync(path.resolve(projDir, relPath))) {
-			await fsp.cp(path.resolve(tmpDir, relPath), path.resolve(projDir, relPath));
+			await fsp.cp(path.resolve(thisS6nDir, relPath), path.resolve(projDir, relPath));
 		}
 	}
 
@@ -156,10 +154,10 @@ export default async ({ projDir, args }) => {
 			continue; // Locked 🔒.
 		}
 		if (!fs.existsSync(path.resolve(projDir, relPath))) {
-			await fsp.cp(path.resolve(tmpDir, relPath), path.resolve(projDir, relPath));
+			await fsp.cp(path.resolve(thisS6nDir, relPath), path.resolve(projDir, relPath));
 		}
 		const json = JSON.parse((await fsp.readFile(path.resolve(projDir, relPath))).toString());
-		const updatesFile = path.resolve(tmpDir, './dev/.files/bin/updater/data', relPath, './updates.json');
+		const updatesFile = path.resolve(thisS6nDir, './dev/.files/bin/updater/data', relPath, './updates.json');
 
 		if (fs.existsSync(updatesFile)) {
 			mc.patch(json, JSON.parse((await fsp.readFile(updatesFile)).toString()));
