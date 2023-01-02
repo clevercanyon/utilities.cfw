@@ -37,7 +37,7 @@
 			"update:project:repos": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos",
 			"update:project:repos:pkgs": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos --pkgs",
 
-			"update:projects": "./dev/.files/bin/update.js projects",
+			"update:projects::": "./dev/.files/bin/update.js projects",
 			"update:projects::dotfiles": "./dev/.files/bin/update.js projects --run update:dotfiles",
 			"update:projects::project": "./dev/.files/bin/update.js projects --run update:project",
 			"update:projects::project:repos": "./dev/.files/bin/update.js projects --run update:project:repos",
