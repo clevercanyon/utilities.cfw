@@ -84,8 +84,8 @@ const coreProjectsOrder = [
 ];
 
 /**
- * NOTE: All of these commands _must_ be performed interactively. Please eview the Yargs configuration below for further
- * details. At this time, there are no exceptions. Every update _must_ occur interactively.
+ * NOTE: All of these commands _must_ be performed interactively. Please review the Yargs configuration below for
+ * further details. At this time, there are no exceptions. Every update _must_ occur interactively.
  */
 
 /**

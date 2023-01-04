@@ -47,7 +47,7 @@ const envFiles = {
 const c10nEmoji = '🦊'; // Clever Canyon’s adopted emoji icon.
 
 /**
- * NOTE: Most of these commands _must_ be performed interactively. Please eview the Yargs configuration below for
+ * NOTE: Most of these commands _must_ be performed interactively. Please review the Yargs configuration below for
  * further details. At this time, only the `decrypt` command is allowed noninteractively, and _only_ noninteractively.
  */
 

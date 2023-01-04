@@ -44,7 +44,7 @@ const c10nEmoji = '🦊'; // Clever Canyon’s adopted emoji icon.
 
 /**
  * NOTE: All commands in this file must support both interactive and noninteractive sessions. Installations occur across
- * a variety of platforms and environments. Therefore, it's important to excercise caution before making changes.
+ * a variety of platforms and environments. Therefore, it's important to exercise caution before making changes.
  */
 
 /**
