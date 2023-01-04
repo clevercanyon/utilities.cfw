@@ -1,6 +1,6 @@
 # `.gitignore` and Related Files
 
-When changing ignore files, please consult the following files:
+When changing ignore files, please review:
 
 -   `@clevercanyon/skeleton/.gitignore`
 -   `@clevercanyon/skeleton/.npmignore`

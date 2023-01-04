@@ -1,18 +1,37 @@
-# Requirements
+# Prerequisites
+
+## macOS
+
+macOS is required to work as a Clever Canyon developer. An M1 Pro chipset, or better, is strongly suggested. We no longer support the older intel chips in any of our supporting documentation. Also, please update to macOS Ventura or higher.
 
 ## Homebrew for macOS
 
 ```bash
 $ xcode-select --install
 $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-$ brew install mas # macOS app store extensions.
+$ brew install mas # macOS app store for Homebrew. Not required, but recommended.
 ```
+
+_**Note:** On M1 MacBooks, Homebrew installs into `/opt/homebrew` instead of `/usr/local`. If you have a `PATH` configured that’s expecting to find binaries in `/usr/local/bin` you will need to update those to `/opt/homebrew/bin` instead._
 
 ## Git via Homebrew
 
 ```bash
 $ brew install git
+$ brew install git-lfs # Not required, but recommended.
+$ brew install gh hub # Not required, but recommended time-savers.
 ```
+
+`git lfs` is for large file storage. See: [git-lfs.com](https://git-lfs.com).
+
+Regarding `gh` vs. `hub`. We recommend and use them both as time-savers.
+
+-   `gh`: <https://cli.github.com>
+    -   <https://github.com/cli/cli/blob/trunk/docs/gh-vs-hub.md>
+-   `hub`: <https://github.com/github/hub>
+    -   <https://github.com/github/hub#aliasing>
+
+Try installing `hub` and adding [`eval "$(hub alias -s)"`](https://github.com/github/hub#aliasing) to your `~/.profile`.
 
 ## `n`: Interactively Manage Node Versions
 
@@ -36,13 +55,13 @@ $ brew install n; # Includes NPM + corepack.
 
 ### Step 3: Customize `n` for Node Version Management
 
-Set the `N_PREFIX` location to `~/.node` (recommended) by adding this line to your `~/.bash_profile`, `~/.zprofile`, or the like.
+Set the `N_PREFIX` location to `~/.node` (recommended) by adding this line to your macOS `~/.profile`.
 
 ```bash
 export N_PREFIX=~/.node;
 ```
 
-Add `~/.node/bin` to your `PATH` by adding these lines to your `~/.bash_profile`, `~/.zprofile`, or the like.
+Add `~/.node/bin` to your `PATH` by adding these lines to your macOS `~/.profile`.
 
 ```bash
 PATH=~/.node/bin:"${PATH}";
@@ -71,10 +90,16 @@ These environment variables authenticate you as a Clever Canyon developer.
 
 -   Contact `@jaswrks` to request your credentials.
 
-Add these lines to your `~/.bash_profile`, `~/.zprofile`, or the like.
+Please add the following lines to your macOS `~/.profile`.
 
 ```bash
 export C10N_NPM_TOKEN='your_token_goes_here';
 export C10N_GITHUB_TOKEN='your_token_goes_here';
 export C10N_CLOUDFLARE_TOKEN='your_token_goes_here';
 ```
+
+## Dotenv Vault Account Access
+
+You will also need access to Clever Canyon’s [Dotenv Vault](https://www.dotenv.org).
+
+-   Contact `@jaswrks` to request account login credentials.

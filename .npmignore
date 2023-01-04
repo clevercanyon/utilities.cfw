@@ -40,7 +40,7 @@
 
 # IntelliJ.
 
-.idea/
+.idea
 
 # Sublime.
 
@@ -53,7 +53,7 @@
 
 # VS Code.
 
-.vscode/
+.vscode
 *.code-workspace
 
 # NPM.
@@ -63,27 +63,27 @@ npm-debug.log
 # Dists (must exclude).
 # May contain `APP_` env vars.
 
-dist/
+dist
 
 # Yarn.
 
-.yarn/
+.yarn
 
 # Vendor.
 
-vendor/
+vendor
 
 # NodeJS.
 
-node_modules/
+node_modules
 
 # JSPM.
 
-jspm_packages/
+jspm_packages
 
 # Bower.
 
-bower_components/
+bower_components
 
 # Dotenv.
 
@@ -95,47 +95,47 @@ bower_components/
 
 # TypeScript.
 
-typings/
-.tscache/
+typings
+.tscache
 *.tsbuildinfo
 
 # Vite.
 
-.vite/
+.vite
 
 # Wrangler.
 
-.wrangler/
+.wrangler
 .dev.vars
 .dev.vars.*
 
 # Rollup.
 
-.rollup/
+.rollup
 
 # Webpack.
 
-.webpack/
+.webpack
 
 # Linaria.
 
-.linaria-cache/
+.linaria-cache
 
 # SASS.
 
-.sass-cache/
+.sass-cache
 
 # Docker.
 
-.docker/
+.docker
 
 # Vagrant.
 
-.vagrant/
+.vagrant
 
 # Elastic Beanstalk.
 
-.elasticbeanstalk/
+.elasticbeanstalk
 
 # CTAGs.
 
@@ -144,23 +144,23 @@ typings/
 
 # VCS.
 
-.git/
+.git
 
-.svn/
-_svn/
+.svn
+_svn
 .svnignore
 
-CVS/
+CVS
 .cvsignore
 
-.bzr/
+.bzr
 .bzrignore
 
-.hg/
+.hg
 .hgignore
 
-SCCS/
-RCS/
+SCCS
+RCS
 
 # PC files.
 
@@ -170,7 +170,7 @@ Desktop.ini
 
 # PC directories.
 
-$RECYCLE.BIN/
+$RECYCLE.BIN
 
 # Mac files.
 
@@ -186,18 +186,18 @@ Icon?
 
 # Mac directories.
 
-.apdisk/
-*.icloud/
-.fseventsd/
-.AppleDB/
-.AppleDesktop/
-.AppleDouble/
-.Trashes/
-.TemporaryItems/
-.Spotlight-V100/
-.DocumentRevisions-V100/
-Network Trash Folder/
-Temporary Items/
+.apdisk
+*.icloud
+.fseventsd
+.AppleDB
+.AppleDesktop
+.AppleDouble
+.Trashes
+.TemporaryItems
+.Spotlight-V100
+.DocumentRevisions-V100
+Network Trash Folder
+Temporary Items
 
 ##
 # These are in addition to what we have in `.gitignore`.
@@ -205,28 +205,28 @@ Temporary Items/
 
 # Dev.
 
-dev/
+dev
 
 # Docs.
 
-doc/
-docs/
+doc
+docs
 
 # Tests.
 
-test/
-tests/
+test
+tests
 
 # Examples.
 
-example/
-examples/
+example
+examples
 
 # Benchmarks.
 
-bench/
-benchmark/
-benchmarks/
+bench
+benchmark
+benchmarks
 
 # Dotenv.
 
@@ -235,11 +235,11 @@ benchmarks/
 
 # GitHub.
 
-.github/
+.github
 
 # Dists.
 
-!dist/
+!dist
 
 # Source.
 
