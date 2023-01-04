@@ -1,142 +1,128 @@
 {
-    "private": false,
-    "publishConfig": {
-        "access": "restricted"
-    },
-    "version": "1.0.25",
-    "license": "GPL-3.0-or-later",
-    "name": "@clevercanyon/utilities.cfw",
-    "description": "Another great project by Clever Canyon.",
-    "repository": "https://github.com/clevercanyon/utilities.cfw",
-    "homepage": "https://github.com/clevercanyon/utilities.cfw#readme",
-    "bugs": "https://github.com/clevercanyon/utilities.cfw/issues",
-    "funding": "https://github.com/sponsors/clevercanyon",
-    "keywords": [
-        "clevercanyon"
-    ],
-    "author": {
-        "name": "Clever Canyon",
-        "url": "https://clevercanyon.com"
-    },
-    "contributors": [],
-    "type": "module",
-    "files": [
-        "/dist"
-    ],
-    "bin": {},
-    "imports": {},
-    "exports": {
-        ".": {
-            "import": "./dist/index.js",
-            "require": "./dist/index.cjs",
-            "types": "./dist/types/index.d.ts"
-        },
-        "./cfw": {
-            "import": "./dist/cfw.js",
-            "require": "./dist/cfw.cjs",
-            "types": "./dist/types/cfw.d.ts"
-        },
-        "./geo": {
-            "import": "./dist/geo.js",
-            "require": "./dist/geo.cjs",
-            "types": "./dist/types/geo.d.ts"
-        }
-    },
-    "sideEffects": [
-        "./src/*.{html,scss,css,tsx,ts,jsx,mjs,js}"
-    ],
-    "module": "./dist/index.js",
-    "main": "./dist/index.cjs",
-    "browser": "",
-    "unpkg": "./dist/index.js",
-    "types": "./dist/types/index.d.ts",
-    "typesVersions": {
-        ">=3.1": {
-            "./*": [
-                "./dist/types/*"
-            ]
-        }
-    },
-    "peerDependencies": {
-        "@clevercanyon/utilities": "^1.0.57",
-        "@cloudflare/kv-asset-handler": "^0.2.0"
-    },
-    "peerDependenciesMeta": {},
-    "bundleDependencies": [],
-    "devDependencies": {
-        "@clevercanyon/skeleton-dev-deps": "^1.0.52",
-        "@cloudflare/workers-types": "^4.20221111.1"
-    },
-    "overrides": {},
-    "cpu": [
-        "x64",
-        "arm64"
-    ],
-    "os": [
-        "darwin",
-        "linux"
-    ],
-    "engines": {
-        "node": "^19.2.0",
-        "npm": "^8.19.3"
-    },
-    "scripts": {
-        "dev:": "npx vite dev",
-        "dev:help": "npx vite dev --help",
-        "dev:mode": "npx vite dev --mode=dev",
-        "preview:": "npx vite preview",
-        "preview:help": "npx vite preview --help",
-        "preview:dev": "npx vite preview --mode=dev",
-        "build:": "npx vite build",
-        "build:help": "npx vite build --help",
-        "build:dev": "npx vite build --mode=dev",
-        "build:ci": "npx vite build --mode=ci",
-        "build:stage": "npx vite build --mode=stage",
-        "build:prod": "npx vite build --mode=prod",
-        "postbuild:": "npx tsc --emitDeclarationOnly",
-        "postbuild:dev": "npx tsc --emitDeclarationOnly",
-        "postbuild:ci": "npx tsc --emitDeclarationOnly",
-        "postbuild:stage": "npx tsc --emitDeclarationOnly",
-        "postbuild:prod": "npx tsc --emitDeclarationOnly",
-        "envs:": "./dev/.files/bin/envs.js",
-        "envs:help": "./dev/.files/bin/envs.js --help",
-        "envs:push": "./dev/.files/bin/envs.js push",
-        "envs:pull": "./dev/.files/bin/envs.js pull",
-        "envs:keys": "./dev/.files/bin/envs.js keys",
-        "envs:encrypt": "./dev/.files/bin/envs.js encrypt",
-        "envs:decrypt": "./dev/.files/bin/envs.js decrypt",
-        "envs:setup": "./dev/.files/bin/envs.js setup",
-        "envs:setup:new": "./dev/.files/bin/envs.js setup --new",
-        "install:": "./dev/.files/bin/install.js",
-        "install:help": "./dev/.files/bin/install.js --help",
-        "install:project": "npm ci --ignore-scripts && ./dev/.files/bin/install.js project",
-        "update:": "./dev/.files/bin/update.js",
-        "update:help": "./dev/.files/bin/update.js --help",
-        "update:dotfiles": "./dev/.files/bin/update.js dotfiles",
-        "update:project": "npm run update:dotfiles && ./dev/.files/bin/update.js project",
-        "update:project:repos": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos",
-        "update:project:repos:pkgs": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos --pkgs",
-        "update:projects::": "./dev/.files/bin/update.js projects",
-        "update:projects::help": "./dev/.files/bin/update.js projects --help",
-        "update:projects::dotfiles": "./dev/.files/bin/update.js projects --run update:dotfiles",
-        "update:projects::project": "./dev/.files/bin/update.js projects --run update:project",
-        "update:projects::project:repos": "./dev/.files/bin/update.js projects --run update:project:repos",
-        "update:projects::project:repos:pkgs": "./dev/.files/bin/update.js projects --run update:project:repos:pkgs",
-        "wrangler:": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler",
-        "wrangler:help": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler --help"
-    },
-    "workspaces": [],
-    "config": {
-        "c10n": {
-            "&": {
-                "dotfiles": {
-                    "lock": []
-                },
-                "build": {
-                    "appType": "cma",
-                    "targetEnv": "cfw"
-                }
-            }
-        }
-    }
+	"private": false,
+	"publishConfig": {
+		"access": "restricted"
+	},
+	"version": "1.0.25",
+	"license": "GPL-3.0-or-later",
+	"name": "@clevercanyon/utilities.cfw",
+	"description": "Another great project by Clever Canyon.",
+	"repository": "https://github.com/clevercanyon/utilities.cfw",
+	"homepage": "https://github.com/clevercanyon/utilities.cfw#readme",
+	"bugs": "https://github.com/clevercanyon/utilities.cfw/issues",
+	"funding": "https://github.com/sponsors/clevercanyon",
+	"keywords": ["clevercanyon"],
+	"author": {
+		"name": "Clever Canyon",
+		"url": "https://clevercanyon.com"
+	},
+	"contributors": [],
+	"type": "module",
+	"files": ["/dist"],
+	"bin": {},
+	"imports": {},
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs",
+			"types": "./dist/types/index.d.ts"
+		},
+		"./cfw": {
+			"import": "./dist/cfw.js",
+			"require": "./dist/cfw.cjs",
+			"types": "./dist/types/cfw.d.ts"
+		},
+		"./geo": {
+			"import": "./dist/geo.js",
+			"require": "./dist/geo.cjs",
+			"types": "./dist/types/geo.d.ts"
+		}
+	},
+	"sideEffects": ["./src/*.{html,scss,css,tsx,ts,jsx,mjs,js}"],
+	"module": "./dist/index.js",
+	"main": "./dist/index.cjs",
+	"browser": "",
+	"unpkg": "./dist/index.js",
+	"types": "./dist/types/index.d.ts",
+	"typesVersions": {
+		">=3.1": {
+			"./*": ["./dist/types/*"]
+		}
+	},
+	"peerDependencies": {
+		"@clevercanyon/utilities": "^1.0.57",
+		"@cloudflare/kv-asset-handler": "^0.2.0"
+	},
+	"peerDependenciesMeta": {},
+	"bundleDependencies": [],
+	"devDependencies": {
+		"@clevercanyon/skeleton-dev-deps": "^1.0.52",
+		"@cloudflare/workers-types": "^4.20221111.1"
+	},
+	"overrides": {},
+	"cpu": ["x64", "arm64"],
+	"os": ["darwin", "linux"],
+	"engines": {
+		"node": "^19.2.0",
+		"npm": "^8.19.3"
+	},
+	"scripts": {
+		"dev:": "npx vite dev",
+		"dev:help": "npx vite dev --help",
+		"dev:mode": "npx vite dev --mode=dev",
+		"preview:": "npx vite preview",
+		"preview:help": "npx vite preview --help",
+		"preview:dev": "npx vite preview --mode=dev",
+		"build:": "npx vite build",
+		"build:help": "npx vite build --help",
+		"build:dev": "npx vite build --mode=dev",
+		"build:ci": "npx vite build --mode=ci",
+		"build:stage": "npx vite build --mode=stage",
+		"build:prod": "npx vite build --mode=prod",
+		"postbuild:": "npx tsc --emitDeclarationOnly",
+		"postbuild:dev": "npx tsc --emitDeclarationOnly",
+		"postbuild:ci": "npx tsc --emitDeclarationOnly",
+		"postbuild:stage": "npx tsc --emitDeclarationOnly",
+		"postbuild:prod": "npx tsc --emitDeclarationOnly",
+		"envs:": "./dev/.files/bin/envs.js",
+		"envs:help": "./dev/.files/bin/envs.js --help",
+		"envs:push": "./dev/.files/bin/envs.js push",
+		"envs:pull": "./dev/.files/bin/envs.js pull",
+		"envs:keys": "./dev/.files/bin/envs.js keys",
+		"envs:encrypt": "./dev/.files/bin/envs.js encrypt",
+		"envs:decrypt": "./dev/.files/bin/envs.js decrypt",
+		"envs:setup": "./dev/.files/bin/envs.js setup",
+		"envs:setup:new": "./dev/.files/bin/envs.js setup --new",
+		"install:": "./dev/.files/bin/install.js",
+		"install:help": "./dev/.files/bin/install.js --help",
+		"install:project": "npm ci --ignore-scripts && ./dev/.files/bin/install.js project",
+		"update:": "./dev/.files/bin/update.js",
+		"update:help": "./dev/.files/bin/update.js --help",
+		"update:dotfiles": "./dev/.files/bin/update.js dotfiles",
+		"update:project": "npm run update:dotfiles && ./dev/.files/bin/update.js project",
+		"update:project:repos": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos",
+		"update:project:repos:pkgs": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos --pkgs",
+		"update:projects::": "./dev/.files/bin/update.js projects",
+		"update:projects::help": "./dev/.files/bin/update.js projects --help",
+		"update:projects::dotfiles": "./dev/.files/bin/update.js projects --run update:dotfiles",
+		"update:projects::project": "./dev/.files/bin/update.js projects --run update:project",
+		"update:projects::project:repos": "./dev/.files/bin/update.js projects --run update:project:repos",
+		"update:projects::project:repos:pkgs": "./dev/.files/bin/update.js projects --run update:project:repos:pkgs",
+		"wrangler:": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler",
+		"wrangler:help": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler --help"
+	},
+	"workspaces": [],
+	"config": {
+		"c10n": {
+			"&": {
+				"dotfiles": {
+					"lock": []
+				},
+				"build": {
+					"appType": "cma",
+					"targetEnv": "cfw"
+				}
+			}
+		}
+	}
 }
