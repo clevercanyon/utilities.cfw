@@ -8,16 +8,19 @@
  */
 /* eslint-env es2021, node */
 
+import _ from 'lodash';
+
 import fs from 'node:fs';
 import path from 'node:path';
-
-import _ from 'lodash';
-import chalk from 'chalk';
 import { dirname } from 'desm';
-import spawn from 'spawn-please';
+
+import coloredBox from 'boxen';
+import chalk, { supportsColor } from 'chalk';
 
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+
+import spawn from 'spawn-please';
 
 const __dirname = dirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
@@ -25,15 +28,19 @@ const binDir = path.resolve(__dirname, '../../../dev/.files/bin');
 
 const { log } = console;
 const echo = process.stdout.write.bind(process.stdout);
-const isTTY = process.stdout.isTTY || process.env.IS_PARENT_TTY ? true : false;
+
+const isParentTTY = process.stdout.isTTY ? true : false;
+const isTTY = process.stdout.isTTY || process.env.PARENT_IS_TTY ? true : false;
 
 const noisySpawnCfg = {
 	cwd: projDir,
-	env: { ...process.env, IS_PARENT_TTY: isTTY },
+	env: { ...process.env, PARENT_IS_TTY: isTTY },
 	stdout: (buffer) => echo(chalk.blue(buffer.toString())),
 	stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
 };
 const quietSpawnCfg = _.pick(noisySpawnCfg, ['cwd', 'env']);
+
+const c10nEmoji = '🦊'; // Clever Canyon’s adopted emoji icon.
 
 /**
  * NOTE: All commands in this file must support both interactive and noninteractive sessions. Installations occur across
@@ -61,14 +68,19 @@ class Project {
 			// Now, we will allow a single `package-lock.json` change to exist as only difference.
 			// e.g., In case of `npm install` having been run vs. `npm clean-install`, which does better.
 			if ('M package-lock.json' !== u.gitStatus({ short: true })) {
-				throw new Error(chalk.red('Git repo is dirty.'));
+				throw new Error('Git repo is dirty.');
 			}
 		}
 
-		if (!fs.existsSync(path.resolve(projDir, './node_modules'))) {
+		if (fs.existsSync(path.resolve(projDir, './package-lock.json'))) {
 			log(chalk.green('Running a clean install of NPM packages.'));
 			if (!this.args.dryRun) {
 				await u.npmCleanInstall();
+			}
+		} else {
+			log(chalk.green('Running an install of NPM packages.'));
+			if (!this.args.dryRun) {
+				await u.npmInstall();
 			}
 		}
 
@@ -84,7 +96,7 @@ class Project {
 			await u.viteBuild({ mode: this.args.mode });
 		}
 
-		log(chalk.green('Project install complete.'));
+		log(await u.finale('Success', 'Project install complete.'));
 	}
 }
 
@@ -144,7 +156,7 @@ class u {
 			}
 			for (const key of keys) {
 				if (!key) {
-					throw new Error(chalk.red('Missing env key(s).'));
+					throw new Error('Missing env key(s).');
 				}
 			}
 			await spawn(path.resolve(binDir, './envs.js'), ['decrypt', '--keys', ...keys], noisySpawnCfg);
@@ -165,8 +177,12 @@ class u {
 		return process.env.npm_lifecycle_script || ''; // NPM script value.
 	}
 
+	static async npmInstall() {
+		await spawn('npm', ['install', '--ignore-scripts', '--silent'], quietSpawnCfg);
+	}
+
 	static async npmCleanInstall() {
-		await spawn('npm', ['ci', '--include=dev', '--ignore-scripts', '--silent'], quietSpawnCfg);
+		await spawn('npm', ['ci', '--ignore-scripts', '--silent'], quietSpawnCfg);
 	}
 
 	/*
@@ -176,6 +192,50 @@ class u {
 	static async viteBuild(opts = { mode: 'prod' }) {
 		await spawn('npx', ['vite', 'build', '--mode', opts.mode], noisySpawnCfg);
 		await spawn('npx', ['tsc'], noisySpawnCfg); // TypeScript types.
+	}
+
+	/**
+	 * Error utilities.
+	 */
+	static async error(title, text) {
+		if (!isParentTTY || !supportsColor?.has16m) {
+			return chalk.red(text); // No box.
+		}
+		return coloredBox(chalk.red(text), {
+			margin: 0,
+			padding: 0.75,
+			textAlignment: 'left',
+
+			dimBorder: false,
+			borderStyle: 'round',
+			borderColor: '#551819',
+			backgroundColor: '',
+
+			titleAlignment: 'left',
+			title: '🙈 ' + chalk.redBright('✖ ' + title),
+		});
+	}
+
+	/**
+	 * Finale utilities.
+	 */
+	static async finale(title, text) {
+		if (!isParentTTY || !supportsColor?.has16m) {
+			return chalk.green(text); // No box.
+		}
+		return coloredBox(chalk.green(text), {
+			margin: 0,
+			padding: 0.75,
+			textAlignment: 'left',
+
+			dimBorder: false,
+			borderStyle: 'round',
+			borderColor: '#445d2c',
+			backgroundColor: '',
+
+			titleAlignment: 'left',
+			title: c10nEmoji + ' ' + chalk.greenBright('✓ ' + title),
+		});
 	}
 }
 
@@ -215,6 +275,11 @@ class u {
 			handler: async (args) => {
 				await new Project(args).run();
 			},
+		})
+		.fail(async (message, error /* , yargs */) => {
+			if (error.stack && typeof error.stack === 'string') log(chalk.gray(error.stack));
+			log(await u.error('Failure', error ? error.toString() : message));
+			process.exit(1);
 		})
 		.strict()
 		.parse();

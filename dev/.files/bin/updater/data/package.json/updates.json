@@ -49,7 +49,6 @@
 			"install:": "./dev/.files/bin/install.js",
 			"install:help": "./dev/.files/bin/install.js --help",
 			"install:project": "npm ci --ignore-scripts && ./dev/.files/bin/install.js project",
-			"postinstall": "./dev/.files/bin/install.js project",
 
 			"update:": "./dev/.files/bin/update.js",
 			"update:help": "./dev/.files/bin/update.js --help",

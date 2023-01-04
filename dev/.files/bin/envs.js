@@ -10,27 +10,30 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
-import desm from 'desm';
-import chalk from 'chalk';
-import spawn from 'spawn-please';
+import coloredBox from 'boxen';
+import chalk, { supportsColor } from 'chalk';
 
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
+import spawn from 'spawn-please';
 import dotenvVaultCore from 'dotenv-vault-core';
 
-const __dirname = desm(import.meta.url);
+const __dirname = dirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
 
 const { log } = console;
 const echo = process.stdout.write.bind(process.stdout);
-const isTTY = process.stdout.isTTY || process.env.IS_PARENT_TTY ? true : false;
+
+const isParentTTY = process.stdout.isTTY ? true : false;
+const isTTY = process.stdout.isTTY || process.env.PARENT_IS_TTY ? true : false;
 
 const noisySpawnCfg = {
 	cwd: projDir,
-	env: { ...process.env, IS_PARENT_TTY: isTTY },
+	env: { ...process.env, PARENT_IS_TTY: isTTY },
 	stdout: (buffer) => echo(chalk.blue(buffer.toString())),
 	stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
 };
@@ -41,6 +44,7 @@ const envFiles = {
 	stage: path.resolve(projDir, './dev/.envs/.env.stage'),
 	prod: path.resolve(projDir, './dev/.envs/.env.prod'),
 };
+const c10nEmoji = '🦊'; // Clever Canyon’s adopted emoji icon.
 
 /**
  * NOTE: Most of these commands _must_ be performed interactively. Please eview the Yargs configuration below for
@@ -85,6 +89,8 @@ class Setup {
 
 		log(chalk.gray('Encrypting all envs.'));
 		await u.encrypt({ dryRun: this.args.dryRun });
+
+		log(u.finale('Success', 'New setup complete.'));
 	}
 
 	async setup() {
@@ -101,6 +107,7 @@ class Setup {
 			log(chalk.gray('Pulling all envs.'));
 			await u.pull({ dryRun: this.args.dryRun });
 		}
+		log(u.finale('Success', 'Setup complete.'));
 	}
 }
 
@@ -115,6 +122,8 @@ class Push {
 	async run() {
 		log(chalk.green('Pushing all envs.'));
 		await u.push({ dryRun: this.args.dryRun });
+
+		log(u.finale('Success', 'Push complete.'));
 
 		if (this.args.dryRun) {
 			log(chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -134,6 +143,8 @@ class Pull {
 		log(chalk.green('Pulling all envs.'));
 		await u.pull({ dryRun: this.args.dryRun });
 
+		log(u.finale('Success', 'Pull complete.'));
+
 		if (this.args.dryRun) {
 			log(chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
@@ -151,6 +162,8 @@ class Keys {
 	async run() {
 		log(chalk.green('Retrieving keys for all envs.'));
 		await u.keys({ dryRun: this.args.dryRun });
+
+		log(u.finale('Success', '↑ Here they are.'));
 
 		if (this.args.dryRun) {
 			log(chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -170,6 +183,8 @@ class Encrypt {
 		log(chalk.green('Encrypting all envs.'));
 		await u.encrypt({ dryRun: this.args.dryRun });
 
+		log(u.finale('Success', 'Encryption complete.'));
+
 		if (this.args.dryRun) {
 			log(chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
@@ -188,6 +203,8 @@ class Decrypt {
 		log(chalk.green('Decrypting env(s).'));
 		await u.decrypt({ keys: this.args.keys, dryRun: this.args.dryRun });
 
+		log(u.finale('Success', 'Decryption complete.'));
+
 		if (this.args.dryRun) {
 			log(chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
@@ -195,7 +212,7 @@ class Decrypt {
 }
 
 /**
- * Misc. utilities.
+ * Utilities.
  */
 class u {
 	/*
@@ -272,7 +289,7 @@ class u {
 			const envFile = envFiles[envName] || '';
 
 			if (!envName || !envFile) {
-				throw new Error(chalk.red('Invalid key: `' + key + '`.'));
+				throw new Error('Invalid key: `' + key + '`.');
 			}
 			log(chalk.gray('Decrypting `' + envName + '` env.'));
 			if (!opts.dryRun) {
@@ -309,6 +326,50 @@ class u {
 
 	static async npmLifecycleScript() {
 		return process.env.npm_lifecycle_script || ''; // NPM script value.
+	}
+
+	/**
+	 * Error utilities.
+	 */
+	static async error(title, text) {
+		if (!isParentTTY || !supportsColor?.has16m) {
+			return chalk.red(text); // No box.
+		}
+		return coloredBox(chalk.red(text), {
+			margin: 0,
+			padding: 0.75,
+			textAlignment: 'left',
+
+			dimBorder: false,
+			borderStyle: 'round',
+			borderColor: '#551819',
+			backgroundColor: '',
+
+			titleAlignment: 'left',
+			title: '🙈 ' + chalk.redBright('✖ ' + title),
+		});
+	}
+
+	/**
+	 * Finale utilities.
+	 */
+	static async finale(title, text) {
+		if (!isParentTTY || !supportsColor?.has16m) {
+			return chalk.green(text); // No box.
+		}
+		return coloredBox(chalk.green(text), {
+			margin: 0,
+			padding: 0.75,
+			textAlignment: 'left',
+
+			dimBorder: false,
+			borderStyle: 'round',
+			borderColor: '#445d2c',
+			backgroundColor: '',
+
+			titleAlignment: 'left',
+			title: c10nEmoji + ' ' + chalk.greenBright('✓ ' + title),
+		});
 	}
 }
 
@@ -352,7 +413,7 @@ class u {
 					})
 					.check(async (/* args */) => {
 						if (!(await u.isInteractive())) {
-							throw new Error(chalk.red('This *must* be performed interactively.'));
+							throw new Error('This *must* be performed interactively.');
 						}
 						return true;
 					});
@@ -377,7 +438,7 @@ class u {
 					})
 					.check(async (/* args */) => {
 						if (!(await u.isInteractive())) {
-							throw new Error(chalk.red('This *must* be performed interactively.'));
+							throw new Error('This *must* be performed interactively.');
 						}
 						return true;
 					});
@@ -402,7 +463,7 @@ class u {
 					})
 					.check(async (/* args */) => {
 						if (!(await u.isInteractive())) {
-							throw new Error(chalk.red('This *must* be performed interactively.'));
+							throw new Error('This *must* be performed interactively.');
 						}
 						return true;
 					});
@@ -427,7 +488,7 @@ class u {
 					})
 					.check(async (/* args */) => {
 						if (!(await u.isInteractive())) {
-							throw new Error(chalk.red('This *must* be performed interactively.'));
+							throw new Error('This *must* be performed interactively.');
 						}
 						return true;
 					});
@@ -452,7 +513,7 @@ class u {
 					})
 					.check(async (/* args */) => {
 						if (!(await u.isInteractive())) {
-							throw new Error(chalk.red('This *must* be performed interactively.'));
+							throw new Error('This *must* be performed interactively.');
 						}
 						return true;
 					});
@@ -484,7 +545,7 @@ class u {
 					})
 					.check(async (/* args */) => {
 						if (await u.isInteractive()) {
-							throw new Error(chalk.red('This can *only* be performed noninteractively.'));
+							throw new Error('This can *only* be performed noninteractively.');
 						}
 						return true;
 					});
@@ -492,6 +553,11 @@ class u {
 			handler: async (args) => {
 				await new Decrypt(args).run();
 			},
+		})
+		.fail(async (message, error /* , yargs */) => {
+			if (error.stack && typeof error.stack === 'string') log(chalk.gray(error.stack));
+			log(await u.error('Failure', error ? error.toString() : message));
+			process.exit(1);
 		})
 		.strict()
 		.parse();

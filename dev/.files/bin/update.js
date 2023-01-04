@@ -8,20 +8,25 @@
  */
 /* eslint-env es2021, node */
 
-import fs from 'node:fs';
+import _ from 'lodash';
+
 import os from 'node:os';
+
+import fs from 'node:fs';
 import path from 'node:path';
+import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
-import _ from 'lodash';
-import chalk from 'chalk';
-import { dirname } from 'desm';
-import spawn from 'spawn-please';
-import { globby } from 'globby';
 import mm from 'micromatch';
+import { globby } from 'globby';
+
+import coloredBox from 'boxen';
+import chalk, { supportsColor } from 'chalk';
 
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+
+import spawn from 'spawn-please';
 import { splitCMD } from '@clevercanyon/split-cmd.fork';
 
 const __dirname = dirname(import.meta.url);
@@ -34,17 +39,21 @@ const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
 const { log } = console;
 const echo = process.stdout.write.bind(process.stdout);
-const isTTY = process.stdout.isTTY || process.env.IS_PARENT_TTY ? true : false;
+
+const isParentTTY = process.stdout.isTTY ? true : false;
+const isTTY = process.stdout.isTTY || process.env.PARENT_IS_TTY ? true : false;
 
 const noisySpawnCfg = {
 	cwd: projDir,
-	env: { ...process.env, IS_PARENT_TTY: isTTY },
+	env: { ...process.env, PARENT_IS_TTY: isTTY },
 	stdout: (buffer) => echo(chalk.blue(buffer.toString())),
 	stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
 };
 const quietSpawnCfg = _.pick(noisySpawnCfg, ['cwd', 'env']);
 
-const coreProjectsIgnore = ['.*', 'forks/'];
+const c10nEmoji = '🦊'; // Clever Canyon’s adopted emoji icon.
+
+const coreProjectsIgnore = ['.*', 'forks/' /* Parent only. */];
 const coreProjectsOrder = [
 	'forks/is-number.fork',
 	'forks/to-regex-range.fork',
@@ -127,7 +136,18 @@ class Projects {
 			const devFilesDir = path.resolve(projDir, './dev/.files');
 			const pkgFile = path.resolve(projDir, './package.json');
 
-			if (hasAllGlob && !fs.existsSync(devFilesDir)) {
+			let isSkeletonDevDepsOk = false; // Special case.
+			if (
+				'@clevercanyon/skeleton' === pkg.name &&
+				'skeleton-dev-deps' === projDirSubpath &&
+				!this.args.cmd && // There's no custom CMD.
+				1 === this.args.run.length && // Just one script.
+				mm.isMatch(this.args.run[0], 'update:project{,:repos,:repos:pkgs}')
+			) {
+				isSkeletonDevDepsOk = true; // Allows `skeleton-dev-deps` project updates.
+				// Note: `skeleton-dev-deps` has it's own set of these project update scripts.
+			}
+			if (hasAllGlob && !fs.existsSync(devFilesDir) && !isSkeletonDevDepsOk) {
 				log(chalk.gray('No `./dev/.files` inside `' + projDisplayDir + '`. Bypassing on all-glob.'));
 				continue; // No `./dev/.files` directory.
 			}
@@ -153,7 +173,7 @@ class Projects {
 				}
 			}
 		}
-		log(chalk.green('Project updates complete.'));
+		log(await u.finale('Success', 'Project updates complete.'));
 	}
 
 	async doGitIgnoreSetup() {
@@ -210,7 +230,7 @@ class Dotfiles {
 			}
 			log(chalk.green('Installing `@clevercanyon/skeleton`’s NPM dependencies.'));
 			if (!this.args.dryRun) {
-				await spawn('npm', ['ci', '--include=dev', '--ignore-scripts', '--silent'], { ...noisySpawnCfg, cwd: s6nRepoDir });
+				await spawn('npm', ['ci', '--ignore-scripts', '--silent'], { ...noisySpawnCfg, cwd: s6nRepoDir });
 			}
 		}
 
@@ -225,7 +245,7 @@ class Dotfiles {
 		/**
 		 * Completes dotfiles update.
 		 */
-		log(chalk.green('Dotfiles update complete.'));
+		log(await u.finale('Success', 'Dotfiles update complete.'));
 	}
 }
 
@@ -298,7 +318,7 @@ class Project {
 				}
 			}
 		}
-		log(chalk.green('Project update complete.'));
+		log(await u.finale('Success', 'Project update complete.'));
 	}
 }
 
@@ -429,6 +449,50 @@ class u {
 		await spawn('npx', ['vite', 'build', '--mode', opts.mode], noisySpawnCfg);
 		await spawn('npx', ['tsc'], noisySpawnCfg); // TypeScript types.
 	}
+
+	/**
+	 * Error utilities.
+	 */
+	static async error(title, text) {
+		if (!isParentTTY || !supportsColor?.has16m) {
+			return chalk.red(text); // No box.
+		}
+		return coloredBox(chalk.red(text), {
+			margin: 0,
+			padding: 0.75,
+			textAlignment: 'left',
+
+			dimBorder: false,
+			borderStyle: 'round',
+			borderColor: '#551819',
+			backgroundColor: '',
+
+			titleAlignment: 'left',
+			title: '🙈 ' + chalk.redBright('✖ ' + title),
+		});
+	}
+
+	/**
+	 * Finale utilities.
+	 */
+	static async finale(title, text) {
+		if (!isParentTTY || !supportsColor?.has16m) {
+			return chalk.green(text); // No box.
+		}
+		return coloredBox(chalk.green(text), {
+			margin: 0,
+			padding: 0.75,
+			textAlignment: 'left',
+
+			dimBorder: false,
+			borderStyle: 'round',
+			borderColor: '#445d2c',
+			backgroundColor: '',
+
+			titleAlignment: 'left',
+			title: c10nEmoji + ' ' + chalk.greenBright('✓ ' + title),
+		});
+	}
 }
 
 /**
@@ -503,16 +567,16 @@ class u {
 					})
 					.check(async (args) => {
 						if (!args.glob.length) {
-							throw new Error(chalk.red('Empty `glob` option.'));
+							throw new Error('Empty `glob` option.');
 						}
 						if (args.glob.includes('**') || mm(args.glob, ['\\*\\*'], { contains: true }).length) {
-							throw new Error(chalk.red('Globstars `**` are prohitibed in `glob` option.'));
+							throw new Error('Globstars `**` are prohitibed in `glob` option.');
 						}
 						if (!args.run.length && !args.cmd) {
-							throw new Error(chalk.red('One of `cmd` and/or `run` is required.'));
+							throw new Error('One of `cmd` and/or `run` is required.');
 						}
 						if (!(await u.isInteractive())) {
-							throw new Error(chalk.red('This *must* be performed interactively.'));
+							throw new Error('This *must* be performed interactively.');
 						}
 						return true;
 					});
@@ -544,7 +608,7 @@ class u {
 					})
 					.check(async (/* args */) => {
 						if (!(await u.isInteractive())) {
-							throw new Error(chalk.red('This *must* be performed interactively.'));
+							throw new Error('This *must* be performed interactively.');
 						}
 						return true;
 					});
@@ -592,7 +656,7 @@ class u {
 					})
 					.check(async (/* args */) => {
 						if (!(await u.isInteractive())) {
-							throw new Error(chalk.red('This *must* be performed interactively.'));
+							throw new Error('This *must* be performed interactively.');
 						}
 						return true;
 					});
@@ -600,6 +664,11 @@ class u {
 			handler: async (args) => {
 				await new Project(args).run();
 			},
+		})
+		.fail(async (message, error /* , yargs */) => {
+			if (error.stack && typeof error.stack === 'string') log(chalk.gray(error.stack));
+			log(await u.error('Failure', error ? error.toString() : message));
+			process.exit(1);
 		})
 		.strict()
 		.parse();
