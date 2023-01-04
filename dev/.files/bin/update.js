@@ -47,7 +47,7 @@ const noisySpawnCfg = {
 	cwd: projDir,
 	env: { ...process.env, PARENT_IS_TTY: isTTY },
 	stdout: (buffer) => echo(chalk.blue(buffer.toString())),
-	stderr: (buffer) => echo(chalk.redBright(buffer.toString())),
+	stderr: (buffer) => echo(chalk.magenta(buffer.toString())),
 };
 const quietSpawnCfg = _.pick(noisySpawnCfg, ['cwd', 'env']);
 

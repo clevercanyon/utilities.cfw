@@ -13,64 +13,63 @@
 		"cpu": ["x64", "arm64"],
 		"os": ["darwin", "linux"],
 		"engines": { "node": "^19.2.0", "npm": "^8.19.3" },
-
-		"scripts": {
-			"dev:": "npx vite dev",
-			"dev:help": "npx vite dev --help",
-			"dev:mode": "npx vite dev --mode=dev",
-
-			"preview:": "npx vite preview",
-			"preview:help": "npx vite preview --help",
-			"preview:dev": "npx vite preview --mode=dev",
-
-			"build:": "npx vite build",
-			"build:help": "npx vite build --help",
-			"build:dev": "npx vite build --mode=dev",
-			"build:ci": "npx vite build --mode=ci",
-			"build:stage": "npx vite build --mode=stage",
-			"build:prod": "npx vite build --mode=prod",
-
-			"postbuild:": "npx tsc --emitDeclarationOnly",
-			"postbuild:dev": "npx tsc --emitDeclarationOnly",
-			"postbuild:ci": "npx tsc --emitDeclarationOnly",
-			"postbuild:stage": "npx tsc --emitDeclarationOnly",
-			"postbuild:prod": "npx tsc --emitDeclarationOnly",
-
-			"envs:": "./dev/.files/bin/envs.js",
-			"envs:help": "./dev/.files/bin/envs.js --help",
-			"envs:push": "./dev/.files/bin/envs.js push",
-			"envs:pull": "./dev/.files/bin/envs.js pull",
-			"envs:keys": "./dev/.files/bin/envs.js keys",
-			"envs:encrypt": "./dev/.files/bin/envs.js encrypt",
-			"envs:decrypt": "./dev/.files/bin/envs.js decrypt",
-			"envs:setup": "./dev/.files/bin/envs.js setup",
-			"envs:setup:new": "./dev/.files/bin/envs.js setup --new",
-
-			"install:": "./dev/.files/bin/install.js",
-			"install:help": "./dev/.files/bin/install.js --help",
-			"install:project": "npm ci --ignore-scripts && ./dev/.files/bin/install.js project",
-
-			"update:": "./dev/.files/bin/update.js",
-			"update:help": "./dev/.files/bin/update.js --help",
-			"update:dotfiles": "./dev/.files/bin/update.js dotfiles",
-			"update:project": "npm run update:dotfiles && ./dev/.files/bin/update.js project",
-			"update:project:repos": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos",
-			"update:project:repos:pkgs": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos --pkgs",
-
-			"update:projects::": "./dev/.files/bin/update.js projects",
-			"update:projects::help": "./dev/.files/bin/update.js projects --help",
-			"update:projects::dotfiles": "./dev/.files/bin/update.js projects --run update:dotfiles",
-			"update:projects::project": "./dev/.files/bin/update.js projects --run update:project",
-			"update:projects::project:repos": "./dev/.files/bin/update.js projects --run update:project:repos",
-			"update:projects::project:repos:pkgs": "./dev/.files/bin/update.js projects --run update:project:repos:pkgs",
-
-			"wrangler:": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler",
-			"wrangler:help": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler --help"
-		},
 		"workspaces": []
 	},
 	"devDependencies": {
 		"@clevercanyon/skeleton-dev-deps": "*"
+	},
+	"scripts": {
+		"dev:": "npx vite dev",
+		"dev:help": "npx vite dev --help",
+		"dev:mode": "npx vite dev --mode=dev",
+
+		"preview:": "npx vite preview",
+		"preview:help": "npx vite preview --help",
+		"preview:dev": "npx vite preview --mode=dev",
+
+		"build:": "npx vite build",
+		"build:help": "npx vite build --help",
+		"build:dev": "npx vite build --mode=dev",
+		"build:ci": "npx vite build --mode=ci",
+		"build:stage": "npx vite build --mode=stage",
+		"build:prod": "npx vite build --mode=prod",
+
+		"postbuild:": "npx tsc --emitDeclarationOnly",
+		"postbuild:dev": "npx tsc --emitDeclarationOnly",
+		"postbuild:ci": "npx tsc --emitDeclarationOnly",
+		"postbuild:stage": "npx tsc --emitDeclarationOnly",
+		"postbuild:prod": "npx tsc --emitDeclarationOnly",
+
+		"envs:": "./dev/.files/bin/envs.js",
+		"envs:help": "./dev/.files/bin/envs.js --help",
+		"envs:push": "./dev/.files/bin/envs.js push",
+		"envs:pull": "./dev/.files/bin/envs.js pull",
+		"envs:keys": "./dev/.files/bin/envs.js keys",
+		"envs:encrypt": "./dev/.files/bin/envs.js encrypt",
+		"envs:decrypt": "./dev/.files/bin/envs.js decrypt",
+		"envs:setup": "./dev/.files/bin/envs.js setup",
+		"envs:setup:new": "./dev/.files/bin/envs.js setup --new",
+
+		"install:": "./dev/.files/bin/install.js",
+		"install:help": "./dev/.files/bin/install.js --help",
+		"install:project": "npm ci --ignore-scripts && ./dev/.files/bin/install.js project",
+
+		"update:": "./dev/.files/bin/update.js",
+		"update:help": "./dev/.files/bin/update.js --help",
+		"update:dotfiles": "./dev/.files/bin/update.js dotfiles",
+		"update:project": "npm run update:dotfiles && ./dev/.files/bin/update.js project",
+		"update:project:repos": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos",
+		"update:project:repos:pkgs": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos --pkgs",
+
+		"update:projects::": "./dev/.files/bin/update.js projects",
+		"update:projects::help": "./dev/.files/bin/update.js projects --help",
+		"update:projects::dotfiles": "./dev/.files/bin/update.js projects --run update:dotfiles",
+		"update:projects::project": "./dev/.files/bin/update.js projects --run update:project",
+		"update:projects::project:repos": "./dev/.files/bin/update.js projects --run update:project:repos",
+		"update:projects::project:repos:pkgs": "./dev/.files/bin/update.js projects --run update:project:repos:pkgs",
+
+		"wrangler:": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler",
+		"wrangler:help": "CLOUDFLARE_API_TOKEN=${C10N_CLOUDFLARE_TOKEN} npx wrangler --help"
 	},
 	"config": {
 		"c10n": {
