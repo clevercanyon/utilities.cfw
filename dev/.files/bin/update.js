@@ -21,6 +21,7 @@ import mm from 'micromatch';
 import { globby } from 'globby';
 
 import coloredBox from 'boxen';
+import terminalImage from 'term-img';
 import chalk, { supportsColor } from 'chalk';
 
 import yargs from 'yargs';
@@ -51,7 +52,8 @@ const noisySpawnCfg = {
 };
 const quietSpawnCfg = _.pick(noisySpawnCfg, ['cwd', 'env']);
 
-const c10nEmoji = '🦊'; // Clever Canyon’s adopted emoji icon.
+const c10nLogo = path.resolve(__dirname, '../assets/brands/c10n/logo.png');
+const c10nLogoDev = path.resolve(__dirname, '../assets/brands/c10n/logo-dev.png');
 
 const coreProjectsIgnore = ['.*', 'forks/' /* Parent only. */];
 const coreProjectsOrder = [
@@ -475,19 +477,24 @@ class u {
 		if (!isParentTTY || !supportsColor?.has16m) {
 			return chalk.red(text); // No box.
 		}
-		return coloredBox(chalk.red(text), {
-			margin: 0,
-			padding: 0.75,
-			textAlignment: 'left',
+		return (
+			'\n' +
+			coloredBox(chalk.bold.red(text), {
+				margin: 0,
+				padding: 0.75,
+				textAlignment: 'left',
 
-			dimBorder: false,
-			borderStyle: 'round',
-			borderColor: '#551819',
-			backgroundColor: '',
+				dimBorder: false,
+				borderStyle: 'round',
+				borderColor: '#551819',
+				backgroundColor: '',
 
-			titleAlignment: 'left',
-			title: '🙈 ' + chalk.redBright('⚑ ' + title),
-		});
+				titleAlignment: 'left',
+				title: chalk.bold.redBright('⚑ ' + title),
+			}) +
+			'\n' +
+			(await terminalImage(c10nLogoDev, { width: '300px', fallback: () => '' }))
+		);
 	}
 
 	/**
@@ -497,19 +504,24 @@ class u {
 		if (!isParentTTY || !supportsColor?.has16m) {
 			return chalk.green(text); // No box.
 		}
-		return coloredBox(chalk.green(text), {
-			margin: 0,
-			padding: 0.75,
-			textAlignment: 'left',
+		return (
+			'\n' +
+			coloredBox(chalk.bold.hex('#ed5f3b')(text), {
+				margin: 0,
+				padding: 0.75,
+				textAlignment: 'left',
 
-			dimBorder: false,
-			borderStyle: 'round',
-			borderColor: '#445d2c',
-			backgroundColor: '',
+				dimBorder: false,
+				borderStyle: 'round',
+				borderColor: '#8e3923',
+				backgroundColor: '',
 
-			titleAlignment: 'left',
-			title: c10nEmoji + ' ' + chalk.greenBright('✓ ' + title),
-		});
+				titleAlignment: 'left',
+				title: chalk.bold.green('✓ ' + title),
+			}) +
+			'\n' +
+			(await terminalImage(c10nLogo, { width: '300px', fallback: () => '' }))
+		);
 	}
 }
 
