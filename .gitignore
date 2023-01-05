@@ -46,6 +46,7 @@
 # VS Code.
 
 .vscode
+*.code-search
 *.code-workspace
 
 # NPM.

@@ -34,8 +34,8 @@ const isTTY = process.stdout.isTTY || process.env.PARENT_IS_TTY ? true : false;
 const noisySpawnCfg = {
 	cwd: projDir,
 	env: { ...process.env, PARENT_IS_TTY: isTTY },
-	stdout: (buffer) => echo(chalk.blue(buffer.toString())),
-	stderr: (buffer) => echo(chalk.magenta(buffer.toString())),
+	stdout: (buffer) => echo(chalk.white(buffer.toString())),
+	stderr: (buffer) => echo(chalk.gray(buffer.toString())),
 };
 const envFiles = {
 	main: path.resolve(projDir, './dev/.envs/.env'),
@@ -90,7 +90,7 @@ class Setup {
 		log(chalk.gray('Encrypting all envs.'));
 		await u.encrypt({ dryRun: this.args.dryRun });
 
-		log(u.finale('Success', 'New setup complete.'));
+		log(await u.finale('Success', 'New setup complete.'));
 	}
 
 	async setup() {
@@ -107,7 +107,7 @@ class Setup {
 			log(chalk.gray('Pulling all envs.'));
 			await u.pull({ dryRun: this.args.dryRun });
 		}
-		log(u.finale('Success', 'Setup complete.'));
+		log(await u.finale('Success', 'Setup complete.'));
 	}
 }
 
@@ -123,7 +123,7 @@ class Push {
 		log(chalk.green('Pushing all envs.'));
 		await u.push({ dryRun: this.args.dryRun });
 
-		log(u.finale('Success', 'Push complete.'));
+		log(await u.finale('Success', 'Push complete.'));
 
 		if (this.args.dryRun) {
 			log(chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -143,7 +143,7 @@ class Pull {
 		log(chalk.green('Pulling all envs.'));
 		await u.pull({ dryRun: this.args.dryRun });
 
-		log(u.finale('Success', 'Pull complete.'));
+		log(await u.finale('Success', 'Pull complete.'));
 
 		if (this.args.dryRun) {
 			log(chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -163,7 +163,7 @@ class Keys {
 		log(chalk.green('Retrieving keys for all envs.'));
 		await u.keys({ dryRun: this.args.dryRun });
 
-		log(u.finale('Success', '↑ Here they are.'));
+		log(await u.finale('Success', '↑ Here they are.'));
 
 		if (this.args.dryRun) {
 			log(chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -183,7 +183,7 @@ class Encrypt {
 		log(chalk.green('Encrypting all envs.'));
 		await u.encrypt({ dryRun: this.args.dryRun });
 
-		log(u.finale('Success', 'Encryption complete.'));
+		log(await u.finale('Success', 'Encryption complete.'));
 
 		if (this.args.dryRun) {
 			log(chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -203,7 +203,7 @@ class Decrypt {
 		log(chalk.green('Decrypting env(s).'));
 		await u.decrypt({ keys: this.args.keys, dryRun: this.args.dryRun });
 
-		log(u.finale('Success', 'Decryption complete.'));
+		log(await u.finale('Success', 'Decryption complete.'));
 
 		if (this.args.dryRun) {
 			log(chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -346,7 +346,7 @@ class u {
 			backgroundColor: '',
 
 			titleAlignment: 'left',
-			title: '🙈 ' + chalk.redBright('✖ ' + title),
+			title: '🙈 ' + chalk.redBright('⚑ ' + title),
 		});
 	}
 
@@ -556,7 +556,7 @@ class u {
 		})
 		.fail(async (message, error /* , yargs */) => {
 			if (error.stack && typeof error.stack === 'string') log(chalk.gray(error.stack));
-			log(await u.error('Failure', error ? error.toString() : message));
+			log(await u.error('Problem', error ? error.toString() : message));
 			process.exit(1);
 		})
 		.strict()

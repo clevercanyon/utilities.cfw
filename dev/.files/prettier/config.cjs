@@ -13,79 +13,192 @@
 
 module.exports = {
 	/**
-	 * Prettier standard options.
+	 * Plugins.
+	 *
+	 * @see https://o5p.me/xCUiHS
+	 */
+	plugins: [
+		'prettier-plugin-jsdoc',
+		'prettier-plugin-ini',
+		'prettier-plugin-properties',
+		'@prettier/plugin-xml',
+		'@prettier/plugin-php',
+		'prettier-plugin-sql',
+		'@prettier/plugin-ruby',
+		'prettier-plugin-sh', //
+	],
+	pluginSearchDirs: false,
+
+	/**
+	 * Std options.
 	 *
 	 * @see https://o5p.me/mmdRUm
 	 */
-	pluginSearchDirs: false,
-	plugins: [
-		'@prettier/plugin-xml', //
-		'@prettier/plugin-php',
-		'@prettier/plugin-ruby',
-		'prettier-plugin-jsdoc',
-	],
-	printWidth: 180,
-	tabWidth: 4,
-	useTabs: true,
-	semi: true,
-	singleQuote: true,
-	quoteProps: 'preserve',
-	jsxSingleQuote: true,
-	trailingComma: 'all',
-	bracketSpacing: true,
-	bracketSameLine: false,
 	arrowParens: 'always',
-	requirePragma: false,
-	insertPragma: false,
-	proseWrap: 'preserve',
-	htmlWhitespaceSensitivity: 'css',
-	vueIndentScriptAndStyle: true,
-	endOfLine: 'lf',
+	bracketSameLine: false,
+	bracketSpacing: true,
 	embeddedLanguageFormatting: 'auto',
+	endOfLine: 'lf',
+	htmlWhitespaceSensitivity: 'css',
+	insertPragma: false,
+	jsxSingleQuote: true,
+	printWidth: 180,
+	proseWrap: 'preserve',
+	quoteProps: 'preserve',
+	requirePragma: false,
+	semi: true,
 	singleAttributePerLine: false,
+	singleQuote: true,
+	tabWidth: 4,
+	trailingComma: 'all',
+	useTabs: true,
+	vueIndentScriptAndStyle: true,
 
-	/**
-	 * Prettier XML plugin options.
-	 *
-	 * @see https://o5p.me/OiLPzn
-	 */
-	xmlSelfClosingSpace: true,
-	xmlWhitespaceSensitivity: 'ignore',
-
-	/**
-	 * Prettier PHP plugin options.
-	 *
-	 * @see https://o5p.me/BHsZj8
-	 */
-	phpVersion: '8.1',
-	trailingCommaPHP: true,
-	braceStyle: '1tbs',
-
-	/**
-	 * Prettier Ruby plugin options.
-	 *
-	 * @see https://o5p.me/tuKNvU
-	 */
-	rubyPlugins: '',
-	rubySingleQuote: true,
-
-	/**
-	 * Prettier JSDoc plugin options.
-	 *
-	 * @see https://o5p.me/dTTfse
-	 */
-	jsdocSpaces: 1,
-	jsdocDescriptionWithDot: true,
-	jsdocDescriptionTag: false,
-	jsdocVerticalAlignment: true,
-	jsdocKeepUnParseAbleExampleIndent: false,
-	jsdocSingleLineComment: false,
-	jsdocCapitalizeDescription: true,
-	jsdocSeparateReturnsFromParam: true,
-	jsdocSeparateTagGroups: true,
-	jsdocPreferCodeFences: false,
-	tsdoc: false,
-	jsdocPrintWidth: 120,
-	jsdocAddDefaultToDescription: false,
-	jsdocLineWrappingStyle: 'greedy',
+	overrides: [
+		{
+			/**
+			 * JSDoc plugin options.
+			 *
+			 * @see https://o5p.me/dTTfse
+			 */
+			files: ['*.{js,cjs,mjs,jsx,ts,tsx}'],
+			plugins: ['prettier-plugin-jsdoc'],
+			options: {
+				jsdocAddDefaultToDescription: false,
+				jsdocCapitalizeDescription: true,
+				jsdocDescriptionTag: false,
+				jsdocDescriptionWithDot: true,
+				jsdocKeepUnParseAbleExampleIndent: false,
+				jsdocLineWrappingStyle: 'greedy',
+				jsdocPreferCodeFences: false,
+				jsdocPrintWidth: 120,
+				jsdocSeparateReturnsFromParam: true,
+				jsdocSeparateTagGroups: true,
+				jsdocSingleLineComment: false,
+				jsdocSpaces: 1,
+				jsdocVerticalAlignment: true,
+				tsdoc: false,
+			},
+		},
+		{
+			/**
+			 * INI plugin options.
+			 *
+			 * @see https://o5p.me/1fqazf
+			 */
+			files: ['*.ini'],
+			plugins: ['prettier-plugin-ini'],
+			options: {
+				parser: 'ini',
+				iniSpaceAroundEquals: true,
+			},
+		},
+		{
+			/**
+			 * Properties plugin options.
+			 *
+			 * @see https://o5p.me/IyzRSp
+			 */
+			files: ['*.properties', '*.env{,.*}'],
+			plugins: ['prettier-plugin-properties'],
+			options: {
+				parser: 'dot-properties',
+				keySeparator: '=',
+				escapeNonLatin1: false,
+			},
+		},
+		{
+			/**
+			 * XML plugin options.
+			 *
+			 * @see https://o5p.me/OiLPzn
+			 */
+			files: ['*.xml'],
+			plugins: ['@prettier/plugin-xml'],
+			options: {
+				parser: 'xml',
+				xmlSelfClosingSpace: true,
+				xmlWhitespaceSensitivity: 'ignore',
+			},
+		},
+		{
+			/**
+			 * PHP plugin options.
+			 *
+			 * @see https://o5p.me/BHsZj8
+			 */
+			files: ['*.php'],
+			plugins: ['@prettier/plugin-php'],
+			options: {
+				parser: 'php',
+				braceStyle: '1tbs',
+				phpVersion: '8.1',
+				trailingCommaPHP: true,
+			},
+		},
+		{
+			/**
+			 * SQL plugin options.
+			 *
+			 * @see https://o5p.me/kYq5bx
+			 */
+			files: ['*.sql'],
+			plugins: ['prettier-plugin-sql'],
+			options: {
+				parser: 'sql',
+				commaPosition: 'after',
+				database: 'mysql',
+				denseOperators: false,
+				expressionWidth: 180,
+				formatter: 'sql-formatter',
+				indentStyle: 'standard',
+				keywordCase: 'upper',
+				language: 'sql',
+				linesBetweenQueries: 1,
+				logicalOperatorNewline: 'before',
+				newlineBeforeSemicolon: false,
+				params: Object,
+				paramTypes: Object,
+				tabulateAlias: false,
+				type: 'table',
+			},
+		},
+		{
+			/**
+			 * Ruby plugin options.
+			 *
+			 * @see https://o5p.me/tuKNvU
+			 */
+			files: ['*.rb'],
+			plugins: ['@prettier/plugin-ruby'],
+			options: {
+				parser: 'ruby',
+				rubyPlugins: '',
+				rubySingleQuote: true,
+			},
+		},
+		{
+			/**
+			 * SH plugin options.
+			 *
+			 * @see https://o5p.me/D0rlOV
+			 */
+			files: ['*.bash', '{,*.}Dockerfile'],
+			plugins: ['prettier-plugin-sh'],
+			options: {
+				parser: 'sh',
+				binaryNextLine: false,
+				experimentalWasm: false,
+				functionNextLine: false,
+				indent: 4,
+				keepComments: true,
+				keepPadding: false,
+				minify: false,
+				spaceRedirects: true,
+				stopAt: undefined,
+				switchCaseIndent: true,
+				variant: 0, // Bash.
+			},
+		},
+	],
 };

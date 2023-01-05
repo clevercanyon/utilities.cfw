@@ -50,16 +50,16 @@
 		"envs:setup": "./dev/.files/bin/envs.js setup",
 		"envs:setup:new": "./dev/.files/bin/envs.js setup --new",
 
-		"install:": "./dev/.files/bin/install.js",
-		"install:help": "./dev/.files/bin/install.js --help",
-		"install:project": "npm ci --ignore-scripts && ./dev/.files/bin/install.js project",
+		"install:": "./dev/.files/bin/bash/npm-2sp.bash 'npm ci' './dev/.files/bin/install.js'",
+		"install:help": "./dev/.files/bin/bash/npm-2sp.bash 'npm ci' './dev/.files/bin/install.js --help'",
+		"install:project": "./dev/.files/bin/bash/npm-2sp.bash 'npm ci' './dev/.files/bin/install.js project'",
 
 		"update:": "./dev/.files/bin/update.js",
 		"update:help": "./dev/.files/bin/update.js --help",
 		"update:dotfiles": "./dev/.files/bin/update.js dotfiles",
-		"update:project": "npm run update:dotfiles && ./dev/.files/bin/update.js project",
-		"update:project:repos": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos",
-		"update:project:repos:pkgs": "npm run update:dotfiles && ./dev/.files/bin/update.js project --repos --pkgs",
+		"update:project": "./dev/.files/bin/bash/npm-2sp.bash 'npm run update:dotfiles' './dev/.files/bin/update.js project'",
+		"update:project:repos": "./dev/.files/bin/bash/npm-2sp.bash 'npm run update:dotfiles' './dev/.files/bin/update.js project --repos'",
+		"update:project:repos:pkgs": "./dev/.files/bin/bash/npm-2sp.bash 'npm run update:dotfiles' './dev/.files/bin/update.js project --repos --pkgs'",
 
 		"update:projects::": "./dev/.files/bin/update.js projects",
 		"update:projects::help": "./dev/.files/bin/update.js projects --help",

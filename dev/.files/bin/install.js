@@ -35,8 +35,8 @@ const isTTY = process.stdout.isTTY || process.env.PARENT_IS_TTY ? true : false;
 const noisySpawnCfg = {
 	cwd: projDir,
 	env: { ...process.env, PARENT_IS_TTY: isTTY },
-	stdout: (buffer) => echo(chalk.blue(buffer.toString())),
-	stderr: (buffer) => echo(chalk.magenta(buffer.toString())),
+	stdout: (buffer) => echo(chalk.white(buffer.toString())),
+	stderr: (buffer) => echo(chalk.gray(buffer.toString())),
 };
 const quietSpawnCfg = _.pick(noisySpawnCfg, ['cwd', 'env']);
 
@@ -178,11 +178,11 @@ class u {
 	}
 
 	static async npmInstall() {
-		await spawn('npm', ['install', '--ignore-scripts', '--silent'], quietSpawnCfg);
+		await spawn('npm', ['install'], noisySpawnCfg);
 	}
 
 	static async npmCleanInstall() {
-		await spawn('npm', ['ci', '--ignore-scripts', '--silent'], quietSpawnCfg);
+		await spawn('npm', ['ci'], noisySpawnCfg);
 	}
 
 	/*
@@ -212,7 +212,7 @@ class u {
 			backgroundColor: '',
 
 			titleAlignment: 'left',
-			title: '🙈 ' + chalk.redBright('✖ ' + title),
+			title: '🙈 ' + chalk.redBright('⚑ ' + title),
 		});
 	}
 
@@ -278,7 +278,7 @@ class u {
 		})
 		.fail(async (message, error /* , yargs */) => {
 			if (error.stack && typeof error.stack === 'string') log(chalk.gray(error.stack));
-			log(await u.error('Failure', error ? error.toString() : message));
+			log(await u.error('Problem', error ? error.toString() : message));
 			process.exit(1);
 		})
 		.strict()
