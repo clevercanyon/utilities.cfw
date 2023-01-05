@@ -3,7 +3,7 @@
     "publishConfig": {
         "access": "restricted"
     },
-    "version": "1.0.31",
+    "version": "1.0.32",
     "license": "GPL-3.0-or-later",
     "name": "@clevercanyon/utilities.cfw",
     "description": "Another great project by Clever Canyon.",
