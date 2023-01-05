@@ -29,29 +29,34 @@ projDir="$(pwd)"
 ##
 
 function isCMDSafeToRun() {
-	[[ "${1:-}" =~ ^(git|npm|npx)[[:space:]] ]] || isCMDInDevBin "${1:-}"
+    [[ "${1:-}" =~ ^(git|npm|npx)[[:space:]] ]] || isCMDInDevBin "${1:-}"
 }
 
 function isCMDHelpOrVersion() {
-	[[ "${1:-}" =~ (^|[[:space:]])(-(h|v)|--(help|version))($|[[:space:]]) ]]
+    [[ "${1:-}" =~ (^|[[:space:]])(-(h|v)|--(help|version))($|[[:space:]]) ]]
 }
 
 function isCMDDryRun() {
-	[[ "${1:-}" =~ (^|[[:space:]])(--dry(Run|-run))($|[[:space:]]) ]]
+    [[ "${1:-}" =~ (^|[[:space:]])(--dry(Run|-run))($|[[:space:]]) ]]
 }
 
 function isCMDInDevBin() {
-	[[ "${1:-}" =~ ^\.\/dev\/\.files\/bin\/ ]]
+    [[ "${1:-}" =~ ^\.\/dev\/\.files\/bin\/ ]]
 }
 
 function isCMDAnNPMScriptInDevBin() {
-	[[ "${1:-}" =~ ^npm[[:space:]]+run(-script)?[[:space:]]+(envs|install|update)\: ]]
+    [[ "${1:-}" =~ ^npm[[:space:]]+run(-script)?[[:space:]]+(envs|install|update)\: ]]
 }
 
 function isCMDAnNPMInstall() {
-	# https://docs.npmjs.com/cli/commands/npm-ci
-	# https://docs.npmjs.com/cli/commands/npm-install
-	[[ "${1:-}" =~ ^npm[[:space:]](ci|clean-install|install-clean|isntall-clean|i|in|ins|inst|insta|instal|isnt|isnta|isntal|install)($|[[:space:]]) ]]
+    # https://docs.npmjs.com/cli/commands/npm-ci
+    # https://docs.npmjs.com/cli/commands/npm-install
+    [[ "${1:-}" =~ ^npm[[:space:]](ci|clean-install|install-clean|isntall-clean|i|in|ins|inst|insta|instal|isnt|isnta|isntal|install)($|[[:space:]]) ]]
+}
+
+function log() {
+    echo -e '\033[0;90m'"${1:-}"'\033[0m\n' >&2 # To stderr stream.
+    # stderr, so we don't interfere with proxied output to stdout stream.
 }
 
 ##
@@ -63,12 +68,12 @@ cmd2="${*:2:1}"
 args="${*:3}"
 
 if ! isCMDSafeToRun "${cmd1}"; then
-	echo 'Insecure. Refusing to proxy CMD 1: `'"${cmd1}"'`'
-	exit 1
-fi
-if ! isCMDSafeToRun "${cmd2}"; then
-	echo 'Insecure. Refusing to proxy CMD 2: `'"${cmd2}"'`'
-	exit 1
+    log 'Insecure; refusing to proxy CMD 1: `'"${cmd1}"'`'
+    exit 1 # Security issue; error status.
+
+elif ! isCMDSafeToRun "${cmd2}"; then
+    log 'Insecure; refusing to proxy CMD 2: `'"${cmd2}"'`'
+    exit 1 # Security issue; error status.
 fi
 
 ##
@@ -76,25 +81,30 @@ fi
 # Uses `sh`, matching NPM.
 ##
 
-if isCMDAnNPMInstall "${cmd1}" && [[ "${cmd1}" =~ ^npm[[:space:]]+ci$ && "${cmd2}" = './dev/.files/bin/install.js project' && -d "${projDir}"/node_modules ]]; then
-	echo 'Skipping CMD 1: `'"${cmd1}"'` in favor of CMD 2: `'"${cmd2}"'`, since `node_modules` exists already.'
+if isCMDAnNPMInstall "${cmd1}" && [[ "${cmd1}" =~ ^npm[[:space:]]+ci$ && "${cmd2}" =~ ^\.\/dev\/\.files\/bin\/install\.js([[:space:]](--help|project))?$ && -d "${projDir}"/node_modules ]]; then
+    log 'Skipping `'"${cmd1}"'` in favor of `'"${cmd2}"'`.'
 
 elif ! isCMDAnNPMInstall "${cmd1}" && isCMDHelpOrVersion "${args}"; then
-	echo 'Skipping non-critical CMD 1: `'"${cmd1}"'` when CMD 2: `'"${cmd2}"'` is in -h|-v|--help|--version mode.'
+    log 'Skipping `'"${cmd1}"'` when `'"${cmd2}"'` is in -h|-v|--help|--version mode.'
 
 elif isCMDDryRun "${args}"; then
-	if isCMDInDevBin "${cmd1}" || isCMDAnNPMScriptInDevBin "${cmd1}"; then
-		if isCMDAnNPMScriptInDevBin "${cmd1}" && [[ "${cmd1}" =~ [[:space:]]--[[:space:]] ]]; then
-			/usr/bin/env sh -c "${cmd1} --dryRun"
-		else
-			/usr/bin/env sh -c "${cmd1} -- --dryRun"
-		fi
-	elif isCMDAnNPMInstall "${cmd1}"; then
-		/usr/bin/env sh -c "${cmd1}" # Always run installs.
-	else
-		echo 'Skipping CMD 1: `'"${cmd1}"'` when CMD 2: `'"${cmd2}"'` is in --dryRun mode.'
-	fi
+    if isCMDInDevBin "${cmd1}" || isCMDAnNPMScriptInDevBin "${cmd1}"; then
+        if isCMDAnNPMScriptInDevBin "${cmd1}" && [[ "${cmd1}" =~ [[:space:]]--[[:space:]] ]]; then
+            trap - ERR # Disable trap.
+            /usr/bin/env sh -c "${cmd1} --dryRun"
+        else
+            trap - ERR # Disable trap.
+            /usr/bin/env sh -c "${cmd1} -- --dryRun"
+        fi
+    elif isCMDAnNPMInstall "${cmd1}"; then
+        trap - ERR # Disable trap.
+        /usr/bin/env sh -c "${cmd1}"
+    else
+        log 'Skipping `'"${cmd1}"'` when `'"${cmd2}"'` is a --dryRun.'
+    fi
 else
-	/usr/bin/env sh -c "${cmd1}"
+    trap - ERR # Disable trap.
+    /usr/bin/env sh -c "${cmd1}"
 fi
+trap - ERR # Disable trap.
 /usr/bin/env sh -c "${cmd2} ${args}"

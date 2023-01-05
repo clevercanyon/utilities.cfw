@@ -567,8 +567,8 @@ class u {
 			},
 		})
 		.fail(async (message, error /* , yargs */) => {
-			if (error.stack && typeof error.stack === 'string') log(chalk.gray(error.stack));
-			log(await u.error('Problem', error ? error.toString() : message));
+			if (error?.stack && typeof error.stack === 'string') log(chalk.gray(error.stack));
+			log(await u.error('Problem', error ? error.toString() : message || 'Unexpected unknown errror.'));
 			process.exit(1);
 		})
 		.strict()

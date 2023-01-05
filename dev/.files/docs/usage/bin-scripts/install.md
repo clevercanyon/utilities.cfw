@@ -1,6 +1,6 @@
-# `./dev/.files/bin/install.js`
+# `$ npm run install:*`
 
-See Also: [Prerequisites](./prerequisites.md)
+<small>Underlying bin script: `./dev/.files/bin/install.js`</small>
 
 ## Interactive Installs
 
@@ -10,7 +10,7 @@ $ npm run install:project
 # Mode can be one of: `dev`, `ci`, `stage`, or `prod` (default).
 ```
 
-You will need a Dotenv Vault login. Please contact `@jaswrks` to request access. You must also have an environment meeting all [prerequisites](./prerequisites.md), along with the additional credentials noted at the bottom of the prerequisites article.
+You will need a [Dotenv Vault](https://www.dotenv.org) login. Please contact `@jaswrks` to request access. You must also have an environment meeting all [prerequisites](./prerequisites.md), along with the additional credentials noted at the bottom of the prerequisites article.
 
 ## Noninteractive Installs (e.g., CI)
 
@@ -23,7 +23,7 @@ In noninteractive installs you must have the following environment variables. Yo
 
 ```
 C10N_DOTENV_KEY_MAIN
-C10N_DOTENV_KEY_CI (or another, matching mode above)
+C10N_DOTENV_KEY_CI (or another, matching `mode`)
 ```
 
 These keys can be retrieved by running the following script interactively.

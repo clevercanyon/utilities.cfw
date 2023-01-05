@@ -1,6 +1,6 @@
-# `./dev/.files/bin/update.js`
+# `$ npm run update:*`
 
-See Also: [Prerequisites](./prerequisites.md)
+<small>Underlying bin script: `./dev/.files/bin/update.js`</small>
 
 All updates _must_ be performed interactively.
 
@@ -9,6 +9,8 @@ All updates _must_ be performed interactively.
 ```bash
 $ npm run update:dotfiles
 ```
+
+See Also: [Prerequisites](./prerequisites.md)
 
 -   When run inside the `@clevercanyon/skeleton` project, any pending changes will be added, committed, and pushed to the remote git origin. This is done to avoid a devastating loss of all changes prior to a self-update in the `@clevercanyon/skeleton`.
 
@@ -173,11 +175,11 @@ If you need more control over command sequence, consider using _only_ a custom C
 
 ```bash
 # Tip: Save repeated commands in a variable.
-$ gitACP='git add --all && git commit -m "Message" && git push';
+$ gitACP='git add --all && git commit -m "Message" && git push'
 
-$ cmd="${gitACP}"; # Commit and push changes before starting.
-$ cmd+=' && git checkout main && npm run script:one && '"${gitACP}";
-$ cmd+=' && git checkout dev && npm run script:one && '"${gitACP}";
+$ cmd="${gitACP}" # Commit and push changes before starting.
+$ cmd+=' && git checkout main && npm run script:one && '"${gitACP}"
+$ cmd+=' && git checkout dev && npm run script:one && '"${gitACP}"
 
 $ npm run update:projects:: -- \
 	--glob 'foo' 'bar-{two,three,four}' 'baz-*-utils' \

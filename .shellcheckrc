@@ -13,6 +13,7 @@ external-sources=true # Follow includes.
 disable=SC2016 # We use a lot of backticks.
 disable=SC1003 # Don't offer this single-quote escape tip.
 disable=SC2155 # Assignment with nested calls is OK.
+disable=SC1112 # Don't complain about unicode quotes.
 
 ##
 # Customizations.
