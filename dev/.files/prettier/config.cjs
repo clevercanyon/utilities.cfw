@@ -62,7 +62,6 @@ module.exports = {
 			 * @see https://o5p.me/dTTfse
 			 */
 			files: ['*.{js,cjs,mjs,jsx,ts,tsx}'],
-			plugins: ['prettier-plugin-jsdoc'],
 			options: {
 				jsdocAddDefaultToDescription: false,
 				jsdocCapitalizeDescription: true,
@@ -82,53 +81,11 @@ module.exports = {
 		},
 		{
 			/**
-			 * INI plugin options.
-			 *
-			 * @see https://o5p.me/1fqazf
-			 */
-			files: ['*.ini'],
-			plugins: ['prettier-plugin-ini'],
-			options: {
-				parser: 'ini',
-				iniSpaceAroundEquals: true,
-			},
-		},
-		{
-			/**
-			 * Properties plugin options.
-			 *
-			 * @see https://o5p.me/IyzRSp
-			 */
-			files: ['*.properties', '*.env{,.*}'],
-			plugins: ['prettier-plugin-properties'],
-			options: {
-				parser: 'dot-properties',
-				keySeparator: '=',
-				escapeNonLatin1: false,
-			},
-		},
-		{
-			/**
-			 * XML plugin options.
-			 *
-			 * @see https://o5p.me/OiLPzn
-			 */
-			files: ['*.xml'],
-			plugins: ['@prettier/plugin-xml'],
-			options: {
-				parser: 'xml',
-				xmlSelfClosingSpace: true,
-				xmlWhitespaceSensitivity: 'ignore',
-			},
-		},
-		{
-			/**
 			 * PHP plugin options.
 			 *
 			 * @see https://o5p.me/BHsZj8
 			 */
 			files: ['*.php'],
-			plugins: ['@prettier/plugin-php'],
 			options: {
 				parser: 'php',
 				braceStyle: '1tbs',
@@ -138,12 +95,46 @@ module.exports = {
 		},
 		{
 			/**
+			 * Ruby plugin options.
+			 *
+			 * @see https://o5p.me/tuKNvU
+			 */
+			files: ['*.rb'],
+			options: {
+				parser: 'ruby',
+				rubyPlugins: '',
+				rubySingleQuote: true,
+			},
+		},
+		{
+			/**
+			 * SH plugin options.
+			 *
+			 * @see https://o5p.me/D0rlOV
+			 */
+			files: ['*.bash', '{,*.}Dockerfile'],
+			options: {
+				parser: 'sh',
+				binaryNextLine: false,
+				experimentalWasm: false,
+				functionNextLine: false,
+				indent: 4,
+				keepComments: true,
+				keepPadding: false,
+				minify: false,
+				spaceRedirects: true,
+				stopAt: undefined,
+				switchCaseIndent: true,
+				variant: 0, // Bash.
+			},
+		},
+		{
+			/**
 			 * SQL plugin options.
 			 *
 			 * @see https://o5p.me/kYq5bx
 			 */
 			files: ['*.sql'],
-			plugins: ['prettier-plugin-sql'],
 			options: {
 				parser: 'sql',
 				commaPosition: 'after',
@@ -165,39 +156,40 @@ module.exports = {
 		},
 		{
 			/**
-			 * Ruby plugin options.
+			 * XML plugin options.
 			 *
-			 * @see https://o5p.me/tuKNvU
+			 * @see https://o5p.me/OiLPzn
 			 */
-			files: ['*.rb'],
-			plugins: ['@prettier/plugin-ruby'],
+			files: ['*.xml'],
 			options: {
-				parser: 'ruby',
-				rubyPlugins: '',
-				rubySingleQuote: true,
+				parser: 'xml',
+				xmlSelfClosingSpace: true,
+				xmlWhitespaceSensitivity: 'ignore',
 			},
 		},
 		{
 			/**
-			 * SH plugin options.
+			 * INI plugin options.
 			 *
-			 * @see https://o5p.me/D0rlOV
+			 * @see https://o5p.me/1fqazf
 			 */
-			files: ['*.bash', '{,*.}Dockerfile'],
-			plugins: ['prettier-plugin-sh'],
+			files: ['*.ini'],
 			options: {
-				parser: 'sh',
-				binaryNextLine: false,
-				experimentalWasm: false,
-				functionNextLine: false,
-				indent: 4,
-				keepComments: true,
-				keepPadding: false,
-				minify: false,
-				spaceRedirects: true,
-				stopAt: undefined,
-				switchCaseIndent: true,
-				variant: 0, // Bash.
+				parser: 'ini',
+				iniSpaceAroundEquals: true,
+			},
+		},
+		{
+			/**
+			 * Properties plugin options.
+			 *
+			 * @see https://o5p.me/IyzRSp
+			 */
+			files: ['*.properties', '*.env{,.*}'],
+			options: {
+				parser: 'dot-properties',
+				keySeparator: '=',
+				escapeNonLatin1: false,
 			},
 		},
 	],

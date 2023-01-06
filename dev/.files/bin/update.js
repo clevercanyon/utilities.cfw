@@ -90,6 +90,8 @@ const coreProjectsOrder = [
  * further details. At this time, there are no exceptions. Every update _must_ occur interactively.
  */
 
+// @todo Make it possible to customize commit messages.
+
 /**
  * Dotfiles command.
  */

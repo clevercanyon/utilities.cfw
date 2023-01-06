@@ -8,13 +8,10 @@
 # @note Only `<custom:start.../custom:end>` will be preserved below.
 ##
 
-# EJS files.
+# EJS unsupported at this time.
+# @todo Build or find an EJS plugin.
 
 *.ejs
-
-# MPA indexes contain EJS.
-
-/src/**/index.html
 
 ##
 # Customizations.

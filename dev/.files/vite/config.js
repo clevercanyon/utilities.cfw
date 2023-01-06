@@ -11,6 +11,7 @@
  */
 /* eslint-env es2021, node */
 
+import fs from 'node:fs';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
 
@@ -27,7 +28,9 @@ import pluginBasicSSL from '@vitejs/plugin-basic-ssl';
 import { ViteEjsPlugin as pluginEJS } from 'vite-plugin-ejs';
 import { ViteMinifyPlugin as pluginMinifyHTML } from 'vite-plugin-minify';
 
-import aliases from './includes/aliases.js';
+import { createRequire } from 'node:module';
+import importAliases from './includes/aliases.js';
+const require = createRequire(import.meta.url);
 
 /**
  * Defines Vite configuration.
@@ -75,7 +78,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	 */
 	const appType = pkg.config?.c10n?.['&'].build?.appType || 'cma';
 	const targetEnv = pkg.config?.c10n?.['&'].build?.targetEnv || 'any';
-	const appBasePath = env.APP_BASE_PATH || '/'; // From environment vars.
+	const appBasePath = env.APP_BASE_PATH || ''; // From environment vars.
 
 	const isMPA = 'mpa' === appType;
 	const isCMA = 'cma' === appType || !isMPA;
@@ -195,8 +198,29 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	 */
 	const pluginBasicSSLConfig = pluginBasicSSL();
 	const pluginEJSConfig = pluginEJS(
-		{ NODE_ENV: nodeEnv, isProd, isDev, env, pkg }, //
-		{ ejs: { root: srcDir, views: [path.resolve(srcDir, './resources/ejs-views')], strict: true, localsName: '$' } },
+		{ $build: { require, pkg, mode, env, projDir } },
+		{
+			ejs: /* <https://o5p.me/wGv5nM> */ {
+				strict: true, // JS strict mode.
+				async: true, // Support await in EJS files.
+
+				delimiter: '?', // <https://o5p.me/Qwu3af>.
+				localsName: '$', // Shorter name for `locals`.
+				outputFunctionName: 'echo', // For output in scriptlets.
+
+				root: [srcDir], // For includes with an absolute path.
+				views: /* For includes with a relative path — includes utilities. */ [
+					//
+					path.resolve(srcDir, './resources/ejs-views'), // Our standard location for internal EJS views.
+					path.resolve(srcDir, './cargo/assets/ejs-views'), // Our standard location for distributed EJS views.
+
+					// If this package is using `@clevercanyon/utilities` we can also leverage EJS fallback utility views.
+					...(fs.existsSync(path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/assets/ejs-views'))
+						? [path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/assets/ejs-views')]
+						: []),
+				],
+			},
+		},
 	);
 	const pluginMinifyHTMLConfig = isProd ? pluginMinifyHTML() : null;
 
@@ -248,10 +272,10 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 		},
 		root: srcDir, // Absolute. Where entry indexes live.
 		publicDir: path.relative(srcDir, cargoDir), // Relative to `root` directory.
-		base: appBasePath, // Analagous to `<base href="/">` — leading & trailing slash.
+		base: appBasePath + '/', // Analagous to `<base href="/">` — leading & trailing slash.
 
 		appType: isCMA ? 'custom' : 'mpa', // MPA = multipage app: <https://o5p.me/ZcTkEv>.
-		resolve: { alias: aliases }, // See: `../typescript/config.json` and `./includes/aliases.js`.
+		resolve: { alias: importAliases }, // See: `../typescript/config.json` and `./includes/aliases.js`.
 
 		envDir: path.relative(srcDir, envsDir), // Relative to `root` directory.
 		envPrefix: appEnvPrefix, // Environment vars w/ this prefix become a part of the app.
