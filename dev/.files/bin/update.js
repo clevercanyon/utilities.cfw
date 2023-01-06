@@ -90,8 +90,6 @@ const coreProjectsOrder = [
  * further details. At this time, there are no exceptions. Every update _must_ occur interactively.
  */
 
-// @todo Make it possible to customize commit messages.
-
 /**
  * Dotfiles command.
  */
@@ -117,7 +115,7 @@ class Dotfiles {
 			log('    ' + chalk.green('i.e., saving latest skeleton changes before self-update.'));
 
 			if (!this.args.dryRun) {
-				await u.gitAddCommitPush();
+				await u.gitAddCommitPush((this.args.message + ' [d]').trim());
 			}
 		}
 
@@ -195,7 +193,7 @@ class Project {
 				if (await u.isGitRepoDirty()) {
 					log(chalk.green('First, committing git repo changes; `' + (await u.gitCurrentBranch()) + '` branch.'));
 					if (!this.args.dryRun) {
-						await u.gitAddCommit();
+						await u.gitAddCommit((this.args.message + ' [p]').trim());
 					}
 				}
 				log(chalk.green('Ensuring origin sync. Pushing to git repo; `' + (await u.gitCurrentBranch()) + '` branch.'));
@@ -204,7 +202,7 @@ class Project {
 				}
 			}
 			if (!this.args.dryRun) {
-				await u.npmVersionPatch(); // Git commit + tag will get pushed below.
+				await u.npmVersionPatch((this.args.message + ' [npm:%s][p]').trim());
 			}
 		}
 
@@ -218,7 +216,7 @@ class Project {
 				if (await u.isGitRepoDirty()) {
 					log(chalk.green('Committing git repo changes; `' + (await u.gitCurrentBranch()) + '` branch.'));
 					if (!this.args.dryRun) {
-						await u.gitAddCommit();
+						await u.gitAddCommit((this.args.message + ' [p]').trim());
 					}
 				}
 				log(chalk.green('Pushing to git repo; `' + (await u.gitCurrentBranch()) + '` branch.'));
@@ -335,7 +333,11 @@ class Projects {
 				for (const run of this.args.run) {
 					log(chalk.green('Running `npm run ' + run + '` in:') + ' ' + chalk.yellow(projDisplayDir));
 					if (!this.args.dryRun) {
-						await spawn('npm', ['run', run], { ...noisySpawnCfg, cwd: projDir });
+						const split = splitCMD(run); // Splits into props.
+						if (this.args.message && mm(split.cmd, 'update:{dotfiles,project}{,:}') && !mm(split.args, ['--message{,=}', '-m{,=}'])) {
+							split.args = split.args.concat(split.args.length ? ['--message', this.args.message] : ['--', '--message', this.args.message]);
+						}
+						await spawn('npm', ['run', split.cmd, ...split.args], { ...noisySpawnCfg, cwd: projDir });
 					}
 				}
 			}
@@ -387,14 +389,14 @@ class u {
 		return String(await spawn('git', ['symbolic-ref', '--short', '--quiet', 'HEAD'], quietSpawnCfg)).trim();
 	}
 
-	static async gitAddCommitPush(message = 'Robotic update.') {
+	static async gitAddCommitPush(message) {
 		await u.gitAddCommit(message);
 		await u.gitPush();
 	}
 
-	static async gitAddCommit(message = 'Robotic update.') {
+	static async gitAddCommit(message) {
 		await spawn('git', ['add', '--all'], noisySpawnCfg);
-		await spawn('git', ['commit', '--message', message], noisySpawnCfg);
+		await spawn('git', ['commit', '--message', message + (/\]$/u.test(message) ? '' : ' ') + '[robotic]'], noisySpawnCfg);
 	}
 
 	static async gitPush() {
@@ -455,8 +457,8 @@ class u {
 		await spawn('npm', ['update', '--save'], noisySpawnCfg);
 	}
 
-	static async npmVersionPatch() {
-		await spawn('npm', ['version', 'patch'], noisySpawnCfg);
+	static async npmVersionPatch(message) {
+		await spawn('npm', ['version', 'patch', '--message', message + (/\]$/u.test(message) ? '' : ' ') + '[robotic]'], noisySpawnCfg);
 	}
 
 	static async npmPublish() {
@@ -547,6 +549,14 @@ class u {
 							default: false,
 							description: 'Updating `@clevercanyon/skeleton` also updates others? Such as `skeleton-dev-deps` and `*.fork`s.',
 						},
+						message: {
+							alias: 'm',
+							type: 'string',
+							requiresArg: true,
+							demandOption: false,
+							default: 'Dotfiles update.',
+							description: 'Commit message when updating `@clevercanyon/skeleton`.',
+						},
 						dryRun: {
 							type: 'boolean',
 							requiresArg: false,
@@ -578,6 +588,15 @@ class u {
 							demandOption: false,
 							default: false,
 							description: 'Push to project repo(s)?',
+						},
+						message: {
+							alias: 'm',
+							type: 'string',
+							requiresArg: true,
+							demandOption: false,
+							default: 'Project update.',
+							implies: ['repos'],
+							description: 'Commit message when updating repos.',
 						},
 						pkgs: {
 							type: 'boolean',
@@ -668,6 +687,14 @@ class u {
 							description: // prettier-ignore
 								'Scripts to `npm run [script]` in each project directory.' +
 								' If both `cmd` and `run` are given, `cmd` will always come first.',
+						},
+						message: {
+							alias: 'm',
+							type: 'string',
+							requiresArg: true,
+							demandOption: false,
+							default: '', // No default value.
+							description: 'Commit message when updating project repos.',
 						},
 						dryRun: {
 							type: 'boolean',
