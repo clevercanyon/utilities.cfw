@@ -163,6 +163,12 @@ export default class u {
 		}
 	}
 
+	static async prettifyPkg() {
+		const pkg = await u.pkg(); // Parses current `./package.json` file.
+		const pkgPrettierCfg = { ...(await prettier.resolveConfig(pkgFile)), parser: 'json' };
+		await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
+	}
+
 	/*
 	 * Git utilities.
 	 */
@@ -884,11 +890,13 @@ export default class u {
 
 	static async npmUpdate() {
 		await u.spawn('npm', ['update', '--save'], { stdio: 'inherit' });
+		await u.prettifyPkg(); // To our standards.
 	}
 
 	static async npmPublish(opts = { dryRun: false }) {
 		if (!opts.dryRun) {
 			await u.spawn('npm', ['publish']);
+			await u.prettifyPkg(); // To our standards.
 		}
 		if (await u.isNPMPkgOriginNPMJS()) {
 			await u.npmjsCheckPkgOrgWideStandards({ dryRun: opts.dryRun });
