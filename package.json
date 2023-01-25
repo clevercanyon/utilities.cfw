@@ -3,7 +3,7 @@
 	"publishConfig": {
 		"access": "restricted"
 	},
-	"version": "1.0.36",
+	"version": "1.0.37",
 	"license": "GPL-3.0-or-later",
 	"name": "@clevercanyon/utilities.cfw",
 	"description": "Another great project by Clever Canyon.",
@@ -50,14 +50,14 @@
 		}
 	},
 	"peerDependencies": {
-		"@clevercanyon/utilities": "^1.0.72",
+		"@clevercanyon/utilities": "^1.0.73",
 		"@cloudflare/kv-asset-handler": "^0.2.0"
 	},
 	"peerDependenciesMeta": {},
 	"bundleDependencies": [],
 	"devDependencies": {
-		"@clevercanyon/skeleton-dev-deps": "^1.0.79",
-		"@cloudflare/workers-types": "^4.20221111.1"
+		"@clevercanyon/skeleton-dev-deps": "^1.0.81",
+		"@cloudflare/workers-types": "^4.20230115.0"
 	},
 	"overrides": {},
 	"cpu": ["x64", "arm64"],

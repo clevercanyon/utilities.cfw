@@ -17,6 +17,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
+import archiver from 'archiver';
 
 import mm from 'micromatch';
 import { globby } from 'globby';
@@ -29,7 +30,6 @@ import { loadEnv } from 'vite';
 import pluginBasicSSL from '@vitejs/plugin-basic-ssl';
 import { ViteEjsPlugin as pluginEJS } from 'vite-plugin-ejs';
 import { ViteMinifyPlugin as pluginMinifyHTML } from 'vite-plugin-minify';
-import { default as vitePluginZipPack } from 'vite-plugin-zip-pack';
 
 import importAliases from './includes/aliases.js';
 
@@ -183,7 +183,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 		pkg.types = './dist/types/' + cmaEntryIndexSubpathNoExt + '.d.ts';
 		pkg.typesVersions = { '>=3.1': { './*': ['./dist/types/*'] } };
 	} else {
-		pkg.type = pkg.module = pkg.main = pkg.browser = pkg.unpkg = pkg.types = '';
+		(pkg.type = 'module'), (pkg.module = pkg.main = pkg.browser = pkg.unpkg = pkg.types = '');
 		(pkg.files = []), (pkg.exports = []), (pkg.sideEffects = []), (pkg.typesVersions = {});
 	}
 
@@ -255,12 +255,20 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 				if ('build' === command) {
 					await spawn('npx', ['tsc', '--emitDeclarationOnly'], { cwd: projDir });
 				}
+
+				/**
+				 * Generates a zip archive containing `./dist` directory.
+				 */
+				if ('build' === command) {
+					const archive = archiver('zip', { zlib: { level: 9 } });
+					archive.pipe(fs.createWriteStream(path.resolve(projDir, './.~dist.zip')));
+					archive.directory(distDir + '/', false);
+					await archive.finalize();
+				}
 			},
 		};
 	})();
-	const pluginZipPackConfig = vitePluginZipPack({ inDir: distDir, outDir: projDir, outFileName: '.~dist.zip' });
-
-	const plugins = [pluginBasicSSLConfig, pluginEJSConfig, pluginMinifyHTMLConfig, pluginC10NPostProcessConfig, pluginZipPackConfig];
+	const plugins = [pluginBasicSSLConfig, pluginEJSConfig, pluginMinifyHTMLConfig, pluginC10NPostProcessConfig];
 	const importedWorkerPlugins = []; // <https://vitejs.dev/guide/features.html#web-workers>.
 
 	/**
