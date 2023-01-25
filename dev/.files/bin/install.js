@@ -8,41 +8,22 @@
  */
 /* eslint-env es2021, node */
 
-import _ from 'lodash';
-
 import fs from 'node:fs';
 import path from 'node:path';
 import { dirname } from 'desm';
 
-import coloredBox from 'boxen';
-import terminalImage from 'term-img';
-import chalk, { supportsColor } from 'chalk';
-
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import spawn from 'spawn-please';
+import chalk from 'chalk';
+import u from './includes/utilities.js';
+
+u.propagateUserEnvVars(); // i.e., `USER_` env vars.
 
 const __dirname = dirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
-const binDir = path.resolve(__dirname, '../../../dev/.files/bin');
 
-const { log } = console;
-const echo = process.stdout.write.bind(process.stdout);
-
-const isParentTTY = process.stdout.isTTY ? true : false;
-const isTTY = process.stdout.isTTY || process.env.PARENT_IS_TTY ? true : false;
-
-const noisySpawnCfg = {
-	cwd: projDir,
-	env: { ...process.env, PARENT_IS_TTY: isTTY },
-	stdout: (buffer) => echo(chalk.white(buffer.toString())),
-	stderr: (buffer) => echo(chalk.gray(buffer.toString())),
-};
-const quietSpawnCfg = _.pick(noisySpawnCfg, ['cwd', 'env']);
-
-const c10nLogo = path.resolve(__dirname, '../assets/brands/c10n/logo.png');
-const c10nLogoDev = path.resolve(__dirname, '../assets/brands/c10n/logo-dev.png');
+const { log } = console; // Shorter reference.
 
 /**
  * NOTE: All commands in this file must support both interactive and noninteractive sessions. Installations occur across
@@ -53,10 +34,16 @@ const c10nLogoDev = path.resolve(__dirname, '../assets/brands/c10n/logo-dev.png'
  * Project command.
  */
 class Project {
+	/**
+	 * Constructor.
+	 */
 	constructor(args) {
 		this.args = args;
 	}
 
+	/**
+	 * Runs CMD.
+	 */
 	async run() {
 		await this.install();
 
@@ -65,14 +52,25 @@ class Project {
 		}
 	}
 
+	/**
+	 * Runs install.
+	 */
 	async install() {
+		/**
+		 * Checks if git repo is dirty.
+		 */
+
 		if ((await u.isGitRepo()) && (await u.isGitRepoDirty())) {
-			// Now, we will allow a single `package-lock.json` change to exist as only difference.
-			// e.g., In case of `npm install` having been run vs. `npm clean-install`, which does better.
+			// We will allow a single `package-lock.json` change to exist as the only difference.
+			// e.g., In case of `npm install` having been run vs. `npm ci`, which does better.
 			if ('M package-lock.json' !== u.gitStatus({ short: true })) {
 				throw new Error('Git repo is dirty.');
 			}
 		}
+
+		/**
+		 * Installs NPM packages; populating `./node_modules`.
+		 */
 
 		if (fs.existsSync(path.resolve(projDir, './package-lock.json'))) {
 			log(chalk.green('Running a clean install of NPM packages.'));
@@ -86,173 +84,36 @@ class Project {
 			}
 		}
 
+		/**
+		 * Installs Dotenv Vault variables.
+		 */
+
 		if (await u.isEnvsVault()) {
-			log(chalk.green('Setting up `.env.vault`.'));
+			log(chalk.green('Installing Dotenv Vault variables.'));
 			if (!this.args.dryRun) {
-				await u.envsSetupOrDecrypt({ mode: this.args.mode });
+				await u.envsInstallOrDecrypt({ mode: this.args.mode });
 			}
 		}
+
+		/**
+		 * Builds the app using Vite in given mode.
+		 */
 
 		log(chalk.green('Building with Vite; `' + this.args.mode + '` mode.'));
 		if (!this.args.dryRun) {
 			await u.viteBuild({ mode: this.args.mode });
 		}
 
+		/**
+		 * Signals completion with success.
+		 */
+
 		log(await u.finale('Success', 'Project install complete.'));
 	}
 }
 
 /**
- * Utilities.
- */
-class u {
-	/*
-	 * TTY utilities.
-	 */
-
-	static async isInteractive() {
-		return isTTY && process.env.TERM && 'dumb' !== process.env.TERM && 'true' !== process.env.CI;
-	}
-
-	/*
-	 * Git utilities.
-	 */
-
-	static async isGitRepo() {
-		try {
-			return 'true' === String(await spawn('git', ['rev-parse', '--is-inside-work-tree'], quietSpawnCfg)).trim();
-		} catch {
-			return false;
-		}
-	}
-
-	static async isGitRepoDirty() {
-		return '' !== (await u.gitStatus({ short: true }));
-	}
-
-	static async gitStatus(opts = { short: false }) {
-		return String(await spawn('git', ['status', ...(opts.short ? ['--short'] : []), '--porcelain'], quietSpawnCfg)).trim();
-	}
-
-	/*
-	 * Env utilities.
-	 */
-
-	static async isEnvsVault() {
-		return fs.existsSync(path.resolve(projDir, './.env.vault'));
-	}
-
-	static async envsSetupOrDecrypt(opts = { mode: 'prod' }) {
-		if (!(await u.isInteractive()) /* Use keys. */) {
-			const env = process.env; // Shorter reference.
-			const keys = [_.get(env, 'C10N_DOTENV_KEY_MAIN', '')];
-
-			if ('dev' === opts.mode) {
-				keys.push(_.get(env, 'C10N_DOTENV_KEY_DEV', ''));
-			} else if ('ci' === opts.mode) {
-				keys.push(_.get(env, 'C10N_DOTENV_KEY_CI', ''));
-			} else if ('stage' === opts.mode) {
-				keys.push(_.get(env, 'C10N_DOTENV_KEY_STAGE', ''));
-			} else if ('prod' === opts.mode) {
-				keys.push(_.get(env, 'C10N_DOTENV_KEY_PROD', ''));
-			}
-			for (const key of keys) {
-				if (!key) {
-					throw new Error('Missing env key(s).');
-				}
-			}
-			await spawn(path.resolve(binDir, './envs.js'), ['decrypt', '--keys', ...keys], noisySpawnCfg);
-		} else {
-			await spawn(path.resolve(binDir, './envs.js'), ['setup'], noisySpawnCfg);
-		}
-	}
-
-	/*
-	 * NPM utilities.
-	 */
-
-	static async npmLifecycleEvent() {
-		return process.env.npm_lifecycle_event || ''; // NPM script name.
-	}
-
-	static async npmLifecycleScript() {
-		return process.env.npm_lifecycle_script || ''; // NPM script value.
-	}
-
-	static async npmInstall() {
-		await spawn('npm', ['install'], noisySpawnCfg);
-	}
-
-	static async npmCleanInstall() {
-		await spawn('npm', ['ci'], noisySpawnCfg);
-	}
-
-	/*
-	 * Vite utilities.
-	 */
-
-	static async viteBuild(opts = { mode: 'prod' }) {
-		await spawn('npx', ['vite', 'build', '--mode', opts.mode], noisySpawnCfg);
-		await spawn('npx', ['tsc'], noisySpawnCfg); // TypeScript types.
-	}
-
-	/**
-	 * Error utilities.
-	 */
-	static async error(title, text) {
-		if (!isParentTTY || !supportsColor?.has16m) {
-			return chalk.red(text); // No box.
-		}
-		return (
-			'\n' +
-			coloredBox(chalk.bold.red(text), {
-				margin: 0,
-				padding: 0.75,
-				textAlignment: 'left',
-
-				dimBorder: false,
-				borderStyle: 'round',
-				borderColor: '#551819',
-				backgroundColor: '',
-
-				titleAlignment: 'left',
-				title: chalk.bold.redBright('⚑ ' + title),
-			}) +
-			'\n' +
-			(await terminalImage(c10nLogoDev, { width: '300px', fallback: () => '' }))
-		);
-	}
-
-	/**
-	 * Finale utilities.
-	 */
-	static async finale(title, text) {
-		if (!isParentTTY || !supportsColor?.has16m) {
-			return chalk.green(text); // No box.
-		}
-		return (
-			'\n' +
-			coloredBox(chalk.bold.hex('#ed5f3b')(text), {
-				margin: 0,
-				padding: 0.75,
-				textAlignment: 'left',
-
-				dimBorder: false,
-				borderStyle: 'round',
-				borderColor: '#8e3923',
-				backgroundColor: '',
-
-				titleAlignment: 'left',
-				title: chalk.bold.green('✓ ' + title),
-			}) +
-			'\n' +
-			(await terminalImage(c10nLogo, { width: '300px', fallback: () => '' }))
-		);
-	}
-}
-
-/**
- * Yargs ⛵🏴‍☠
+ * Yargs CLI config. ⛵🏴‍☠
  *
  * @see http://yargs.js.org/docs/
  */

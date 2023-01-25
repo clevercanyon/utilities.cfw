@@ -11,36 +11,39 @@
  */
 /* eslint-env es2021, node */
 
+import _ from 'lodash';
+
 import fs from 'node:fs';
 import path from 'node:path';
+import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
-import _ from 'lodash';
-import chalk from 'chalk';
 import mm from 'micromatch';
-import mc from 'merge-change';
-import { dirname } from 'desm';
-import prettier from 'prettier';
 import { globby } from 'globby';
+
+import mc from 'merge-change';
+import prettier from 'prettier';
+import spawn from 'spawn-please';
 
 import { loadEnv } from 'vite';
 import pluginBasicSSL from '@vitejs/plugin-basic-ssl';
 import { ViteEjsPlugin as pluginEJS } from 'vite-plugin-ejs';
 import { ViteMinifyPlugin as pluginMinifyHTML } from 'vite-plugin-minify';
+import { default as vitePluginZipPack } from 'vite-plugin-zip-pack';
+
+import importAliases from './includes/aliases.js';
 
 import { createRequire } from 'node:module';
-import importAliases from './includes/aliases.js';
 const require = createRequire(import.meta.url);
 
 /**
  * Defines Vite configuration.
  *
- * @param   vite       Data passed in by Vite.
- * @param   projConfig Project configuration overrides.
+ * @param   vite Data passed in by Vite.
  *
- * @returns            Vite configuration object properties.
+ * @returns      Vite configuration object properties.
  */
-export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {}) => {
+export default async ({ mode, command /*, ssrBuild */ }) => {
 	/**
 	 * Directory vars.
 	 */
@@ -62,22 +65,22 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	const pkgPrettierCfg = { ...(await prettier.resolveConfig(pkgFile)), parser: 'json' };
 
 	/**
-	 * Environment & mode-related vars.
+	 * Mode-related vars.
+	 */
+	const isDev = 'dev' === mode; // Development mode?
+	process.env.NODE_ENV = isDev ? 'development' : 'production'; // <https://o5p.me/DscTVM>.
+
+	/**
+	 * Environment-related vars.
 	 */
 	const appEnvPrefix = 'APP_'; // Part of app.
 	const env = loadEnv(mode, envsDir, appEnvPrefix);
 
-	const isDev = /^dev(?:elopment)?$/iu.test(mode);
-	const isProd = !isDev; // Always opposite.
-
-	const nodeEnv = isDev ? 'development' : 'production';
-	process.env.NODE_ENV = nodeEnv; // <https://o5p.me/DscTVM>.
-
 	/**
 	 * App type, target, path, and related vars.
 	 */
-	const appType = pkg.config?.c10n?.['&'].build?.appType || 'cma';
-	const targetEnv = pkg.config?.c10n?.['&'].build?.targetEnv || 'any';
+	const appType = _.get(pkg, 'config.c10n.&.build.appType') || 'cma';
+	const targetEnv = _.get(pkg, 'config.c10n.&.build.targetEnv') || 'any';
 	const appBasePath = env.APP_BASE_PATH || ''; // From environment vars.
 
 	const isMPA = 'mpa' === appType;
@@ -108,11 +111,8 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	/**
 	 * Validates all of the above.
 	 */
-	if (typeof projConfig?.appType !== 'undefined') {
-		throw new Error('Modifying `appType` is not permitted at this time. Instead, use `config.c10n.&.build.appType` in `package.json`.');
-	}
-	if (typeof projConfig.build?.formats !== 'undefined') {
-		throw new Error('Modifying `build.formats` is not permitted at this time.');
+	if (!['dev', 'ci', 'stage', 'prod'].includes(mode)) {
+		throw new Error('Required `mode` is missing or invalid. Expecting `dev|ci|stage|prod`.');
 	}
 	if ((!isMPA && !isCMA) || !['mpa', 'cma'].includes(appType)) {
 		throw new Error('Must have a valid `config.c10n.&.build.appType` in `package.json`.');
@@ -128,9 +128,14 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	}
 
 	/**
-	 * Updates `package.json` accordingly.
+	 * Prepares `package.json` property updates.
 	 */
-	pkg.exports = {}; // Ensure exists as object.
+	const origPkg = { ...pkg };
+
+	pkg.type = 'module'; // ES module.
+	pkg.files = ['/dist']; // Dist directory only.
+	pkg.exports = {}; // Exports object initialization.
+	pkg.sideEffects = ['./src/*.{html,scss,css,tsx,ts,jsx,mjs,js}'];
 
 	if (isCMA && (isSSR || cmaEntries.length > 1)) {
 		mc.patch(pkg.exports, {
@@ -178,16 +183,15 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 		pkg.types = './dist/types/' + cmaEntryIndexSubpathNoExt + '.d.ts';
 		pkg.typesVersions = { '>=3.1': { './*': ['./dist/types/*'] } };
 	} else {
-		(pkg.exports = []), (pkg.typesVersions = {});
-		// ↑ When empty, `exports` should default to an array.
-		pkg.module = pkg.main = pkg.browser = pkg.unpkg = pkg.types = '';
+		pkg.type = pkg.module = pkg.main = pkg.browser = pkg.unpkg = pkg.types = '';
+		(pkg.files = []), (pkg.exports = []), (pkg.sideEffects = []), (pkg.typesVersions = {});
 	}
-	await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
 
-	console.log(
-		chalk.blue('Updated `package.json` properties: ') + //
-			chalk.green(JSON.stringify(_.pick(pkg, ['exports', 'module', 'main', 'browser', 'unpkg', 'types', 'typesVersions']), null, 4)),
-	);
+	/**
+	 * Updates `package.json` properties impacting builds.
+	 */
+	const preBuildPkg = { ...origPkg, type: pkg.type, sideEffects: pkg.sideEffects };
+	await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(preBuildPkg, null, 4), pkgPrettierCfg));
 
 	/**
 	 * Configures plugins for Vite.
@@ -222,9 +226,41 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 			},
 		},
 	);
-	const pluginMinifyHTMLConfig = isProd ? pluginMinifyHTML() : null;
+	const pluginMinifyHTMLConfig = isDev ? null : pluginMinifyHTML();
 
-	const plugins = [pluginBasicSSLConfig, pluginEJSConfig, pluginMinifyHTMLConfig];
+	const pluginC10NPostProcessConfig = ((postProcessed = false) => {
+		return {
+			name: 'vite-plugin-c10n-post-process',
+			enforce: 'post', // After others on this hook.
+
+			async writeBundle(/* rollup hook */) {
+				if (postProcessed) return;
+				postProcessed = true;
+
+				/**
+				 * Copies `./.env.vault` to dist directory.
+				 */
+				if (fs.existsSync(path.resolve(projDir, './.env.vault'))) {
+					await fsp.copyFile(path.resolve(projDir, './.env.vault'), path.resolve(distDir, './.env.vault'));
+				}
+
+				/**
+				 * Writes prepared `package.json` property updates.
+				 */
+				await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
+
+				/**
+				 * Generates typescript type declaration file(s).
+				 */
+				if ('build' === command) {
+					await spawn('npx', ['tsc', '--emitDeclarationOnly'], { cwd: projDir });
+				}
+			},
+		};
+	})();
+	const pluginZipPackConfig = vitePluginZipPack({ inDir: distDir, outDir: projDir, outFileName: '.~dist.zip' });
+
+	const plugins = [pluginBasicSSLConfig, pluginEJSConfig, pluginMinifyHTMLConfig, pluginC10NPostProcessConfig, pluginZipPackConfig];
 	const importedWorkerPlugins = []; // <https://vitejs.dev/guide/features.html#web-workers>.
 
 	/**
@@ -255,13 +291,12 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	const importedWorkerRollupConfig = { ..._.omit(rollupConfig, ['input']) };
 
 	/**
-	 * Vite config base.
-	 *
-	 * This is extended by project configs.
+	 * Base config for Vite.
 	 *
 	 * @see https://vitejs.dev/config/
 	 */
 	const baseConfig = {
+		c10n: { pkg },
 		define: {
 			// Static replacements.
 			$$__APP_PKG_NAME__$$: pkg.name || '',
@@ -300,10 +335,10 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 			// Note: `a16s` = numeronym for 'acquired resources'.
 
 			ssr: isSSR, // Server-side rendering?
-			...(isSSR ? { ssrManifest: isDev } : {}),
+			...(isSSR ? { ssrManifest: true } : {}),
 
 			sourcemap: isDev, // Enables creation of sourcemaps.
-			manifest: isDev, // Enables creation of manifest for assets.
+			manifest: true, // Enables creation of manifest for assets.
 
 			...(isCMA // Custom-made apps = library code.
 				? {
@@ -328,9 +363,7 @@ export default async ({ mode } /* { command, mode, ssrBuild } */, projConfig = {
 	};
 
 	/**
-	 * Returns final Vite config.
-	 *
-	 * @note Merged with project config.
+	 * Returns base config for Vite.
 	 */
-	return mc.merge(baseConfig, projConfig);
+	return baseConfig;
 };

@@ -40,8 +40,8 @@ site.exclude = [
 build.cwd = "./"
 build.watch_dir = "./src"
 
-build.command = "npm run build:prod"
-env.dev.build.command = "npm run build:dev"
+build.command = "npx @clevercanyon/madrun build --mode=prod"
+env.dev.build.command = "npx @clevercanyon/madrun build --mode=dev"
 
 ##
 # Customizations.

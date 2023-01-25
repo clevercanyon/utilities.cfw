@@ -192,5 +192,17 @@ module.exports = {
 				escapeNonLatin1: false,
 			},
 		},
+		{
+			/**
+			 * YAML spec options.
+			 *
+			 * @see https://o5p.me/jJH2xY
+			 */
+			files: ['*.yml', '*.yaml'],
+			options: {
+				tabWidth: 2,
+				useTabs: false,
+			},
+		},
 	],
 };
