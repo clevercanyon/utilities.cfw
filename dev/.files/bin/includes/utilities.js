@@ -896,7 +896,6 @@ export default class u {
 	static async npmPublish(opts = { dryRun: false }) {
 		if (!opts.dryRun) {
 			await u.spawn('npm', ['publish']);
-			await u.prettifyPkg(); // To our standards.
 		}
 		if (await u.isNPMPkgOriginNPMJS()) {
 			await u.npmjsCheckPkgOrgWideStandards({ dryRun: opts.dryRun });
