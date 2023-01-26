@@ -437,13 +437,13 @@ class Decrypt {
  *
  * @see http://yargs.js.org/docs/
  */
-(async () => {
+void (async () => {
 	await yargs(hideBin(process.argv))
 		.command({
 			command: 'install',
-			desc: 'Installs all envs for dotenv vault.',
+			describe: 'Installs all envs for dotenv vault.',
 			builder: (yargs) => {
-				yargs
+				return yargs
 					.options({
 						'new': {
 							type: 'boolean',
@@ -483,9 +483,9 @@ class Decrypt {
 		})
 		.command({
 			command: 'push',
-			desc: 'Pushes all envs to dotenv vault.',
+			describe: 'Pushes all envs to dotenv vault.',
 			builder: (yargs) => {
-				yargs
+				return yargs
 					.options({
 						dryRun: {
 							type: 'boolean',
@@ -508,9 +508,9 @@ class Decrypt {
 		})
 		.command({
 			command: 'pull',
-			desc: 'Pulls all envs from dotenv vault.',
+			describe: 'Pulls all envs from dotenv vault.',
 			builder: (yargs) => {
-				yargs
+				return yargs
 					.options({
 						dryRun: {
 							type: 'boolean',
@@ -533,9 +533,9 @@ class Decrypt {
 		})
 		.command({
 			command: 'keys',
-			desc: 'Retrieves decryption keys for all envs.',
+			describe: 'Retrieves decryption keys for all envs.',
 			builder: (yargs) => {
-				yargs
+				return yargs
 					.options({
 						dryRun: {
 							type: 'boolean',
@@ -558,9 +558,9 @@ class Decrypt {
 		})
 		.command({
 			command: 'encrypt',
-			desc: 'Encrypts all envs into `.env.vault`.',
+			describe: 'Encrypts all envs into `.env.vault`.',
 			builder: (yargs) => {
-				yargs
+				return yargs
 					.options({
 						dryRun: {
 							type: 'boolean',
@@ -583,9 +583,9 @@ class Decrypt {
 		})
 		.command({
 			command: 'decrypt',
-			desc: 'Decrypts `.env.vault` env(s) for the given key(s).',
+			describe: 'Decrypts `.env.vault` env(s) for the given key(s).',
 			builder: (yargs) => {
-				yargs
+				return yargs
 					.options({
 						keys: {
 							type: 'array',

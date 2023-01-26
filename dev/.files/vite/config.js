@@ -106,6 +106,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 
 	const isWeb = ['web', 'webw'].includes(targetEnv);
 	const isSSR = ['cfp', 'cfw', 'node'].includes(targetEnv);
+	const isSSRNoExternals = isSSR && ['cfp', 'cfw'].includes(targetEnv);
 	const isSSRWorker = isSSR && ['cfw'].includes(targetEnv);
 
 	/**
@@ -233,7 +234,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 			name: 'vite-plugin-c10n-post-process',
 			enforce: 'post', // After others on this hook.
 
-			async writeBundle(/* rollup hook */) {
+			async closeBundle(/* rollup hook */) {
 				if (postProcessed) return;
 				postProcessed = true;
 
@@ -283,8 +284,8 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 			: mpaIndexes,
 
 		external: [
-			'__STATIC_CONTENT_MANIFEST', // CF workers.
 			...Object.keys(pkg.peerDependencies || {}),
+			'__STATIC_CONTENT_MANIFEST', // Cloudflare workers.
 		],
 		output: {
 			interop: 'auto', // Matches TypeScript.
@@ -329,6 +330,14 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 		esbuild: { jsx: 'automatic' }, // ← Not necessary in Vite 4.0.x.
 		// See: <https://o5p.me/240y9w>, where `jsx` will be picked up from `tsconfig.json`.
 
+		...(isSSR // <https://vitejs.dev/config/ssr-options.html>.
+			? {
+					ssr: {
+						noExternal: isSSRNoExternals,
+						target: isSSRWorker ? 'webworker' : 'node',
+					},
+			  }
+			: {}),
 		worker: /* <https://vitejs.dev/guide/features.html#web-workers> */ {
 			format: 'es',
 			plugins: importedWorkerPlugins,
@@ -360,14 +369,6 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 				: {}),
 			rollupOptions: rollupConfig, // See: <https://o5p.me/5Vupql>.
 		},
-		...(isSSR // <https://vitejs.dev/config/ssr-options.html>.
-			? {
-					ssr: {
-						noExternal: true, // All server side.
-						target: isSSRWorker ? 'webworker' : 'node',
-					},
-			  }
-			: {}),
 	};
 
 	/**

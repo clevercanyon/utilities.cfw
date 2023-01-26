@@ -12,7 +12,7 @@ export default {
 	updates: {
 		ignore: [
 			'.*', //
-			'.github',
+			'!.github',
 			'forks/',
 		],
 		order: [
@@ -27,9 +27,12 @@ export default {
 			'forks/merge-change.fork',
 			'forks/spawn-please.fork',
 			'forks/shescape.fork',
+
+			'*.fork',
 			'forks/*.fork',
 
-			'madrun',
+			'madrun', // Outlier.
+
 			'skeleton-dev-deps',
 			'skeleton',
 
@@ -45,12 +48,13 @@ export default {
 			'utilities.*',
 
 			'skeleton.*',
+
+			'.github',
+			'private',
 		],
 		skeletonOthers: {
 			globs: [
-				'.github', //
-				'private',
-				'skeleton-dev-deps',
+				'skeleton-dev-deps', //
 				'{*.fork,forks/*.fork}',
 			],
 			files: [

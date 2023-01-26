@@ -456,13 +456,13 @@ class Projects {
  *
  * @see http://yargs.js.org/docs/
  */
-(async () => {
+void (async () => {
 	await yargs(hideBin(process.argv))
 		.command({
 			command: ['dotfiles'],
-			desc: 'Updates project dotfiles.',
+			describe: 'Updates project dotfiles.',
 			builder: (yargs) => {
-				yargs
+				return yargs
 					.options({
 						skeletonUpdatesOthers: {
 							type: 'boolean',
@@ -502,9 +502,9 @@ class Projects {
 		})
 		.command({
 			command: ['project'],
-			desc: 'Updates NPM packages + optionally pushes to repo(s) + optionally publishes package(s).',
+			describe: 'Updates NPM packages + optionally pushes to repo(s) + optionally publishes package(s).',
 			builder: (yargs) => {
-				yargs
+				return yargs
 					.options({
 						repos: {
 							type: 'boolean',
@@ -559,9 +559,9 @@ class Projects {
 		})
 		.command({
 			command: ['projects'],
-			desc: 'Updates multiple projects.',
+			describe: 'Updates multiple projects.',
 			builder: (yargs) => {
-				yargs
+				return yargs
 					.options({
 						glob: {
 							type: 'array',

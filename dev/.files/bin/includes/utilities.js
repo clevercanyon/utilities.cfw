@@ -86,7 +86,7 @@ export default class u {
 	 */
 
 	static async isInteractive() {
-		const isTTY = process.stdout.isTTY || process.env.PARENT_IS_TTY ? true : false;
+		const isTTY = process.stdout.isTTY || 'true' === process.env.PARENT_IS_TTY ? true : false;
 		return isTTY && process.env.TERM && 'dumb' !== process.env.TERM && 'true' !== process.env.CI && true !== process.env.CI;
 	}
 
@@ -109,8 +109,8 @@ export default class u {
 				PARENT_IS_TTY:
 					process.stdout.isTTY || //
 					process.env.PARENT_IS_TTY
-						? true
-						: false,
+						? 'true'
+						: 'false',
 			},
 			// Output handlers do not run when `stdio: 'inherit'` or `quiet: true`.
 			stdout: opts.quiet ? null : (buffer) => echo(chalk.white(buffer.toString())),
@@ -1075,7 +1075,7 @@ export default class u {
 	 * Error utilities.
 	 */
 	static async error(title, text) {
-		if (!process.stdout.isTTY || !supportsColor?.has16m) {
+		if (!process.stdout.isTTY || !supportsColor || !supportsColor?.has16m) {
 			return chalk.red(text); // No box.
 		}
 		return (
@@ -1102,7 +1102,7 @@ export default class u {
 	 * Finale utilities.
 	 */
 	static async finale(title, text) {
-		if (!process.stdout.isTTY || !supportsColor?.has16m) {
+		if (!process.stdout.isTTY || !supportsColor || !supportsColor?.has16m) {
 			return chalk.green(text); // No box.
 		}
 		return (

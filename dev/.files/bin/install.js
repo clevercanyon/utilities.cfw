@@ -117,13 +117,13 @@ class Project {
  *
  * @see http://yargs.js.org/docs/
  */
-(async () => {
+void (async () => {
 	await yargs(hideBin(process.argv))
 		.command({
 			command: ['project'],
-			desc: 'Installs NPM packages, envs, and builds distro.',
+			describe: 'Installs NPM packages, envs, and builds distro.',
 			builder: (yargs) => {
-				yargs
+				return yargs
 					.options({
 						mode: {
 							type: 'string',
