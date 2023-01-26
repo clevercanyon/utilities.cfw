@@ -26,7 +26,8 @@
 				"dotfiles": {},
 				"build": {},
 				"github": {
-					"teams": {}
+					"teams": {},
+					"labels": {}
 				},
 				"npmjs": {}
 			}

@@ -62,7 +62,7 @@ const envFiles = {
 	stage: path.resolve(projDir, './dev/.envs/.env.stage'),
 	prod: path.resolve(projDir, './dev/.envs/.env.prod'),
 };
-const githubConfigVersion = '1.0.0'; // Bump when config changes in routines below.
+const githubConfigVersion = '1.0.1'; // Bump when config changes in routines below.
 const githubEnvsVersion = '1.0.0'; // Bump when environments change in routines below.
 const npmjsConfigVersion = '1.0.0'; // Bump when config changes in routines below.
 
@@ -334,6 +334,35 @@ export default class u {
 		if ('main' !== repoData.default_branch) {
 			throw new Error('githubCheckRepoOrgWideStandards: Default branch at GitHub must be `main`.');
 		}
+		const alwaysOnRequiredLabels = {
+			'bug report': {
+				color: 'b60205',
+				desc: 'Something isn’t working.',
+			},
+			'good first issue': {
+				color: 'fef2c0',
+				desc: 'Good first issue for newcomers.',
+			},
+			'question': {
+				color: '0e8a16',
+				desc: 'Something is being asked.',
+			},
+			'request': {
+				color: '1d76db',
+				desc: 'Something is being requested.',
+			},
+			'robotic': {
+				color: 'eeeeee',
+				desc: 'Something created robotically.',
+			},
+			'suggestion': {
+				color: 'fbca04',
+				desc: 'Something is being suggested.',
+			},
+		};
+		const labels = Object.assign({}, _.get(pkg, 'config.c10n.&.github.labels', {}), alwaysOnRequiredLabels);
+		const labelsToDelete = await u._githubRepoLabels(); // Current list of repo’s labels.
+
 		const alwaysOnRequiredTeams = { owners: 'admin', 'security-managers': 'pull' }; // No exceptions.
 		const teams = Object.assign({}, _.get(pkg, 'config.c10n.&.github.teams', {}), alwaysOnRequiredTeams);
 		const teamsToDelete = await u._githubRepoTeams(); // Current list of repo’s teams.
@@ -384,15 +413,38 @@ export default class u {
 			await octokit.request('PUT /repos/{owner}/{repo}/automated-security-fixes', { owner, repo });
 		}
 
+		for (const [labelName, labelData] of Object.entries(labels)) {
+			if (labelsToDelete[labelName]) {
+				delete labelsToDelete[labelName]; // Don't delete.
+
+				log(chalk.gray('Updating `' + labelName + '` label in GitHub repo to `#' + labelData.color + '` color.'));
+				if (!opts.dryRun) {
+					await octokit.request('PATCH /repos/{owner}/{repo}/labels/{labelName}', { owner, repo, labelName, ...labelData });
+				}
+			} else {
+				log(chalk.gray('Adding `' + labelName + '` label to GitHub repo with `#' + labelData.color + '` color.'));
+				if (!opts.dryRun) {
+					await octokit.request('POST /repos/{owner}/{repo}/labels', { owner, repo, name: labelName, ...labelData });
+				}
+			}
+		}
+		for (const [labelName, labelData] of Object.entries(labelsToDelete)) {
+			log(chalk.gray('Deleting `' + labelName + '` (unused) label with `#' + labelData.color + '` color from GitHub repo.'));
+			if (!opts.dryRun) {
+				await octokit.request('DELETE /repos/{owner}/{repo}/labels/{labelName}', { owner, repo, labelName });
+			}
+		}
+
 		for (const [team, permission] of Object.entries(teams)) {
 			delete teamsToDelete[team]; // Don't delete.
+
 			log(chalk.gray('Adding `' + team + '` team to GitHub repo with `' + permission + '` permission.'));
 			if (!opts.dryRun) {
 				await octokit.request('PUT /orgs/{org}/teams/{team}/repos/{owner}/{repo}', { org: owner, owner, repo, team, permission });
 			}
 		}
 		for (const [team, teamData] of Object.entries(teamsToDelete)) {
-			log(chalk.gray('Deleting `' + team + '` (unused) with `' + teamData.permission + '` permission from GitHub repo.'));
+			log(chalk.gray('Deleting `' + team + '` (unused) team with `' + teamData.permission + '` permission from GitHub repo.'));
 			if (!opts.dryRun) {
 				await octokit.request('DELETE /orgs/{org}/teams/{team}/repos/{owner}/{repo}', { org: owner, owner, repo, team });
 			}
@@ -400,6 +452,7 @@ export default class u {
 
 		for (const branch of ['main'] /* Always protect `main` branch. */) {
 			delete protectedBranchesToDelete[branch]; // Don't delete.
+
 			log(chalk.gray('Protecting `' + branch + '` branch in GitHub repo.'));
 			if (!opts.dryRun) {
 				await octokit.request('PUT /repos/{owner}/{repo}/branches/{branch}/protection', {
@@ -419,6 +472,7 @@ export default class u {
 					required_status_checks: null, // We don't use.
 
 					// @review Not implemented. See: <https://o5p.me/hfPAag>.
+					// Not currently a major issue since we already have an org-wide required workflow.
 					required_deployment_environments: { environments: ['ci'] },
 
 					restrictions: { users: [], teams: ['owners'], apps: [] },
@@ -517,6 +571,25 @@ export default class u {
 			throw new Error('u._githubRepo: Failed to acquire GitHub repository’s data.');
 		}
 		return r.data;
+	}
+
+	static async _githubRepoLabels() {
+		const labels = {}; // Initialize.
+		const { owner, repo } = await u.githubOrigin();
+		const i6r = octokit.paginate.iterator('GET /repos/{owner}/{repo}/labels{?per_page}', { owner, repo, per_page: 100 });
+
+		if (typeof i6r !== 'object') {
+			throw new Error('u._githubRepoLabels: Failed to acquire GitHub repository’s labels.');
+		}
+		for await (const { data } of i6r) {
+			for (const label of data) {
+				if (typeof label !== 'object' || !label.name) {
+					throw new Error('u._githubRepoLabels: Failed to acquire GitHub repository’s label data.');
+				}
+				labels[label.name] = label;
+			}
+		}
+		return labels;
 	}
 
 	static async _githubRepoTeams() {
