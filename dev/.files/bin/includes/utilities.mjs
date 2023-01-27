@@ -933,9 +933,9 @@ export default class u {
 				}
 				keys.push(env.USER_DOTENV_KEY_PROD);
 			}
-			await u.spawn(path.resolve(binDir, './envs.js'), ['decrypt', '--keys', ...keys]);
+			await u.spawn(path.resolve(binDir, './envs.mjs'), ['decrypt', '--keys', ...keys]);
 		} else {
-			await u.spawn(path.resolve(binDir, './envs.js'), ['install']);
+			await u.spawn(path.resolve(binDir, './envs.mjs'), ['install']);
 		}
 	}
 

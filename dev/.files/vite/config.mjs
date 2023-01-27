@@ -304,11 +304,11 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 		c10n: { pkg, pkgProps },
 		define: {
 			// Static replacements.
-			$$__APP_PKG_NAME__$$: pkg.name || '',
-			$$__APP_PKG_VERSION__$$: pkg.version || '',
-			$$__APP_PKG_REPOSITORY__$$: pkg.repository || '',
-			$$__APP_PKG_HOMEPAGE__$$: pkg.homepage || '',
-			$$__APP_PKG_BUGS__$$: pkg.bugs || '',
+			$$__APP_PKG_NAME__$$: JSON.stringify(pkg.name || ''),
+			$$__APP_PKG_VERSION__$$: JSON.stringify(pkg.version || ''),
+			$$__APP_PKG_REPOSITORY__$$: JSON.stringify(pkg.repository || ''),
+			$$__APP_PKG_HOMEPAGE__$$: JSON.stringify(pkg.homepage || ''),
+			$$__APP_PKG_BUGS__$$: JSON.stringify(pkg.bugs || ''),
 		},
 		root: srcDir, // Absolute. Where entry indexes live.
 		publicDir: path.relative(srcDir, cargoDir), // Relative to `root` directory.

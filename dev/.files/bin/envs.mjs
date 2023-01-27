@@ -439,6 +439,13 @@ class Decrypt {
  */
 void (async () => {
 	await yargs(hideBin(process.argv))
+		.parserConfiguration({
+			'dot-notation': false,
+			'strip-aliased': true,
+			'strip-dashed': true,
+			'greedy-arrays': true,
+			'boolean-negation': false,
+		})
 		.command({
 			command: 'install',
 			describe: 'Installs all envs for dotenv vault.',
