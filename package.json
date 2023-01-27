@@ -3,7 +3,7 @@
 	"publishConfig": {
 		"access": "restricted"
 	},
-	"version": "1.0.41",
+	"version": "1.0.42",
 	"license": "GPL-3.0-or-later",
 	"name": "@clevercanyon/utilities.cfw",
 	"description": "Another great project by Clever Canyon.",
@@ -49,24 +49,26 @@
 			"./*": ["./dist/types/*"]
 		}
 	},
+	"dependencies": {},
 	"peerDependencies": {
-		"@clevercanyon/utilities": "^1.0.77",
+		"@clevercanyon/utilities": "^1.0.78",
 		"@cloudflare/kv-asset-handler": "^0.2.0"
 	},
 	"peerDependenciesMeta": {},
+	"optionalDependencies": {},
 	"bundleDependencies": [],
 	"devDependencies": {
-		"@clevercanyon/skeleton-dev-deps": "^1.0.87",
+		"@clevercanyon/skeleton-dev-deps": "^1.0.99",
 		"@cloudflare/workers-types": "^4.20230115.0"
 	},
 	"overrides": {},
+	"workspaces": [],
 	"cpu": ["x64", "arm64"],
 	"os": ["darwin", "linux"],
 	"engines": {
 		"node": "^19.2.0 || ^19.4.0",
 		"npm": "^8.19.3 || ^9.2.0"
 	},
-	"workspaces": [],
 	"config": {
 		"c10n": {
 			"&": {
@@ -83,7 +85,8 @@
 						"architects": "push"
 					},
 					"labels": {},
-					"configVersion": "1.0.1"
+					"configVersion": "1.0.1",
+					"envsVersion": ""
 				},
 				"npmjs": {
 					"configVersions": "1.0.1,1.0.0"

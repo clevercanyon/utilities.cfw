@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Update CLI.
  *
@@ -17,6 +16,8 @@ import path from 'node:path';
 import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
+import deeps from 'deeps';
+import mc from 'merge-change';
 import * as se from 'shescape';
 import spawn from 'spawn-please';
 
@@ -36,18 +37,19 @@ const __dirname = dirname(import.meta.url);
 const binDir = path.resolve(__dirname, '..');
 const projDir = path.resolve(__dirname, '../../../..');
 
-const { pkgFile, pkgName, pkgPrivate, pkgRepository } = (() => {
+const { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType } = (() => {
 	const pkgFile = path.resolve(projDir, './package.json');
 	const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
 	if (typeof pkg !== 'object') {
 		throw new Error('u: Unable to parse `./package.json`.');
 	}
-	const pkgName = pkg.name || '';
-	const pkgPrivate = pkg.private;
-	const pkgRepository = pkg.repository || '';
+	const pkgName = _.get(pkg, 'name', '');
+	const pkgPrivate = _.get(pkg, 'private', null);
+	const pkgRepository = _.get(pkg, 'repository', '');
+	const pkgBuildAppType = _.get(pkg, 'config.c10n.&.build.appType', '');
 
-	return { pkgFile, pkgName, pkgPrivate, pkgRepository };
+	return { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType };
 })();
 const { log } = console; // Shorter reference.
 const echo = process.stdout.write.bind(process.stdout);
@@ -68,6 +70,27 @@ const npmjsConfigVersion = '1.0.0'; // Bump when config changes in routines belo
 
 const c10nLogo = path.resolve(__dirname, '../../assets/brands/c10n/logo.png');
 const c10nLogoDev = path.resolve(__dirname, '../../assets/brands/c10n/logo-dev.png');
+
+mc.addOperation('$default', (current, defaults) => {
+	const paths = Object.keys(defaults);
+
+	for (const path of paths) {
+		if (undefined === deeps.get(current, path, '.')) {
+			deeps.set(current, path, defaults[path], true, '.');
+		}
+	}
+	return paths.length > 0;
+});
+mc.addOperation('$ꓺdefault', (current, defaults) => {
+	const paths = Object.keys(defaults);
+
+	for (const path of paths) {
+		if (undefined === deeps.get(current, path, 'ꓺ')) {
+			deeps.set(current, path, defaults[path], true, 'ꓺ');
+		}
+	}
+	return paths.length > 0;
+});
 
 /**
  * Utilities.
@@ -157,14 +180,57 @@ export default class u {
 			throw new Error('u.pkgIncrementVersion: Failed to increment version: `' + origVersion + '`.');
 		}
 		if (!opts.dryRun) {
-			pkg.version = version; // Update to incremented version.
-			const pkgPrettierCfg = { ...(await prettier.resolveConfig(pkgFile)), parser: 'json' };
-			await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
+			await u.updatePkg({ version });
 		}
 	}
 
-	static async prettifyPkg() {
+	static async updatePkg(propsOrPath, value = undefined, delimiter = '.') {
 		const pkg = await u.pkg(); // Parses current `./package.json` file.
+
+		if (typeof propsOrPath === 'string') {
+			const path = propsOrPath; // String path.
+			deeps.set(pkg, path, value, true, delimiter);
+			//
+		} else if (typeof propsOrPath === 'object') {
+			const props = propsOrPath; // Object props.
+			mc.patch(pkg, props); // Potentially declarative ops.
+		} else {
+			throw new Error('u.updatePkg: Invalid arguments.');
+		}
+		await fsp.writeFile(pkgFile, JSON.stringify(pkg, null, 4));
+		await u.prettifyPkg(); // Sorts and runs prettier.
+	}
+
+	static async prettifyPkg() {
+		const pkg = {}; // Sorted `./package.json`; i.e., using insertion order.
+		const curPkg = await u.pkg(); // Parses current `./package.json` file.
+
+		const updatesFile = path.resolve(projDir, './dev/.files/bin/updater/data/package.json/updates.json');
+		const sortOrderFile = path.resolve(projDir, './dev/.files/bin/updater/data/package.json/sort-order.json');
+
+		const updates = JSON.parse((await fsp.readFile(updatesFile)).toString());
+		const sortOrder = JSON.parse((await fsp.readFile(sortOrderFile)).toString());
+
+		if (typeof updates !== 'object') {
+			throw new Error('u.prettifyPkg: Unable to parse `' + updatesFile + '`.');
+		}
+		if (!Array.isArray(sortOrder)) {
+			throw new Error('u.prettifyPkg: Unable to parse `' + sortOrderFile + '`.');
+		}
+		if (await u.isPkgRepo('clevercanyon/skeleton-dev-deps')) {
+			if (updates.$ꓺdefault?.['devDependenciesꓺ@clevercanyon/skeleton-dev-deps']) {
+				delete updates.$ꓺdefault['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
+			}
+		}
+		mc.patch(curPkg, updates); // Potentially declarative ops.
+
+		for (const path of sortOrder) {
+			const value = deeps.get(curPkg, path, 'ꓺ');
+			if (undefined !== value) deeps.set(pkg, path, value, true, 'ꓺ');
+		}
+		for (const [path, value] of Object.entries(deeps.flatten(curPkg, 'ꓺ'))) {
+			if (undefined === deeps.get(pkg, path, 'ꓺ')) deeps.set(pkg, path, value, true, 'ꓺ');
+		}
 		const pkgPrettierCfg = { ...(await prettier.resolveConfig(pkgFile)), parser: 'json' };
 		await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
 	}
@@ -273,17 +339,14 @@ export default class u {
 
 	static async githubReleaseTag() {
 		const { owner, repo } = await u.githubOrigin();
-
-		// Created by Vite build process.
 		const distZipFile = path.resolve(projDir, './.~dist.zip');
-
-		if (!fs.existsSync(distZipFile)) {
-			throw new Error('u.githubReleaseTag: Missing `./.~dist.zip`.');
-		}
 		const pkg = await u.pkg(); // Parses current `./package.json` file.
 
 		if (!pkg.version) {
 			throw new Error('u.githubReleaseTag: Package version is empty.');
+		}
+		if ((await u.isViteBuild()) && !fs.existsSync(distZipFile)) {
+			throw new Error('u.githubReleaseTag: Missing `./.~dist.zip` archive.');
 		}
 		const r = await octokit.request('POST /repos/{owner}/{repo}/releases', {
 			owner,
@@ -299,17 +362,19 @@ export default class u {
 		if (typeof r !== 'object' || typeof r.data !== 'object' || !r.data.id || !r.data.upload_url) {
 			throw new Error('u.githubReleaseTag: Failed to acquire GitHub release data.');
 		}
-		await octokit.request({
-			method: 'POST',
-			url: r.data.upload_url,
+		if ((await u.isViteBuild()) && fs.existsSync(distZipFile)) {
+			await octokit.request({
+				method: 'POST',
+				url: r.data.upload_url,
 
-			name: 'dist.zip',
-			headers: {
-				'content-type': 'application/zip',
-				'content-length': fs.statSync(distZipFile).size,
-			},
-			data: fs.readFileSync(distZipFile),
-		});
+				name: 'dist.zip',
+				headers: {
+					'content-type': 'application/zip',
+					'content-length': fs.statSync(distZipFile).size,
+				},
+				data: fs.readFileSync(distZipFile),
+			});
+		}
 	}
 
 	static async githubCheckRepoOrgWideStandards(opts = { dryRun: false }) {
@@ -495,9 +560,7 @@ export default class u {
 			}
 		}
 		if (!opts.dryRun) {
-			_.set(pkg, 'config.c10n.&.github.configVersion', githubConfigVersion);
-			const pkgPrettierCfg = { ...(await prettier.resolveConfig(pkgFile)), parser: 'json' };
-			await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
+			await u.updatePkg('config.c10n.&.github.configVersion', githubConfigVersion);
 		}
 	}
 
@@ -557,9 +620,7 @@ export default class u {
 			}
 		}
 		if (!opts.dryRun) {
-			_.set(pkg, 'config.c10n.&.github.envsVersion', githubEnvsVersion);
-			const pkgPrettierCfg = { ...(await prettier.resolveConfig(pkgFile)), parser: 'json' };
-			await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
+			await u.updatePkg('config.c10n.&.github.envsVersion', githubEnvsVersion);
 		}
 	}
 
@@ -1028,9 +1089,7 @@ export default class u {
 			}
 		}
 		if (!opts.dryRun) {
-			_.set(pkg, 'config.c10n.&.npmjs.configVersions', githubConfigVersion + ',' + npmjsConfigVersion);
-			const pkgPrettierCfg = { ...(await prettier.resolveConfig(pkgFile)), parser: 'json' };
-			await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
+			await u.updatePkg('config.c10n.&.npmjs.configVersions', githubConfigVersion + ',' + npmjsConfigVersion);
 		}
 	}
 
@@ -1066,6 +1125,10 @@ export default class u {
 	/*
 	 * Vite utilities.
 	 */
+
+	static async isViteBuild() {
+		return '' !== pkgBuildAppType;
+	}
 
 	static async viteBuild(opts = { mode: 'prod' }) {
 		await u.spawn('npx', ['vite', 'build', '--mode', opts.mode]);

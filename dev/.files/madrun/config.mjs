@@ -16,13 +16,13 @@ const __dirname = dirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
 
 export default {
-	'envs': async () => ['./dev/.files/bin/envs.js {{@}}'],
-	'envs:push': async () => ['./dev/.files/bin/envs.js push {{@}}'],
-	'envs:pull': async () => ['./dev/.files/bin/envs.js pull {{@}}'],
-	'envs:keys': async () => ['./dev/.files/bin/envs.js keys {{@}}'],
-	'envs:encrypt': async () => ['./dev/.files/bin/envs.js encrypt {{@}}'],
-	'envs:decrypt': async () => ['./dev/.files/bin/envs.js decrypt {{@}}'],
-	'envs:install': async () => ['./dev/.files/bin/envs.js install {{@}}'],
+	'envs': async () => ['./dev/.files/bin/envs.mjs {{@}}'],
+	'envs:push': async () => ['./dev/.files/bin/envs.mjs push {{@}}'],
+	'envs:pull': async () => ['./dev/.files/bin/envs.mjs pull {{@}}'],
+	'envs:keys': async () => ['./dev/.files/bin/envs.mjs keys {{@}}'],
+	'envs:encrypt': async () => ['./dev/.files/bin/envs.mjs encrypt {{@}}'],
+	'envs:decrypt': async () => ['./dev/.files/bin/envs.mjs decrypt {{@}}'],
+	'envs:install': async () => ['./dev/.files/bin/envs.mjs install {{@}}'],
 
 	'dev': async (args) => ['npx vite dev' + (args.mode ? '' : ' --mode=dev') + ' {{@}}'],
 	'preview': async (args) => ['npx vite preview' + (args.mode ? '' : ' --mode=dev') + ' {{@}}'],
@@ -30,25 +30,25 @@ export default {
 
 	'install': async () => {
 		if (fs.existsSync(path.resolve(projDir, './node_modules'))) {
-			return ['./dev/.files/bin/install.js {{@}}'];
+			return ['./dev/.files/bin/install.mjs {{@}}'];
 		}
-		return ['npm ci', './dev/.files/bin/install.js {{@}}'];
+		return ['npm ci', './dev/.files/bin/install.mjs {{@}}'];
 	},
 	'install:project': async () => {
 		if (fs.existsSync(path.resolve(projDir, './node_modules'))) {
-			return ['./dev/.files/bin/install.js project {{@}}'];
+			return ['./dev/.files/bin/install.mjs project {{@}}'];
 		}
-		return ['npm ci', './dev/.files/bin/install.js project {{@}}'];
+		return ['npm ci', './dev/.files/bin/install.mjs project {{@}}'];
 	},
-	'update': async () => ['./dev/.files/bin/update.js {{@}}'],
-	'update:dotfiles': async () => ['./dev/.files/bin/update.js dotfiles {{@}}'],
+	'update': async () => ['./dev/.files/bin/update.mjs {{@}}'],
+	'update:dotfiles': async () => ['./dev/.files/bin/update.mjs dotfiles {{@}}'],
 	'update:project': async (args) => {
 		if (args.h || args.v || args.help || args.version) {
-			return './dev/.files/bin/update.js project {{@}}';
+			return './dev/.files/bin/update.mjs project {{@}}';
 		}
-		return ['./dev/.files/bin/update.js dotfiles {{--dryRun}}', './dev/.files/bin/update.js project {{@}}'];
+		return ['./dev/.files/bin/update.mjs dotfiles {{--dryRun}}', './dev/.files/bin/update.mjs project {{@}}'];
 	},
-	'update:projects': async () => ['./dev/.files/bin/update.js projects {{@}}'],
+	'update:projects': async () => ['./dev/.files/bin/update.mjs projects {{@}}'],
 
 	'wrangler': async () => ['CLOUDFLARE_API_TOKEN="${USER_CLOUDFLARE_TOKEN}" npx wrangler {{@}}'],
 };

@@ -16,7 +16,7 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import chalk from 'chalk';
-import u from './includes/utilities.js';
+import u from './includes/utilities.mjs';
 
 u.propagateUserEnvVars(); // i.e., `USER_` env vars.
 
@@ -99,9 +99,11 @@ class Project {
 		 * Builds the app using Vite in given mode.
 		 */
 
-		log(chalk.green('Building with Vite; `' + this.args.mode + '` mode.'));
-		if (!this.args.dryRun) {
-			await u.viteBuild({ mode: this.args.mode });
+		if (await u.isViteBuild()) {
+			log(chalk.green('Building with Vite; `' + this.args.mode + '` mode.'));
+			if (!this.args.dryRun) {
+				await u.viteBuild({ mode: this.args.mode });
+			}
 		}
 
 		/**

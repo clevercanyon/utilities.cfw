@@ -10,10 +10,7 @@ Open `./dev/.files/bin/includes/core-projects.js` and change these.
 {
 	updates: {
 		ignore: [],
-		order: [],
-		skeletonOthers: {
-			globs: [],
-		}
+		order: []
 	}
 }
 ```

@@ -24,8 +24,8 @@ import { hideBin } from 'yargs/helpers';
 import chalk from 'chalk';
 import * as se from 'shescape';
 
-import u from './includes/utilities.js';
-import coreProjects from './includes/core-projects.js';
+import u from './includes/utilities.mjs';
+import coreProjects from './includes/core-projects.mjs';
 import { splitCMD } from '@clevercanyon/split-cmd.fork';
 
 u.propagateUserEnvVars(); // i.e., `USER_` env vars.
@@ -128,7 +128,7 @@ class Dotfiles {
 
 		log(chalk.green('Running updater using latest `clevercanyon/skeleton`; `' + skeletonBranch + '` branch.'));
 		if (!this.args.dryRun) {
-			await (await import(path.resolve(skeletonRepoDir, './dev/.files/bin/updater/index.js'))).default({ projDir, args: this.args });
+			await (await import(path.resolve(skeletonRepoDir, './dev/.files/bin/updater/index.mjs'))).default({ projDir });
 		}
 
 		/**
@@ -206,9 +206,11 @@ class Project {
 		 * Updates Vite build in the given mode.
 		 */
 
-		log(chalk.green('Updating Vite build; `' + this.args.mode + '` mode.'));
-		if (!this.args.dryRun) {
-			await u.viteBuild({ mode: this.args.mode });
+		if (await u.isViteBuild()) {
+			log(chalk.green('Updating Vite build; `' + this.args.mode + '` mode.'));
+			if (!this.args.dryRun) {
+				await u.viteBuild({ mode: this.args.mode });
+			}
 		}
 
 		/**
@@ -362,27 +364,10 @@ class Projects {
 			const pkgFile = path.resolve(projDir, './package.json');
 
 			/**
-			 * Checks `skeleton-dev-deps` considerations.
-			 */
-
-			let isSkeletonDevDepsAndScriptOk = false; // Special case.
-			if (
-				'skeleton-dev-deps' === projDirSubpath &&
-				(await u.isPkgRepo('clevercanyon/skeleton')) &&
-				//
-				!this.args.cmd && // There's no custom CMD to run.
-				1 === this.args.run.length && // Just one `update:project` script to run.
-				mm.isMatch(this.args.run[0], 'update:project{,:*, *}') // Pattern matching.
-			) {
-				isSkeletonDevDepsAndScriptOk = true; // Allows `skeleton-dev-deps` `update:project` script.
-				// Note: `skeleton-dev-deps` has it's own set of `update:project` scripts that are ok to run.
-			}
-
-			/**
 			 * Validates the current glob result.
 			 */
 
-			if (hasAllGlob && !fs.existsSync(devFilesDir) && !isSkeletonDevDepsAndScriptOk) {
+			if (hasAllGlob && !fs.existsSync(devFilesDir)) {
 				log(chalk.gray('Has glob `*`. No `./dev/.files` inside `' + projDisplayDir + '`. Bypassing.'));
 				continue; // No `./dev/.files` directory.
 			}
@@ -404,7 +389,7 @@ class Projects {
 
 					log(chalk.green('Running `' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + chalk.yellow(projDisplayDir));
 					if (!this.args.dryRun) {
-						await u.spawn(split.cmd, split.args, { cwd: projDir });
+						await u.spawn(split.cmd, split.args, { cwd: projDir, stdio: 'inherit' });
 					}
 				}
 			}
@@ -426,7 +411,7 @@ class Projects {
 
 						log(chalk.green('Running `madrun ' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + chalk.yellow(projDisplayDir));
 						if (!this.args.dryRun) {
-							await u.spawn('npx', ['@clevercanyon/madrun', split.cmd, ...split.args], { cwd: projDir });
+							await u.spawn('npx', ['@clevercanyon/madrun', split.cmd, ...split.args], { cwd: projDir, stdio: 'inherit' });
 						}
 					}
 				}
@@ -464,15 +449,6 @@ void (async () => {
 			builder: (yargs) => {
 				return yargs
 					.options({
-						skeletonUpdatesOthers: {
-							type: 'boolean',
-							requiresArg: false,
-							demandOption: false,
-							default: false,
-							description: // prettier-ignore
-								'Updating `clevercanyon/skeleton` also updates some dotfiles in “other” core repos?' +
-								' The “other” repos include: ../ `github`, `private`, `skeleton-dev-deps`, and `*.fork`s.',
-						},
 						message: {
 							alias: 'm',
 							type: 'string',
@@ -567,7 +543,7 @@ void (async () => {
 							type: 'array',
 							requiresArg: true,
 							demandOption: false,
-							default: ['*'],
+							default: ['*', '.github'],
 							description:  // prettier-ignore
 								'Glob matching is relative to `' + projsDir + '` and finds directories only.' +
 								' Note: Globstars `**` are not allowed given the nature of this command and will therefore throw an error.' +

@@ -1,36 +1,74 @@
 {
-	"$unset": ["typings", "scripts"],
-	"$set": {
+	"$ꓺdefault": {
+		"private": true,
+		"publishConfigꓺaccess": "restricted",
+
+		"version": "1.0.0",
+		"license": "GPL-3.0-or-later",
+		"name": "@clevercanyon/project",
+		"description": "Another great project by Clever Canyon.",
+		"repository": "https://github.com/clevercanyon/project",
+		"homepage": "https://github.com/clevercanyon/project#readme",
+		"bugs": "https://github.com/clevercanyon/project/issues",
+		"funding": "https://github.com/sponsors/clevercanyon",
+		"keywords": ["clevercanyon"],
+
 		"author": {
 			"name": "Clever Canyon",
 			"url": "https://clevercanyon.com"
 		},
+		"contributors": [],
+
+		"type": "module",
+		"files": [],
+		"bin": {},
+		"imports": {},
+		"exports": null,
+		"sideEffects": [],
+		"module": "",
+		"main": "",
+		"browser": "",
+		"unpkg": "",
+		"types": "",
+		"typesVersions": {},
+
+		"dependencies": {},
+		"peerDependencies": {},
+		"peerDependenciesMeta": {},
+		"optionalDependencies": {},
+		"bundleDependencies": [],
+		"devDependencies": {},
+		"devDependenciesꓺ@clevercanyon/skeleton-dev-deps": "*",
+
+		"overrides": {},
+		"workspaces": [],
+
+		"cpu": [],
+		"os": [],
+		"engines": {},
+
+		"configꓺc10nꓺ&ꓺdotfilesꓺlock": [],
+
+		"configꓺc10nꓺ&ꓺbuildꓺappType": "cma",
+		"configꓺc10nꓺ&ꓺbuildꓺtargetEnv": "any",
+
+		"configꓺc10nꓺ&ꓺgithubꓺteams": {},
+		"configꓺc10nꓺ&ꓺgithubꓺlabels": {},
+
+		"configꓺc10nꓺ&ꓺgithubꓺconfigVersion": "",
+		"configꓺc10nꓺ&ꓺgithubꓺenvsVersion": "",
+		"configꓺc10nꓺ&ꓺnpmjsꓺconfigVersions": ""
+	},
+	"$set": {
 		"funding": "https://github.com/sponsors/clevercanyon",
+		"workspaces": [],
 
 		"cpu": ["x64", "arm64"],
 		"os": ["darwin", "linux"],
 		"engines": {
 			"node": "^19.2.0 || ^19.4.0",
 			"npm": "^8.19.3 || ^9.2.0"
-		},
-		"workspaces": []
-	},
-	"devDependencies": {
-		"$set": {
-			"@clevercanyon/skeleton-dev-deps": "^1.0.0"
 		}
 	},
-	"config": {
-		"c10n": {
-			"&": {
-				"dotfiles": {},
-				"build": {},
-				"github": {
-					"teams": {},
-					"labels": {}
-				},
-				"npmjs": {}
-			}
-		}
-	}
+	"$unset": ["typings", "scripts"]
 }

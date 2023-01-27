@@ -1,7 +1,7 @@
 /**
- * Mad Run config file.
+ * Vite config file.
  *
- * Mad Run is aware of this config file's location.
+ * Vite is aware of this config file's location.
  *
  * @note CUSTOM EDITS ONLY PLEASE!
  * @note In the future this file will be updated automatically.
@@ -10,12 +10,14 @@
 /* eslint-env es2021, node */
 
 import mc from 'merge-change';
-import baseConfig from './dev/.files/madrun/config.js';
+import baseConfig from './dev/.files/vite/config.mjs';
 
 /*
  * Customizations.
  * <custom:start> */
 
-export default mc.merge({}, baseConfig, {});
+export default async (vite) => {
+	return mc.merge({}, await baseConfig(vite), {});
+};
 
 /* </custom:end> */

@@ -11,27 +11,45 @@ import _ from 'lodash';
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
-import { dirname } from 'desm';
-import { globbyStream } from 'globby';
-
 import chalk from 'chalk';
+import deeps from 'deeps';
 import mc from 'merge-change';
 import prettier from 'prettier';
 import spawn from 'spawn-please';
 
-import customRegexp from './data/custom-regexp.js';
-import coreProjects from '../includes/core-projects.js';
+import customRegexp from './data/custom-regexp.mjs';
 
 const { log } = console; // Shorter reference.
 
-export default async ({ projDir, args }) => {
+mc.addOperation('$default', (current, defaults) => {
+	const paths = Object.keys(defaults);
+
+	for (const path of paths) {
+		if (undefined === deeps.get(current, path, '.')) {
+			deeps.set(current, path, defaults[path], true, '.');
+		}
+	}
+	return paths.length > 0;
+});
+mc.addOperation('$ꓺdefault', (current, defaults) => {
+	const paths = Object.keys(defaults);
+
+	for (const path of paths) {
+		if (undefined === deeps.get(current, path, 'ꓺ')) {
+			deeps.set(current, path, defaults[path], true, 'ꓺ');
+		}
+	}
+	return paths.length > 0;
+});
+
+export default async ({ projDir }) => {
 	/**
 	 * Initializes vars.
 	 */
 	const __dirname = dirname(import.meta.url);
-	const projsDir = path.dirname(projDir); // One level up.
 	const skeletonDir = path.resolve(__dirname, '../../../..');
 
 	/**
@@ -42,7 +60,7 @@ export default async ({ projDir, args }) => {
 	 * @returns {string}     Escaped string.
 	 */
 	const escRegExp = (str) => {
-		return str.replace(/[.*+?^${}()|[\]\\-]/gu, '\\$&');
+		return str.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 	};
 
 	/**
@@ -111,9 +129,9 @@ export default async ({ projDir, args }) => {
 		await fsp.mkdir(path.resolve(projDir, relPath), { recursive: true });
 		await fsp.cp(path.resolve(skeletonDir, relPath), path.resolve(projDir, relPath), { recursive: true });
 	}
-	await fsp.chmod(path.resolve(projDir, './dev/.files/bin/envs.js'), 0o700);
-	await fsp.chmod(path.resolve(projDir, './dev/.files/bin/install.js'), 0o700);
-	await fsp.chmod(path.resolve(projDir, './dev/.files/bin/update.js'), 0o700);
+	await fsp.chmod(path.resolve(projDir, './dev/.files/bin/envs.mjs'), 0o700);
+	await fsp.chmod(path.resolve(projDir, './dev/.files/bin/install.mjs'), 0o700);
+	await fsp.chmod(path.resolve(projDir, './dev/.files/bin/update.mjs'), 0o700);
 
 	/**
 	 * Updates semi-immutable dotfiles.
@@ -125,6 +143,7 @@ export default async ({ projDir, args }) => {
 		'./.eslintrc.cjs',
 		'./.gitattributes',
 		'./.gitignore',
+		'./.madrun.mjs',
 		'./.npmignore',
 		'./.npmrc',
 		'./.postcssrc.cjs',
@@ -134,7 +153,7 @@ export default async ({ projDir, args }) => {
 		'./.stylelintrc.cjs',
 		'./.tailwindrc.cjs',
 		'./tsconfig.json',
-		'./vite.config.js',
+		'./vite.config.mjs',
 		'./wrangler.toml',
 	]) {
 		if (await isLocked(relPath)) {
@@ -152,29 +171,6 @@ export default async ({ projDir, args }) => {
 		}
 		await fsp.mkdir(path.dirname(path.resolve(projDir, relPath)), { recursive: true });
 		await fsp.writeFile(path.resolve(projDir, relPath), newFileContents);
-
-		if (args.skeletonUpdatesOthers && (await isPkgRepo('clevercanyon/skeleton')) && coreProjects.updates.skeletonOthers.files.includes(relPath)) {
-			const otherGlobs = coreProjects.updates.skeletonOthers.globs; // The “others” we'll update.
-			const globStream = globbyStream(otherGlobs, { expandDirectories: false, onlyDirectories: true, absolute: true, cwd: projsDir, dot: false });
-
-			for await (const projDir of globStream) {
-				if (!fs.existsSync(path.resolve(projDir, './package.json'))) {
-					continue; // False positive. No `package.json` file.
-				}
-				let newFileContents = ''; // Initialize.
-
-				if (fs.existsSync(path.resolve(projDir, relPath))) {
-					const oldFileContents = (await fsp.readFile(path.resolve(projDir, relPath))).toString();
-					const oldFileMatches = customRegexp.exec(oldFileContents); // See: `./data/custom-regexp.js`.
-					const oldFileCustomCode = oldFileMatches ? oldFileMatches[2] : ''; // We'll preserve any custom code.
-					newFileContents = (await fsp.readFile(path.resolve(skeletonDir, relPath))).toString().replace(customRegexp, ($_, $1, $2, $3) => $1 + oldFileCustomCode + $3);
-				} else {
-					newFileContents = (await fsp.readFile(path.resolve(skeletonDir, relPath))).toString();
-				}
-				await fsp.mkdir(path.dirname(path.resolve(projDir, relPath)), { recursive: true });
-				await fsp.writeFile(path.resolve(projDir, relPath), newFileContents);
-			}
-		}
 	}
 
 	/**
@@ -204,8 +200,9 @@ export default async ({ projDir, args }) => {
 		if (!fs.existsSync(path.resolve(projDir, relPath))) {
 			await fsp.cp(path.resolve(skeletonDir, relPath), path.resolve(projDir, relPath));
 		}
-		const json = JSON.parse((await fsp.readFile(path.resolve(projDir, relPath))).toString());
+		let json = JSON.parse((await fsp.readFile(path.resolve(projDir, relPath))).toString());
 		const jsonUpdatesFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', relPath, './updates.json');
+		const jsonSortOrderFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', relPath, './sort-order.json');
 
 		if (typeof json !== 'object') {
 			throw new Error('updater: Unable to parse `' + relPath + '`.');
@@ -216,7 +213,30 @@ export default async ({ projDir, args }) => {
 			if (typeof jsonUpdates !== 'object') {
 				throw new Error('updater: Unable to parse `' + jsonUpdatesFile + '`.');
 			}
-			mc.patch(json, jsonUpdates); // Merges potentially declarative ops.
+			if ('./package.json' === relPath && (await isPkgRepo('clevercanyon/skeleton-dev-deps'))) {
+				if (jsonUpdates.$ꓺdefault?.['devDependenciesꓺ@clevercanyon/skeleton-dev-deps']) {
+					delete jsonUpdates.$ꓺdefault['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
+				}
+			}
+			mc.patch(json, jsonUpdates); // Potentially declarative ops.
+			const prettierCfg = { ...(await prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
+			await fsp.writeFile(path.resolve(projDir, relPath), prettier.format(JSON.stringify(json, null, 4), prettierCfg));
+		}
+		if (fs.existsSync(jsonSortOrderFile)) {
+			const origJSON = _.cloneDeep(json); // Deep clone.
+			json = {}; // Sorted JSON file; i.e., using insertion order.
+			const jsonSortOrder = JSON.parse((await fsp.readFile(jsonSortOrderFile)).toString());
+
+			if (!Array.isArray(jsonSortOrder)) {
+				throw new Error('updater: Unable to parse `' + jsonSortOrderFile + '`.');
+			}
+			for (const path of jsonSortOrder) {
+				const value = deeps.get(origJSON, path, 'ꓺ');
+				if (undefined !== value) deeps.set(json, path, value, true, 'ꓺ');
+			}
+			for (const [path, value] of Object.entries(deeps.flatten(origJSON, 'ꓺ'))) {
+				if (undefined === deeps.get(json, path, 'ꓺ')) deeps.set(json, path, value, true, 'ꓺ');
+			}
 			const prettierCfg = { ...(await prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
 			await fsp.writeFile(path.resolve(projDir, relPath), prettier.format(JSON.stringify(json, null, 4), prettierCfg));
 		}
@@ -225,6 +245,8 @@ export default async ({ projDir, args }) => {
 	/**
 	 * Updates `@clevercanyon/skeleton-dev-deps` in project dir.
 	 */
-	log(chalk.green('Updating project to latest `@clevercanyon/skeleton-dev-deps`.'));
-	await spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps', '--silent'], { cwd: projDir });
+	if (!(await isPkgRepo('clevercanyon/skeleton-dev-deps'))) {
+		log(chalk.green('Updating project to latest `@clevercanyon/skeleton-dev-deps`.'));
+		await spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps', '--silent'], { cwd: projDir });
+	}
 };
