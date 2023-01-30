@@ -39,7 +39,7 @@ import { paginateRest as OctokitPluginPaginateRest } from '@octokit/plugin-pagin
 import sodium from 'libsodium-wrappers'; // Used to encrypt GitHub secret values.
 
 const __dirname = dirname(import.meta.url);
-const binDir = path.resolve(__dirname, '..' );
+const binDir = path.resolve(__dirname, '..');
 const projDir = path.resolve(__dirname, '../../../..');
 
 const { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType } = (() => {
@@ -59,9 +59,9 @@ const { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType } = (() => 
 const Octokit = OctokitCore.plugin(OctokitPluginPaginateRest);
 const octokit = new Octokit({ auth: process.env.USER_GITHUB_TOKEN || '' });
 
-const githubConfigVersion = '1.0.1'; // Bump when config changes in routines below.
-const githubEnvsVersion = '1.0.0'; // Bump when environments change in routines below.
-const npmjsConfigVersion = '1.0.0'; // Bump when config changes in routines below.
+const githubConfigVersion = '1.0.2'; // Bump when config changes in routines below.
+const githubEnvsVersion = '1.0.2'; // Bump when environments change in routines below.
+const npmjsConfigVersion = '1.0.2'; // Bump when config changes in routines below.
 
 const c10nLogo = path.resolve(__dirname, '../../assets/brands/c10n/logo.png');
 const c10nLogoDev = path.resolve(__dirname, '../../assets/brands/c10n/logo-dev.png');
