@@ -25,6 +25,9 @@ Example `index.scss` starter file contents:
 const path = require('node:path');
 const projDir = path.resolve(__dirname, '../../..');
 
+/**
+ * Composition.
+ */
 module.exports = {
 	plugins: [require('@tailwindcss/typography')],
 	theme: {
@@ -33,5 +36,5 @@ module.exports = {
 			serif: ['Georgia', 'serif'],
 		},
 	},
-	content: [path.resolve(projDir, './src/**/*.{md,xml,html,shtml,php,ejs,js,cjs,mjs,jsx,ts,tsx}')],
+	content: [path.resolve(projDir, './src/**/*.{md,xml,html,shtml,php,ejs,js,jsx,cjs,cjsx,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}')],
 };

@@ -11,30 +11,28 @@
  */
 /* eslint-env es2021, node */
 
-let commonPlugins = [];
-let commonExtends = [];
-let commonIgnoreFiles = [];
-let commonRules = {};
-
-module.exports = {
-	plugins: (commonPlugins = [
+/**
+ * Base config.
+ */
+const baseConfig = {
+	plugins: [
 		'stylelint-scss', //
 		'stylelint-order',
-	]),
-	extends: (commonExtends = [
+	],
+	extends: [
 		'stylelint-config-standard-scss', //
 		'stylelint-config-recess-order',
-	]).concat(['stylelint-config-prettier']),
-
-	ignoreFiles: (commonIgnoreFiles = [
+		'stylelint-config-prettier', // Must come last.
+	],
+	ignoreFiles: [
 		'**/dist/**', //
 		'**/.yarn/**',
 		'**/vendor/**',
 		'**/node_modules/**',
 		'**/jspm_packages/**',
 		'**/bower_components/**',
-	]),
-	rules: (commonRules = {
+	],
+	rules: {
 		'indentation': 'tab',
 		'no-duplicate-selectors': false,
 		'selector-type-no-unknown': false,
@@ -42,30 +40,37 @@ module.exports = {
 		'selector-class-pattern': '^[_-]?[a-z][a-z0-9]*(?:[_-]{1,2}[a-z0-9]+)*$',
 		'selector-id-pattern': '^[a-z][a-z0-9]*(?:[_-]{1,2}[a-z0-9]+)*$',
 		'at-rule-no-unknown': [true, { ignoreAtRules: ['tailwind', 'apply', 'variants', 'responsive', 'screen'] }],
-	}),
+	},
+};
+
+/**
+ * Composition.
+ */
+module.exports = {
+	...baseConfig,
 	overrides: [
 		{
 			files: ['**/*.scss'],
-			ignoreFiles: commonIgnoreFiles,
 
-			plugins: commonPlugins,
-			extends: commonExtends.concat(['stylelint-config-prettier']),
+			plugins: [...baseConfig.plugins],
+			extends: [...baseConfig.extends],
+			ignoreFiles: [...baseConfig.ignoreFiles],
 
 			customSyntax: 'postcss-scss',
 			rules: {
-				...commonRules,
-				'scss/at-rule-no-unknown': commonRules['at-rule-no-unknown'],
+				...baseConfig.rules,
+				'scss/at-rule-no-unknown': baseConfig.rules['at-rule-no-unknown'],
 			},
 		},
 		{
 			files: ['**/*.css'],
-			ignoreFiles: commonIgnoreFiles,
 
-			plugins: commonPlugins,
-			extends: commonExtends.concat(['stylelint-config-prettier']),
+			plugins: [...baseConfig.plugins],
+			extends: [...baseConfig.extends],
+			ignoreFiles: [...baseConfig.ignoreFiles],
 
 			customSyntax: 'postcss-safe-parser',
-			rules: { ...commonRules },
+			rules: { ...baseConfig.rules },
 		},
 	],
 };

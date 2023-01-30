@@ -140,6 +140,7 @@ export default async ({ projDir }) => {
 		'./.github/dependabot.yml',
 		'./.browserslistrc',
 		'./.editorconfig',
+		'./.eslintignore',
 		'./.eslintrc.cjs',
 		'./.gitattributes',
 		'./.gitignore',

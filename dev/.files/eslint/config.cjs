@@ -17,13 +17,6 @@
  */
 /* eslint-env es2021, node */
 
-let commonPlugins = [];
-let commonExtends = [];
-let commonIgnorePatterns = [];
-let commonParserOptions = {};
-let commonSettings = {};
-let commonRules = {};
-
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -31,111 +24,169 @@ const projDir = path.resolve(__dirname, '../../..');
 const pkgFile = path.resolve(projDir, './package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
-module.exports = {
+/**
+ * Base config.
+ */
+const baseConfig = {
 	root: true,
 	env: { es2021: true },
 
-	plugins: (commonPlugins = [
+	plugins: [
 		'import', //
 		'react',
 		'react-hooks',
 		'jsx-a11y',
-	]).concat(['prettier']),
-
-	extends: (commonExtends = [
+		'prettier', // Must come last.
+	],
+	extends: [
 		'eslint:recommended', //
 		'plugin:import/recommended',
 		'plugin:react/recommended',
 		'plugin:react-hooks/recommended',
 		'plugin:jsx-a11y/recommended',
-	]).concat(['plugin:prettier/recommended']),
-
-	// Ignore patterns are applied globally.
-	// eslint-disable-next-line no-unused-vars -- OK.
-	ignorePatterns: (commonIgnorePatterns = [
-		'!**/.*', //
+		'plugin:prettier/recommended', // Must come last.
+	],
+	ignorePatterns: [
+		'!**/.*', // Applied globally.
 		'**/dist/**',
 		'**/.yarn/**',
 		'**/vendor/**',
 		'**/node_modules/**',
 		'**/jspm_packages/**',
 		'**/bower_components/**',
-	]),
-	parser: 'espree', // Default parser.
+	],
+	settings: {}, // None at this time.
 
-	parserOptions: (commonParserOptions = {
+	parser: 'espree', // Default parser.
+	// <https://o5p.me/RARPvV>, <https://o5p.me/U4DpMN>.
+
+	parserOptions: {
 		ecmaVersion: 2021,
 		ecmaFeatures: {
 			jsx: true,
 			impliedStrict: true,
 		},
 		sourceType: pkg.type || 'script',
-	}),
-	settings: (commonSettings = {}),
-
-	rules: (commonRules = {
+	},
+	rules: {
 		'import/no-named-as-default-member': ['off'],
 		'no-empty': ['warn', { allowEmptyCatch: true }],
-	}),
-	overrides: [
-		{
-			files: ['**/*.{tsx,ts}'],
-			// ignorePatterns : commonIgnorePatterns,
-			// ↑ Ignore patterns are global and not allowed here.
+	},
+};
 
-			plugins: [
-				...commonPlugins, //
-				'@typescript-eslint',
-			].concat(['prettier']),
+/**
+ * Typescript partials.
+ */
+const tsPlugins = [...baseConfig.plugins];
+const tsExtends = [...baseConfig.extends];
 
-			extends: [
-				...commonExtends, //
-				'plugin:import/typescript',
-				'plugin:@typescript-eslint/recommended',
-				'plugin:@typescript-eslint/recommended-requiring-type-checking',
-			].concat(['plugin:prettier/recommended']),
+tsPlugins.splice(-1, 0, '@typescript-eslint');
+tsExtends.splice(-1, 0, // Prettier must come last.
+	...[
+		'plugin:import/typescript',
+		'plugin:@typescript-eslint/recommended',
+		'plugin:@typescript-eslint/recommended-requiring-type-checking',
+	],
+); // prettier-ignore
 
-			parser: '@typescript-eslint/parser',
+/**
+ * Typescript overrides.
+ */
+const tsOverrides = {
+	plugins: tsPlugins,
+	extends: tsExtends,
 
-			parserOptions: {
-				...commonParserOptions,
-				requireConfigFile: true,
+	settings: {
+		...baseConfig.settings,
+		'import/parsers': {
+			'@typescript-eslint/parser': ['.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx'],
+		},
+		'import/resolver': {
+			typescript: {
+				alwaysTryTypes: true,
 				project: ['**/tsconfig.json'],
 			},
-			settings: {
-				...commonSettings,
-				'import/parsers': {
-					'@typescript-eslint/parser': ['.tsx', '.ts'],
-				},
-				'import/resolver': {
-					typescript: {
-						alwaysTryTypes: true,
-						project: ['**/tsconfig.json'],
-					},
-				},
+		},
+	},
+	parser: '@typescript-eslint/parser',
+
+	parserOptions: {
+		...baseConfig.parserOptions,
+		project: ['**/tsconfig.json'],
+		requireConfigFile: true,
+	},
+	rules: {
+		...baseConfig.rules,
+		'@typescript-eslint/require-await': ['off'],
+		'@typescript-eslint/no-empty-interface': ['off'],
+		'@typescript-eslint/no-inferrable-types': ['off'],
+		'@typescript-eslint/ban-ts-comment': [
+			'warn',
+			{
+				'ts-check': 'allow-with-description',
+				'ts-nocheck': 'allow-with-description',
+				'ts-expect-error': 'allow-with-description',
+				'ts-ignore': 'allow-with-description',
 			},
-			rules: {
-				...commonRules,
-				'@typescript-eslint/require-await': ['off'],
-				'@typescript-eslint/no-empty-interface': ['off'],
-				'@typescript-eslint/no-inferrable-types': ['off'],
-				'@typescript-eslint/ban-ts-comment': [
-					'warn',
-					{
-						'ts-check': 'allow-with-description',
-						'ts-nocheck': 'allow-with-description',
-						'ts-expect-error': 'allow-with-description',
-						'ts-ignore': 'allow-with-description',
-					},
-				],
-				'@typescript-eslint/triple-slash-reference': [
-					'warn',
-					{
-						'path': 'never',
-						'types': 'always',
-						'lib': 'always',
-					},
-				],
+		],
+		'@typescript-eslint/triple-slash-reference': [
+			'warn',
+			{
+				'path': 'never',
+				'types': 'always',
+				'lib': 'always',
+			},
+		],
+	},
+};
+
+/**
+ * Composition.
+ */
+module.exports = {
+	...baseConfig,
+	overrides: [
+		{
+			files: ['**/*.cjs'],
+
+			parserOptions: {
+				...baseConfig.parserOptions,
+				sourceType: 'commonjs',
+			},
+		},
+		{
+			files: ['**/*.mjs'],
+
+			parserOptions: {
+				...baseConfig.parserOptions,
+				sourceType: 'module',
+			},
+		},
+		{
+			files: ['**/*.{ts,tsx}'],
+
+			...tsOverrides,
+			parserOptions: {
+				...tsOverrides.parserOptions,
+				sourceType: pkg.type || 'script',
+			},
+		},
+		{
+			files: ['**/*.{cts,ctsx}'],
+
+			...tsOverrides,
+			parserOptions: {
+				...tsOverrides.parserOptions,
+				sourceType: 'commonjs',
+			},
+		},
+		{
+			files: ['**/*.{mts,mtsx}'],
+
+			...tsOverrides,
+			parserOptions: {
+				...tsOverrides.parserOptions,
+				sourceType: 'module',
 			},
 		},
 	],

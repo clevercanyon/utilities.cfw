@@ -12,18 +12,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { dirname } from 'desm';
 
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
-
 import chalk from 'chalk';
 import u from './includes/utilities.mjs';
 
-u.propagateUserEnvVars(); // i.e., `USER_` env vars.
-
 const __dirname = dirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
-
-const { log } = console; // Shorter reference.
 
 /**
  * NOTE: All commands in this file must support both interactive and noninteractive sessions. Installations occur across
@@ -48,7 +41,7 @@ class Project {
 		await this.install();
 
 		if (this.args.dryRun) {
-			log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -73,12 +66,12 @@ class Project {
 		 */
 
 		if (fs.existsSync(path.resolve(projDir, './package-lock.json'))) {
-			log(chalk.green('Running a clean install of NPM packages.'));
+			u.log(chalk.green('Running a clean install of NPM packages.'));
 			if (!this.args.dryRun) {
 				await u.npmCleanInstall();
 			}
 		} else {
-			log(chalk.green('Running an install of NPM packages.'));
+			u.log(chalk.green('Running an install of NPM packages.'));
 			if (!this.args.dryRun) {
 				await u.npmInstall();
 			}
@@ -89,7 +82,7 @@ class Project {
 		 */
 
 		if (await u.isEnvsVault()) {
-			log(chalk.green('Installing Dotenv Vault variables.'));
+			u.log(chalk.green('Installing Dotenv Vault variables.'));
 			if (!this.args.dryRun) {
 				await u.envsInstallOrDecrypt({ mode: this.args.mode });
 			}
@@ -100,7 +93,7 @@ class Project {
 		 */
 
 		if (await u.isViteBuild()) {
-			log(chalk.green('Building with Vite; `' + this.args.mode + '` mode.'));
+			u.log(chalk.green('Building with Vite; `' + this.args.mode + '` mode.'));
 			if (!this.args.dryRun) {
 				await u.viteBuild({ mode: this.args.mode });
 			}
@@ -110,24 +103,17 @@ class Project {
 		 * Signals completion with success.
 		 */
 
-		log(await u.finale('Success', 'Project install complete.'));
+		u.log(await u.finaleBox('Success', 'Project install complete.'));
 	}
 }
 
 /**
- * Yargs CLI config. ⛵🏴‍☠
- *
- * @see http://yargs.js.org/docs/
+ * Yargs ⛵🏴‍☠.
  */
 void (async () => {
-	await yargs(hideBin(process.argv))
-		.parserConfiguration({
-			'dot-notation': false,
-			'strip-aliased': true,
-			'strip-dashed': true,
-			'greedy-arrays': true,
-			'boolean-negation': false,
-		})
+	await u.propagateUserEnvVars(); // i.e., `USER_` env vars.
+	const yargs = await u.yargs({ scriptName: 'madrun install' });
+	await yargs
 		.command({
 			command: ['project'],
 			describe: 'Installs NPM packages, envs, and builds distro.',
@@ -158,11 +144,5 @@ void (async () => {
 				await new Project(args).run();
 			},
 		})
-		.fail(async (message, error /* , yargs */) => {
-			if (error?.stack && typeof error.stack === 'string') log(chalk.gray(error.stack));
-			log(await u.error('Problem', error ? error.toString() : message || 'Unexpected unknown errror.'));
-			process.exit(1);
-		})
-		.strict()
 		.parse();
 })();

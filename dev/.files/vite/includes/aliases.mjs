@@ -18,6 +18,9 @@ const __dirname = dirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../../..');
 const srcDir = path.resolve(projDir, './src');
 
+/**
+ * Defines vite resolution aliases.
+ */
 export default [
 	// See also: `../typescript/config.json`.
 	{

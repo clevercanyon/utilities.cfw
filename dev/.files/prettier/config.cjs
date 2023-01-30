@@ -11,28 +11,33 @@
  */
 /* eslint-env es2021, node */
 
-module.exports = {
+/**
+ * Base config.
+ */
+const baseConfig = {
 	/**
 	 * Plugins.
 	 *
-	 * @see https://o5p.me/xCUiHS
+	 * @note We use a bunch.
+	 * @note https://o5p.me/xCUiHS
 	 */
+	pluginSearchDirs: false,
 	plugins: [
-		'prettier-plugin-jsdoc',
+		'prettier-plugin-jsdoc', //
 		'prettier-plugin-ini',
 		'prettier-plugin-properties',
 		'@prettier/plugin-xml',
 		'@prettier/plugin-php',
 		'prettier-plugin-sql',
 		'@prettier/plugin-ruby',
-		'prettier-plugin-sh', //
+		'prettier-plugin-sh',
 	],
-	pluginSearchDirs: false,
 
 	/**
-	 * Std options.
+	 * Standard options.
 	 *
-	 * @see https://o5p.me/mmdRUm
+	 * @note We define them all.
+	 * @note https://o5p.me/mmdRUm
 	 */
 	arrowParens: 'always',
 	bracketSameLine: false,
@@ -53,7 +58,13 @@ module.exports = {
 	trailingComma: 'all',
 	useTabs: true,
 	vueIndentScriptAndStyle: true,
+};
 
+/**
+ * Composition.
+ */
+module.exports = {
+	...baseConfig,
 	overrides: [
 		{
 			/**
@@ -72,7 +83,7 @@ module.exports = {
 			 *
 			 * @see https://o5p.me/dTTfse
 			 */
-			files: ['*.{js,cjs,mjs,jsx,ts,tsx}'],
+			files: ['*.{js,jsx,cjs,cjsx,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}'],
 			options: {
 				jsdocAddDefaultToDescription: false,
 				jsdocCapitalizeDescription: true,

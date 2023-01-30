@@ -68,7 +68,7 @@ Create this file on your computer. Then, restart your computer, open VS Code, an
 
 ## VS Code Word Separator Instructions
 
-Another neat trick is to modify VS Code by adding this to your `settings.json` file. By removing `$` and adding `ꓺ` to the list you can now double-click either side of `$urlꓺparse` to select `$url` or `parse`.
+Another neat trick is to modify VS Code by adding this to your `settings.json` file. By removing `$` and adding `ꓺ` to the list you can now double-click either side of `$urlꓺparse` to select `$url` or `parse`. Whether this behavior is preferrable or not — that’s entirely up to you. @jaswrks's personal preference is to omit `ꓺ` from the list below, treating `ꓺ` as a word character.
 
 ```jsonc
 {

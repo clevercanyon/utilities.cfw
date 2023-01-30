@@ -18,9 +18,6 @@ import fsp from 'node:fs/promises';
 import mm from 'micromatch';
 import { globby } from 'globby';
 
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
-
 import chalk from 'chalk';
 import * as se from 'shescape';
 
@@ -28,13 +25,9 @@ import u from './includes/utilities.mjs';
 import coreProjects from './includes/core-projects.mjs';
 import { splitCMD } from '@clevercanyon/split-cmd.fork';
 
-u.propagateUserEnvVars(); // i.e., `USER_` env vars.
-
 const __dirname = dirname(import.meta.url);
-const projsDir = path.resolve(__dirname, '../../../..');
 const projDir = path.resolve(__dirname, '../../..');
-
-const { log } = console; // Shorter reference.
+const projsDir = path.resolve(__dirname, '../../../..');
 
 /**
  * NOTE: All of these commands _must_ be performed interactively. Please review the Yargs configuration below for
@@ -59,7 +52,7 @@ class Dotfiles {
 		await this.update();
 
 		if (this.args.dryRun) {
-			log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -90,8 +83,8 @@ class Dotfiles {
 		 */
 
 		if ((await u.isPkgRepo('clevercanyon/skeleton')) && (await u.isGitRepoDirty())) {
-			log(chalk.green('Updating `clevercanyon/skeleton` git repo; `' + skeletonBranch + '` branch.'));
-			log('    ' + chalk.green('i.e., saving latest skeleton changes before self-update.'));
+			u.log(chalk.green('Updating `clevercanyon/skeleton` git repo; `' + skeletonBranch + '` branch.'));
+			u.log('    ' + chalk.green('i.e., saving latest skeleton changes before self-update.'));
 
 			if (!this.args.dryRun) {
 				await u.gitAddCommitPush((this.args.message + ' [d]').trim());
@@ -108,15 +101,15 @@ class Dotfiles {
 		 */
 
 		if (fs.existsSync(skeletonRepoDir) && (await u.gitLocalRepoSHA(skeletonRepoDir, skeletonBranch)) === (await u.gitRemoteRepoSHA(skeletonRepoURL, skeletonBranch))) {
-			log(chalk.green('Using latest `clevercanyon/skeleton` from cache; `' + skeletonBranch + '` branch.'));
+			u.log(chalk.green('Using latest `clevercanyon/skeleton` from cache; `' + skeletonBranch + '` branch.'));
 		} else {
-			log(chalk.green('Git-cloning, and caching, latest `clevercanyon/skeleton`; `' + skeletonBranch + '` branch.'));
+			u.log(chalk.green('Git-cloning, and caching, latest `clevercanyon/skeleton`; `' + skeletonBranch + '` branch.'));
 			if (!this.args.dryRun) {
 				await fsp.rm(skeletonRepoDir, { recursive: true, force: true });
 				await fsp.mkdir(skeletonRepoDir, { recursive: true }); // Starts fresh.
 				await u.spawn('git', ['clone', skeletonRepoURL, skeletonRepoDir, '--branch', skeletonBranch, '--depth=1'], { cwd: skeletonRepoDir });
 			}
-			log(chalk.green('Installing `clevercanyon/skeleton`’s NPM dependencies; `' + skeletonBranch + '` branch.'));
+			u.log(chalk.green('Installing `clevercanyon/skeleton`’s NPM dependencies; `' + skeletonBranch + '` branch.'));
 			if (!this.args.dryRun) {
 				await u.spawn('npm', ['ci'], { cwd: skeletonRepoDir });
 			}
@@ -126,7 +119,7 @@ class Dotfiles {
 		 * Runs updater using files from latest skeleton.
 		 */
 
-		log(chalk.green('Running updater using latest `clevercanyon/skeleton`; `' + skeletonBranch + '` branch.'));
+		u.log(chalk.green('Running updater using latest `clevercanyon/skeleton`; `' + skeletonBranch + '` branch.'));
 		if (!this.args.dryRun) {
 			await (await import(path.resolve(skeletonRepoDir, './dev/.files/bin/updater/index.mjs'))).default({ projDir });
 		}
@@ -135,7 +128,7 @@ class Dotfiles {
 		 * Signals completion with success.
 		 */
 
-		log(await u.finale('Success', 'Dotfiles update complete.'));
+		u.log(await u.finaleBox('Success', 'Dotfiles update complete.'));
 	}
 }
 
@@ -157,7 +150,7 @@ class Project {
 		await this.update();
 
 		if (this.args.dryRun) {
-			log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -169,7 +162,7 @@ class Project {
 		 * Updates NPM packages.
 		 */
 
-		log(chalk.green('Updating NPM packages.'));
+		u.log(chalk.green('Updating NPM packages.'));
 		if (!this.args.dryRun) {
 			await u.npmUpdate();
 		}
@@ -179,18 +172,22 @@ class Project {
 		 */
 
 		if (this.args.repos && (await u.isGitRepo()) && (await u.isGitRepoOriginGitHub())) {
-			log(chalk.green('Repos will update, so checking GitHub repo org-wide standards.'));
+			u.log(chalk.green('Repos will update, so checking GitHub repo org-wide standards.'));
 			await u.githubCheckRepoOrgWideStandards({ dryRun: this.args.dryRun });
 		}
 
 		/**
-		 * Pushes to Dotenv Vault, then encrypts, `./.env.vault`.
+		 * Pushes all Dotenv Vault envs; else recompiles only.
 		 */
-		// Also syncs GitHub repo environments using org-wide standards.
 
 		if (this.args.repos && (await u.isEnvsVault())) {
-			log(chalk.green('Repos will update, so pushing, then re-encrypting `./.env.vault`.'));
+			u.log(chalk.green('Repos will update, so pushing all Dotenv Vault envs.'));
+			// Also syncs GitHub repo environments using org-wide standards.
 			await u.envsPush({ dryRun: this.args.dryRun });
+			//
+		} else if (await u.isEnvsVault()) {
+			u.log(chalk.green('Recompiling all Dotenv Vault `.env*` files.'));
+			await u.envsCompile({ dryRun: this.args.dryRun });
 		}
 
 		/**
@@ -198,7 +195,7 @@ class Project {
 		 */
 
 		if (this.args.repos && this.args.pkgs && (await u.isNPMPkgPublishable({ mode: this.args.mode }))) {
-			log(chalk.green('NPM package will publish, so incrementing version.'));
+			u.log(chalk.green('NPM package will publish, so incrementing version.'));
 			await u.pkgIncrementVersion({ dryRun: this.args.dryRun });
 		}
 
@@ -207,7 +204,7 @@ class Project {
 		 */
 
 		if (await u.isViteBuild()) {
-			log(chalk.green('Updating Vite build; `' + this.args.mode + '` mode.'));
+			u.log(chalk.green('Updating Vite build; `' + this.args.mode + '` mode.'));
 			if (!this.args.dryRun) {
 				await u.viteBuild({ mode: this.args.mode });
 			}
@@ -219,25 +216,25 @@ class Project {
 
 		if (this.args.repos) {
 			/**
-			 * Gets `./package.json` with a potentially incremented version.
+			 * Parses current `./package.json`.
 			 */
 
-			const pkg = await u.pkg(); // See version incrementation above.
+			const pkg = await u.pkg(); // Potentially incremented version.
 
 			/**
 			 * Publishes a new version of NPM package(s).
 			 */
-			// Also checks org-wide npmjs package standards.
 
 			if (this.args.pkgs) {
 				if (await u.isNPMPkgPublishable({ mode: this.args.mode })) {
-					log(chalk.green('Publishing NPM package.'));
+					u.log(chalk.green('Publishing NPM package.'));
+					// Also checks org-wide npmjs package standards.
 					await u.npmPublish({ dryRun: this.args.dryRun });
 					//
 				} else if (await u.isNPMPkg()) {
-					log(chalk.gray('NPM package is not in a publishable state.'));
+					u.log(chalk.gray('NPM package is not in a publishable state.'));
 				} else {
-					log(chalk.gray('Not an NPM package.'));
+					u.log(chalk.gray('Not an NPM package.'));
 				}
 			}
 
@@ -247,29 +244,29 @@ class Project {
 
 			if (await u.isGitRepo()) {
 				if (await u.isGitRepoDirty()) {
-					log(chalk.green('Committing git repo changes; `' + (await u.gitCurrentBranch()) + '` branch.'));
+					u.log(chalk.green('Committing git repo changes; `' + (await u.gitCurrentBranch()) + '` branch.'));
 					if (!this.args.dryRun) {
 						await u.gitAddCommit((this.args.message + ' [p]').trim());
 					}
 				}
 				if (this.args.pkgs && (await u.isNPMPkgPublishable({ mode: this.args.mode }))) {
-					log(chalk.green('Creating git repo tag; `' + (await u.gitCurrentBranch()) + '` branch; `v' + pkg.version + '` tag.'));
+					u.log(chalk.green('Creating git repo tag; `' + (await u.gitCurrentBranch()) + '` branch; `v' + pkg.version + '` tag.'));
 					if (!this.args.dryRun) {
 						await u.gitTag((this.args.message + ' [p][v' + pkg.version + ']').trim());
 					}
 				}
-				log(chalk.green('Pushing to git repo; `' + (await u.gitCurrentBranch()) + '` branch.'));
+				u.log(chalk.green('Pushing to git repo; `' + (await u.gitCurrentBranch()) + '` branch.'));
 				if (!this.args.dryRun) {
 					await u.gitPush(); // Also pushes any tags.
 				}
 				if ((await u.isGitRepoOriginGitHub()) && this.args.pkgs && (await u.isNPMPkgPublishable({ mode: this.args.mode }))) {
-					log(chalk.green('Generating GitHub release; `v' + pkg.version + '` tag.'));
+					u.log(chalk.green('Generating GitHub release; `v' + pkg.version + '` tag.'));
 					if (!this.args.dryRun) {
 						await u.githubReleaseTag();
 					}
 				}
 			} else {
-				log(chalk.gray('Not a git repo.'));
+				u.log(chalk.gray('Not a git repo.'));
 			}
 		}
 
@@ -277,7 +274,7 @@ class Project {
 		 * Signals completion with success.
 		 */
 
-		log(await u.finale('Success', 'Project update complete.'));
+		u.log(await u.finaleBox('Success', 'Project update complete.'));
 	}
 }
 
@@ -299,7 +296,7 @@ class Projects {
 		await this.update();
 
 		if (this.args.dryRun) {
-			log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -313,7 +310,7 @@ class Projects {
 
 		let i; // Initialize.
 		const orderedResults = [];
-		const hasAllGlob = this.args.glob.includes('*');
+		const hasAllGlob = this.args.globs.includes('*');
 
 		/**
 		 * Does git ignore setup.
@@ -325,14 +322,14 @@ class Projects {
 		 * Acquires unordered glob results.
 		 */
 
-		const unorderedResults = await globby(this.args.glob, {
+		const unorderedResults = await globby(this.args.globs, {
 			cwd: projsDir,
 			onlyDirectories: true,
 			expandDirectories: false,
 
 			gitignore: true,
 			ignoreFiles: ['.~gitignore'],
-			ignore: coreProjects.updates.ignore.concat(this.args.ignore),
+			ignore: coreProjects.updates.ignore.concat(this.args.ignores),
 		});
 
 		/**
@@ -368,11 +365,11 @@ class Projects {
 			 */
 
 			if (hasAllGlob && !fs.existsSync(devFilesDir)) {
-				log(chalk.gray('Has glob `*`. No `./dev/.files` inside `' + projDisplayDir + '`. Bypassing.'));
+				u.log(chalk.gray('Has glob `*`. No `./dev/.files` inside `' + projDisplayDir + '`. Bypassing.'));
 				continue; // No `./dev/.files` directory.
 			}
 			if (hasAllGlob && !fs.existsSync(pkgFile)) {
-				log(chalk.gray('Has glob `*`. No `./package.json` in `' + projDisplayDir + '`. Bypassing.'));
+				u.log(chalk.gray('Has glob `*`. No `./package.json` in `' + projDisplayDir + '`. Bypassing.'));
 				continue; // No `./package.json` file.
 			}
 
@@ -380,36 +377,35 @@ class Projects {
 			 * Runs CMD(s) for current glob result.
 			 */
 
-			if (this.args.cmd) {
-				for (const cmdArgs of this.args.cmd.split(/\s*&&\s*/u)) {
-					const split = splitCMD(cmdArgs); // Splits into properties: `{cmd,args}`.
+			if (this.args.cmds.length) {
+				for (const cmd of this.args.cmds) {
+					for (const cmdArgs of cmd.split(/\s*&&\s*/u)) {
+						const split = splitCMD(cmdArgs); // Splits into properties: `{cmd,args}`.
 
-					const quotedCMD = se.quote(split.cmd); // Used only in output logging.
-					const quotedArgs = se.quoteAll(split.args); // Only in output logging.
+						const quotedCMD = se.quote(split.cmd); // Used only in output logging.
+						const quotedArgs = se.quoteAll(split.args); // Only in output logging.
 
-					log(chalk.green('Running `' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + chalk.yellow(projDisplayDir));
-					if (!this.args.dryRun) {
-						await u.spawn(split.cmd, split.args, { cwd: projDir, stdio: 'inherit' });
+						u.log(chalk.green('Running `' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + chalk.yellow(projDisplayDir));
+						if (!this.args.dryRun) {
+							await u.spawn(split.cmd, split.args, { cwd: projDir, stdio: 'inherit' });
+						}
 					}
 				}
 			}
 
 			/**
-			 * Madruns script(s) for current glob result.
+			 * Runs script(s) for current glob result.
 			 */
 
-			if (this.args.run.length) {
-				for (const run of this.args.run) {
+			if (this.args.runs.length) {
+				for (const run of this.args.runs) {
 					for (const cmdArgs of run.split(/\s*&&\s*/u)) {
 						const split = splitCMD(cmdArgs); // Splits into properties: `{cmd,args}`.
 
-						if (this.args.message && mm(split.cmd, 'update:{dotfiles,project}{,:}') && !mm(split.args, ['--message{,=}', '-m{,=}'])) {
-							split.args = split.args.concat(['--message', this.args.message]);
-						}
 						const quotedCMD = se.quote(split.cmd); // Used only in output logging.
 						const quotedArgs = se.quoteAll(split.args); // Only in output logging.
 
-						log(chalk.green('Running `madrun ' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + chalk.yellow(projDisplayDir));
+						u.log(chalk.green('Running `madrun ' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + chalk.yellow(projDisplayDir));
 						if (!this.args.dryRun) {
 							await u.spawn('npx', ['@clevercanyon/madrun', split.cmd, ...split.args], { cwd: projDir, stdio: 'inherit' });
 						}
@@ -422,7 +418,7 @@ class Projects {
 		 * Signals completion with success.
 		 */
 
-		log(await u.finale('Success', 'Project updates complete.'));
+		u.log(await u.finaleBox('Success', 'Project updates complete.'));
 	}
 
 	/**
@@ -437,19 +433,12 @@ class Projects {
 }
 
 /**
- * Yargs CLI config. ⛵🏴‍☠
- *
- * @see http://yargs.js.org/docs/
+ * Yargs ⛵🏴‍☠.
  */
 void (async () => {
-	await yargs(hideBin(process.argv))
-		.parserConfiguration({
-			'dot-notation': false,
-			'strip-aliased': true,
-			'strip-dashed': true,
-			'greedy-arrays': true,
-			'boolean-negation': false,
-		})
+	await u.propagateUserEnvVars(); // i.e., `USER_` env vars.
+	const yargs = await u.yargs({ scriptName: 'madrun update' });
+	await yargs
 		.command({
 			command: ['dotfiles'],
 			describe: 'Updates project dotfiles.',
@@ -495,6 +484,7 @@ void (async () => {
 							demandOption: false,
 							default: false,
 							description: 'Push to project repo(s)?',
+							alias: ['repo'],
 						},
 						message: {
 							alias: 'm',
@@ -512,6 +502,7 @@ void (async () => {
 							default: false,
 							implies: ['repos'],
 							description: 'Publish updated project package(s)?',
+							alias: ['pkg'],
 						},
 						mode: {
 							type: 'string',
@@ -546,7 +537,7 @@ void (async () => {
 			builder: (yargs) => {
 				return yargs
 					.options({
-						glob: {
+						globs: {
 							type: 'array',
 							requiresArg: true,
 							demandOption: false,
@@ -555,8 +546,9 @@ void (async () => {
 								'Glob matching is relative to `' + projsDir + '` and finds directories only.' +
 								' Note: Globstars `**` are not allowed given the nature of this command and will therefore throw an error.' +
 								' Please be more specific. Wildcards `*` are fine, but globstars `**` are prohibited in this option.',
+							alias: ['globs[]', 'globs[', 'glob', 'glob[]', 'glob['],
 						},
-						ignore: {
+						ignores: {
 							type: 'array',
 							requiresArg: true,
 							demandOption: false,
@@ -565,6 +557,7 @@ void (async () => {
 								'Glob matching is relative to `' + projsDir + '`. This effectively excludes directories otherwise found by the `glob` option.' +
 								' Note: The default ignore patterns are always in effect and cannot be overridden, only appended with this option.' +
 								' Additionally, patterns in this project’s `.gitignore` file, and those within each matched project directory, are also always in effect.',
+							alias: ['ignores[]', 'ignores[', 'ignore', 'ignore[]', 'ignore['],
 						},
 						order: {
 							type: 'array',
@@ -576,18 +569,20 @@ void (async () => {
 								' Note: It’s not necessary to list every single project directory, only those you need to prioritize, in a specific order.' +
 								' Any that are not listed explicitly, in order, will run last, in an arbitrary glob-based ordering, which is generally unpredictable.' +
 								' Note: The default ordering is always in effect and cannot be overridden, only appended with this option.',
+							alias: ['order[]', 'order['],
 						},
-						cmd: {
-							type: 'string',
+						cmds: {
+							type: 'array',
 							requiresArg: true,
 							demandOption: false,
-							default: '',
+							default: [],
 							description: // prettier-ignore
 								'Arbitrary `[cmd] [args]` to run in each project directory.' +
 								' Note: The use of `&&` is allowed, but the use of `||` or `|` pipes is not permitted at this time.' +
 								' If both `cmd` and `run` are given, `cmd` will always run first.',
+							alias: ['cmds[]', 'cmds[', 'cmd', 'cmd[]', 'cmd['],
 						},
-						run: {
+						runs: {
 							type: 'array',
 							requiresArg: true,
 							demandOption: false,
@@ -596,14 +591,7 @@ void (async () => {
 								'Scripts to `madrun [cmd] [args]` in each project directory.' +
 								' Note: The use of `&&` is allowed, but the use of `||` or `|` pipes is not permitted at this time.' +
 								' If both `cmd` and `run` are given, `cmd` will always run first.',
-						},
-						message: {
-							alias: 'm',
-							type: 'string',
-							requiresArg: true,
-							demandOption: false,
-							default: '', // No default value.
-							description: 'Commit message when updating project repos.',
+							alias: ['runs[]', 'runs[', 'run', 'run[]', 'run['],
 						},
 						dryRun: {
 							type: 'boolean',
@@ -614,13 +602,13 @@ void (async () => {
 						},
 					})
 					.check(async (args) => {
-						if (!args.glob.length) {
+						if (!args.globs.length) {
 							throw new Error('Empty `glob` option.');
 						}
-						if (args.glob.includes('**') || mm(args.glob, ['\\*\\*'], { contains: true }).length) {
+						if (args.globs.includes('**') || mm(args.globs, ['\\*\\*'], { contains: true }).length) {
 							throw new Error('Globstars `**` are prohitibed in `glob` option.');
 						}
-						if (!args.run.length && !args.cmd) {
+						if (!args.cmds.length && !args.runs.length) {
 							throw new Error('One of `cmd` and/or `run` is required.');
 						}
 						if (!(await u.isInteractive())) {
@@ -633,11 +621,5 @@ void (async () => {
 				await new Projects(args).run();
 			},
 		})
-		.fail(async (message, error /* , yargs */) => {
-			if (error?.stack && typeof error.stack === 'string') log(chalk.gray(error.stack));
-			log(await u.error('Problem', error ? error.toString() : message || 'Unexpected unknown errror.'));
-			process.exit(1);
-		})
-		.strict()
 		.parse();
 })();

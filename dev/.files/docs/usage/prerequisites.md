@@ -134,9 +134,9 @@ $ npm completion > /opt/homebrew/etc/bash_completion.d/npm
 # See: <https://docs.npmjs.com/cli/commands/npm-completion>
 ```
 
-## Mad Run: We're Mad About Scripts
+## We're Mad About Scripts
 
-Runs one or more commands configured by a JS file; in sequence. We use this tool at Clever Canyon instead of NPM scripts. Mad Run was developed internally and should be installed globally. You'll see that most of our GitHub repos include a `./.madrun.js` config file along with instructions regarding scripts you can run that’ll make your workflow easier.
+`$ madrun` runs one or more commands configured by a JS file; in sequence. We use this tool at Clever Canyon instead of NPM scripts. `$ madrun` was developed internally and should be installed globally. You'll see that most of our GitHub repos include a `./.madrun.mjs` config file along with instructions regarding scripts you can run that’ll make your workflow easier.
 
 ```bash
 $ npm install -g @clevercanyon/madrun
@@ -147,28 +147,33 @@ $ npm install -g @clevercanyon/madrun
 These environment variables authenticate you as a Clever Canyon developer. Please add the following lines to your macOS `~/.profile`.There are details below that help with token generation, for each of these. Please read carefully.
 
 ```bash
+export USER_GITHUB_USERNAME='your_username_goes_here'
 export USER_GITHUB_TOKEN='your_token_goes_here'
 export USER_NPM_TOKEN='your_token_goes_here'
 export USER_CLOUDFLARE_TOKEN='your_token_goes_here'
 ```
 
+### `USER_GITHUB_USERNAME`
+
+-   Please set this to the GitHub username that you use to access the Clever Canyon organization.
+
 ### `USER_GITHUB_TOKEN`
 
--   Contact @jaswrks or @bruckwrks and request access to the Clever Canyon organization on GitHub.
--   Create a personal **classic** (aka: legacy) access token (recommended). Select scopes `repo`, `workflow`, and `read:org`, at minimum. Please note that a classic access token works for all organizations you're a member of. A 1 year expiration date is suggested.
+-   Contact @jaswrks or @brucewrks and request access to the Clever Canyon organization on GitHub.
+-   Create a personal **classic** (aka: legacy) access token (recommended). Select scopes `repo`, `workflow`, `read:org`, at minimum. Please note that a classic access token works for all organizations you're a member of. A 1 year expiration date is suggested.
     -   See: <https://github.com/settings/tokens/new>
 -   Alternatively, create a personal **granular** (aka: fine-grained) access token with **resource owner** set to `clevercanyon`. Give the token access to **all respositories** and enable read/write (or highest available) access for all repository permissions. Leave account permissions empty. A 1 year expiration date is suggested. _Note: The caveat with granular access tokens is that they are created for a single resource owner. Therefore, you'll need a separate token for anything outside of Clever Canyon. In the future we anticipate that GitHub will improve, at which time we'll update these instructions, favoring granular access._
     -   See: <https://github.com/settings/personal-access-tokens/new>
 
 ### `USER_NPM_TOKEN`
 
--   Contact @jaswrks or @bruckwrks and request access to the Clever Canyon organization on NPM.
--   Create a personal **granular** (aka: fine-grained) access token with read/write access. If `@clevercanyon` is also listed separately as an organization (requires an NPM admin role or higher), then please do add the `@clevercanyon` **organization** as well, also with read/write access, at minimum. A 1 year expiration date is suggested.
+-   Contact @jaswrks or @brucewrks and request access to the Clever Canyon organization on NPM.
+-   Create a personal **granular** (aka: fine-grained) access token with read/write access. If `@clevercanyon` is also listed separately as an organization (requires an NPM admin role or higher), then please _do_ add the `@clevercanyon` **organization** as well, also with read/write access, at minimum. A 1 year expiration date is suggested.
     -   See: <https://docs.npmjs.com/about-access-tokens>
 
 ### `USER_CLOUDFLARE_TOKEN`
 
--   Contact @jaswrks or @bruckwrks and request access to the Clever Canyon organization on Cloudflare.
+-   Contact @jaswrks or @brucewrks and request access to the Clever Canyon organization on Cloudflare.
 -   Create a personal API token using Cloudflare's **Edit Cloudflare Workers** template type, which predefines all of the necessary/mininum permissions. Set **Account Resources** to include Clever Canyon, at minimum, but you probably want to create the token for 'all accounts'. Set **Zone Resources** to include all zones from Clever Canyon, at minimum, but you probably want to create the token for 'all zones'. A 1 year expiration date is suggested.
     -   See: <https://dash.cloudflare.com/profile/api-tokens>
 
@@ -176,8 +181,8 @@ export USER_CLOUDFLARE_TOKEN='your_token_goes_here'
 
 You will also need access to Clever Canyon’s [Dotenv Vault](https://www.dotenv.org).
 
--   Contact @jaswrks or @bruckwrks to request Clever Canyon org access at Dotenv Vault.
--   No token is needed. Dotenv Vault developer authentication must occur in a web browser. If you're working on repos where CLI scripts keep opening browser tabs asking for your Dotenv Vault login credentials, that's why. To resolve, contact @jaswrks or @bruckwrks and request access to the Clever Canyon organization at Dotenv Vault.
+-   Contact @jaswrks or @brucewrks to request Clever Canyon org access at Dotenv Vault.
+-   No token is needed. Dotenv Vault developer authentication must occur in a web browser. If you're working on repos where CLI scripts keep opening browser tabs asking for your Dotenv Vault login credentials, that's why. Contact @jaswrks or @brucewrks and request access to the Clever Canyon organization at Dotenv Vault.
 
 ## Environment Variable Tips & Tricks
 
@@ -198,10 +203,12 @@ Here's a rough example you can adapt to your liking.
 `~/.profile`, `~/.bash_profile`, or `~/.zprofile`.
 
 ```bash
+export MY_PERSONAL_GITHUB_USERNAME='your_username_goes_here'
 export MY_PERSONAL_GITHUB_TOKEN='your_token_goes_here'
 export MY_PERSONAL_NPM_TOKEN='your_token_goes_here'
 export MY_PERSONAL_CLOUDFLARE_TOKEN='your_token_goes_here'
 
+export MY_C10N_GITHUB_USERNAME='your_username_goes_here'
 export MY_C10N_GITHUB_TOKEN='your_token_goes_here'
 export MY_C10N_NPM_TOKEN='your_token_goes_here'
 export MY_C10N_CLOUDFLARE_TOKEN='your_token_goes_here'
@@ -209,8 +216,11 @@ export MY_C10N_CLOUDFLARE_TOKEN='your_token_goes_here'
 
 `~/.config/git/personal/.gitconfig` file.
 
+These values are literal and not replacement codes. They reference environment variable names.
+
 ```ini
 [github]
+username=MY_PERSONAL_GITHUB_USERNAME
 token=MY_PERSONAL_GITHUB_TOKEN
 
 [npm]
@@ -222,8 +232,11 @@ token=MY_PERSONAL_CLOUDFLARE_TOKEN
 
 `~/.config/git/clevercanyon/.gitconfig` file.
 
+These values are literal and not replacement codes. They reference environment variable names.
+
 ```ini
 [github]
+username=MY_C10N_GITHUB_USERNAME
 token=MY_C10N_GITHUB_TOKEN
 
 [npm]
@@ -239,11 +252,13 @@ token=MY_C10N_CLOUDFLARE_TOKEN
 #!/usr/bin/env bash
 
 function madrun() {
+	local github_username_env_var="$(command git config github.username)"
 	local github_token_env_var="$(command git config github.token)"
 	local npm_token_env_var="$(command git config npm.token)"
 	local cloudflare_token_env_var="$(command git config cloudflare.token)"
 
-	USER_GITHUB_TOKEN="${!github_token_env_var}" \
+	USER_GITHUB_USERNAME="${!github_username_env_var}" \
+		USER_GITHUB_TOKEN="${!github_token_env_var}" \
 		USER_NPM_TOKEN="${!npm_token_env_var}" \
 		USER_CLOUDFLARE_TOKEN="${!cloudflare_token_env_var}" \
 		command madrun "${@}"
@@ -256,11 +271,13 @@ function madrun() {
 #!/usr/bin/env bash
 
 function npm() {
+	local github_username_env_var="$(command git config github.username)"
 	local github_token_env_var="$(command git config github.token)"
 	local npm_token_env_var="$(command git config npm.token)"
 	local cloudflare_token_env_var="$(command git config cloudflare.token)"
 
-	USER_GITHUB_TOKEN="${!github_token_env_var}" \
+	USER_GITHUB_USERNAME="${!github_username_env_var}" \
+		USER_GITHUB_TOKEN="${!github_token_env_var}" \
 		USER_NPM_TOKEN="${!npm_token_env_var}" \
 		USER_CLOUDFLARE_TOKEN="${!cloudflare_token_env_var}" \
 		command npm "${@}"
@@ -273,11 +290,13 @@ function npm() {
 #!/usr/bin/env bash
 
 function npx() {
+	local github_username_env_var="$(command git config github.username)"
 	local github_token_env_var="$(command git config github.token)"
 	local npm_token_env_var="$(command git config npm.token)"
 	local cloudflare_token_env_var="$(command git config cloudflare.token)"
 
-	USER_GITHUB_TOKEN="${!github_token_env_var}" \
+	USER_GITHUB_USERNAME="${!github_username_env_var}" \
+		USER_GITHUB_TOKEN="${!github_token_env_var}" \
 		USER_NPM_TOKEN="${!npm_token_env_var}" \
 		USER_CLOUDFLARE_TOKEN="${!cloudflare_token_env_var}" \
 		command npx "${@}"
@@ -290,9 +309,16 @@ function npx() {
 #!/usr/bin/env bash
 
 function git() {
+	local github_username_env_var="$(command git config github.username)"
 	local github_token_env_var="$(command git config github.token)"
+	local npm_token_env_var="$(command git config npm.token)"
+	local cloudflare_token_env_var="$(command git config cloudflare.token)"
 
-	GH_TOKEN="${!github_token_env_var}" \
+	USER_GITHUB_USERNAME="${!github_username_env_var}" \
+		USER_GITHUB_TOKEN="${!github_token_env_var}" \
+		USER_NPM_TOKEN="${!npm_token_env_var}" \
+		USER_CLOUDFLARE_TOKEN="${!cloudflare_token_env_var}" \
+		GH_TOKEN="${!github_token_env_var}" \
 		command git "${@}"
 }
 ```
@@ -303,9 +329,16 @@ function git() {
 #!/usr/bin/env bash
 
 function gh() {
+	local github_username_env_var="$(command git config github.username)"
 	local github_token_env_var="$(command git config github.token)"
+	local npm_token_env_var="$(command git config npm.token)"
+	local cloudflare_token_env_var="$(command git config cloudflare.token)"
 
-	GH_TOKEN="${!github_token_env_var}" \
+	USER_GITHUB_USERNAME="${!github_username_env_var}" \
+		USER_GITHUB_TOKEN="${!github_token_env_var}" \
+		USER_NPM_TOKEN="${!npm_token_env_var}" \
+		USER_CLOUDFLARE_TOKEN="${!cloudflare_token_env_var}" \
+		GH_TOKEN="${!github_token_env_var}" \
 		command gh "${@}"
 }
 ```
