@@ -1,3 +1,3 @@
 # @clevercanyon/utilities.cfw
 
-Another great project by Clever Canyon.
+Utilities for JavaScript apps running in a Cloudflare Worker environment.

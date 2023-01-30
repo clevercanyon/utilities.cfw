@@ -3,10 +3,10 @@
 	"publishConfig": {
 		"access": "restricted"
 	},
-	"version": "1.0.45",
+	"version": "1.0.46",
 	"license": "GPL-3.0-or-later",
 	"name": "@clevercanyon/utilities.cfw",
-	"description": "Another great project by Clever Canyon.",
+	"description": "Utilities for JavaScript apps running in a Cloudflare Worker environment.",
 	"repository": "https://github.com/clevercanyon/utilities.cfw",
 	"homepage": "https://github.com/clevercanyon/utilities.cfw#readme",
 	"bugs": "https://github.com/clevercanyon/utilities.cfw/issues",
@@ -51,7 +51,7 @@
 	},
 	"dependencies": {},
 	"peerDependencies": {
-		"@clevercanyon/utilities": "^1.0.81",
+		"@clevercanyon/utilities": "^1.0.82",
 		"@cloudflare/kv-asset-handler": "^0.2.0"
 	},
 	"peerDependenciesMeta": {},
