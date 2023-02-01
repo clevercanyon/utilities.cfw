@@ -67,6 +67,8 @@ const baseConfig = {
 		'import/extensions': [...allJSExtns],
 		'import/resolver': {
 			node: { extensions: [...allJSExtns] },
+			// See: <https://o5p.me/y2hSj8>.
+			exports: { conditions: [] },
 		},
 	}, // None at this time.
 
