@@ -14,14 +14,10 @@ import { dirname } from 'desm';
 
 import chalk from 'chalk';
 import u from './includes/utilities.mjs';
+import { $yargs } from '@clevercanyon/utilities.node';
 
 const __dirname = dirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
-
-/**
- * NOTE: All commands in this file must support both interactive and noninteractive sessions. Installations occur across
- * a variety of platforms and environments. Therefore, it's important to exercise caution before making changes.
- */
 
 /**
  * Project command.
@@ -111,9 +107,13 @@ class Project {
  * Yargs ⛵🏴‍☠.
  */
 void (async () => {
-	await u.propagateUserEnvVars(); // i.e., `USER_` env vars.
-	const yargs = await u.yargs({ scriptName: 'madrun install' });
-	await yargs
+	await u.propagateUserEnvVars();
+	await (
+		await $yargs.cli({
+			scriptName: 'madrun install',
+			version: (await u.pkg()).version,
+		})
+	)
 		.command({
 			command: ['project'],
 			describe: 'Installs NPM packages, envs, and builds distro.',

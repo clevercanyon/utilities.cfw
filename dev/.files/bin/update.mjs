@@ -15,24 +15,15 @@ import path from 'node:path';
 import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
-import mm from 'micromatch';
-import { globby } from 'globby';
-
 import chalk from 'chalk';
-import * as se from 'shescape';
-
 import u from './includes/utilities.mjs';
+import { $mm } from '@clevercanyon/utilities';
 import coreProjects from './includes/core-projects.mjs';
-import { splitCMD } from '@clevercanyon/split-cmd.fork';
+import { $cmd, $glob, $yargs } from '@clevercanyon/utilities.node';
 
 const __dirname = dirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
 const projsDir = path.resolve(__dirname, '../../../..');
-
-/**
- * NOTE: All of these commands _must_ be performed interactively. Please review the Yargs configuration below for
- * further details. At this time, there are no exceptions. Every update _must_ occur interactively.
- */
 
 /**
  * Dotfiles command.
@@ -322,11 +313,10 @@ class Projects {
 		 * Acquires unordered glob results.
 		 */
 
-		const unorderedResults = await globby(this.args.globs, {
+		const unorderedResults = await $glob.promise(this.args.globs, {
 			cwd: projsDir,
 			onlyDirectories: true,
-			expandDirectories: false,
-
+			absolute: false,
 			gitignore: true,
 			ignoreFiles: ['.~gitignore'],
 			ignore: coreProjects.updates.ignore.concat(this.args.ignores),
@@ -337,7 +327,7 @@ class Projects {
 		 */
 
 		for (const projDirSubpathGlob of coreProjects.updates.order.concat(this.args.order)) {
-			for (const projDirSubpath of mm(unorderedResults, projDirSubpathGlob)) {
+			for (const projDirSubpath of $mm.match(unorderedResults, projDirSubpathGlob)) {
 				if (-1 === (i = unorderedResults.indexOf(projDirSubpath))) {
 					continue; // Not applicable.
 				}
@@ -380,10 +370,10 @@ class Projects {
 			if (this.args.cmds.length) {
 				for (const cmd of this.args.cmds) {
 					for (const cmdArgs of cmd.split(/\s*&&\s*/u)) {
-						const split = splitCMD(cmdArgs); // Splits into properties: `{cmd,args}`.
+						const split = $cmd.split(cmdArgs); // Splits into: `{cmd,args}`.
 
-						const quotedCMD = se.quote(split.cmd); // Used only in output logging.
-						const quotedArgs = se.quoteAll(split.args); // Only in output logging.
+						const quotedCMD = $cmd.quote(split.cmd); // Used only in output logging.
+						const quotedArgs = $cmd.quoteAll(split.args); // Only in output logging.
 
 						u.log(chalk.green('Running `' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + chalk.yellow(projDisplayDir));
 						if (!this.args.dryRun) {
@@ -400,10 +390,10 @@ class Projects {
 			if (this.args.runs.length) {
 				for (const run of this.args.runs) {
 					for (const cmdArgs of run.split(/\s*&&\s*/u)) {
-						const split = splitCMD(cmdArgs); // Splits into properties: `{cmd,args}`.
+						const split = $cmd.split(cmdArgs); // Splits into: `{cmd,args}`.
 
-						const quotedCMD = se.quote(split.cmd); // Used only in output logging.
-						const quotedArgs = se.quoteAll(split.args); // Only in output logging.
+						const quotedCMD = $cmd.quote(split.cmd); // Used only in output logging.
+						const quotedArgs = $cmd.quoteAll(split.args); // Only in output logging.
 
 						u.log(chalk.green('Running `madrun ' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + chalk.yellow(projDisplayDir));
 						if (!this.args.dryRun) {
@@ -436,9 +426,13 @@ class Projects {
  * Yargs ⛵🏴‍☠.
  */
 void (async () => {
-	await u.propagateUserEnvVars(); // i.e., `USER_` env vars.
-	const yargs = await u.yargs({ scriptName: 'madrun update' });
-	await yargs
+	await u.propagateUserEnvVars();
+	await (
+		await $yargs.cli({
+			scriptName: 'madrun update',
+			version: (await u.pkg()).version,
+		})
+	)
 		.command({
 			command: ['dotfiles'],
 			describe: 'Updates project dotfiles.',
@@ -605,7 +599,7 @@ void (async () => {
 						if (!args.globs.length) {
 							throw new Error('Empty `glob` option.');
 						}
-						if (args.globs.includes('**') || mm(args.globs, ['\\*\\*'], { contains: true }).length) {
+						if (args.globs.includes('**') || $mm.match(args.globs, ['\\*\\*'], { contains: true }).length) {
 							throw new Error('Globstars `**` are prohitibed in `glob` option.');
 						}
 						if (!args.cmds.length && !args.runs.length) {

@@ -9,13 +9,13 @@
  */
 /* eslint-env es2021, node */
 
-const mc = require('merge-change');
+const $obj = require('@clevercanyon/utilities/obj');
 const baseConfig = require('./dev/.files/stylelint/config.cjs');
 
 /*
  * Customizations.
  * <custom:start> */
 
-module.exports = mc.merge({}, baseConfig, {});
+module.exports = $obj.mc.merge({}, baseConfig, {});
 
 /* </custom:end> */

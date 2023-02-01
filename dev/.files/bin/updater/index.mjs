@@ -16,15 +16,15 @@ import fsp from 'node:fs/promises';
 
 import chalk from 'chalk';
 import deeps from 'deeps';
-import mc from 'merge-change';
 import prettier from 'prettier';
-import spawn from 'spawn-please';
 
+import { $str, $obj } from '@clevercanyon/utilities';
 import customRegexp from './data/custom-regexp.mjs';
+import { $cmd } from '@clevercanyon/utilities.node';
 
 const { log } = console; // Shorter reference.
 
-mc.addOperation('$default', (current, defaults) => {
+$obj.mc.addOperation('$default', (current, defaults) => {
 	const paths = Object.keys(defaults);
 
 	for (const path of paths) {
@@ -34,7 +34,7 @@ mc.addOperation('$default', (current, defaults) => {
 	}
 	return paths.length > 0;
 });
-mc.addOperation('$ꓺdefault', (current, defaults) => {
+$obj.mc.addOperation('$ꓺdefault', (current, defaults) => {
 	const paths = Object.keys(defaults);
 
 	for (const path of paths) {
@@ -53,23 +53,16 @@ export default async ({ projDir }) => {
 	const skeletonDir = path.resolve(__dirname, '../../../..');
 
 	/**
-	 * Escapes string for use in a regular expression.
-	 *
-	 * @param   {string} str String to escape.
-	 *
-	 * @returns {string}     Escaped string.
-	 */
-	const escRegExp = (str) => {
-		return str.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
-	};
-
-	/**
 	 * Gets current `./package.json`.
 	 *
 	 * @returns {object} Parsed `./package.json`.
 	 */
 	const getPkg = async () => {
 		const pkgFile = path.resolve(projDir, './package.json');
+
+		if (!fs.existsSync(pkgFile)) {
+			throw new Error('updater.getPkg: Missing `./package.json`.');
+		}
 		const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
 		if (typeof pkg !== 'object') {
@@ -99,7 +92,7 @@ export default async ({ projDir }) => {
 	 * @returns {boolean}           True if current package repo is `ownerRepo`.
 	 */
 	const isPkgRepo = async (ownerRepo) => {
-		return new RegExp('[:/]' + escRegExp(ownerRepo) + '(?:\\.git)?$', 'iu').test(pkgRepository);
+		return new RegExp('[:/]' + $str.escRegExp(ownerRepo) + '(?:\\.git)?$', 'iu').test(pkgRepository);
 	};
 
 	/**
@@ -219,7 +212,7 @@ export default async ({ projDir }) => {
 					delete jsonUpdates.$ꓺdefault['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
 				}
 			}
-			mc.patch(json, jsonUpdates); // Potentially declarative ops.
+			$obj.mc.patch(json, jsonUpdates); // Potentially declarative ops.
 			const prettierCfg = { ...(await prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
 			await fsp.writeFile(path.resolve(projDir, relPath), prettier.format(JSON.stringify(json, null, 4), prettierCfg));
 		}
@@ -248,6 +241,6 @@ export default async ({ projDir }) => {
 	 */
 	if (!(await isPkgRepo('clevercanyon/skeleton-dev-deps'))) {
 		log(chalk.green('Updating project to latest `@clevercanyon/skeleton-dev-deps`.'));
-		await spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps', '--silent'], { cwd: projDir });
+		await $cmd.spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps'], { cwd: projDir });
 	}
 };

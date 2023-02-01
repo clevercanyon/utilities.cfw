@@ -9,7 +9,6 @@
 
 import _ from 'lodash';
 import deeps from 'deeps';
-import mc from 'merge-change';
 
 import os from 'node:os';
 import fs from 'node:fs';
@@ -17,22 +16,15 @@ import path from 'node:path';
 import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
-import * as se from 'shescape';
-import spawn from 'spawn-please';
-
-import coloredBox from 'boxen';
-import terminalImage from 'term-img';
-import chalk, { supportsColor } from 'chalk';
-
+import chalk from 'chalk';
 import semver from 'semver';
 import prettier from 'prettier';
 
 import dotenv from 'dotenv';
 import dotenvVaultCore from 'dotenv-vault-core';
 
-import yArgs from 'yargs';
-// ↓ Incompatible with Vite’s config file bundler.
-// import { hideBin as yArgsꓺhideBin } from 'yargs/helpers';
+import { $str, $obj, $url } from '@clevercanyon/utilities';
+import { $cmd, $chalk } from '@clevercanyon/utilities.node';
 
 import { Octokit as OctokitCore } from '@octokit/core';
 import { paginateRest as OctokitPluginPaginateRest } from '@octokit/plugin-paginate-rest';
@@ -44,6 +36,10 @@ const projDir = path.resolve(__dirname, '../../../..');
 
 const { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType } = (() => {
 	const pkgFile = path.resolve(projDir, './package.json');
+
+	if (!fs.existsSync(pkgFile)) {
+		throw new Error('u: Missing `./package.json`.');
+	}
 	const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
 	if (typeof pkg !== 'object') {
@@ -64,11 +60,8 @@ const githubEnvsVersion = '1.0.2'; // Bump when environments change in routines 
 const npmjsConfigVersion = '1.0.2'; // Bump when config changes in routines below.
 
 const c10nLogo = path.resolve(__dirname, '../../assets/brands/c10n/logo.png');
-const c10nLogoDev = path.resolve(__dirname, '../../assets/brands/c10n/logo-dev.png');
 
-const yArgsꓺhideBin = (argv) => argv.slice(2); // Polyfill for incompatible import noted above.
-
-mc.addOperation('$default', (current, defaults) => {
+$obj.mc.addOperation('$default', (current, defaults) => {
 	const paths = Object.keys(defaults);
 
 	for (const path of paths) {
@@ -78,7 +71,7 @@ mc.addOperation('$default', (current, defaults) => {
 	}
 	return paths.length > 0;
 });
-mc.addOperation('$ꓺdefault', (current, defaults) => {
+$obj.mc.addOperation('$ꓺdefault', (current, defaults) => {
 	const paths = Object.keys(defaults);
 
 	for (const path of paths) {
@@ -89,17 +82,6 @@ mc.addOperation('$ꓺdefault', (current, defaults) => {
 	return paths.length > 0;
 });
 
-const yargsꓺdefaultOpts = {
-	bracketedArrays: true,
-	scriptName: '',
-	errorBoxName: '',
-	helpOption: 'help',
-	versionOption: 'version',
-	maxTerminalWidth: 80,
-	showHidden: false,
-	strict: true,
-};
-
 /**
  * Utilities.
  */
@@ -109,43 +91,11 @@ export default class u {
 	 */
 
 	/*
-	 * StdIO utilities.
+	 * Output utilities.
 	 */
 
 	static log(...args) {
 		return console.log(...args);
-	}
-
-	static logError(...args) {
-		return console.error(...args);
-	}
-
-	static logDebug(...args) {
-		return console.debug(...args);
-	}
-
-	static echo(...args) {
-		return process.stdout.write.bind(process.stdout)(...args);
-	}
-
-	static echoError(...args) {
-		return process.stdout.write.bind(process.stderr)(...args);
-	}
-
-	static echoDebug(...args) {
-		return process.stdout.write.bind(process.stdout)(...args);
-	}
-
-	/*
-	 * String utilities.
-	 */
-
-	static encURI(...args) {
-		return encodeURIComponent(...args);
-	}
-
-	static escRegExp(str) {
-		return str.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 	}
 
 	/**
@@ -163,97 +113,6 @@ export default class u {
 		process.env.CLOUDFLARE_API_TOKEN = process.env.USER_CLOUDFLARE_TOKEN || '';
 	}
 
-	/**
-	 * Yargs utilities.
-	 */
-
-	static async yargs(opts = yargsꓺdefaultOpts) {
-		let newYargs; // Initialize.
-		opts = Object.assign({}, yargsꓺdefaultOpts, opts);
-
-		if (opts.bracketedArrays) {
-			newYargs = await u._yArgsꓺwithBracketedArrays();
-		} else {
-			newYargs = yArgs(yArgsꓺhideBin(process.argv));
-		}
-		if (opts.scriptName) {
-			newYargs.scriptName(opts.scriptName);
-		}
-		return newYargs
-			.parserConfiguration({
-				'strip-dashed': true,
-				'strip-aliased': true,
-				'greedy-arrays': true,
-				'dot-notation': false,
-				'boolean-negation': false,
-			})
-			.help(opts.helpOption) // Given explicitly.
-			.version(opts.versionOption, (await u.pkg()).version || '0.0.0')
-
-			.wrap(Math.max(opts.maxTerminalWidth, newYargs.terminalWidth() / 2))
-			.showHidden(opts.showHidden) // `false` = permanently hide hidden options.
-			.strict(opts.strict) // `true` = no arbitrary commands|options.
-
-			.fail(async (message, error /* , yargs */) => {
-				if (error?.stack && typeof error.stack === 'string') u.logError(chalk.gray(error.stack));
-				u.logError(await u.errorBox((opts.errorBoxName ? opts.errorBoxName + ': ' : '') + 'Problem', error ? error.toString() : message || 'Unexpected unknown errror.'));
-				process.exit(1);
-			});
-	}
-
-	static async _yArgsꓺwithBracketedArrays() {
-		const bracketedArrayArgNames = [];
-		const newYargsArgs = yArgsꓺhideBin(process.argv);
-
-		for (const arg of newYargsArgs) {
-			let m = null; // Initializes variable.
-			if ((m = arg.match(/^-{1,2}((?:[^-[\]\s][^[\]\s]*)?\[\]?)$/u))) {
-				if ('[]' === m[1]) bracketedArrayArgNames.push('[');
-				bracketedArrayArgNames.push(m[1]);
-			}
-		}
-		if (!bracketedArrayArgNames.length) {
-			return yArgs(newYargsArgs); // New Yargs instance.
-		}
-		for (let i = 0, inBracketedArrayArgs = false; i < newYargsArgs.length; i++) {
-			if (inBracketedArrayArgs) {
-				if (']' === newYargsArgs[i] || '-]' === newYargsArgs[i]) {
-					inBracketedArrayArgs = false;
-					newYargsArgs[i] = '-]'; // Closing arg.
-				}
-			} else if (newYargsArgs[i].match(/^-{1,2}((?:[^-[\]\s][^[\]\s]*)?\[)$/u)) {
-				inBracketedArrayArgs = true;
-			}
-		}
-		return yArgs(newYargsArgs) // New Yargs instance.
-			.array(bracketedArrayArgNames)
-			.options({
-				']': {
-					hidden: true,
-					type: 'boolean',
-					requiresArg: false,
-					demandOption: false,
-					default: false,
-				},
-			})
-			.middleware((args) => {
-				delete args[']']; // Ditch closing brackets.
-
-				for (const [name] of Object.entries(args)) {
-					if (['$0', '_', ']'].includes(name)) {
-						continue; // Not applicable.
-					} else if (!bracketedArrayArgNames.includes(name)) {
-						continue; // Not applicable.
-					}
-					if (args[name] instanceof Array) {
-						args[name] = args[name] //
-							.map((v) => (typeof v === 'string' ? v.replace(/,$/u, '') : v))
-							.filter((v) => '' !== v);
-					}
-				}
-			}, true);
-	}
-
 	/*
 	 * TTY utilities.
 	 */
@@ -268,28 +127,14 @@ export default class u {
 	 */
 
 	static async spawn(cmd, args = [], opts = {}) {
-		if ('shell' in opts ? opts.shell : 'bash') {
-			// When using a shell, we must escape everything ourselves.
-			// i.e., Node does not escape `cmd` or `args` when a `shell` is given.
-			(cmd = se.quote(cmd)), (args = se.quoteAll(args));
-		}
-		return await spawn(cmd, args, {
+		return await $cmd.spawn(cmd, args, {
 			cwd: projDir,
-			shell: 'bash',
 			stdio: 'pipe',
 			env: {
-				...process.env,
-				PARENT_IS_TTY:
-					process.stdout.isTTY || //
-					process.env.PARENT_IS_TTY
-						? 'true'
-						: 'false',
+				...process.env, // Parent TTY assists {@see isInteractive()}.
+				PARENT_IS_TTY: process.stdout.isTTY || process.env.PARENT_IS_TTY ? 'true' : 'false',
 			},
-			// Output handlers do not run when `stdio: 'inherit'` or `quiet: true`.
-			stdout: opts.quiet ? null : (buffer) => u.echo(chalk.white(buffer.toString())),
-			stderr: opts.quiet ? null : (buffer) => u.echoError(chalk.gray(buffer.toString())),
-
-			..._.omit(opts, ['quiet']),
+			...opts,
 		});
 	}
 
@@ -298,6 +143,9 @@ export default class u {
 	 */
 
 	static async pkg() {
+		if (!fs.existsSync(pkgFile)) {
+			throw new Error('u.pkg: Missing `./package.json`.');
+		}
 		const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
 		if (typeof pkg !== 'object') {
@@ -307,7 +155,7 @@ export default class u {
 	}
 
 	static async isPkgRepo(ownerRepo) {
-		return new RegExp('[:/]' + u.escRegExp(ownerRepo) + '(?:\\.git)?$', 'iu').test(pkgRepository);
+		return new RegExp('[:/]' + $str.escRegExp(ownerRepo) + '(?:\\.git)?$', 'iu').test(pkgRepository);
 	}
 
 	static async isPkgRepoTemplate() {
@@ -343,7 +191,7 @@ export default class u {
 			//
 		} else if (typeof propsOrPath === 'object') {
 			const props = propsOrPath; // Object props.
-			mc.patch(pkg, props); // Potentially declarative ops.
+			$obj.mc.patch(pkg, props); // Potentially declarative ops.
 		} else {
 			throw new Error('u.updatePkg: Invalid arguments.');
 		}
@@ -372,7 +220,7 @@ export default class u {
 				delete updates.$ꓺdefault['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
 			}
 		}
-		mc.patch(curPkg, updates); // Potentially declarative ops.
+		$obj.mc.patch(curPkg, updates); // Potentially declarative ops.
 
 		for (const path of sortOrder) {
 			const value = deeps.get(curPkg, path, 'ꓺ');
@@ -476,7 +324,7 @@ export default class u {
 	 */
 
 	static async gistGetJSON(user, gistId) {
-		return await (await fetch('https://gist.github.com/' + encodeURIComponent(user) + '/' + encodeURIComponent(gistId) + '/raw')).json();
+		return await (await fetch('https://gist.github.com/' + $url.encode(user) + '/' + $url.encode(gistId) + '/raw')).json();
 	}
 
 	static async gistGetC10NUsers() {
@@ -612,7 +460,7 @@ export default class u {
 		const protectedBranches = await u._githubRepoProtectedBranches();
 		const protectedBranchesToDelete = Object.assign({}, protectedBranches);
 
-		const defaultHomepage = 'https://github.com/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo) + '#readme';
+		const defaultHomepage = 'https://github.com/' + $url.encode(owner) + '/' + $url.encode(repo) + '#readme';
 		const defaultDescription = 'Another great project by @' + repoData.owner.login + '.';
 
 		u.log(chalk.gray('Configuring GitHub repo using org-wide standards.'));
@@ -1067,7 +915,7 @@ export default class u {
 		if (!opts.dryRun) {
 			for (const [envName, envFile] of Object.entries(_.omit(envFiles, ['main']))) {
 				const thisEnv = dotenv.parse(envFile);
-				const env = mc.merge({}, mainEnv, thisEnv);
+				const env = $obj.mc.merge({}, mainEnv, thisEnv);
 
 				const compDir = path.resolve(path.dirname(envFile), './.~comp');
 				const envJSONFile = path.resolve(compDir, path.basename(envFile) + '.json');
@@ -1355,58 +1203,10 @@ export default class u {
 	}
 
 	/**
-	 * Error utilities.
-	 */
-
-	static async errorBox(title, text) {
-		if (!process.stdout.isTTY || !supportsColor || !supportsColor?.has16m) {
-			return chalk.red(text); // No box.
-		}
-		return (
-			'\n' +
-			coloredBox(chalk.bold.red(text), {
-				margin: 0,
-				padding: 0.75,
-				textAlignment: 'left',
-
-				dimBorder: false,
-				borderStyle: 'round',
-				borderColor: '#551819',
-				backgroundColor: '',
-
-				titleAlignment: 'left',
-				title: chalk.bold.redBright('⚑ ' + title),
-			}) +
-			'\n' +
-			(await terminalImage(c10nLogoDev, { width: '300px', fallback: () => '' }))
-		);
-	}
-
-	/**
 	 * Finale utilities.
 	 */
 
 	static async finaleBox(title, text) {
-		if (!process.stdout.isTTY || !supportsColor || !supportsColor?.has16m) {
-			return chalk.green(text); // No box.
-		}
-		return (
-			'\n' +
-			coloredBox(chalk.bold.hex('#ed5f3b')(text), {
-				margin: 0,
-				padding: 0.75,
-				textAlignment: 'left',
-
-				dimBorder: false,
-				borderStyle: 'round',
-				borderColor: '#8e3923',
-				backgroundColor: '',
-
-				titleAlignment: 'left',
-				title: chalk.bold.green('✓ ' + title),
-			}) +
-			'\n' +
-			(await terminalImage(c10nLogo, { width: '300px', fallback: () => '' }))
-		);
+		return await $chalk.finaleBox(title, text, { image: c10nLogo });
 	}
 }

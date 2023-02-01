@@ -151,9 +151,9 @@ $ madrun update projects --run[ 'update dotfiles' ] --dryRun
 -   👍🏻 Valid Examples
     -   `--run[ 'a', 'b', 'c' ]` and `--run[ 'a' 'b' 'c' ]` are equivalent (commas optional).
     -   `--run[ 'a' ]` and `--run[ 'a', ]` are equivalent. A single array item (comma optional).
--   👍🏻 Alternate Syntax w/ Caveats
+-   Alternate Syntax w/ Caveats
     -   `--run 'a'` shorthand is valid, but this syntax supports just a single array item.
-    -   `--run[] 'a' 'b' 'c'` shorthand is valid and supports multiple array items. Commas are not allowed with this syntax, even if purely cosmetic. Also, this syntax cannot be followed by positional arguments, because `--run[]` is greedy in the collection of array items that follow its array option name.
+    -   `--run[] 'a' 'b' 'c'` shorthand is valid and supports multiple array items. However, commas are not allowed with this syntax. Also, this syntax cannot be followed by any positional arguments, because `--run[]` is greedy in the collection of array items that follow its array option name.
 
 ### Updates Dotfiles + Project
 

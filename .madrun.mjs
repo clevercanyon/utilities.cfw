@@ -9,13 +9,13 @@
  */
 /* eslint-env es2021, node */
 
-import mc from 'merge-change';
+import { $obj } from '@clevercanyon/utilities';
 import baseConfig from './dev/.files/madrun/config.mjs';
 
 /*
  * Customizations.
  * <custom:start> */
 
-export default mc.merge({}, baseConfig, {});
+export default $obj.mc.merge({}, baseConfig, {});
 
 /* </custom:end> */

@@ -15,14 +15,10 @@ import fsp from 'node:fs/promises';
 
 import chalk from 'chalk';
 import u from './includes/utilities.mjs';
+import { $yargs } from '@clevercanyon/utilities.node';
 
 const __dirname = dirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
-
-/**
- * NOTE: Most of these commands _must_ be performed interactively. Please review the Yargs configuration below for
- * further details. At this time, only the `decrypt` command is allowed noninteractively, and _only_ noninteractively.
- */
 
 /**
  * Install command.
@@ -479,9 +475,13 @@ class Decrypt {
  * Yargs ⛵🏴‍☠.
  */
 void (async () => {
-	await u.propagateUserEnvVars(); // i.e., `USER_` env vars.
-	const yargs = await u.yargs({ scriptName: 'madrun envs' });
-	await yargs
+	await u.propagateUserEnvVars();
+	await (
+		await $yargs.cli({
+			scriptName: 'madrun envs',
+			version: (await u.pkg()).version,
+		})
+	)
 		.command({
 			command: 'install',
 			describe: 'Installs all envs for Dotenv Vault.',

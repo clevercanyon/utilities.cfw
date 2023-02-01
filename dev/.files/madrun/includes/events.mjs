@@ -9,10 +9,11 @@
 /* eslint-env es2021, node */
 
 import fs from 'node:fs';
-import fsp from 'node:fs/promises';
-import { dirname } from 'desm';
 import path from 'node:path';
+import { dirname } from 'desm';
+import fsp from 'node:fs/promises';
 
+import { $url } from '@clevercanyon/utilities';
 import u from '../../bin/includes/utilities.mjs';
 
 const __dirname = dirname(import.meta.url);
@@ -33,10 +34,10 @@ export default {
 		 */
 		async (args) => {
 			/**
-			 * Propagates `USER_` env vars.
+			 * Propagates env vars.
 			 */
 
-			await u.propagateUserEnvVars(); // i.e., `USER_` env vars.
+			await u.propagateUserEnvVars();
 
 			/**
 			 * Deletes Dotenv Vault associated with template.
@@ -50,7 +51,7 @@ export default {
 			 */
 
 			const dirBasename = path.basename(projDir);
-			const parentDir = path.dirname(projDir); // One level up.
+			const parentDir = path.dirname(projDir);
 			const parentDirBasename = path.basename(parentDir);
 
 			/**
@@ -59,9 +60,9 @@ export default {
 
 			await u.updatePkg({
 				name: args.pkgName || '@' + parentDirBasename + '/' + dirBasename,
-				repository: 'https://github.com/' + u.encURI(parentDirBasename) + '/' + u.encURI(dirBasename),
-				homepage: 'https://github.com/' + u.encURI(parentDirBasename) + '/' + u.encURI(dirBasename) + '#readme',
-				bugs: 'https://github.com/' + u.encURI(parentDirBasename) + '/' + u.encURI(dirBasename) + '/issues',
+				repository: 'https://github.com/' + $url.encode(parentDirBasename) + '/' + $url.encode(dirBasename),
+				homepage: 'https://github.com/' + $url.encode(parentDirBasename) + '/' + $url.encode(dirBasename) + '#readme',
+				bugs: 'https://github.com/' + $url.encode(parentDirBasename) + '/' + $url.encode(dirBasename) + '/issues',
 
 				$unset: /* Effectively resets these to default values. */ [
 					'private', //
@@ -93,10 +94,13 @@ export default {
 			 */
 
 			const readmeFile = path.resolve(projDir, './README.md');
-			let readme = fs.readFileSync(readmeFile).toString(); // Markdown.
 
-			readme = readme.replace(/@clevercanyon\/[^/?#\s]+/gu, args.pkgName || '@' + parentDirBasename + '/' + dirBasename);
-			await fsp.writeFile(readmeFile, readme); // Updates `./README.md` file.
+			if (fs.existsSync(readmeFile)) {
+				let readme = fs.readFileSync(readmeFile).toString(); // Markdown.
+
+				readme = readme.replace(/@clevercanyon\/[^/?#\s]+/gu, args.pkgName || '@' + parentDirBasename + '/' + dirBasename);
+				await fsp.writeFile(readmeFile, readme); // Updates `./README.md` file.
+			}
 
 			/**
 			 * Initializes this as a new git repository.
@@ -123,14 +127,14 @@ export default {
 				if (process.env.GH_TOKEN && 'owner' === (await u.gistGetC10NUser()).github?.role) {
 					await u.spawn('gh', ['repo', 'create', parentDirBasename + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private'], { stdio: 'inherit' });
 				} else {
-					const origin = 'https://github.com/' + u.encURI(parentDirBasename) + '/' + u.encURI(dirBasename) + '.git';
+					const origin = 'https://github.com/' + $url.encode(parentDirBasename) + '/' + $url.encode(dirBasename) + '.git';
 					await u.spawn('git', ['remote', 'add', 'origin', origin], { stdio: 'inherit' });
 				}
 			} else if (process.env.USER_GITHUB_USERNAME === parentDirBasename) {
 				if (process.env.GH_TOKEN) {
 					await u.spawn('gh', ['repo', 'create', parentDirBasename + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private'], { stdio: 'inherit' });
 				} else {
-					const origin = 'https://github.com/' + u.encURI(parentDirBasename) + '/' + u.encURI(dirBasename) + '.git';
+					const origin = 'https://github.com/' + $url.encode(parentDirBasename) + '/' + $url.encode(dirBasename) + '.git';
 					await u.spawn('git', ['remote', 'add', 'origin', origin], { stdio: 'inherit' });
 				}
 			}
@@ -139,7 +143,7 @@ export default {
 			 * Signals completion with success.
 			 */
 
-			u.log(await u.finale('Success', 'New project ready.'));
+			u.log(await u.finaleBox('Success', 'New project ready.'));
 		},
 	],
 };

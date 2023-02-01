@@ -22,7 +22,14 @@ const path = require('node:path');
 
 const projDir = path.resolve(__dirname, '../../..');
 const pkgFile = path.resolve(projDir, './package.json');
+
+if (!fs.existsSync(pkgFile)) {
+	throw new Error('eslint/config.cjs: Missing `./package.json`.');
+}
 const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
+
+const allJSExtns = ['.js', '.jsx', '.cjs', '.cjsx', '.json', '.node', '.mjs', '.mjsx'];
+const allTSExtns = ['.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx'];
 
 /**
  * Base config.
@@ -55,7 +62,13 @@ const baseConfig = {
 		'**/jspm_packages/**',
 		'**/bower_components/**',
 	],
-	settings: {}, // None at this time.
+	settings: {
+		// <https://o5p.me/Pz4Su8>.
+		'import/extensions': [...allJSExtns],
+		'import/resolver': {
+			node: { extensions: [...allJSExtns] },
+		},
+	}, // None at this time.
 
 	parser: 'espree', // Default parser.
 	// <https://o5p.me/RARPvV>, <https://o5p.me/U4DpMN>.
@@ -70,6 +83,8 @@ const baseConfig = {
 	},
 	rules: {
 		'import/no-named-as-default-member': ['off'],
+		'import/no-duplicates': ['off'], // Redundant & not smart.
+		'import/extensions': ['warn', 'always', { ignorePackages: true }],
 		'no-empty': ['warn', { allowEmptyCatch: true }],
 	},
 };
@@ -93,19 +108,19 @@ tsExtends.splice(-1, 0, // Prettier must come last.
  * Typescript overrides.
  */
 const tsOverrides = {
-	plugins: tsPlugins,
-	extends: tsExtends,
+	plugins: [...tsPlugins],
+	extends: [...tsExtends],
 
 	settings: {
 		...baseConfig.settings,
-		'import/parsers': {
-			'@typescript-eslint/parser': ['.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx'],
-		},
+		'import/extensions': [...allJSExtns, ...allTSExtns],
+		'import/parsers': { '@typescript-eslint/parser': [...allTSExtns] },
 		'import/resolver': {
 			typescript: {
 				alwaysTryTypes: true,
 				project: ['**/tsconfig.json'],
 			},
+			node: { extensions: [...allJSExtns, ...allTSExtns] },
 		},
 	},
 	parser: '@typescript-eslint/parser',
@@ -137,6 +152,14 @@ const tsOverrides = {
 				'lib': 'always',
 			},
 		],
+		'import/extensions': [
+			'warn',
+			'always', // Require all imports to include a file extension.
+			{
+				ignorePackages: true, // ↓ Never use TS extensions in imports.
+				pattern: { ...Object.fromEntries(Array.from(allTSExtns, (e) => [e.slice(1), 'never'])) },
+			},
+		],
 	},
 };
 
@@ -147,7 +170,7 @@ module.exports = {
 	...baseConfig,
 	overrides: [
 		{
-			files: ['**/*.cjs'],
+			files: ['**/*.{cjs,node}'],
 
 			parserOptions: {
 				...baseConfig.parserOptions,

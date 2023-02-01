@@ -12,7 +12,6 @@
 /* eslint-env es2021, node */
 
 import _ from 'lodash';
-import mc from 'merge-change';
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,15 +19,14 @@ import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 import archiver from 'archiver';
 
-import mm from 'micromatch';
-import { globby } from 'globby';
-
 import { loadEnv } from 'vite';
 import pluginBasicSSL from '@vitejs/plugin-basic-ssl';
 import { ViteEjsPlugin as pluginEJS } from 'vite-plugin-ejs';
 import { ViteMinifyPlugin as pluginMinifyHTML } from 'vite-plugin-minify';
 
 import u from '../bin/includes/utilities.mjs';
+import { $obj, $mm } from '@clevercanyon/utilities';
+import { $glob } from '@clevercanyon/utilities.node';
 import importAliases from './includes/aliases.mjs';
 
 import { createRequire } from 'node:module';
@@ -88,16 +86,16 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	cmaName = cmaName.replace(/[^a-z.0-9]([^.])/gu, (m0, m1) => m1.toUpperCase());
 	cmaName = cmaName.replace(/^\.|\.$/u, '');
 
-	const mpaIndexes = await globby('**/index.html', { expandDirectories: false, cwd: srcDir, absolute: true });
+	const mpaIndexes = await $glob.promise('**/index.html', { cwd: srcDir });
 	const mpaIndexesSubPaths = mpaIndexes.map((absPath) => path.relative(srcDir, absPath));
 
-	const cmaEntries = await globby('*.{ts,tsx}', { expandDirectories: false, cwd: srcDir, absolute: true });
+	const cmaEntries = await $glob.promise('*.{ts,tsx}', { cwd: srcDir });
 	const cmaEntriesRelPaths = cmaEntries.map((absPath) => './' + path.relative(srcDir, absPath));
 	const cmaEntriesSubpaths = cmaEntries.map((absPath) => path.relative(srcDir, absPath));
 	const cmaEntriesSubpathsNoExt = cmaEntriesSubpaths.map((subpath) => subpath.replace(/\.[^.]+$/u, ''));
 
-	const mpaEntryIndexSubpath = mpaIndexesSubPaths.find((subpath) => mm.isMatch(subpath, 'index.html'));
-	const cmaEntryIndexSubpath = cmaEntriesSubpaths.find((subpath) => mm.isMatch(subpath, 'index.{ts,tsx}'));
+	const mpaEntryIndexSubpath = mpaIndexesSubPaths.find((subpath) => $mm.isMatch(subpath, 'index.html'));
+	const cmaEntryIndexSubpath = cmaEntriesSubpaths.find((subpath) => $mm.isMatch(subpath, 'index.{ts,tsx}'));
 	const cmaEntryIndexSubpathNoExt = cmaEntryIndexSubpath.replace(/\.[^.]+$/u, '');
 
 	const isWeb = ['web', 'webw'].includes(targetEnv);
@@ -155,7 +153,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 			if (cmaEntrySubPathNoExt === cmaEntryIndexSubpathNoExt) {
 				continue; // Don't remap the entry index.
 			}
-			mc.patch(updatePkg.exports, {
+			$obj.mc.patch(updatePkg.exports, {
 				['./' + cmaEntrySubPathNoExt]: {
 					import: './dist/' + cmaEntrySubPathNoExt + '.js',
 					require: './dist/' + cmaEntrySubPathNoExt + '.cjs',

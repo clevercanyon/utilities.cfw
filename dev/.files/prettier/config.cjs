@@ -83,7 +83,7 @@ module.exports = {
 			 *
 			 * @see https://o5p.me/dTTfse
 			 */
-			files: ['*.{js,jsx,cjs,cjsx,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}'],
+			files: ['*.{js,jsx,cjs,cjsx,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx,node}'],
 			options: {
 				jsdocAddDefaultToDescription: false,
 				jsdocCapitalizeDescription: true,

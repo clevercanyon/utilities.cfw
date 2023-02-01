@@ -9,7 +9,7 @@
  */
 /* eslint-env es2021, node */
 
-import mc from 'merge-change';
+import { $obj } from '@clevercanyon/utilities';
 import baseConfig from './dev/.files/vite/config.mjs';
 
 /*
@@ -17,7 +17,7 @@ import baseConfig from './dev/.files/vite/config.mjs';
  * <custom:start> */
 
 export default async (vite) => {
-	return mc.merge({}, await baseConfig(vite), {});
+	return $obj.mc.merge({}, await baseConfig(vite), {});
 };
 
 /* </custom:end> */
