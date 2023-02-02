@@ -56,7 +56,7 @@ export default {
 			const parentDirBasename = path.basename(parentDir);
 
 			const parentDirBrand = $brand.get(parentDirBasename);
-			const parentDirOwner = parentDirBrand?.slug || parentDirBasename;
+			const parentDirOwner = parentDirBrand?.org?.slug || parentDirBasename;
 
 			/**
 			 * Updates `./package.json` in new project directory.

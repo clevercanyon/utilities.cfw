@@ -125,9 +125,9 @@ With this structure, all `clevercanyon` projects are together. If you are workin
 
 By default, the glob patterns are `[ '*', '.github' ]`, matching all direct siblings, and also matching one special `.github` directory, if it's present on your system. The special `.github` repository contains our GitHub organization config files.
 
-If any of the glob patterns is set to a single `*` (as in the default case), scripts are only run if the project directory contains a `./dev/.files` directory and a `./package.json` file.
+If any of the glob patterns is set to a single `*` (as in the default case), scripts are only run if the project directory contains a `./dev/.files` directory, a `./package.json` file, and a `./.madrun.mjs` file.
 
-However, when the glob pattern is set to something else and doesn’t contain a glob with a single `*`, you must be sure of what you're doing, because the restriction is no longer applied and all scripts and/or custom commands will run as requested with no requirement that a project contain a `./dev/.files` directory or a `./package.json` file. For this reason it is strongly suggested that you do a `--dryRun` and review carefully. Massive productivity can turn into massive cleanup if you're not careful!
+However, when the glob pattern is set to something else and doesn’t contain a glob with a single `*`, you must be sure of what you're doing, because the restriction is no longer applied and all scripts and/or custom commands will run as requested with no requirement that a project contain a `./dev/.files` directory, a `./package.json` file, or a `./.madrun.mjs` file. For this reason it is strongly suggested that you do a `--dryRun` and review carefully. Massive productivity can turn into massive cleanup if you're not careful!
 
 <small>_**Note:** All of the examples below end with `--dryRun`. Remove the flag when running for real._</small>
 
