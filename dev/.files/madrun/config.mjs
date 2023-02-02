@@ -13,15 +13,17 @@ import events from './includes/events.mjs';
 /**
  * `$ madrun` commands.
  */
-export default {
-	'envs': './dev/.files/bin/envs.mjs {{@}}',
-	'install': './dev/.files/bin/install.mjs {{@}}',
-	'update': './dev/.files/bin/update.mjs {{@}}',
+export default async (/* {cmd, args, ctx} */) => {
+	return {
+		'envs': './dev/.files/bin/envs.mjs {{@}}',
+		'install': './dev/.files/bin/install.mjs {{@}}',
+		'update': './dev/.files/bin/update.mjs {{@}}',
 
-	'dev': async (args) => 'npx vite dev' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
-	'preview': async (args) => 'npx vite preview' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
-	'build': async (args) => 'npx vite build' + (args.mode ? '' : ' --mode=prod') + ' {{@}}',
-	'wrangler': 'CLOUDFLARE_API_TOKEN="${USER_CLOUDFLARE_TOKEN:-}" npx wrangler {{@}}',
+		'dev': async ({ args }) => 'npx vite dev' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
+		'preview': async ({ args }) => 'npx vite preview' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
+		'build': async ({ args }) => 'npx vite build' + (args.mode ? '' : ' --mode=prod') + ' {{@}}',
+		'wrangler': 'CLOUDFLARE_API_TOKEN="${USER_CLOUDFLARE_TOKEN:-}" npx wrangler {{@}}',
 
-	...events, // e.g., `on::madrun:default:new`.
+		...events, // e.g., `on::madrun:default:new`.
+	};
 };

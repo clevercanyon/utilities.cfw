@@ -42,7 +42,7 @@ const { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType } = (() => 
 	}
 	const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
-	if (typeof pkg !== 'object') {
+	if (!_.isPlainObject(pkg)) {
 		throw new Error('u: Unable to parse `./package.json`.');
 	}
 	const pkgName = _.get(pkg, 'name', '');
@@ -148,7 +148,7 @@ export default class u {
 		}
 		const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
-		if (typeof pkg !== 'object') {
+		if (!_.isPlainObject(pkg)) {
 			throw new Error('u.pkg: Unable to parse `./package.json`.');
 		}
 		return pkg; // JSON object data.
@@ -189,7 +189,7 @@ export default class u {
 			const path = propsOrPath; // String path.
 			deeps.set(pkg, path, value, true, delimiter);
 			//
-		} else if (typeof propsOrPath === 'object') {
+		} else if (_.isPlainObject(propsOrPath)) {
 			const props = propsOrPath; // Object props.
 			$obj.mc.patch(pkg, props); // Potentially declarative ops.
 		} else {
@@ -209,7 +209,7 @@ export default class u {
 		const updates = JSON.parse((await fsp.readFile(updatesFile)).toString());
 		const sortOrder = JSON.parse((await fsp.readFile(sortOrderFile)).toString());
 
-		if (typeof updates !== 'object') {
+		if (!_.isPlainObject(updates)) {
 			throw new Error('u.prettifyPkg: Unable to parse `' + updatesFile + '`.');
 		}
 		if (!Array.isArray(sortOrder)) {
@@ -340,7 +340,7 @@ export default class u {
 		const githubUsername = String(process.env.USER_GITHUB_USERNAME).replace(/^@/u, '').toLowerCase();
 
 		let c10nUser = c10nUsers[githubUsername] || {};
-		c10nUser = c10nUser && typeof c10nUser === 'object' ? c10nUser : {};
+		c10nUser = _.isPlainObject(c10nUser) ? c10nUser : {};
 		_.set(c10nUser, 'github.username', githubUsername);
 
 		return c10nUser;
@@ -1163,7 +1163,7 @@ export default class u {
 
 	static async _npmjsOrgUserCanAdmin(org) {
 		try {
-			return 'object' === typeof (await u._npmjsOrgUsers(org));
+			return _.isPlainObject(await u._npmjsOrgUsers(org));
 		} catch {
 			return false; // Only admins|owners can list org members.
 		}
@@ -1172,7 +1172,7 @@ export default class u {
 	static async _npmjsOrgUsers(org) {
 		const members = JSON.parse(String(await u.spawn('npm', ['org', 'ls', org, '--json'], { quiet: true })));
 
-		if (typeof members !== 'object') {
+		if (!_.isPlainObject(members)) {
 			throw new Error('u._npmjsOrgMembers: Failed to acquire list of NPM team members for `' + org + '`.');
 		}
 		return members; // Keyed by username; values one of: `developer`, `admin`, or `owner`.

@@ -13,8 +13,8 @@ import path from 'node:path';
 import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
-import { $url } from '@clevercanyon/utilities';
 import u from '../../bin/includes/utilities.mjs';
+import { $url, $brand } from '@clevercanyon/utilities';
 
 const __dirname = dirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../../..');
@@ -51,18 +51,22 @@ export default {
 			 */
 
 			const dirBasename = path.basename(projDir);
+
 			const parentDir = path.dirname(projDir);
 			const parentDirBasename = path.basename(parentDir);
+
+			const parentDirBrand = $brand.get(parentDirBasename);
+			const parentDirOwner = parentDirBrand?.slug || parentDirBasename;
 
 			/**
 			 * Updates `./package.json` in new project directory.
 			 */
 
 			await u.updatePkg({
-				name: args.pkgName || '@' + parentDirBasename + '/' + dirBasename,
-				repository: 'https://github.com/' + $url.encode(parentDirBasename) + '/' + $url.encode(dirBasename),
-				homepage: 'https://github.com/' + $url.encode(parentDirBasename) + '/' + $url.encode(dirBasename) + '#readme',
-				bugs: 'https://github.com/' + $url.encode(parentDirBasename) + '/' + $url.encode(dirBasename) + '/issues',
+				name: args.pkgName || '@' + parentDirOwner + '/' + dirBasename,
+				repository: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename),
+				homepage: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '#readme',
+				bugs: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '/issues',
 
 				$unset: /* Effectively resets these to default values. */ [
 					'private', //
@@ -98,7 +102,7 @@ export default {
 			if (fs.existsSync(readmeFile)) {
 				let readme = fs.readFileSync(readmeFile).toString(); // Markdown.
 
-				readme = readme.replace(/@clevercanyon\/[^/?#\s]+/gu, args.pkgName || '@' + parentDirBasename + '/' + dirBasename);
+				readme = readme.replace(/@clevercanyon\/[^/?#\s]+/gu, args.pkgName || '@' + parentDirOwner + '/' + dirBasename);
 				await fsp.writeFile(readmeFile, readme); // Updates `./README.md` file.
 			}
 
@@ -123,18 +127,18 @@ export default {
 			 * Attempts to create a remote repository origin at GitHub; if at all possible.
 			 */
 
-			if ('clevercanyon' === parentDirBasename) {
+			if ('clevercanyon' === parentDirOwner) {
 				if (process.env.GH_TOKEN && 'owner' === (await u.gistGetC10NUser()).github?.role) {
-					await u.spawn('gh', ['repo', 'create', parentDirBasename + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private'], { stdio: 'inherit' });
+					await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private'], { stdio: 'inherit' });
 				} else {
-					const origin = 'https://github.com/' + $url.encode(parentDirBasename) + '/' + $url.encode(dirBasename) + '.git';
+					const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
 					await u.spawn('git', ['remote', 'add', 'origin', origin], { stdio: 'inherit' });
 				}
-			} else if (process.env.USER_GITHUB_USERNAME === parentDirBasename) {
+			} else if (process.env.USER_GITHUB_USERNAME === parentDirOwner) {
 				if (process.env.GH_TOKEN) {
-					await u.spawn('gh', ['repo', 'create', parentDirBasename + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private'], { stdio: 'inherit' });
+					await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private'], { stdio: 'inherit' });
 				} else {
-					const origin = 'https://github.com/' + $url.encode(parentDirBasename) + '/' + $url.encode(dirBasename) + '.git';
+					const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
 					await u.spawn('git', ['remote', 'add', 'origin', origin], { stdio: 'inherit' });
 				}
 			}

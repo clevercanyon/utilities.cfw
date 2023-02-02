@@ -65,7 +65,7 @@ export default async ({ projDir }) => {
 		}
 		const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
-		if (typeof pkg !== 'object') {
+		if (!_.isPlainObject(pkg)) {
 			throw new Error('updater.getPkg: Unable to parse `./package.json`.');
 		}
 		return pkg;
@@ -198,13 +198,13 @@ export default async ({ projDir }) => {
 		const jsonUpdatesFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', relPath, './updates.json');
 		const jsonSortOrderFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', relPath, './sort-order.json');
 
-		if (typeof json !== 'object') {
+		if (!_.isPlainObject(json)) {
 			throw new Error('updater: Unable to parse `' + relPath + '`.');
 		}
 		if (fs.existsSync(jsonUpdatesFile)) {
 			const jsonUpdates = JSON.parse((await fsp.readFile(jsonUpdatesFile)).toString());
 
-			if (typeof jsonUpdates !== 'object') {
+			if (!_.isPlainObject(jsonUpdates)) {
 				throw new Error('updater: Unable to parse `' + jsonUpdatesFile + '`.');
 			}
 			if ('./package.json' === relPath && (await isPkgRepo('clevercanyon/skeleton-dev-deps'))) {
