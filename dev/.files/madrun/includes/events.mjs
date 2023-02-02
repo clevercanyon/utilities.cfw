@@ -68,9 +68,9 @@ export default {
 				homepage: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '#readme',
 				bugs: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '/issues',
 
-				$unset: /* Effectively resets these to default values. */ [
+				$ꓺunset: /* Effectively resets these to default values. */ [
 					'private', //
-					'publishConfig.access',
+					'publishConfigꓺaccess',
 
 					'version',
 					'license',
@@ -81,16 +81,16 @@ export default {
 					'author',
 					'contributors',
 
-					'config.c10n.&.github.teams',
-					'config.c10n.&.github.labels',
-					'config.c10n.&.github.configVersion',
-					'config.c10n.&.github.envsVersion',
+					'configꓺc10nꓺ&ꓺgithubꓺteams',
+					'configꓺc10nꓺ&ꓺgithubꓺlabels',
+					'configꓺc10nꓺ&ꓺgithubꓺconfigVersion',
+					'configꓺc10nꓺ&ꓺgithubꓺenvsVersion',
 
-					'config.c10n.&.npmjs.teams',
-					'config.c10n.&.npmjs.configVersions',
+					'configꓺc10nꓺ&ꓺnpmjsꓺteams',
+					'configꓺc10nꓺ&ꓺnpmjsꓺconfigVersions',
 				],
-				...(args.pkg ? { $set: { private: false } } : {}),
-				...(args.pkg && args.public ? { $set: { 'publishConfig.access': 'public' } } : {}),
+				...(args.pkg ? { $ꓺset: { private: false } } : {}),
+				...(args.pkg && args.public ? { $ꓺset: { publishConfigꓺaccess: 'public' } } : {}),
 			});
 
 			/**

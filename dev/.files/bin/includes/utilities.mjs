@@ -8,7 +8,6 @@
 /* eslint-env es2021, node */
 
 import _ from 'lodash';
-import deeps from 'deeps';
 
 import os from 'node:os';
 import fs from 'node:fs';
@@ -60,27 +59,6 @@ const githubEnvsVersion = '1.0.2'; // Bump when environments change in routines 
 const npmjsConfigVersion = '1.0.2'; // Bump when config changes in routines below.
 
 const c10nLogo = path.resolve(__dirname, '../../assets/brands/c10n/logo.png');
-
-$obj.mc.addOperation('$default', (current, defaults) => {
-	const paths = Object.keys(defaults);
-
-	for (const path of paths) {
-		if (undefined === deeps.get(current, path, '.')) {
-			deeps.set(current, path, defaults[path], true, '.');
-		}
-	}
-	return paths.length > 0;
-});
-$obj.mc.addOperation('$ꓺdefault', (current, defaults) => {
-	const paths = Object.keys(defaults);
-
-	for (const path of paths) {
-		if (undefined === deeps.get(current, path, 'ꓺ')) {
-			deeps.set(current, path, defaults[path], true, 'ꓺ');
-		}
-	}
-	return paths.length > 0;
-});
 
 /**
  * Utilities.
@@ -182,12 +160,12 @@ export default class u {
 		}
 	}
 
-	static async updatePkg(propsOrPath, value = undefined, delimiter = '.') {
+	static async updatePkg(propsOrPath = {}, value = undefined, delimiter = '.') {
 		const pkg = await u.pkg(); // Parses current `./package.json` file.
 
 		if (typeof propsOrPath === 'string') {
 			const path = propsOrPath; // String path.
-			deeps.set(pkg, path, value, true, delimiter);
+			$obj.mc.u.set(pkg, path, value, false, delimiter);
 			//
 		} else if (_.isPlainObject(propsOrPath)) {
 			const props = propsOrPath; // Object props.
@@ -195,40 +173,23 @@ export default class u {
 		} else {
 			throw new Error('u.updatePkg: Invalid arguments.');
 		}
-		await fsp.writeFile(pkgFile, JSON.stringify(pkg, null, 4));
-		await u.prettifyPkg(); // Sorts and runs prettier.
-	}
-
-	static async prettifyPkg() {
-		const pkg = {}; // Sorted `./package.json`; i.e., using insertion order.
-		const curPkg = await u.pkg(); // Parses current `./package.json` file.
-
 		const updatesFile = path.resolve(projDir, './dev/.files/bin/updater/data/package.json/updates.json');
-		const sortOrderFile = path.resolve(projDir, './dev/.files/bin/updater/data/package.json/sort-order.json');
-
 		const updates = JSON.parse((await fsp.readFile(updatesFile)).toString());
-		const sortOrder = JSON.parse((await fsp.readFile(sortOrderFile)).toString());
 
 		if (!_.isPlainObject(updates)) {
-			throw new Error('u.prettifyPkg: Unable to parse `' + updatesFile + '`.');
-		}
-		if (!Array.isArray(sortOrder)) {
-			throw new Error('u.prettifyPkg: Unable to parse `' + sortOrderFile + '`.');
+			throw new Error('u.updatePkg: Unable to parse `' + updatesFile + '`.');
 		}
 		if (await u.isPkgRepo('clevercanyon/skeleton-dev-deps')) {
 			if (updates.$ꓺdefault?.['devDependenciesꓺ@clevercanyon/skeleton-dev-deps']) {
 				delete updates.$ꓺdefault['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
 			}
+			if (Array.isArray(updates.$ꓺunset)) {
+				updates.$ꓺunset.push('devDependenciesꓺ@clevercanyon/skeleton-dev-deps');
+			} else {
+				updates.$ꓺunset = ['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
+			}
 		}
-		$obj.mc.patch(curPkg, updates); // Potentially declarative ops.
-
-		for (const path of sortOrder) {
-			const value = deeps.get(curPkg, path, 'ꓺ');
-			if (undefined !== value) deeps.set(pkg, path, value, true, 'ꓺ');
-		}
-		for (const [path, value] of Object.entries(deeps.flatten(curPkg, 'ꓺ'))) {
-			if (undefined === deeps.get(pkg, path, 'ꓺ')) deeps.set(pkg, path, value, true, 'ꓺ');
-		}
+		$obj.mc.patch(pkg, updates); // Potentially declarative ops.
 		const pkgPrettierCfg = { ...(await prettier.resolveConfig(pkgFile)), parser: 'json' };
 		await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
 	}
@@ -1092,7 +1053,7 @@ export default class u {
 
 	static async npmUpdate() {
 		await u.spawn('npm', ['update', '--save'], { stdio: 'inherit' });
-		await u.prettifyPkg(); // To our standards.
+		await u.updatePkg(); // To our standards.
 	}
 
 	static async npmPublish(opts = { dryRun: false }) {

@@ -59,7 +59,7 @@
 		"configꓺc10nꓺ&ꓺgithubꓺenvsVersion": "",
 		"configꓺc10nꓺ&ꓺnpmjsꓺconfigVersions": ""
 	},
-	"$set": {
+	"$ꓺset": {
 		"funding": "https://github.com/sponsors/clevercanyon",
 		"workspaces": [],
 
@@ -70,5 +70,63 @@
 			"npm": "^8.19.3 || ^9.2.0"
 		}
 	},
-	"$unset": ["typings", "scripts"]
+	"$ꓺunset": ["typings", "scripts"],
+
+	"$ꓺpropSortOrder": [
+		"private",
+		"publishConfigꓺaccess",
+
+		"version",
+		"license",
+		"name",
+		"description",
+		"repository",
+		"homepage",
+		"bugs",
+		"funding",
+		"keywords",
+
+		"author",
+		"contributors",
+
+		"type",
+		"files",
+		"bin",
+		"imports",
+		"exports",
+		"sideEffects",
+		"module",
+		"main",
+		"browser",
+		"unpkg",
+		"types",
+		"typesVersions",
+
+		"dependencies",
+		"peerDependencies",
+		"peerDependenciesMeta",
+		"optionalDependencies",
+		"bundleDependencies",
+		"devDependencies",
+
+		"overrides",
+		"workspaces",
+
+		"cpu",
+		"os",
+		"enginesꓺnode",
+		"enginesꓺnpm",
+
+		"configꓺc10nꓺ&ꓺdotfilesꓺlock",
+
+		"configꓺc10nꓺ&ꓺbuildꓺappType",
+		"configꓺc10nꓺ&ꓺbuildꓺtargetEnv",
+
+		"configꓺc10nꓺ&ꓺgithubꓺteams",
+		"configꓺc10nꓺ&ꓺgithubꓺlabels",
+		"configꓺc10nꓺ&ꓺgithubꓺconfigVersion",
+		"configꓺc10nꓺ&ꓺgithubꓺenvsVersion",
+
+		"configꓺc10nꓺ&ꓺnpmjsꓺconfigVersions"
+	]
 }

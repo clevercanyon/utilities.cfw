@@ -15,7 +15,6 @@ import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
 import chalk from 'chalk';
-import deeps from 'deeps';
 import prettier from 'prettier';
 
 import { $str, $obj } from '@clevercanyon/utilities';
@@ -23,27 +22,6 @@ import customRegexp from './data/custom-regexp.mjs';
 import { $cmd } from '@clevercanyon/utilities.node';
 
 const { log } = console; // Shorter reference.
-
-$obj.mc.addOperation('$default', (current, defaults) => {
-	const paths = Object.keys(defaults);
-
-	for (const path of paths) {
-		if (undefined === deeps.get(current, path, '.')) {
-			deeps.set(current, path, defaults[path], true, '.');
-		}
-	}
-	return paths.length > 0;
-});
-$obj.mc.addOperation('$ꓺdefault', (current, defaults) => {
-	const paths = Object.keys(defaults);
-
-	for (const path of paths) {
-		if (undefined === deeps.get(current, path, 'ꓺ')) {
-			deeps.set(current, path, defaults[path], true, 'ꓺ');
-		}
-	}
-	return paths.length > 0;
-});
 
 export default async ({ projDir }) => {
 	/**
@@ -196,7 +174,6 @@ export default async ({ projDir }) => {
 		}
 		let json = JSON.parse((await fsp.readFile(path.resolve(projDir, relPath))).toString());
 		const jsonUpdatesFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', relPath, './updates.json');
-		const jsonSortOrderFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', relPath, './sort-order.json');
 
 		if (!_.isPlainObject(json)) {
 			throw new Error('updater: Unable to parse `' + relPath + '`.');
@@ -211,26 +188,13 @@ export default async ({ projDir }) => {
 				if (jsonUpdates.$ꓺdefault?.['devDependenciesꓺ@clevercanyon/skeleton-dev-deps']) {
 					delete jsonUpdates.$ꓺdefault['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
 				}
+				if (Array.isArray(jsonUpdates.$ꓺunset)) {
+					jsonUpdates.$ꓺunset.push('devDependenciesꓺ@clevercanyon/skeleton-dev-deps');
+				} else {
+					jsonUpdates.$ꓺunset = ['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
+				}
 			}
 			$obj.mc.patch(json, jsonUpdates); // Potentially declarative ops.
-			const prettierCfg = { ...(await prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
-			await fsp.writeFile(path.resolve(projDir, relPath), prettier.format(JSON.stringify(json, null, 4), prettierCfg));
-		}
-		if (fs.existsSync(jsonSortOrderFile)) {
-			const origJSON = _.cloneDeep(json); // Deep clone.
-			json = {}; // Sorted JSON file; i.e., using insertion order.
-			const jsonSortOrder = JSON.parse((await fsp.readFile(jsonSortOrderFile)).toString());
-
-			if (!Array.isArray(jsonSortOrder)) {
-				throw new Error('updater: Unable to parse `' + jsonSortOrderFile + '`.');
-			}
-			for (const path of jsonSortOrder) {
-				const value = deeps.get(origJSON, path, 'ꓺ');
-				if (undefined !== value) deeps.set(json, path, value, true, 'ꓺ');
-			}
-			for (const [path, value] of Object.entries(deeps.flatten(origJSON, 'ꓺ'))) {
-				if (undefined === deeps.get(json, path, 'ꓺ')) deeps.set(json, path, value, true, 'ꓺ');
-			}
 			const prettierCfg = { ...(await prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
 			await fsp.writeFile(path.resolve(projDir, relPath), prettier.format(JSON.stringify(json, null, 4), prettierCfg));
 		}
