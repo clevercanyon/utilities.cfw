@@ -124,6 +124,7 @@ export default async ({ projDir }) => {
 		'./.shellcheckrc',
 		'./.stylelintrc.cjs',
 		'./.tailwindrc.cjs',
+		'./jest.config.mjs',
 		'./tsconfig.json',
 		'./vite.config.mjs',
 		'./wrangler.toml',

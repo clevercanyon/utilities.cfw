@@ -68,9 +68,9 @@ export default {
 				homepage: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '#readme',
 				bugs: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '/issues',
 
-				$ꓺunset: /* Effectively resets these to default values. */ [
+				$unset: /* Effectively resets these to default values. */ [
 					'private', //
-					'publishConfigꓺaccess',
+					'publishConfig.access',
 
 					'version',
 					'license',
@@ -81,16 +81,16 @@ export default {
 					'author',
 					'contributors',
 
-					'configꓺc10nꓺ&ꓺgithubꓺteams',
-					'configꓺc10nꓺ&ꓺgithubꓺlabels',
-					'configꓺc10nꓺ&ꓺgithubꓺconfigVersion',
-					'configꓺc10nꓺ&ꓺgithubꓺenvsVersion',
+					'config.c10n.&.github.teams',
+					'config.c10n.&.github.labels',
+					'config.c10n.&.github.configVersion',
+					'config.c10n.&.github.envsVersion',
 
-					'configꓺc10nꓺ&ꓺnpmjsꓺteams',
-					'configꓺc10nꓺ&ꓺnpmjsꓺconfigVersions',
+					'config.c10n.&.npmjs.teams',
+					'config.c10n.&.npmjs.configVersions',
 				],
-				...(args.pkg ? { $ꓺset: { private: false } } : {}),
-				...(args.pkg && args.public ? { $ꓺset: { publishConfigꓺaccess: 'public' } } : {}),
+				...(args.pkg ? { $set: { private: false } } : {}),
+				...(args.pkg && args.public ? { $set: { 'publishConfig.access': 'public' } } : {}),
 			});
 
 			/**
@@ -129,17 +129,17 @@ export default {
 
 			if ('clevercanyon' === parentDirOwner) {
 				if (process.env.GH_TOKEN && 'owner' === (await u.gistGetC10NUser()).github?.role) {
-					await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private'], { stdio: 'inherit' });
+					await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private']);
 				} else {
 					const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
-					await u.spawn('git', ['remote', 'add', 'origin', origin], { stdio: 'inherit' });
+					await u.spawn('git', ['remote', 'add', 'origin', origin]);
 				}
 			} else if (process.env.USER_GITHUB_USERNAME === parentDirOwner) {
 				if (process.env.GH_TOKEN) {
-					await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private'], { stdio: 'inherit' });
+					await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private']);
 				} else {
 					const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
-					await u.spawn('git', ['remote', 'add', 'origin', origin], { stdio: 'inherit' });
+					await u.spawn('git', ['remote', 'add', 'origin', origin]);
 				}
 			}
 
