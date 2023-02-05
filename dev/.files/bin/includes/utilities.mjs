@@ -165,7 +165,7 @@ export default class u {
 
 		if (typeof propsOrPath === 'string') {
 			const path = propsOrPath; // String path.
-			$obj.mc.u.set(pkg, path, value, false, delimiter);
+			$obj.mc.u.set(pkg, path, value, delimiter);
 			//
 		} else if (_.isPlainObject(propsOrPath)) {
 			const props = propsOrPath; // Object props.
