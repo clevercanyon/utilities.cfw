@@ -95,9 +95,8 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	const cmaEntryIndexSubpath = cmaEntriesSubpaths.find((subpath) => $str.mm.isMatch(subpath, 'index.{ts,tsx}'));
 	const cmaEntryIndexSubpathNoExt = cmaEntryIndexSubpath.replace(/\.[^.]+$/u, '');
 
-	const isWeb = ['web', 'webw'].includes(targetEnv);
-	const isSSR = ['cfp', 'cfw', 'node'].includes(targetEnv);
-	const isSSRNoExternals = isSSR && ['cfp', 'cfw'].includes(targetEnv);
+	const isSSR = ['cfw', 'node'].includes(targetEnv);
+	const isSSRNoExternals = isSSR && ['cfw'].includes(targetEnv);
 	const isSSRWorker = isSSR && ['cfw'].includes(targetEnv);
 
 	/**
@@ -139,7 +138,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 		updatePkg.module = './dist/' + cmaEntryIndexSubpathNoExt + '.js';
 		updatePkg.main = './dist/' + cmaEntryIndexSubpathNoExt + '.cjs';
 
-		updatePkg.browser = isWeb ? updatePkg.module : '';
+		updatePkg.browser = ['web', 'webw'].includes(targetEnv) ? updatePkg.module : '';
 		updatePkg.unpkg = updatePkg.module;
 
 		updatePkg.types = './dist/types/' + cmaEntryIndexSubpathNoExt + '.d.ts';
@@ -168,7 +167,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 		updatePkg.module = './dist/' + cmaEntryIndexSubpathNoExt + '.js';
 		updatePkg.main = './dist/' + cmaEntryIndexSubpathNoExt + '.umd.cjs';
 
-		updatePkg.browser = isWeb ? updatePkg.main : '';
+		updatePkg.browser = ['web', 'webw'].includes(targetEnv) ? updatePkg.main : '';
 		updatePkg.unpkg = updatePkg.main;
 
 		updatePkg.types = './dist/types/' + cmaEntryIndexSubpathNoExt + '.d.ts';
@@ -292,6 +291,9 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 			// However, in builds that are not final (e.g., CMAs with peer dependencies), preserving modules
 			// has performance benefits, as it allows for tree-shaking optimization in final builds.
 			preserveModules: isCMA && Object.keys(pkg.peerDependencies || {}).length > 0,
+
+			// Cannot inline dynamic imports when `preserveModules` is enabled, so set as `false` explicitly.
+			...(isCMA && Object.keys(pkg.peerDependencies || {}).length > 0 ? { inlineDynamicImports: false } : {}),
 		},
 	};
 	// <https://vitejs.dev/guide/features.html#web-workers>
