@@ -12,16 +12,14 @@ import os from 'node:os';
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
-import chalk from 'chalk';
 import u from './includes/utilities.mjs';
-import { $mm } from '@clevercanyon/utilities';
 import coreProjects from './includes/core-projects.mjs';
-import { $cmd, $glob, $yargs } from '@clevercanyon/utilities.node';
+import { $str } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $fs, $chalk, $cmd, $glob, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 
-const __dirname = dirname(import.meta.url);
+const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
 const projsDir = path.resolve(__dirname, '../../../..');
 
@@ -43,7 +41,7 @@ class Dotfiles {
 		await this.update();
 
 		if (this.args.dryRun) {
-			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -74,8 +72,8 @@ class Dotfiles {
 		 */
 
 		if ((await u.isPkgRepo('clevercanyon/skeleton')) && (await u.isGitRepoDirty())) {
-			u.log(chalk.green('Updating `clevercanyon/skeleton` git repo; `' + skeletonBranch + '` branch.'));
-			u.log('    ' + chalk.green('i.e., saving latest skeleton changes before self-update.'));
+			u.log($chalk.green('Updating `clevercanyon/skeleton` git repo; `' + skeletonBranch + '` branch.'));
+			u.log('    ' + $chalk.green('i.e., saving latest skeleton changes before self-update.'));
 
 			if (!this.args.dryRun) {
 				await u.gitAddCommitPush((this.args.message + ' [d]').trim());
@@ -92,15 +90,15 @@ class Dotfiles {
 		 */
 
 		if (fs.existsSync(skeletonRepoDir) && (await u.gitLocalRepoSHA(skeletonRepoDir, skeletonBranch)) === (await u.gitRemoteRepoSHA(skeletonRepoURL, skeletonBranch))) {
-			u.log(chalk.green('Using latest `clevercanyon/skeleton` from cache; `' + skeletonBranch + '` branch.'));
+			u.log($chalk.green('Using latest `clevercanyon/skeleton` from cache; `' + skeletonBranch + '` branch.'));
 		} else {
-			u.log(chalk.green('Git-cloning, and caching, latest `clevercanyon/skeleton`; `' + skeletonBranch + '` branch.'));
+			u.log($chalk.green('Git-cloning, and caching, latest `clevercanyon/skeleton`; `' + skeletonBranch + '` branch.'));
 			if (!this.args.dryRun) {
 				await fsp.rm(skeletonRepoDir, { recursive: true, force: true });
 				await fsp.mkdir(skeletonRepoDir, { recursive: true }); // Starts fresh.
 				await u.spawn('git', ['clone', skeletonRepoURL, skeletonRepoDir, '--branch', skeletonBranch, '--depth=1'], { cwd: skeletonRepoDir });
 			}
-			u.log(chalk.green('Installing `clevercanyon/skeleton`’s NPM dependencies; `' + skeletonBranch + '` branch.'));
+			u.log($chalk.green('Installing `clevercanyon/skeleton`’s NPM dependencies; `' + skeletonBranch + '` branch.'));
 			if (!this.args.dryRun) {
 				await u.spawn('npm', ['ci'], { cwd: skeletonRepoDir });
 			}
@@ -110,7 +108,7 @@ class Dotfiles {
 		 * Runs updater using files from latest skeleton.
 		 */
 
-		u.log(chalk.green('Running updater using latest `clevercanyon/skeleton`; `' + skeletonBranch + '` branch.'));
+		u.log($chalk.green('Running updater using latest `clevercanyon/skeleton`; `' + skeletonBranch + '` branch.'));
 		if (!this.args.dryRun) {
 			await (await import(path.resolve(skeletonRepoDir, './dev/.files/bin/updater/index.mjs'))).default({ projDir });
 		}
@@ -141,7 +139,7 @@ class Project {
 		await this.update();
 
 		if (this.args.dryRun) {
-			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -153,7 +151,7 @@ class Project {
 		 * Updates NPM packages.
 		 */
 
-		u.log(chalk.green('Updating NPM packages.'));
+		u.log($chalk.green('Updating NPM packages.'));
 		if (!this.args.dryRun) {
 			await u.npmUpdate();
 		}
@@ -163,7 +161,7 @@ class Project {
 		 */
 
 		if (this.args.repos && (await u.isGitRepo()) && (await u.isGitRepoOriginGitHub())) {
-			u.log(chalk.green('Repos will update, so checking GitHub repo org-wide standards.'));
+			u.log($chalk.green('Repos will update, so checking GitHub repo org-wide standards.'));
 			await u.githubCheckRepoOrgWideStandards({ dryRun: this.args.dryRun });
 		}
 
@@ -172,12 +170,12 @@ class Project {
 		 */
 
 		if (this.args.repos && (await u.isEnvsVault())) {
-			u.log(chalk.green('Repos will update, so pushing all Dotenv Vault envs.'));
+			u.log($chalk.green('Repos will update, so pushing all Dotenv Vault envs.'));
 			// Also syncs GitHub repo environments using org-wide standards.
 			await u.envsPush({ dryRun: this.args.dryRun });
 			//
 		} else if (await u.isEnvsVault()) {
-			u.log(chalk.green('Recompiling all Dotenv Vault `.env*` files.'));
+			u.log($chalk.green('Recompiling all Dotenv Vault `.env*` files.'));
 			await u.envsCompile({ dryRun: this.args.dryRun });
 		}
 
@@ -186,7 +184,7 @@ class Project {
 		 */
 
 		if (this.args.repos && this.args.pkgs && (await u.isNPMPkgPublishable({ mode: this.args.mode }))) {
-			u.log(chalk.green('NPM package will publish, so incrementing version.'));
+			u.log($chalk.green('NPM package will publish, so incrementing version.'));
 			await u.pkgIncrementVersion({ dryRun: this.args.dryRun });
 		}
 
@@ -195,7 +193,7 @@ class Project {
 		 */
 
 		if (await u.isViteBuild()) {
-			u.log(chalk.green('Updating Vite build; `' + this.args.mode + '` mode.'));
+			u.log($chalk.green('Updating Vite build; `' + this.args.mode + '` mode.'));
 			if (!this.args.dryRun) {
 				await u.viteBuild({ mode: this.args.mode });
 			}
@@ -218,14 +216,14 @@ class Project {
 
 			if (this.args.pkgs) {
 				if (await u.isNPMPkgPublishable({ mode: this.args.mode })) {
-					u.log(chalk.green('Publishing NPM package.'));
+					u.log($chalk.green('Publishing NPM package.'));
 					// Also checks org-wide npmjs package standards.
 					await u.npmPublish({ dryRun: this.args.dryRun });
 					//
 				} else if (await u.isNPMPkg()) {
-					u.log(chalk.gray('NPM package is not in a publishable state.'));
+					u.log($chalk.gray('NPM package is not in a publishable state.'));
 				} else {
-					u.log(chalk.gray('Not an NPM package.'));
+					u.log($chalk.gray('Not an NPM package.'));
 				}
 			}
 
@@ -235,29 +233,29 @@ class Project {
 
 			if (await u.isGitRepo()) {
 				if (await u.isGitRepoDirty()) {
-					u.log(chalk.green('Committing git repo changes; `' + (await u.gitCurrentBranch()) + '` branch.'));
+					u.log($chalk.green('Committing git repo changes; `' + (await u.gitCurrentBranch()) + '` branch.'));
 					if (!this.args.dryRun) {
 						await u.gitAddCommit((this.args.message + ' [p]').trim());
 					}
 				}
 				if (this.args.pkgs && (await u.isNPMPkgPublishable({ mode: this.args.mode }))) {
-					u.log(chalk.green('Creating git repo tag; `' + (await u.gitCurrentBranch()) + '` branch; `v' + pkg.version + '` tag.'));
+					u.log($chalk.green('Creating git repo tag; `' + (await u.gitCurrentBranch()) + '` branch; `v' + pkg.version + '` tag.'));
 					if (!this.args.dryRun) {
 						await u.gitTag((this.args.message + ' [p][v' + pkg.version + ']').trim());
 					}
 				}
-				u.log(chalk.green('Pushing to git repo; `' + (await u.gitCurrentBranch()) + '` branch.'));
+				u.log($chalk.green('Pushing to git repo; `' + (await u.gitCurrentBranch()) + '` branch.'));
 				if (!this.args.dryRun) {
 					await u.gitPush(); // Also pushes any tags.
 				}
 				if ((await u.isGitRepoOriginGitHub()) && this.args.pkgs && (await u.isNPMPkgPublishable({ mode: this.args.mode }))) {
-					u.log(chalk.green('Generating GitHub release; `v' + pkg.version + '` tag.'));
+					u.log($chalk.green('Generating GitHub release; `v' + pkg.version + '` tag.'));
 					if (!this.args.dryRun) {
 						await u.githubReleaseTag();
 					}
 				}
 			} else {
-				u.log(chalk.gray('Not a git repo.'));
+				u.log($chalk.gray('Not a git repo.'));
 			}
 		}
 
@@ -287,7 +285,7 @@ class Projects {
 		await this.update();
 
 		if (this.args.dryRun) {
-			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -327,7 +325,7 @@ class Projects {
 		 */
 
 		for (const projDirSubpathGlob of coreProjects.updates.order.concat(this.args.order)) {
-			for (const projDirSubpath of $mm.match(unorderedResults, projDirSubpathGlob)) {
+			for (const projDirSubpath of $str.mm.match(unorderedResults, projDirSubpathGlob)) {
 				if (-1 === (i = unorderedResults.indexOf(projDirSubpath))) {
 					continue; // Not applicable.
 				}
@@ -356,15 +354,15 @@ class Projects {
 			 */
 
 			if (hasAllGlob && !fs.existsSync(devFilesDir)) {
-				u.log(chalk.gray('Has glob `*`. No `./dev/.files` in `' + projDisplayDir + '`. Bypassing.'));
+				u.log($chalk.gray('Has glob `*`. No `./dev/.files` in `' + projDisplayDir + '`. Bypassing.'));
 				continue; // No `./dev/.files` directory.
 			}
 			if (hasAllGlob && !fs.existsSync(pkgFile)) {
-				u.log(chalk.gray('Has glob `*`. No `./package.json` in `' + projDisplayDir + '`. Bypassing.'));
+				u.log($chalk.gray('Has glob `*`. No `./package.json` in `' + projDisplayDir + '`. Bypassing.'));
 				continue; // No `./package.json` file.
 			}
 			if (hasAllGlob && !fs.existsSync(madrunFile)) {
-				u.log(chalk.gray('Has glob `*`. No `./.madrun.mjs` in `' + projDisplayDir + '`. Bypassing.'));
+				u.log($chalk.gray('Has glob `*`. No `./.madrun.mjs` in `' + projDisplayDir + '`. Bypassing.'));
 				continue; // No `./.madrun.mjs` file.
 			}
 
@@ -380,7 +378,7 @@ class Projects {
 						const quotedCMD = $cmd.quote(split.cmd); // Used only in output logging.
 						const quotedArgs = $cmd.quoteAll(split.args); // Only in output logging.
 
-						u.log(chalk.green('Running `' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + chalk.yellow(projDisplayDir));
+						u.log($chalk.green('Running `' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + $chalk.yellow(projDisplayDir));
 						if (!this.args.dryRun) {
 							await u.spawn(split.cmd, split.args, { cwd: projDir, stdio: 'inherit' });
 						}
@@ -400,7 +398,7 @@ class Projects {
 						const quotedCMD = $cmd.quote(split.cmd); // Used only in output logging.
 						const quotedArgs = $cmd.quoteAll(split.args); // Only in output logging.
 
-						u.log(chalk.green('Running `madrun ' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + chalk.yellow(projDisplayDir));
+						u.log($chalk.green('Running `madrun ' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + $chalk.yellow(projDisplayDir));
 						if (!this.args.dryRun) {
 							await u.spawn('npx', ['@clevercanyon/madrun', split.cmd, ...split.args], { cwd: projDir, stdio: 'inherit' });
 						}
@@ -604,7 +602,7 @@ void (async () => {
 						if (!args.globs.length) {
 							throw new Error('Empty `glob` option.');
 						}
-						if (args.globs.includes('**') || $mm.match(args.globs, ['\\*\\*'], { contains: true }).length) {
+						if (args.globs.includes('**') || $str.mm.match(args.globs, ['\\*\\*'], { contains: true }).length) {
 							throw new Error('Globstars `**` are prohitibed in `glob` option.');
 						}
 						if (!args.cmds.length && !args.runs.length) {

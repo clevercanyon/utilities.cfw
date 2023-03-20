@@ -1,5 +1,5 @@
 {
-	"$ꓺdefault": {
+	"$ꓺdefaults": {
 		"private": true,
 		"publishConfigꓺaccess": "restricted",
 
@@ -20,7 +20,6 @@
 		"contributors": [],
 
 		"type": "module",
-		"files": [],
 		"bin": {},
 		"imports": {},
 		"exports": null,
@@ -39,9 +38,7 @@
 		"bundleDependencies": [],
 		"devDependencies": {},
 		"devDependenciesꓺ@clevercanyon/skeleton-dev-deps": "*",
-
 		"overrides": {},
-		"workspaces": [],
 
 		"cpu": [],
 		"os": [],
@@ -61,7 +58,6 @@
 	},
 	"$ꓺset": {
 		"funding": "https://github.com/sponsors/clevercanyon",
-		"workspaces": [],
 
 		"cpu": ["x64", "arm64"],
 		"os": ["darwin", "linux"],
@@ -70,9 +66,9 @@
 			"npm": "^8.19.3 || ^9.2.0"
 		}
 	},
-	"$ꓺunset": ["typings", "scripts"],
+	"$ꓺunset": ["typings", "scripts", "workspaces"],
 
-	"$ꓺpropSortOrder": [
+	"$ꓺkeySortOrder": [
 		"private",
 		"publishConfigꓺaccess",
 
@@ -108,9 +104,7 @@
 		"optionalDependencies",
 		"bundleDependencies",
 		"devDependencies",
-
 		"overrides",
-		"workspaces",
 
 		"cpu",
 		"os",

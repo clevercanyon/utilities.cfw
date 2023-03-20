@@ -9,13 +9,13 @@
  */
 /* eslint-env es2021, node */
 
-const $obj = require('@clevercanyon/utilities/obj');
 const baseConfig = require('./dev/.files/postcss/config.cjs');
+const { $obj } = require('./node_modules/@clevercanyon/utilities/dist/index.cjs');
 
 /*
  * Customizations.
  * <custom:start> */
 
-module.exports = $obj.mc.merge({}, baseConfig, {});
+module.exports = $obj.mergeDeep({}, baseConfig, {});
 
 /* </custom:end> */

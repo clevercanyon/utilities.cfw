@@ -11,20 +11,14 @@
  */
 /* eslint-env es2021, node */
 
-import path from 'node:path';
-import { dirname } from 'desm';
-
-const __dirname = dirname(import.meta.url);
-const projDir = path.resolve(__dirname, '../../../..');
-const srcDir = path.resolve(projDir, './src');
+import tsAliases from '../../typescript/includes/import-aliases.mjs';
 
 /**
  * Defines vite resolution aliases.
  */
-export default [
-	// See also: `../typescript/config.json`.
-	{
-		find: /^@\/~(.+)$/u,
-		replacement: path.resolve(srcDir, './$1'),
-	},
-];
+const aliases = []; // Initialize aliases.
+
+for (const [key, value] of Object.entries(tsAliases)) {
+	aliases.push({ find: new RegExp(key), replacement: value });
+}
+export default aliases;

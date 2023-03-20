@@ -12,8 +12,10 @@
  */
 
 {
-	"include": ["../../../src/**/*"],
-
+	"include": [
+		"../../../src/**/*", //
+		"../../../tsconfig.d.ts"
+	],
 	"compilerOptions": {
 		"baseUrl": "../../../src",
 		"rootDir": "../../../src",
@@ -33,15 +35,15 @@
 
 		"strict": true,
 		"skipLibCheck": true,
+		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 
 		"paths": {
-			"@/~*": ["./*"] // Relative to `baseUrl`.
+			// Note: Use just a single array item for Vite/Jest compatibility.
+			"@:src/*": ["./*"] // Relative to `baseUrl`.
 		},
-		"noEmit": false,
-		"emitDeclarationOnly": true,
-
 		"declaration": true,
-		"declarationMap": false
+		"declarationMap": false,
+		"emitDeclarationOnly": true
 	}
 }

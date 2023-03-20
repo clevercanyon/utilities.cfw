@@ -9,15 +9,15 @@
  */
 /* eslint-env es2021, node */
 
-import { $obj } from '@clevercanyon/utilities';
 import baseConfig from './dev/.files/madrun/config.mjs';
+import { $obj } from './node_modules/@clevercanyon/utilities/dist/index.js';
 
 /*
  * Customizations.
  * <custom:start> */
 
 export default async (madrun) => {
-	return $obj.mc.merge({}, await baseConfig(madrun), {
+	return $obj.mergeDeep({}, await baseConfig(madrun), {
 		// 'project:[cmd]': '', // Always prefix project CMDs.
 	});
 };

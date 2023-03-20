@@ -7,6 +7,10 @@
 #
 #     $ npm pack --dry-run
 #
+# Please keep in mind that if `files` is used in `./package.json`,
+# the `files` setting will **not** be altered by an `./.npmignore` in the
+# main project directory. In such a case, `./.npmignore` is meaningless.
+#
 # @note CUSTOM EDITS ONLY PLEASE!
 # @note In the future this file will be updated automatically.
 # @note Only `<custom:start.../custom:end>` will be preserved below.
@@ -25,6 +29,7 @@
 # Logs.
 
 *.log
+*.logs
 
 # Backups.
 
@@ -57,12 +62,8 @@
 *.code-search
 *.code-workspace
 
-# NPM.
-
-npm-debug.log
-
 # Dists (must exclude).
-# May contain `APP_` env vars.
+# May contain APP_ env vars.
 
 dist
 
@@ -103,6 +104,7 @@ typings
 # Vite.
 
 .vite
+.vitest
 
 # Wrangler.
 
@@ -204,67 +206,122 @@ Temporary Items
 # These are in addition to what we have in `.gitignore`.
 ##
 
+# Dist (allow).
+
+!dist
+
+# Configs.
+
+.*
+
+*config.*
+!dist/**/*config.*
+
+*.config.*
+!dist/**/*.config.*
+
+wrangler.*
+!dist/**/wrangler.*
+
+# Uncompiled sources.
+
+src
+__src__
+
+*.scss
+!dist/**/*.scss
+
+*.less
+!dist/**/*.less
+
+*.ejs
+!dist/**/*.ejs
+
+*.jsx
+!dist/**/*.jsx
+
+*.ts
+!*.d.ts
+!dist/**/*.ts
+
+*.tsx
+!*.d.tsx
+!dist/**/*.tsx
+
+*.cts
+!*.d.cts
+!dist/**/*.cts
+
+*.ctsx
+!*.d.ctsx
+!dist/**/*.ctsx
+
+*.mts
+!*.d.mts
+!dist/**/*.mts
+
+*.mtsx
+!*.d.mtsx
+!dist/**/*.mtsx
+
 # Dev.
 
 dev
+__dev__
 
 # Docs.
 
 doc
 docs
+__doc__
+__docs__
+*.doc.*
+*.docs.*
+*.readme.*
+*.readmes.*
 
 # Tests.
 
 test
 tests
+__test__
+__tests__
+*.test.*
+*.tests.*
+*.test-d.*
+*.tests-d.*
+
+# Specs.
+
+spec
+specs
+__spec__
+__specs__
+*.spec.*
+*.specs.*
+*.spec-d.*
+*.specs-d.*
 
 # Examples.
 
 example
 examples
+__example__
+__examples__
+*.example.*
+*.examples.*
 
 # Benchmarks.
 
 bench
 benchmark
 benchmarks
-
-# Dotenv.
-
-.env.vault
-.env.project
-
-# GitHub.
-
-.github
-
-# Dists.
-
-!dist
-
-# Source.
-
-.*
-__*
-
-*.ts
-*.tsx
-!*.d.ts
-*.jsx
-*.ejs
-
-*.scss
-*.less
-
-*.test.*
-*.spec.*
-*.readme.*
-
-jsconfig.*
-tsconfig.*
-wrangler.*
-vite.config.*
-tailwind.config.*
+__bench__
+__benchmark__
+__benchmarks__
+*.bench.*
+*.benchmark.*
+*.benchmarks.*
 
 ##
 # There are also a few items always included and/or excluded by NPM.

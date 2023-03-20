@@ -2,6 +2,8 @@
  * Utility class.
  */
 
+import './resources/init-env.js';
+
 import {
 	getAssetFromKV as cfKVAꓺgetAssetFromKV,
 	mapRequestToAsset as cfKVAꓺmapRequestToAsset,
@@ -65,20 +67,21 @@ export async function handleFetchEvent(feData: InitialFetchEventData | FetchEven
 	let url: URL | null = null;
 	const { env, ctx, routes } = feData;
 
-	$env.capture(env); // Captures environment vars.
-	const basePath = ($env.get('APP_BASE_PATH') as string) || '';
+	$env.capture('@global', env);
+
+	const basePath = $env.get('@top', 'APP_BASE_PATH', '') as string;
 
 	try {
 		request = $http.prepareRequest(request, {});
-		url = $url.parse(request.url, null, true) as URL;
+		url = $url.parse(request.url) as URL;
 	} catch (error) {
 		return error instanceof Response ? error : $http.prepareResponse(request, { status: 500 });
 	}
 	feData = { request, env, ctx, routes, url }; // Recompiles data.
 
 	if (
-		$http.requestPathIsStatic(request, url) &&
-		$env.get('__STATIC_CONTENT') && // Worker site?
+		$http.requestPathIsStatic(request, url) && //
+		$env.get('@top', '__STATIC_CONTENT' /* Worker site? */) &&
 		$str.matches(url.pathname, basePath + '/assets/**')
 	) {
 		return handleFetchStaticAssets(feData);
@@ -95,7 +98,7 @@ export async function handleFetchEvent(feData: InitialFetchEventData | FetchEven
  */
 async function handleFetchDynamics(feData: FetchEventData): Promise<Response> {
 	const { request, routes, url } = feData;
-	const basePath = ($env.get('APP_BASE_PATH') as string) || '';
+	const basePath = $env.get('@top', 'APP_BASE_PATH', '') as string;
 
 	for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
 		if ($str.matches(url.pathname, basePath + '/' + routeSubpathGlob)) {
@@ -114,7 +117,7 @@ async function handleFetchDynamics(feData: FetchEventData): Promise<Response> {
  */
 async function handleFetchStaticAssets(feData: FetchEventData): Promise<Response> {
 	const { request, ctx } = feData;
-	const basePath = ($env.get('APP_BASE_PATH') as string) || '';
+	const basePath = $env.get('@top', 'APP_BASE_PATH', '') as string;
 
 	try {
 		const eventProps = {
@@ -124,7 +127,7 @@ async function handleFetchStaticAssets(feData: FetchEventData): Promise<Response
 			},
 		};
 		const response = await cfKVAꓺgetAssetFromKV(eventProps, {
-			ASSET_NAMESPACE: $env.get('__STATIC_CONTENT'),
+			ASSET_NAMESPACE: $env.get('@top', '__STATIC_CONTENT') as string,
 			// @ts-ignore: This is dynamically resolved by Cloudflare.
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, import/no-unresolved
 			ASSET_MANIFEST: JSON.parse(await import('__STATIC_CONTENT_MANIFEST')) as { [x: string]: string },

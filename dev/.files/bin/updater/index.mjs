@@ -7,19 +7,13 @@
  */
 /* eslint-env es2021, node */
 
-import _ from 'lodash';
-
 import fs from 'node:fs';
 import path from 'node:path';
-import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
-import chalk from 'chalk';
-import prettier from 'prettier';
-
-import { $str, $obj } from '@clevercanyon/utilities';
 import customRegexp from './data/custom-regexp.mjs';
-import { $cmd } from '@clevercanyon/utilities.node';
+import { $is, $str, $obj, $obp } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $fs, $cmd, $chalk, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 
 const { log } = console; // Shorter reference.
 
@@ -27,7 +21,7 @@ export default async ({ projDir }) => {
 	/**
 	 * Initializes vars.
 	 */
-	const __dirname = dirname(import.meta.url);
+	const __dirname = $fs.imuDirname(import.meta.url);
 	const skeletonDir = path.resolve(__dirname, '../../../..');
 
 	/**
@@ -43,7 +37,7 @@ export default async ({ projDir }) => {
 		}
 		const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
-		if (!_.isPlainObject(pkg)) {
+		if (!$is.plainObject(pkg)) {
 			throw new Error('updater.getPkg: Unable to parse `./package.json`.');
 		}
 		return pkg;
@@ -56,7 +50,7 @@ export default async ({ projDir }) => {
 		const pkg = await getPkg();
 		const pkgRepository = pkg.repository || '';
 
-		let pkgDotfileLocks = _.get(pkg, 'config.c10n.&.dotfiles.lock', []);
+		let pkgDotfileLocks = $obp.get(pkg, 'config.c10n.&.dotfiles.lock', []);
 		pkgDotfileLocks = pkgDotfileLocks.map((relPath) => path.resolve(projDir, relPath));
 
 		return { pkgRepository, pkgDotfileLocks };
@@ -125,6 +119,7 @@ export default async ({ projDir }) => {
 		'./.stylelintrc.cjs',
 		'./.tailwindrc.cjs',
 		'./jest.config.mjs',
+		'./tsconfig.d.ts',
 		'./tsconfig.json',
 		'./vite.config.mjs',
 		'./wrangler.toml',
@@ -176,28 +171,28 @@ export default async ({ projDir }) => {
 		let json = JSON.parse((await fsp.readFile(path.resolve(projDir, relPath))).toString());
 		const jsonUpdatesFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', relPath, './updates.json');
 
-		if (!_.isPlainObject(json)) {
+		if (!$is.plainObject(json)) {
 			throw new Error('updater: Unable to parse `' + relPath + '`.');
 		}
 		if (fs.existsSync(jsonUpdatesFile)) {
 			const jsonUpdates = JSON.parse((await fsp.readFile(jsonUpdatesFile)).toString());
 
-			if (!_.isPlainObject(jsonUpdates)) {
+			if (!$is.plainObject(jsonUpdates)) {
 				throw new Error('updater: Unable to parse `' + jsonUpdatesFile + '`.');
 			}
 			if ('./package.json' === relPath && (await isPkgRepo('clevercanyon/skeleton-dev-deps'))) {
-				if (jsonUpdates.$ꓺdefault?.['devDependenciesꓺ@clevercanyon/skeleton-dev-deps']) {
-					delete jsonUpdates.$ꓺdefault['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
+				if (jsonUpdates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/skeleton-dev-deps']) {
+					delete jsonUpdates.$ꓺdefaults['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
 				}
-				if (Array.isArray(jsonUpdates.$ꓺunset)) {
+				if ($is.array(jsonUpdates.$ꓺunset)) {
 					jsonUpdates.$ꓺunset.push('devDependenciesꓺ@clevercanyon/skeleton-dev-deps');
 				} else {
 					jsonUpdates.$ꓺunset = ['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
 				}
 			}
-			$obj.mc.patch(json, jsonUpdates); // Potentially declarative ops.
-			const prettierCfg = { ...(await prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
-			await fsp.writeFile(path.resolve(projDir, relPath), prettier.format(JSON.stringify(json, null, 4), prettierCfg));
+			$obj.patchDeep(json, jsonUpdates); // Potentially declarative ops.
+			const prettierCfg = { ...(await $prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
+			await fsp.writeFile(path.resolve(projDir, relPath), $prettier.format(JSON.stringify(json, null, 4), prettierCfg));
 		}
 	}
 
@@ -205,7 +200,7 @@ export default async ({ projDir }) => {
 	 * Updates `@clevercanyon/skeleton-dev-deps` in project dir.
 	 */
 	if (!(await isPkgRepo('clevercanyon/skeleton-dev-deps'))) {
-		log(chalk.green('Updating project to latest `@clevercanyon/skeleton-dev-deps`.'));
+		log($chalk.green('Updating project to latest `@clevercanyon/skeleton-dev-deps`.'));
 		await $cmd.spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps'], { cwd: projDir });
 	}
 };

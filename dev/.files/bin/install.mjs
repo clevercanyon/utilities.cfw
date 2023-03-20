@@ -10,13 +10,11 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { dirname } from 'desm';
 
-import chalk from 'chalk';
 import u from './includes/utilities.mjs';
-import { $yargs } from '@clevercanyon/utilities.node';
+import { $fs, $chalk, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 
-const __dirname = dirname(import.meta.url);
+const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
 
 /**
@@ -37,7 +35,7 @@ class Project {
 		await this.install();
 
 		if (this.args.dryRun) {
-			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -62,12 +60,12 @@ class Project {
 		 */
 
 		if (fs.existsSync(path.resolve(projDir, './package-lock.json'))) {
-			u.log(chalk.green('Running a clean install of NPM packages.'));
+			u.log($chalk.green('Running a clean install of NPM packages.'));
 			if (!this.args.dryRun) {
 				await u.npmCleanInstall();
 			}
 		} else {
-			u.log(chalk.green('Running an install of NPM packages.'));
+			u.log($chalk.green('Running an install of NPM packages.'));
 			if (!this.args.dryRun) {
 				await u.npmInstall();
 			}
@@ -78,7 +76,7 @@ class Project {
 		 */
 
 		if (await u.isEnvsVault()) {
-			u.log(chalk.green('Installing Dotenv Vault variables.'));
+			u.log($chalk.green('Installing Dotenv Vault variables.'));
 			if (!this.args.dryRun) {
 				await u.envsInstallOrDecrypt({ mode: this.args.mode });
 			}
@@ -89,7 +87,7 @@ class Project {
 		 */
 
 		if (await u.isViteBuild()) {
-			u.log(chalk.green('Building with Vite; `' + this.args.mode + '` mode.'));
+			u.log($chalk.green('Building with Vite; `' + this.args.mode + '` mode.'));
 			if (!this.args.dryRun) {
 				await u.viteBuild({ mode: this.args.mode });
 			}

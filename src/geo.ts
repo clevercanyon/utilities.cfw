@@ -2,12 +2,13 @@
  * Utility class.
  */
 
+import './resources/init-env.js';
 import type { FetchEventData } from './cfw.js';
 
 /**
  * Gets geo property.
  *
- * @param   fed Fetch data.
+ * @param   fed Fetch event data.
  *
  * @returns     Geo property value.
  */

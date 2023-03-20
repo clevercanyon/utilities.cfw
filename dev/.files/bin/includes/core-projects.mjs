@@ -23,7 +23,6 @@ export default {
 			'micromatch.fork',
 
 			'split-cmd.fork',
-			'merge-change.fork',
 			'spawn-please.fork',
 			'shescape.fork',
 

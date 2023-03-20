@@ -36,5 +36,5 @@ module.exports = {
 			serif: ['Georgia', 'serif'],
 		},
 	},
-	content: [path.resolve(projDir, './src/**/*.{md,xml,html,shtml,php,ejs,js,jsx,cjs,cjsx,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx,node}')],
+	content: [path.resolve(projDir, './src/**/*.{md,xml,html,shtml,php,ejs,js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}')],
 };

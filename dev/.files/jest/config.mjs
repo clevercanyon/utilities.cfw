@@ -10,26 +10,53 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { dirname } from 'desm';
 
-const __dirname = dirname(import.meta.url);
+import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+
+const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
+
+const srcDir = path.resolve(projDir, './src');
+const testsDir = path.resolve(projDir, './tests');
+
+const srcDirExists = fs.existsSync(srcDir);
+const testsDirExists = fs.existsSync(testsDir);
+
+const pkgFile = path.resolve(projDir, './package.json');
+
+if (!fs.existsSync(pkgFile)) {
+	throw new Error('jest/config.mjs: Missing `./package.json`.');
+}
+const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
 /**
  * Defines Jest configuration.
  */
 export default async (/* {} */) => {
-	const srcDir = path.resolve(projDir, './src');
-	const srcDirExists = fs.existsSync(srcDir);
-
-	const testsDir = path.resolve(projDir, './tests');
-	const testsDirExists = fs.existsSync(testsDir);
-
 	return {
 		roots: [
 			...(srcDirExists ? [srcDir] : []), //
 			...(testsDirExists ? [testsDir] : []),
 			...(!srcDirExists && !testsDirExists ? [projDir] : []),
 		],
+		testPathIgnorePatterns: [
+			'**/.git/**', //
+			'**/dev/**',
+			'**/dist/**',
+			'**/.yarn/**',
+			'**/vendor/**',
+			'**/node_modules/**',
+			'**/jspm_packages/**',
+			'**/bower_components/**',
+		],
+		// Configured to run JS tests only; not TypeScript tests.
+		// To create and run TypeScript tests, use Vitest instead of Jest.
+		testMatch: [
+			'**/*.{test|tests|spec|specs}.{js,jsx,cjs,cjsx,node,mjs,mjsx}', //
+			'**/{__test__,__tests__,__spec__,__specs__}/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx}',
+		],
+		moduleNameMapper: (await import('../typescript/includes/import-aliases.mjs')).default,
+		moduleFileExtensions: ['.js', '.jsx', '.cjs', '.cjsx', '.json', '.node', '.mjs', '.mjsx'],
+		extensionsToTreatAsEsm: [...('module' === pkg.type ? ['.js', '.jsx', '.mjs', '.mjsx'] : ['.mjs', '.mjsx'])],
 	};
 };

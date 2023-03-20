@@ -11,13 +11,9 @@
  */
 /* eslint-env es2021, node */
 
-import _ from 'lodash';
-
 import fs from 'node:fs';
 import path from 'node:path';
-import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
-import archiver from 'archiver';
 
 import { loadEnv } from 'vite';
 import pluginBasicSSL from '@vitejs/plugin-basic-ssl';
@@ -25,9 +21,9 @@ import { ViteEjsPlugin as pluginEJS } from 'vite-plugin-ejs';
 import { ViteMinifyPlugin as pluginMinifyHTML } from 'vite-plugin-minify';
 
 import u from '../bin/includes/utilities.mjs';
-import { $obj, $mm } from '@clevercanyon/utilities';
-import { $glob } from '@clevercanyon/utilities.node';
-import importAliases from './includes/aliases.mjs';
+import importAliases from './includes/import-aliases.mjs';
+import { $fs, $glob } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $str, $obj, $obp } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -43,12 +39,14 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	/**
 	 * Directory vars.
 	 */
-	const __dirname = dirname(import.meta.url);
+	const __dirname = $fs.imuDirname(import.meta.url);
 	const projDir = path.resolve(__dirname, '../../..');
 
 	const srcDir = path.resolve(__dirname, '../../../src');
-	const envsDir = path.resolve(__dirname, '../../../dev/.envs');
 	const cargoDir = path.resolve(__dirname, '../../../src/cargo');
+
+	const envsDir = path.resolve(__dirname, '../../../dev/.envs');
+	const logsDir = path.resolve(__dirname, '../../../dev/.logs');
 
 	const distDir = path.resolve(__dirname, '../../../dist');
 	const a16sDir = path.resolve(__dirname, '../../../dist/assets/a16s');
@@ -59,10 +57,9 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	const pkg = await u.pkg(); // Parses current `./package.json` file.
 
 	/**
-	 * Mode-related vars.
+	 * Sets node environment.
 	 */
-	const isDev = 'dev' === mode; // Development mode?
-	process.env.NODE_ENV = isDev ? 'development' : 'production'; // <https://o5p.me/DscTVM>.
+	process.env.NODE_ENV = 'dev' === mode ? 'development' : 'production'; // <https://o5p.me/DscTVM>.
 
 	/**
 	 * Environment-related vars.
@@ -73,8 +70,8 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	/**
 	 * App type, target, path, and related vars.
 	 */
-	const appType = _.get(pkg, 'config.c10n.&.build.appType') || 'cma';
-	const targetEnv = _.get(pkg, 'config.c10n.&.build.targetEnv') || 'any';
+	const appType = $obp.get(pkg, 'config.c10n.&.build.appType') || 'cma';
+	const targetEnv = $obp.get(pkg, 'config.c10n.&.build.targetEnv') || 'any';
 	const appBasePath = env.APP_BASE_PATH || ''; // From environment vars.
 
 	const isMPA = 'mpa' === appType;
@@ -94,8 +91,8 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	const cmaEntriesSubpaths = cmaEntries.map((absPath) => path.relative(srcDir, absPath));
 	const cmaEntriesSubpathsNoExt = cmaEntriesSubpaths.map((subpath) => subpath.replace(/\.[^.]+$/u, ''));
 
-	const mpaEntryIndexSubpath = mpaIndexesSubPaths.find((subpath) => $mm.isMatch(subpath, 'index.html'));
-	const cmaEntryIndexSubpath = cmaEntriesSubpaths.find((subpath) => $mm.isMatch(subpath, 'index.{ts,tsx}'));
+	const mpaEntryIndexSubpath = mpaIndexesSubPaths.find((subpath) => $str.mm.isMatch(subpath, 'index.html'));
+	const cmaEntryIndexSubpath = cmaEntriesSubpaths.find((subpath) => $str.mm.isMatch(subpath, 'index.{ts,tsx}'));
 	const cmaEntryIndexSubpathNoExt = cmaEntryIndexSubpath.replace(/\.[^.]+$/u, '');
 
 	const isWeb = ['web', 'webw'].includes(targetEnv);
@@ -128,7 +125,6 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	const updatePkg = {}; // Initialize.
 
 	updatePkg.type = 'module'; // ES module; always.
-	updatePkg.files = ['/dist']; // Dist directory only.
 	updatePkg.exports = {}; // Exports object initialization.
 	updatePkg.sideEffects = ['./src/*.{html,scss,ts,tsx}']; // <https://o5p.me/xVY39g>.
 
@@ -153,7 +149,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 			if (cmaEntrySubPathNoExt === cmaEntryIndexSubpathNoExt) {
 				continue; // Don't remap the entry index.
 			}
-			$obj.mc.patch(updatePkg.exports, {
+			$obj.patchDeep(updatePkg.exports, {
 				['./' + cmaEntrySubPathNoExt]: {
 					import: './dist/' + cmaEntrySubPathNoExt + '.js',
 					require: './dist/' + cmaEntrySubPathNoExt + '.cjs',
@@ -180,7 +176,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	} else {
 		updatePkg.type = 'module'; // Always a module when building with Vite.
 		updatePkg.module = updatePkg.main = updatePkg.browser = updatePkg.unpkg = updatePkg.types = '';
-		(updatePkg.exports = null), (updatePkg.files = updatePkg.sideEffects = []), (updatePkg.typesVersions = {});
+		(updatePkg.exports = null), (updatePkg.sideEffects = []), (updatePkg.typesVersions = {});
 	}
 
 	/**
@@ -221,7 +217,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 			},
 		},
 	);
-	const pluginMinifyHTMLConfig = isDev ? null : pluginMinifyHTML();
+	const pluginMinifyHTMLConfig = 'dev' === mode ? null : pluginMinifyHTML();
 
 	const pluginC10NPostProcessConfig = ((postProcessed = false) => {
 		return {
@@ -255,7 +251,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 				 * Generates a zip archive containing `./dist` directory.
 				 */
 				if ('build' === command) {
-					const archive = archiver('zip', { zlib: { level: 9 } });
+					const archive = $fs.archiver('zip', { zlib: { level: 9 } });
 					archive.pipe(fs.createWriteStream(path.resolve(projDir, './.~dist.zip')));
 					archive.directory(distDir + '/', false);
 					await archive.finalize();
@@ -278,20 +274,132 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 			: mpaIndexes,
 
 		external: [
-			...Object.keys(pkg.peerDependencies || {}),
-			'__STATIC_CONTENT_MANIFEST', // Cloudflare workers.
+			'__STATIC_CONTENT_MANIFEST', // Cloudflare workers use this for static assets.
+			...Object.keys(pkg.peerDependencies || {}).map((k) => new RegExp('^' + $str.escRegExp(k) + '(?:$|/)')),
 		],
 		output: {
 			interop: 'auto', // Matches TypeScript config.
 			exports: 'named', // Matches TypeScript config.
 			esModule: true, // Matches TypeScript config.
 
-			extend: true, // i.e., Global `||` checks.
+			extend: true, // i.e., UMD global `||` checks.
 			noConflict: true, // Like `jQuery.noConflict()`.
+			compact: 'prod' === mode, // Minify auto-generated snippets.
+
+			// Preserves module structure in CMAs built explicitly as dependencies.
+			// The expectation is that peers will build w/ this flag set as false, which is
+			// recommended, because preserving module structure in a final build has performance costs.
+			// However, in builds that are not final (e.g., CMAs with peer dependencies), preserving modules
+			// has performance benefits, as it allows for tree-shaking optimization in final builds.
+			preserveModules: isCMA && Object.keys(pkg.peerDependencies || {}).length > 0,
 		},
 	};
 	// <https://vitejs.dev/guide/features.html#web-workers>
-	const importedWorkerRollupConfig = { ..._.omit(rollupConfig, ['input']) };
+	const importedWorkerRollupConfig = { ...$obj.omit(rollupConfig, ['input']) };
+
+	/**
+	 * Vitest config for Vite.
+	 */
+	const vitestExcludes = [
+		'**/.*', //
+		'**/dev/**',
+		'**/dist/**',
+		'**/.yarn/**',
+		'**/vendor/**',
+		'**/node_modules/**',
+		'**/jspm_packages/**',
+		'**/bower_components/**',
+		'**/*.d.{ts,tsx,cts,ctsx,mts,mtsx}',
+	];
+	const vitestIncludes = [
+		'**/*.{test,tests,spec,specs}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+		'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+	];
+	const vitestTypecheckIncludes = [
+		'**/*.{test,tests,spec,specs}-d.{ts,tsx,cts,ctsx,mts,mtsx}', //
+		'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*-d.{ts,tsx,cts,ctsx,mts,mtsx}',
+	];
+	const vitestBenchIncludes = [
+		'**/*.{bench,benchmark,benchmarks}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+		'**/{bench,benchmark,benchmarks,__bench__,__benchmark__,__benchmarks__}/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+	];
+	const vitestExtensions = ['.js', '.jsx', '.cjs', '.cjsx', '.json', '.node', '.mjs', '.mjsx', '.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx'];
+
+	const vitestConfig = {
+		root: srcDir,
+
+		include: vitestIncludes,
+		css: { include: /.+/u },
+
+		exclude: vitestExcludes,
+		watchExclude: vitestExcludes,
+
+		// @todo Enhance miniflare support.
+		// @todo Add support for testing web workers.
+		environment: ['web'].includes(targetEnv) ? 'jsdom' // <https://o5p.me/Gf9Cy5>.
+			: ['cfp', 'cfw'].includes(targetEnv) ? 'miniflare' // <https://o5p.me/TyF9Ot>.
+			: ['node'].includes(targetEnv) ? 'node' // <https://o5p.me/Gf9Cy5>.
+			: 'node', // prettier-ignore
+
+		// See: <https://o5p.me/8Pjw1d> for `environment`, `environmentMatchGlobs` precedence.
+		environmentMatchGlobs: [
+			['**/*.web.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'jsdom'],
+			['**/*.{cfp,cfw}.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'miniflare'],
+			['**/*.node.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'node'],
+		],
+		deps: {
+			interopDefault: true,
+			external: ['**/dist/**', '**/node_modules/**'].concat(rollupConfig.external),
+		},
+		cache: { dir: path.resolve(projDir, './node_modules/.vitest') },
+
+		transformMode: {
+			web: [], // See: <https://o5p.me/Nf6MGy> for further details.
+			ssr: [new RegExp('\\.(?:' + vitestExtensions.map((e) => $str.escRegExp(e.slice(1))).join('|') + ')$')],
+		},
+		// See: <https://vitest.dev/api/#test-only>
+		// See: <https://vitest.dev/api/#bench-only>
+		// See: <https://vitest.dev/api/#describe-only>
+		allowOnly: true, // Allows `describe.only`, `test.only`, `bench.only`.
+		passWithNoTests: true, // Pass if there are no tests to run.
+
+		watch: false, // Disable watching by default.
+		forceRerunTriggers: ['**/package.json', '**/vitest.config.*', '**/vite.config.*'],
+
+		reporters: ['verbose'], // Verbose reporting.
+		outputFile: {
+			json: path.resolve(logsDir, './tests/vitest.json'),
+			junit: path.resolve(logsDir, './tests/vitest.junit'),
+			html: path.resolve(logsDir, './tests/vitest/index.html'),
+		},
+		typecheck: {
+			include: vitestTypecheckIncludes,
+			exclude: vitestExcludes,
+		},
+		coverage: {
+			all: true,
+			src: srcDir,
+			include: ['**'],
+			exclude: vitestExcludes //
+				.concat(vitestIncludes)
+				.concat(vitestTypecheckIncludes)
+				.concat(vitestBenchIncludes),
+			extension: vitestExtensions,
+			reporter: ['text', 'html', 'clover', 'json'],
+			reportsDirectory: path.resolve(logsDir, './coverage/vitest'),
+		},
+		benchmark: {
+			include: vitestBenchIncludes,
+			includeSource: vitestIncludes,
+			exclude: vitestExcludes,
+
+			outputFile: {
+				json: path.resolve(logsDir, './benchmarks/vitest.json'),
+				junit: path.resolve(logsDir, './benchmarks/vitest.junit'),
+				html: path.resolve(logsDir, './benchmarks/vitest.html'),
+			},
+		},
+	};
 
 	/**
 	 * Base config for Vite.
@@ -300,8 +408,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	 */
 	const baseConfig = {
 		c10n: { pkg, updatePkg },
-		define: {
-			// Static replacements.
+		define: /* Static replacements. */ {
 			$$__APP_PKG_NAME__$$: JSON.stringify(pkg.name || ''),
 			$$__APP_PKG_VERSION__$$: JSON.stringify(pkg.version || ''),
 			$$__APP_PKG_REPOSITORY__$$: JSON.stringify(pkg.repository || ''),
@@ -313,7 +420,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 		base: appBasePath + '/', // Analagous to `<base href="/">` — leading & trailing slash.
 
 		appType: isCMA ? 'custom' : 'mpa', // See: <https://o5p.me/ZcTkEv>.
-		resolve: { alias: importAliases }, // Matches TypeScript config.
+		resolve: { alias: importAliases }, // Matches TypeScript config import aliases.
 
 		envDir: path.relative(srcDir, envsDir), // Relative to `root` directory.
 		envPrefix: appEnvPrefix, // Environment vars w/ this prefix become a part of the app.
@@ -343,10 +450,11 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 			// Note: `a16s` = numeronym for 'acquired resources'.
 
 			ssr: isSSR, // Server-side rendering?
-			...(isSSR ? { ssrManifest: true } : {}),
+			...(isSSR ? { ssrManifest: 'dev' === mode } : {}),
 
-			sourcemap: isDev, // Enables creation of sourcemaps.
-			manifest: true, // Enables creation of manifest for assets.
+			sourcemap: 'dev' === mode, // Enables creation of sourcemaps.
+			manifest: 'dev' === mode, // Enables creation of manifest for assets.
+			minify: 'dev' === mode ? false : 'esbuild', // See: <https://o5p.me/ZyQ4sv>.
 
 			...(isCMA // Custom-made apps = library code.
 				? {
@@ -360,6 +468,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 				: {}),
 			rollupOptions: rollupConfig, // See: <https://o5p.me/5Vupql>.
 		},
+		test: vitestConfig, // Vitest configuration options.
 	};
 
 	/**

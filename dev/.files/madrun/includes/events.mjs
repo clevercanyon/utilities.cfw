@@ -10,13 +10,13 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
 import u from '../../bin/includes/utilities.mjs';
-import { $url, $brand } from '@clevercanyon/utilities';
+import { $fs } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $is, $fn, $url, $brand } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 
-const __dirname = dirname(import.meta.url);
+const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../../..');
 
 /**
@@ -55,8 +55,8 @@ export default {
 			const parentDir = path.dirname(projDir);
 			const parentDirBasename = path.basename(parentDir);
 
-			const parentDirBrand = $brand.get(parentDirBasename);
-			const parentDirOwner = parentDirBrand?.org?.slug || parentDirBasename;
+			const maybeParentDirBrand = $fn.try(() => $brand.get(parentDirBasename))(); // Maybe.
+			const parentDirOwner = $is.brand(maybeParentDirBrand) ? maybeParentDirBrand.org.slug : parentDirBasename;
 
 			/**
 			 * Updates `./package.json` in new project directory.

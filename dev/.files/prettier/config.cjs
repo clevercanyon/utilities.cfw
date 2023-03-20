@@ -83,7 +83,7 @@ module.exports = {
 			 *
 			 * @see https://o5p.me/dTTfse
 			 */
-			files: ['*.{js,jsx,cjs,cjsx,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx,node}'],
+			files: ['*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}'],
 			options: {
 				jsdocAddDefaultToDescription: false,
 				jsdocCapitalizeDescription: true,
@@ -93,7 +93,7 @@ module.exports = {
 				jsdocLineWrappingStyle: 'greedy',
 				jsdocPreferCodeFences: false,
 				jsdocPrintWidth: 120,
-				jsdocSeparateReturnsFromParam: true,
+				jsdocSeparateReturnsFromParam: false,
 				jsdocSeparateTagGroups: true,
 				jsdocSingleLineComment: false,
 				jsdocSpaces: 1,

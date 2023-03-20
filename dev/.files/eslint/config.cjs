@@ -54,7 +54,8 @@ const baseConfig = {
 		'plugin:prettier/recommended', // Must come last.
 	],
 	ignorePatterns: [
-		'!**/.*', // Applied globally.
+		'!**/.*', //
+		'**/.git/**',
 		'**/dist/**',
 		'**/.yarn/**',
 		'**/vendor/**',
@@ -88,6 +89,18 @@ const baseConfig = {
 		'import/no-duplicates': ['off'], // Redundant & not smart.
 		'import/extensions': ['warn', 'always', { ignorePackages: true }],
 		'no-empty': ['warn', { allowEmptyCatch: true }],
+		'no-unused-vars': [
+			'warn',
+			{
+				vars: 'all',
+				args: 'after-used',
+				caughtErrors: 'none',
+				ignoreRestSiblings: false,
+				varsIgnorePattern: '^unusedꓺ',
+				caughtErrorsIgnorePattern: '^unusedꓺ',
+				destructuredArrayIgnorePattern: '^unusedꓺ',
+			},
+		],
 	},
 };
 
@@ -154,6 +167,9 @@ const tsOverrides = {
 				'lib': 'always',
 			},
 		],
+		'no-unused-vars': 'off', // Disable in favor of TypeScript flavor.
+		'@typescript-eslint/no-unused-vars': [...baseConfig.rules['no-unused-vars']],
+
 		'import/extensions': [
 			'warn',
 			'always', // Require all imports to include a file extension.

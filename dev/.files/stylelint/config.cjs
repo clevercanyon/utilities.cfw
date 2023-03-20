@@ -25,7 +25,8 @@ const baseConfig = {
 		'stylelint-config-prettier', // Must come last.
 	],
 	ignoreFiles: [
-		'**/dist/**', //
+		'**/.git/**', //
+		'**/dist/**',
 		'**/.yarn/**',
 		'**/vendor/**',
 		'**/node_modules/**',

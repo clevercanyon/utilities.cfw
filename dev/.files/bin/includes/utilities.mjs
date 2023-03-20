@@ -7,29 +7,18 @@
  */
 /* eslint-env es2021, node */
 
-import _ from 'lodash';
-
 import os from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
-import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
-
-import chalk from 'chalk';
-import semver from 'semver';
-import prettier from 'prettier';
-
-import dotenv from 'dotenv';
-import dotenvVaultCore from 'dotenv-vault-core';
-
-import { $str, $obj, $url } from '@clevercanyon/utilities';
-import { $cmd, $chalk } from '@clevercanyon/utilities.node';
 
 import { Octokit as OctokitCore } from '@octokit/core';
 import { paginateRest as OctokitPluginPaginateRest } from '@octokit/plugin-paginate-rest';
-import sodium from 'libsodium-wrappers'; // Used to encrypt GitHub secret values.
 
-const __dirname = dirname(import.meta.url);
+import { $is, $str, $crypto, $obj, $obp, $url, $version } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $fs, $cmd, $chalk, $dotenv, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+
+const __dirname = $fs.imuDirname(import.meta.url);
 const binDir = path.resolve(__dirname, '..');
 const projDir = path.resolve(__dirname, '../../../..');
 
@@ -41,22 +30,22 @@ const { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType } = (() => 
 	}
 	const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
-	if (!_.isPlainObject(pkg)) {
+	if (!$is.plainObject(pkg)) {
 		throw new Error('u: Unable to parse `./package.json`.');
 	}
-	const pkgName = _.get(pkg, 'name', '');
-	const pkgPrivate = _.get(pkg, 'private', null);
-	const pkgRepository = _.get(pkg, 'repository', '');
-	const pkgBuildAppType = _.get(pkg, 'config.c10n.&.build.appType', '');
+	const pkgName = $obp.get(pkg, 'name', '');
+	const pkgPrivate = $obp.get(pkg, 'private');
+	const pkgRepository = $obp.get(pkg, 'repository', '');
+	const pkgBuildAppType = $obp.get(pkg, 'config.c10n.&.build.appType', '');
 
 	return { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType };
 })();
 const Octokit = OctokitCore.plugin(OctokitPluginPaginateRest);
 const octokit = new Octokit({ auth: process.env.USER_GITHUB_TOKEN || '' });
 
-const githubConfigVersion = '1.0.2'; // Bump when config changes in routines below.
-const githubEnvsVersion = '1.0.2'; // Bump when environments change in routines below.
-const npmjsConfigVersion = '1.0.2'; // Bump when config changes in routines below.
+const githubConfigVersion = '1.0.3'; // Bump when config changes in routines below.
+const githubEnvsVersion = '1.0.3'; // Bump when environments change in routines below.
+const npmjsConfigVersion = '1.0.3'; // Bump when config changes in routines below.
 
 const c10nLogo = path.resolve(__dirname, '../../assets/brands/c10n/logo.png');
 
@@ -126,7 +115,7 @@ export default class u {
 		}
 		const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
 
-		if (!_.isPlainObject(pkg)) {
+		if (!$is.plainObject(pkg)) {
 			throw new Error('u.pkg: Unable to parse `./package.json`.');
 		}
 		return pkg; // JSON object data.
@@ -146,11 +135,11 @@ export default class u {
 		const origVersion = String(pkg.version || '');
 		let version = origVersion || '0.0.0';
 
-		if (!semver.valid(version)) {
+		if (!$version.isValid(version)) {
 			throw new Error('u.pkgIncrementVersion: Not a semantic version: `' + origVersion + '`.');
 		}
-		const isVersionPrerelease = semver.prerelease(version) ? true : false;
-		version = semver.inc(version, isVersionPrerelease ? 'prerelease' : 'patch');
+		const isVersionPrerelease = $version.prerelease(version) ? true : false;
+		version = $version.increment(version, isVersionPrerelease ? 'prerelease' : 'patch');
 
 		if (!version /* Catch increment failures. */) {
 			throw new Error('u.pkgIncrementVersion: Failed to increment version: `' + origVersion + '`.');
@@ -160,38 +149,38 @@ export default class u {
 		}
 	}
 
-	static async updatePkg(propsOrPath = {}, value = undefined, delimiter = '.') {
+	static async updatePkg(propsOrPath = {}, value = undefined, separator = '.') {
 		const pkg = await u.pkg(); // Parses current `./package.json` file.
 
-		if (typeof propsOrPath === 'string') {
-			const path = propsOrPath; // String path.
-			$obj.mc.u.set(pkg, path, value, delimiter);
+		if ($is.string(propsOrPath)) {
+			const path = propsOrPath;
+			$obp.set(pkg, path, value, separator);
 			//
-		} else if (_.isPlainObject(propsOrPath)) {
-			const props = propsOrPath; // Object props.
-			$obj.mc.patch(pkg, props); // Potentially declarative ops.
+		} else if ($is.plainObject(propsOrPath)) {
+			const props = propsOrPath; // Object properties.
+			$obj.patchDeep(pkg, props); // Potentially declarative ops.
 		} else {
 			throw new Error('u.updatePkg: Invalid arguments.');
 		}
 		const updatesFile = path.resolve(projDir, './dev/.files/bin/updater/data/package.json/updates.json');
 		const updates = JSON.parse((await fsp.readFile(updatesFile)).toString());
 
-		if (!_.isPlainObject(updates)) {
+		if (!$is.plainObject(updates)) {
 			throw new Error('u.updatePkg: Unable to parse `' + updatesFile + '`.');
 		}
 		if (await u.isPkgRepo('clevercanyon/skeleton-dev-deps')) {
-			if (updates.$ꓺdefault?.['devDependenciesꓺ@clevercanyon/skeleton-dev-deps']) {
-				delete updates.$ꓺdefault['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
+			if (updates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/skeleton-dev-deps']) {
+				delete updates.$ꓺdefaults['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
 			}
-			if (Array.isArray(updates.$ꓺunset)) {
+			if ($is.array(updates.$ꓺunset)) {
 				updates.$ꓺunset.push('devDependenciesꓺ@clevercanyon/skeleton-dev-deps');
 			} else {
 				updates.$ꓺunset = ['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
 			}
 		}
-		$obj.mc.patch(pkg, updates); // Potentially declarative ops.
-		const pkgPrettierCfg = { ...(await prettier.resolveConfig(pkgFile)), parser: 'json' };
-		await fsp.writeFile(pkgFile, prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
+		$obj.patchDeep(pkg, updates); // Potentially declarative ops.
+		const pkgPrettierCfg = { ...(await $prettier.resolveConfig(pkgFile)), parser: 'json' };
+		await fsp.writeFile(pkgFile, $prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
 	}
 
 	/*
@@ -301,8 +290,8 @@ export default class u {
 		const githubUsername = String(process.env.USER_GITHUB_USERNAME).replace(/^@/u, '').toLowerCase();
 
 		let c10nUser = c10nUsers[githubUsername] || {};
-		c10nUser = _.isPlainObject(c10nUser) ? c10nUser : {};
-		_.set(c10nUser, 'github.username', githubUsername);
+		c10nUser = $is.plainObject(c10nUser) ? c10nUser : {};
+		$obp.set(c10nUser, 'github.username', githubUsername);
 
 		return c10nUser;
 	}
@@ -343,9 +332,9 @@ export default class u {
 
 			draft: false,
 			generate_release_notes: true,
-			prerelease: semver.prerelease(pkg.version) ? true : false,
+			prerelease: $version.prerelease(pkg.version) ? true : false,
 		});
-		if (typeof r !== 'object' || typeof r.data !== 'object' || !r.data.id || !r.data.upload_url) {
+		if (!$is.object(r) || !$is.object(r.data) || !r.data.id || !r.data.upload_url) {
 			throw new Error('u.githubReleaseTag: Failed to acquire GitHub release data.');
 		}
 		if ((await u.isViteBuild()) && fs.existsSync(distZipFile)) {
@@ -378,8 +367,8 @@ export default class u {
 		}
 		const pkg = await u.pkg(); // Parses current `./package.json` file.
 
-		if (_.get(pkg, 'config.c10n.&.github.configVersion') === githubConfigVersion) {
-			u.log(chalk.gray('GitHub repo configuration is up-to-date @v' + githubConfigVersion + '.'));
+		if ($obp.get(pkg, 'config.c10n.&.github.configVersion') === githubConfigVersion) {
+			u.log($chalk.gray('GitHub repo configuration is up-to-date @v' + githubConfigVersion + '.'));
 			return; // Repo configuration version is already up-to-date.
 		}
 		if ('main' !== repoData.default_branch) {
@@ -411,20 +400,20 @@ export default class u {
 				desc: 'Something is being suggested.',
 			},
 		};
-		const labels = Object.assign({}, _.get(pkg, 'config.c10n.&.github.labels', {}), alwaysOnRequiredLabels);
+		const labels = $obj.assign({}, $obp.get(pkg, 'config.c10n.&.github.labels', {}), alwaysOnRequiredLabels);
 		const labelsToDelete = await u._githubRepoLabels(); // Current list of repo’s labels.
 
 		const alwaysOnRequiredTeams = { owners: 'admin', 'security-managers': 'pull' }; // No exceptions.
-		const teams = Object.assign({}, _.get(pkg, 'config.c10n.&.github.teams', {}), alwaysOnRequiredTeams);
+		const teams = $obj.assign({}, $obp.get(pkg, 'config.c10n.&.github.teams', {}), alwaysOnRequiredTeams);
 		const teamsToDelete = await u._githubRepoTeams(); // Current list of repo’s teams.
 
 		const protectedBranches = await u._githubRepoProtectedBranches();
-		const protectedBranchesToDelete = Object.assign({}, protectedBranches);
+		const protectedBranchesToDelete = $obj.assign({}, protectedBranches);
 
 		const defaultHomepage = 'https://github.com/' + $url.encode(owner) + '/' + $url.encode(repo) + '#readme';
 		const defaultDescription = 'Another great project by @' + repoData.owner.login + '.';
 
-		u.log(chalk.gray('Configuring GitHub repo using org-wide standards.'));
+		u.log($chalk.gray('Configuring GitHub repo using org-wide standards.'));
 		if (!opts.dryRun) {
 			await octokit.request('PATCH /repos/{owner}/{repo}', {
 				owner,
@@ -468,19 +457,19 @@ export default class u {
 			if (labelsToDelete[labelName]) {
 				delete labelsToDelete[labelName]; // Don't delete.
 
-				u.log(chalk.gray('Updating `' + labelName + '` label in GitHub repo to `#' + labelData.color + '` color.'));
+				u.log($chalk.gray('Updating `' + labelName + '` label in GitHub repo to `#' + labelData.color + '` color.'));
 				if (!opts.dryRun) {
 					await octokit.request('PATCH /repos/{owner}/{repo}/labels/{labelName}', { owner, repo, labelName, ...labelData });
 				}
 			} else {
-				u.log(chalk.gray('Adding `' + labelName + '` label to GitHub repo with `#' + labelData.color + '` color.'));
+				u.log($chalk.gray('Adding `' + labelName + '` label to GitHub repo with `#' + labelData.color + '` color.'));
 				if (!opts.dryRun) {
 					await octokit.request('POST /repos/{owner}/{repo}/labels', { owner, repo, name: labelName, ...labelData });
 				}
 			}
 		}
 		for (const [labelName, labelData] of Object.entries(labelsToDelete)) {
-			u.log(chalk.gray('Deleting `' + labelName + '` (unused) label with `#' + labelData.color + '` color from GitHub repo.'));
+			u.log($chalk.gray('Deleting `' + labelName + '` (unused) label with `#' + labelData.color + '` color from GitHub repo.'));
 			if (!opts.dryRun) {
 				await octokit.request('DELETE /repos/{owner}/{repo}/labels/{labelName}', { owner, repo, labelName });
 			}
@@ -489,13 +478,13 @@ export default class u {
 		for (const [team, permission] of Object.entries(teams)) {
 			delete teamsToDelete[team]; // Don't delete.
 
-			u.log(chalk.gray('Adding `' + team + '` team to GitHub repo with `' + permission + '` permission.'));
+			u.log($chalk.gray('Adding `' + team + '` team to GitHub repo with `' + permission + '` permission.'));
 			if (!opts.dryRun) {
 				await octokit.request('PUT /orgs/{org}/teams/{team}/repos/{owner}/{repo}', { org: owner, owner, repo, team, permission });
 			}
 		}
 		for (const [team, teamData] of Object.entries(teamsToDelete)) {
-			u.log(chalk.gray('Deleting `' + team + '` (unused) team with `' + teamData.permission + '` permission from GitHub repo.'));
+			u.log($chalk.gray('Deleting `' + team + '` (unused) team with `' + teamData.permission + '` permission from GitHub repo.'));
 			if (!opts.dryRun) {
 				await octokit.request('DELETE /orgs/{org}/teams/{team}/repos/{owner}/{repo}', { org: owner, owner, repo, team });
 			}
@@ -504,7 +493,7 @@ export default class u {
 		for (const branch of ['main'] /* Always protect `main` branch. */) {
 			delete protectedBranchesToDelete[branch]; // Don't delete.
 
-			u.log(chalk.gray('Protecting `' + branch + '` branch in GitHub repo.'));
+			u.log($chalk.gray('Protecting `' + branch + '` branch in GitHub repo.'));
 			if (!opts.dryRun) {
 				await octokit.request('PUT /repos/{owner}/{repo}/branches/{branch}/protection', {
 					owner,
@@ -540,7 +529,7 @@ export default class u {
 			}
 		}
 		for (const [branch] of Object.entries(protectedBranchesToDelete)) {
-			u.log(chalk.gray('Deleting `' + branch + '` (unused) branch protection in GitHub repo.'));
+			u.log($chalk.gray('Deleting `' + branch + '` (unused) branch protection in GitHub repo.'));
 			if (!opts.dryRun) {
 				await octokit.request('DELETE /repos/{owner}/{repo}/branches/{branch}/protection', { owner, repo, branch });
 			}
@@ -564,17 +553,17 @@ export default class u {
 		}
 		const pkg = await u.pkg(); // Parses current `./package.json` file.
 
-		if (_.get(pkg, 'config.c10n.&.github.envsVersion') === githubEnvsVersion) {
-			u.log(chalk.gray('GitHub repo environments are up-to-date @v' + githubEnvsVersion + '.'));
+		if ($obp.get(pkg, 'config.c10n.&.github.envsVersion') === githubEnvsVersion) {
+			u.log($chalk.gray('GitHub repo environments are up-to-date @v' + githubEnvsVersion + '.'));
 			return; // Repo environments version is already up-to-date.
 		}
-		u.log(chalk.gray('Configuring GitHub repo environments using org-wide standards.'));
+		u.log($chalk.gray('Configuring GitHub repo environments using org-wide standards.'));
 
 		const envFiles = await u.envFiles(); // All environment files.
 		const envKeys = await u._envsExtractKeys(); // Dotenv Vault decryption keys.
 		await u._githubEnsureRepoEnvs({ dryRun: opts.dryRun }); // Creates|deletes repo envs.
 
-		for (const [envName] of Object.entries(_.omit(envFiles, ['main']))) {
+		for (const [envName] of Object.entries($obj.omit(envFiles, ['main']))) {
 			const envSecretsToDelete = await u._githubRepoEnvSecrets(repoId, envName);
 
 			for (const [envSecretName, envSecretValue] of Object.entries({
@@ -584,11 +573,11 @@ export default class u {
 				delete envSecretsToDelete[envSecretName]; // Don't delete.
 				const { envPublicKeyId, envPublicKey } = await u._githubRepoEnvPublicKey(repoId, envName);
 
-				const encryptedEnvSecretValue = await sodium.ready.then(() => {
-					const sodiumKey = sodium.from_base64(envPublicKey, sodium.base64_variants.ORIGINAL);
-					return sodium.to_base64(sodium.crypto_box_seal(sodium.from_string(envSecretValue), sodiumKey), sodium.base64_variants.ORIGINAL);
+				const encryptedEnvSecretValue = await $crypto.sodium.ready.then(() => {
+					const sodiumKey = $crypto.sodium.from_base64(envPublicKey, $crypto.sodium.base64_variants.ORIGINAL);
+					return $crypto.sodium.to_base64($crypto.sodium.crypto_box_seal($crypto.sodium.from_string(envSecretValue), sodiumKey), $crypto.sodium.base64_variants.ORIGINAL);
 				});
-				u.log(chalk.gray('Updating `' + envSecretName + '` secret in `' + envName + '` repo env at GitHub.'));
+				u.log($chalk.gray('Updating `' + envSecretName + '` secret in `' + envName + '` repo env at GitHub.'));
 				if (!opts.dryRun) {
 					await octokit.request('PUT /repositories/{repoId}/environments/{envName}/secrets/{envSecretName}', {
 						repoId,
@@ -600,7 +589,7 @@ export default class u {
 				}
 			}
 			for (const [envSecretName] of Object.entries(envSecretsToDelete)) {
-				u.log(chalk.gray('Deleting `' + envSecretName + '` (unused) secret in `' + envName + '` repo env at GitHub.'));
+				u.log($chalk.gray('Deleting `' + envSecretName + '` (unused) secret in `' + envName + '` repo env at GitHub.'));
 				if (!opts.dryRun) {
 					await octokit.request('DELETE /repositories/{repoId}/environments/{envName}/secrets/{envSecretName}', { repoId, envName, envSecretName });
 				}
@@ -615,7 +604,7 @@ export default class u {
 		const { owner, repo } = await u.githubOrigin();
 		const r = await octokit.request('GET /repos/{owner}/{repo}', { owner, repo });
 
-		if (typeof r !== 'object' || typeof r.data !== 'object' || !r.data.id) {
+		if (!$is.object(r) || !$is.object(r.data) || !r.data.id) {
 			throw new Error('u._githubRepo: Failed to acquire GitHub repository’s data.');
 		}
 		return r.data;
@@ -626,12 +615,12 @@ export default class u {
 		const { owner, repo } = await u.githubOrigin();
 		const i6r = octokit.paginate.iterator('GET /repos/{owner}/{repo}/labels{?per_page}', { owner, repo, per_page: 100 });
 
-		if (typeof i6r !== 'object') {
+		if (!$is.object(i6r)) {
 			throw new Error('u._githubRepoLabels: Failed to acquire GitHub repository’s labels.');
 		}
 		for await (const { data } of i6r) {
 			for (const label of data) {
-				if (typeof label !== 'object' || !label.name) {
+				if (!$is.object(label) || !label.name) {
 					throw new Error('u._githubRepoLabels: Failed to acquire GitHub repository’s label data.');
 				}
 				labels[label.name] = label;
@@ -645,12 +634,12 @@ export default class u {
 		const { owner, repo } = await u.githubOrigin();
 		const i6r = octokit.paginate.iterator('GET /repos/{owner}/{repo}/teams{?per_page}', { owner, repo, per_page: 100 });
 
-		if (typeof i6r !== 'object') {
+		if (!$is.object(i6r)) {
 			throw new Error('u._githubRepoTeams: Failed to acquire GitHub repository’s teams.');
 		}
 		for await (const { data } of i6r) {
 			for (const repoTeam of data) {
-				if (typeof repoTeam !== 'object' || !repoTeam.slug) {
+				if (!$is.object(repoTeam) || !repoTeam.slug) {
 					throw new Error('u._githubRepoTeams: Failed to acquire a GitHub repo team’s data.');
 				}
 				repoTeams[repoTeam.slug] = repoTeam;
@@ -664,12 +653,12 @@ export default class u {
 		const { owner, repo } = await u.githubOrigin();
 		const i6r = octokit.paginate.iterator('GET /repos/{owner}/{repo}/branches{?protected,per_page}', { owner, repo, protected: true, per_page: 100 });
 
-		if (typeof i6r !== 'object') {
+		if (!$is.object(i6r)) {
 			throw new Error('u._githubRepoProtectedBranches: Failed to acquire GitHub repository’s protected branches.');
 		}
 		for await (const { data } of i6r) {
 			for (const repoProtectedBranch of data) {
-				if (typeof repoProtectedBranch !== 'object' || !repoProtectedBranch.name) {
+				if (!$is.object(repoProtectedBranch) || !repoProtectedBranch.name) {
 					throw new Error('u._githubRepoProtectedBranches: Failed to acquire a GitHub repository’s protected branch data.');
 				}
 				repoProtectedBranches[repoProtectedBranch.name] = repoProtectedBranch;
@@ -683,12 +672,12 @@ export default class u {
 		const { owner, repo } = await u.githubOrigin();
 		const i6r = octokit.paginate.iterator('GET /repos/{owner}/{repo}/environments{?per_page}', { owner, repo, per_page: 100 });
 
-		if (typeof i6r !== 'object') {
+		if (!$is.object(i6r)) {
 			throw new Error('u._githubRepoEnvs: Failed to acquire GitHub repository’s environments.');
 		}
 		for await (const { data } of i6r) {
 			for (const env of data) {
-				if (typeof env !== 'object' || !env.name) {
+				if (!$is.object(env) || !env.name) {
 					throw new Error('u._githubRepoEnvs: Failed to acquire GitHub repository’s environment data.');
 				}
 				envs[env.name] = env;
@@ -700,7 +689,7 @@ export default class u {
 	static async _githubRepoEnvPublicKey(repoId, envName) {
 		const r = await octokit.request('GET /repositories/{repoId}/environments/{envName}/secrets/public-key', { repoId, envName });
 
-		if (typeof r !== 'object' || typeof r.data !== 'object' || !r.data.key_id || !r.data.key) {
+		if (!$is.object(r) || !$is.object(r.data) || !r.data.key_id || !r.data.key) {
 			throw new Error('u._githubRepoEnvPublicKey: Failed to acquire GitHub repository env’s public key.');
 		}
 		return { envPublicKeyId: r.data.key_id, envPublicKey: r.data.key };
@@ -710,12 +699,12 @@ export default class u {
 		const envSecrets = {}; // Initialize.
 		const i6r = octokit.paginate.iterator('GET /repositories/{repoId}/environments/{envName}/secrets{?per_page}', { repoId, envName, per_page: 100 });
 
-		if (typeof i6r !== 'object') {
+		if (!$is.object(i6r)) {
 			throw new Error('u._githubRepoEnvSecrets: Failed to acquire GitHub repository’s secrets for an environment.');
 		}
 		for await (const { data } of i6r) {
 			for (const envSecret of data) {
-				if (typeof envSecret !== 'object' || !envSecret.name) {
+				if (!$is.object(envSecret) || !envSecret.name) {
 					throw new Error('u._githubRepoEnvSecrets: Failed to acquire GitHub repository’s secret data for an environment.');
 				}
 				envSecrets[envSecret.name] = envSecret;
@@ -729,12 +718,12 @@ export default class u {
 		const { owner, repo } = await u.githubOrigin();
 		const i6r = octokit.paginate.iterator('GET /repos/{owner}/{repo}/environments/{envName}/deployment-branch-policies{?per_page}', { owner, repo, envName, per_page: 100 });
 
-		if (typeof i6r !== 'object') {
+		if (!$is.object(i6r)) {
 			throw new Error('u._githubRepoEnvBranchPolicies: Failed to acquire GitHub repository’s branch policies for an environment.');
 		}
 		for await (const { data } of i6r) {
 			for (const envBranchPolicy of data) {
-				if (typeof envBranchPolicy !== 'object' || !envBranchPolicy.name) {
+				if (!$is.object(envBranchPolicy) || !envBranchPolicy.name) {
 					throw new Error('u._githubRepoEnvBranchPolicies: Failed to acquire GitHub repository’s branch policy data for an environment.');
 				}
 				envBranchPolicies[envBranchPolicy.name] = envBranchPolicy;
@@ -747,15 +736,15 @@ export default class u {
 		const envFiles = await u.envFiles();
 		const { owner, repo } = await u.githubOrigin();
 		const repoEnvs = await u._githubRepoEnvs();
-		const repoEnvsToDelete = Object.assign({}, repoEnvs);
+		const repoEnvsToDelete = $obj.assign({}, repoEnvs);
 
-		for (const [envName] of Object.entries(_.omit(envFiles, ['main']))) {
+		for (const [envName] of Object.entries($obj.omit(envFiles, ['main']))) {
 			delete repoEnvsToDelete[envName]; // Don't delete.
 
 			if (repoEnvs[envName]) {
-				u.log(chalk.gray('Updating `' + envName + '` repo env at GitHub.'));
+				u.log($chalk.gray('Updating `' + envName + '` repo env at GitHub.'));
 			} else {
-				u.log(chalk.gray('Creating `' + envName + '` repo env at GitHub.'));
+				u.log($chalk.gray('Creating `' + envName + '` repo env at GitHub.'));
 			}
 			if (!opts.dryRun) {
 				await octokit.request('PUT /repos/{owner}/{repo}/environments/{envName}', {
@@ -768,13 +757,13 @@ export default class u {
 					},
 				});
 				const repoEnvBranchPolicies = await u._githubRepoEnvBranchPolicies(envName);
-				const repoEnvBranchPoliciesToDelete = Object.assign({}, repoEnvBranchPolicies);
+				const repoEnvBranchPoliciesToDelete = $obj.assign({}, repoEnvBranchPolicies);
 
 				for (const repoEnvBranchPolicyName of [...('prod' === envName ? ['main'] : [])]) {
 					delete repoEnvBranchPoliciesToDelete[repoEnvBranchPolicyName]; // Don't delete.
 
 					if (!repoEnvBranchPolicies[repoEnvBranchPolicyName]) {
-						u.log(chalk.gray('Creating `' + repoEnvBranchPolicyName + '` branch policy for `' + envName + '` repo env at GitHub.'));
+						u.log($chalk.gray('Creating `' + repoEnvBranchPolicyName + '` branch policy for `' + envName + '` repo env at GitHub.'));
 						if (!opts.dryRun) {
 							await octokit.request('POST /repos/{owner}/{repo}/environments/{envName}/deployment-branch-policies', {
 								owner,
@@ -786,7 +775,7 @@ export default class u {
 					}
 				}
 				for (const [repoEnvBranchPolicyName, repoEnvBranchPolicy] of Object.entries(repoEnvBranchPoliciesToDelete)) {
-					u.log(chalk.gray('Deleting `' + repoEnvBranchPolicyName + '` (unused) branch policy for `' + envName + '` repo env at GitHub.'));
+					u.log($chalk.gray('Deleting `' + repoEnvBranchPolicyName + '` (unused) branch policy for `' + envName + '` repo env at GitHub.'));
 					if (!opts.dryRun) {
 						await octokit.request('DELETE /repos/{owner}/{repo}/environments/{envName}/deployment-branch-policies/{branchPolicyId}', {
 							owner,
@@ -799,7 +788,7 @@ export default class u {
 			}
 		}
 		for (const [envName] of Object.entries(repoEnvsToDelete)) {
-			u.log(chalk.gray('Deleting `' + envName + '` (unused) repo env at GitHub.'));
+			u.log($chalk.gray('Deleting `' + envName + '` (unused) repo env at GitHub.'));
 			if (!opts.dryRun) {
 				await octokit.request('DELETE /repos/{owner}/{repo}/environments/{envName}', { owner, repo, envName });
 			}
@@ -829,20 +818,20 @@ export default class u {
 
 		for (const [envName, envFile] of Object.entries(envFiles)) {
 			if (!fs.existsSync(envFile)) {
-				u.log(chalk.gray('Creating file for `' + envName + '` env.'));
+				u.log($chalk.gray('Creating file for `' + envName + '` env.'));
 				if (!opts.dryRun) {
 					await fsp.mkdir(path.dirname(envFile), { recursive: true });
 					await fsp.writeFile(envFile, '# ' + envName);
 				}
 			}
-			u.log(chalk.gray('Pushing `' + envName + '` env to Dotenv Vault.'));
+			u.log($chalk.gray('Pushing `' + envName + '` env to Dotenv Vault.'));
 			if (!opts.dryRun) {
 				await u.spawn('npx', ['dotenv-vault', 'push', envName, envFile, '--yes']);
 			}
 		}
 		await u.envsCompile({ dryRun: opts.dryRun });
 
-		u.log(chalk.gray('Encrypting all envs using latest Dotenv Vault data.'));
+		u.log($chalk.gray('Encrypting all envs using latest Dotenv Vault data.'));
 		if (!opts.dryRun) {
 			await u.spawn('npx', ['dotenv-vault', 'build', '--yes']);
 		}
@@ -855,12 +844,12 @@ export default class u {
 		const envFiles = await u.envFiles();
 
 		for (const [envName, envFile] of Object.entries(envFiles)) {
-			u.log(chalk.gray('Pulling `' + envName + '` env from Dotenv Vault.'));
+			u.log($chalk.gray('Pulling `' + envName + '` env from Dotenv Vault.'));
 			if (!opts.dryRun) {
 				await fsp.mkdir(path.dirname(envFile), { recursive: true });
 				await u.spawn('npx', ['dotenv-vault', 'pull', envName, envFile, '--yes']);
 			}
-			// log(chalk.gray('Deleting previous file for `' + envName + '` env.'));
+			// log($chalk.gray('Deleting previous file for `' + envName + '` env.'));
 			if (!opts.dryRun) {
 				await fsp.rm(envFile + '.previous', { force: true });
 			}
@@ -870,13 +859,13 @@ export default class u {
 
 	static async envsCompile(opts = { dryRun: false }) {
 		const envFiles = await u.envFiles();
-		const mainEnv = dotenv.parse(envFiles.main);
+		const mainEnv = $dotenv.parse(envFiles.main);
 
-		u.log(chalk.gray('Compiling all Dotenv Vault envs; i.e., generating JSON files.'));
+		u.log($chalk.gray('Compiling all Dotenv Vault envs; i.e., generating JSON files.'));
 		if (!opts.dryRun) {
-			for (const [envName, envFile] of Object.entries(_.omit(envFiles, ['main']))) {
-				const thisEnv = dotenv.parse(envFile);
-				const env = $obj.mc.merge({}, mainEnv, thisEnv);
+			for (const [envName, envFile] of Object.entries($obj.omit(envFiles, ['main']))) {
+				const thisEnv = $dotenv.parse(envFile);
+				const env = $obj.mergeDeep({}, mainEnv, thisEnv);
 
 				const compDir = path.resolve(path.dirname(envFile), './.~comp');
 				const envJSONFile = path.resolve(compDir, path.basename(envFile) + '.json');
@@ -888,14 +877,14 @@ export default class u {
 	}
 
 	static async envsKeys(opts = { dryRun: false }) {
-		u.log(chalk.gray('Getting all Dotenv Vault keys.'));
+		u.log($chalk.gray('Getting all Dotenv Vault keys.'));
 		if (!opts.dryRun) {
 			await u.spawn('npx', ['dotenv-vault', 'keys', '--yes']);
 		}
 	}
 
 	static async envsEncrypt(opts = { dryRun: false }) {
-		u.log(chalk.gray('Building Dotenv Vault; i.e., encrypting all envs.'));
+		u.log($chalk.gray('Building Dotenv Vault; i.e., encrypting all envs.'));
 		if (!opts.dryRun) {
 			await u.spawn('npx', ['dotenv-vault', 'build', '--yes']);
 		}
@@ -911,13 +900,13 @@ export default class u {
 			if (!envName || !envFile) {
 				throw new Error('u.envsDecrypt: Invalid Dotenv Vault decryption key: `' + key + '`.');
 			}
-			u.log(chalk.gray('Decrypting `' + envName + '` env using Dotenv Vault key.'));
+			u.log($chalk.gray('Decrypting `' + envName + '` env using Dotenv Vault key.'));
 			if (!opts.dryRun) {
 				const origDotenvKey = process.env.DOTENV_KEY || '';
 				process.env.DOTENV_KEY = key; // For `dotEnvVaultCore`.
 
 				// Note: `path` leads to `.env.vault`. See: <https://o5p.me/MqXJaf>.
-				const { parsed: env } = dotenvVaultCore.config({ path: path.resolve(projDir, './.env' /* .vault */) });
+				const { parsed: env } = $dotenv.vault.config({ path: path.resolve(projDir, './.env' /* .vault */) });
 
 				await fsp.mkdir(path.dirname(envFile), { recursive: true });
 				await fsp.writeFile(envFile, await u._envToText(envName, env));
@@ -969,7 +958,7 @@ export default class u {
 		const keys = {}; // Initialize.
 		const envFiles = await u.envFiles();
 
-		u.log(chalk.gray('Extracting all Dotenv Vault keys.'));
+		u.log($chalk.gray('Extracting all Dotenv Vault keys.'));
 		const output = await u.spawn('npx', ['dotenv-vault', 'keys', '--yes'], { quiet: true });
 
 		let _m = null; // Initialize.
@@ -1091,28 +1080,28 @@ export default class u {
 		}
 		const pkg = await u.pkg(); // Parses current `./package.json` file.
 
-		if (_.get(pkg, 'config.c10n.&.npmjs.configVersions') === githubConfigVersion + ',' + npmjsConfigVersion) {
-			u.log(chalk.gray('npmjs package configuration is up-to-date @v' + githubConfigVersion + ' @v' + npmjsConfigVersion + '.'));
+		if ($obp.get(pkg, 'config.c10n.&.npmjs.configVersions') === githubConfigVersion + ',' + npmjsConfigVersion) {
+			u.log($chalk.gray('npmjs package configuration is up-to-date @v' + githubConfigVersion + ' @v' + npmjsConfigVersion + '.'));
 			return; // Package configuration version is already up-to-date.
 		}
-		u.log(chalk.gray('Configuring npmjs package using org-wide standards.'));
+		u.log($chalk.gray('Configuring npmjs package using org-wide standards.'));
 
 		const teamsToDelete = await u._npmjsOrgTeams(org); // Current list of organization’s teams.
 		const alwaysOnRequiredTeams = { developers: 'read-write', owners: 'read-write', 'security-managers': 'read-only' }; // No exceptions.
 
-		const teams = Object.assign({}, _.get(pkg, 'config.c10n.&.npmjs.teams', _.get(pkg, 'config.c10n.&.github.teams', {})), alwaysOnRequiredTeams);
+		const teams = $obj.assign({}, $obp.get(pkg, 'config.c10n.&.npmjs.teams', $obp.get(pkg, 'config.c10n.&.github.teams', {})), alwaysOnRequiredTeams);
 		Object.keys(teams).forEach((team) => (teams[team] = /^(?:read-write|push|maintain|admin)$/iu.test(teams[team]) ? 'read-write' : 'read-only'));
 
 		for (const [team, permission] of Object.entries(teams)) {
 			delete teamsToDelete[team]; // Don't delete.
 
-			u.log(chalk.gray('Adding `' + team + '` team to npmjs package with `' + permission + '` permission.'));
+			u.log($chalk.gray('Adding `' + team + '` team to npmjs package with `' + permission + '` permission.'));
 			if (!opts.dryRun) {
 				await u.spawn('npm', ['access', 'grant', permission, org + ':' + team], { quiet: true });
 			}
 		}
 		for (const [team] of Object.entries(teamsToDelete)) {
-			u.log(chalk.gray('Deleting `' + team + '` (unused) from npmjs package.'));
+			u.log($chalk.gray('Deleting `' + team + '` (unused) from npmjs package.'));
 			if (!opts.dryRun) {
 				await u.spawn('npm', ['access', 'revoke', org + ':' + team], { quiet: true }).catch(() => null);
 			}
@@ -1124,7 +1113,7 @@ export default class u {
 
 	static async _npmjsOrgUserCanAdmin(org) {
 		try {
-			return _.isPlainObject(await u._npmjsOrgUsers(org));
+			return $is.plainObject(await u._npmjsOrgUsers(org));
 		} catch {
 			return false; // Only admins|owners can list org members.
 		}
@@ -1133,7 +1122,7 @@ export default class u {
 	static async _npmjsOrgUsers(org) {
 		const members = JSON.parse(String(await u.spawn('npm', ['org', 'ls', org, '--json'], { quiet: true })));
 
-		if (!_.isPlainObject(members)) {
+		if (!$is.plainObject(members)) {
 			throw new Error('u._npmjsOrgMembers: Failed to acquire list of NPM team members for `' + org + '`.');
 		}
 		return members; // Keyed by username; values one of: `developer`, `admin`, or `owner`.
@@ -1142,12 +1131,12 @@ export default class u {
 	static async _npmjsOrgTeams(org) {
 		const teams = JSON.parse(String(await u.spawn('npm', ['team', 'ls', org, '--json'], { quiet: true })));
 
-		if (!(teams instanceof Array)) {
+		if (!$is.array(teams)) {
 			throw new Error('u._npmjsOrgTeams: Failed to acquire list of NPM teams for `' + org + '` org.');
 		}
-		return teams.reduce((o, team) => {
-			o[team.replace(/^[^:]+:/u, '')] = team;
-			return o; // Object return.
+		return teams.reduce((obj, team) => {
+			obj[team.replace(/^[^:]+:/u, '')] = team;
+			return obj; // Object return.
 		}, {});
 	}
 

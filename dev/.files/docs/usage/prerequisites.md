@@ -71,6 +71,12 @@ Your `~/.config/gh/config.yml` file should now contain.
 git_protocol: https
 ```
 
+### Signed Commits Required
+
+All commits must be digitally signed using a GPG key, so please be sure to complete GPG key setup at GitHub.
+
+-   See: [Signing GitHub Commits](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits).
+
 ## `n`: Interactively Manage Node Versions
 
 The `n` package allows you to juggle Node versions, as required, for various needs.

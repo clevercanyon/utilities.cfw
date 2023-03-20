@@ -10,14 +10,12 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { dirname } from 'desm';
 import fsp from 'node:fs/promises';
 
-import chalk from 'chalk';
 import u from './includes/utilities.mjs';
-import { $yargs } from '@clevercanyon/utilities.node';
+import { $fs, $chalk, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 
-const __dirname = dirname(import.meta.url);
+const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
 
 /**
@@ -41,7 +39,7 @@ class Install {
 			await this.install();
 		}
 		if (this.args.dryRun) {
-			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -53,13 +51,13 @@ class Install {
 		 * Displays preamble.
 		 */
 
-		u.log(chalk.green('Installing all new Dotenv Vault envs.'));
+		u.log($chalk.green('Installing all new Dotenv Vault envs.'));
 
 		/**
 		 * Deletes old files so a new install can begin.
 		 */
 
-		u.log(chalk.gray('Deleting any existing `.env.me`, `.env.vault` files.'));
+		u.log($chalk.gray('Deleting any existing `.env.me`, `.env.vault` files.'));
 		if (!this.args.dryRun) {
 			await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
 			await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
@@ -69,7 +67,7 @@ class Install {
 		 * Logs the current user into Dotenv Vault.
 		 */
 
-		u.log(chalk.gray('Creating all new Dotenv Vault envs, which requires login.'));
+		u.log($chalk.gray('Creating all new Dotenv Vault envs, which requires login.'));
 		if (!this.args.dryRun) {
 			await u.spawn('npx', ['dotenv-vault', 'new', '--yes']);
 			await u.spawn('npx', ['dotenv-vault', 'login', '--yes']);
@@ -80,14 +78,14 @@ class Install {
 		 * Pushes all envs to Dotenv Vault.
 		 */
 
-		u.log(chalk.gray('Pushing all envs to Dotenv Vault.'));
+		u.log($chalk.gray('Pushing all envs to Dotenv Vault.'));
 		await u.envsPush({ dryRun: this.args.dryRun });
 
 		/**
 		 * Encrypts all Dotenv Vault envs.
 		 */
 
-		u.log(chalk.gray('Building; i.e., encrypting, all Dotenv Vault envs.'));
+		u.log($chalk.gray('Building; i.e., encrypting, all Dotenv Vault envs.'));
 		await u.envsEncrypt({ dryRun: this.args.dryRun });
 
 		/**
@@ -105,7 +103,7 @@ class Install {
 		 * Displays preamble.
 		 */
 
-		u.log(chalk.green('Installing all Dotenv Vault envs.'));
+		u.log($chalk.green('Installing all Dotenv Vault envs.'));
 
 		/**
 		 * Checks if project is an envs vault.
@@ -120,7 +118,7 @@ class Install {
 		 */
 
 		if (!fs.existsSync(path.resolve(projDir, './.env.me'))) {
-			u.log(chalk.gray('Installing all Dotenv Vault envs, which requires login.'));
+			u.log($chalk.gray('Installing all Dotenv Vault envs, which requires login.'));
 			if (!this.args.dryRun) {
 				await u.spawn('npx', ['dotenv-vault', 'login', '--yes']);
 
@@ -135,7 +133,7 @@ class Install {
 		 */
 
 		if (this.args.pull || !fs.existsSync((await u.envFiles()).main)) {
-			u.log(chalk.gray('Pulling all envs from Dotenv Vault.'));
+			u.log($chalk.gray('Pulling all envs from Dotenv Vault.'));
 			await u.envsPull({ dryRun: this.args.dryRun });
 		}
 
@@ -165,7 +163,7 @@ class Push {
 		await this.push();
 
 		if (this.args.dryRun) {
-			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -177,7 +175,7 @@ class Push {
 		 * Displays preamble.
 		 */
 
-		u.log(chalk.green('Pushing all envs to Dotenv Vault.'));
+		u.log($chalk.green('Pushing all envs to Dotenv Vault.'));
 
 		/**
 		 * Checks if project has a Dotenv Vault.
@@ -219,7 +217,7 @@ class Pull {
 		await this.pull();
 
 		if (this.args.dryRun) {
-			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -231,7 +229,7 @@ class Pull {
 		 * Displays preamble.
 		 */
 
-		u.log(chalk.green('Pulling all envs from Dotenv Vault.'));
+		u.log($chalk.green('Pulling all envs from Dotenv Vault.'));
 
 		/**
 		 * Checks if project has a Dotenv Vault.
@@ -273,7 +271,7 @@ class Compile {
 		await this.compile();
 
 		if (this.args.dryRun) {
-			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -285,7 +283,7 @@ class Compile {
 		 * Displays preamble.
 		 */
 
-		u.log(chalk.green('Compiling all Dotenv Vault envs.'));
+		u.log($chalk.green('Compiling all Dotenv Vault envs.'));
 
 		/**
 		 * Checks if project has a Dotenv Vault.
@@ -327,7 +325,7 @@ class Keys {
 		await this.keys();
 
 		if (this.args.dryRun) {
-			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -339,7 +337,7 @@ class Keys {
 		 * Displays preamble.
 		 */
 
-		u.log(chalk.green('Retrieving Dotenv Vault keys for all envs.'));
+		u.log($chalk.green('Retrieving Dotenv Vault keys for all envs.'));
 
 		/**
 		 * Checks if project has a Dotenv Vault.
@@ -381,7 +379,7 @@ class Encrypt {
 		await this.encrypt();
 
 		if (this.args.dryRun) {
-			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -393,7 +391,7 @@ class Encrypt {
 		 * Displays preamble.
 		 */
 
-		u.log(chalk.green('Building; i.e., encrypting all Dotenv Vault envs.'));
+		u.log($chalk.green('Building; i.e., encrypting all Dotenv Vault envs.'));
 
 		/**
 		 * Checks if project has a Dotenv Vault.
@@ -435,7 +433,7 @@ class Decrypt {
 		await this.decrypt();
 
 		if (this.args.dryRun) {
-			u.log(chalk.cyanBright('Dry run. This was all a simulation.'));
+			u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
 		}
 	}
 
@@ -447,7 +445,7 @@ class Decrypt {
 		 * Displays preamble.
 		 */
 
-		u.log(chalk.green('Decrypting Dotenv Vault env(s).'));
+		u.log($chalk.green('Decrypting Dotenv Vault env(s).'));
 
 		/**
 		 * Checks if project has a Dotenv Vault.
