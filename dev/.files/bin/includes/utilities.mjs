@@ -12,10 +12,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
 
+import sodium from 'libsodium-wrappers';
 import { Octokit as OctokitCore } from '@octokit/core';
 import { paginateRest as OctokitPluginPaginateRest } from '@octokit/plugin-paginate-rest';
 
-import { $is, $str, $crypto, $obj, $obp, $url, $version } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $is, $str, $obj, $obp, $url, $version } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import { $fs, $cmd, $chalk, $dotenv, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 
 const __dirname = $fs.imuDirname(import.meta.url);
@@ -573,9 +574,9 @@ export default class u {
 				delete envSecretsToDelete[envSecretName]; // Don't delete.
 				const { envPublicKeyId, envPublicKey } = await u._githubRepoEnvPublicKey(repoId, envName);
 
-				const encryptedEnvSecretValue = await $crypto.sodium.ready.then(() => {
-					const sodiumKey = $crypto.sodium.from_base64(envPublicKey, $crypto.sodium.base64_variants.ORIGINAL);
-					return $crypto.sodium.to_base64($crypto.sodium.crypto_box_seal($crypto.sodium.from_string(envSecretValue), sodiumKey), $crypto.sodium.base64_variants.ORIGINAL);
+				const encryptedEnvSecretValue = await sodium.ready.then(() => {
+					const sodiumKey = sodium.from_base64(envPublicKey, sodium.base64_variants.ORIGINAL);
+					return sodium.to_base64(sodium.crypto_box_seal(sodium.from_string(envSecretValue), sodiumKey), sodium.base64_variants.ORIGINAL);
 				});
 				u.log($chalk.gray('Updating `' + envSecretName + '` secret in `' + envName + '` repo env at GitHub.'));
 				if (!opts.dryRun) {
