@@ -108,7 +108,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	if ((!isMPA && !isCMA) || !['mpa', 'cma'].includes(appType)) {
 		throw new Error('Must have a valid `config.c10n.&.build.appType` in `package.json`.');
 	}
-	if (!['any', 'cfp', 'cfw', 'node', 'web', 'webw', 'opl'].includes(targetEnv)) {
+	if (!['any', 'node', 'cfw', 'cfp', 'web', 'webw'].includes(targetEnv)) {
 		throw new Error('Must have a valid `config.c10n.&.build.targetEnv` in `package.json`.');
 	}
 	if (isMPA && !mpaEntryIndexSubpath) {
@@ -125,7 +125,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 
 	updatePkg.type = 'module'; // ES module; always.
 	updatePkg.exports = {}; // Exports object initialization.
-	updatePkg.sideEffects = ['./src/*.{html,scss,ts,tsx}']; // <https://o5p.me/xVY39g>.
+	updatePkg.sideEffects = []; // <https://o5p.me/xVY39g>.
 
 	if (isCMA && (isSSR || cmaEntries.length > 1)) {
 		updatePkg.exports = {
@@ -156,6 +156,8 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 				},
 			});
 		}
+		updatePkg.sideEffects = ['./src/*.{html,scss,ts,tsx}'];
+		//
 	} else if (isCMA) {
 		updatePkg.exports = {
 			'.': {
@@ -172,10 +174,16 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 
 		updatePkg.types = './dist/types/' + cmaEntryIndexSubpathNoExt + '.d.ts';
 		updatePkg.typesVersions = { '>=3.1': { './*': ['./dist/types/*'] } };
-	} else {
+
+		updatePkg.sideEffects = ['./src/*.{html,scss,ts,tsx}'];
+		//
+	} /* Multipage app. */ else {
 		updatePkg.type = 'module'; // Always a module when building with Vite.
 		updatePkg.module = updatePkg.main = updatePkg.browser = updatePkg.unpkg = updatePkg.types = '';
 		(updatePkg.exports = null), (updatePkg.sideEffects = []), (updatePkg.typesVersions = {});
+	}
+	if (fs.existsSync(path.resolve(projDir, './src/resources/init-env.ts'))) {
+		updatePkg.sideEffects.push('./src/resources/init-env.ts');
 	}
 
 	/**
@@ -264,8 +272,8 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	/**
 	 * Configures rollup for Vite.
 	 *
-	 * @see https://vitejs.dev/config/build-options.html#build-rollupoptions
 	 * @see https://rollupjs.org/guide/en/#big-list-of-options
+	 * @see https://vitejs.dev/config/build-options.html#build-rollupoptions
 	 */
 	const rollupConfig = {
 		input: isCMA // Absolute paths.
@@ -290,10 +298,10 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 			// recommended, because preserving module structure in a final build has performance costs.
 			// However, in builds that are not final (e.g., CMAs with peer dependencies), preserving modules
 			// has performance benefits, as it allows for tree-shaking optimization in final builds.
-			preserveModules: isCMA && Object.keys(pkg.peerDependencies || {}).length > 0,
+			preserveModules: isCMA && cmaEntries.length > 1 && Object.keys(pkg.peerDependencies || {}).length > 0,
 
 			// Cannot inline dynamic imports when `preserveModules` is enabled, so set as `false` explicitly.
-			...(isCMA && Object.keys(pkg.peerDependencies || {}).length > 0 ? { inlineDynamicImports: false } : {}),
+			...(isCMA && cmaEntries.length > 1 && Object.keys(pkg.peerDependencies || {}).length > 0 ? { inlineDynamicImports: false } : {}),
 		},
 	};
 	// <https://vitejs.dev/guide/features.html#web-workers>
@@ -338,15 +346,15 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 
 		// @todo Enhance miniflare support.
 		// @todo Add support for testing web workers.
-		environment: ['web'].includes(targetEnv) ? 'jsdom' // <https://o5p.me/Gf9Cy5>.
-			: ['cfp', 'cfw'].includes(targetEnv) ? 'miniflare' // <https://o5p.me/TyF9Ot>.
+		environment: ['web', 'cfp'].includes(targetEnv) ? 'jsdom' // <https://o5p.me/Gf9Cy5>.
+			: ['cfw'].includes(targetEnv) ? 'miniflare' // <https://o5p.me/TyF9Ot>.
 			: ['node'].includes(targetEnv) ? 'node' // <https://o5p.me/Gf9Cy5>.
 			: 'node', // prettier-ignore
 
 		// See: <https://o5p.me/8Pjw1d> for `environment`, `environmentMatchGlobs` precedence.
 		environmentMatchGlobs: [
-			['**/*.web.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'jsdom'],
-			['**/*.{cfp,cfw}.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'miniflare'],
+			['**/*.{web,cfp}.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'jsdom'],
+			['**/*.cfw.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'miniflare'],
 			['**/*.node.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'node'],
 		],
 		deps: {
@@ -410,6 +418,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	 */
 	const baseConfig = {
 		c10n: { pkg, updatePkg },
+
 		define: /* Static replacements. */ {
 			$$__APP_PKG_NAME__$$: JSON.stringify(pkg.name || ''),
 			$$__APP_PKG_VERSION__$$: JSON.stringify(pkg.version || ''),
