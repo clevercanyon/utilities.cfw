@@ -275,6 +275,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	 * @see https://rollupjs.org/guide/en/#big-list-of-options
 	 * @see https://vitejs.dev/config/build-options.html#build-rollupoptions
 	 */
+	const rollupChunkCounters = new Map();
 	const rollupConfig = {
 		input: isCMA // Absolute paths.
 			? cmaEntries
@@ -292,6 +293,25 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 			extend: true, // i.e., UMD global `||` checks.
 			noConflict: true, // Like `jQuery.noConflict()`.
 			compact: 'prod' === mode, // Minify auto-generated snippets.
+
+			// By default, in library mode, Vite ignores `build.assetsDir`.
+			// This prevents that by enforcing a consistent location for chunks and assets.
+			chunkFileNames: (chunk) => {
+				// This function doesn’t have access to the current output format, unfortunately.
+				// However, we are setting `build.lib.formats` explicitly in the configuration below.
+				// Therefore, we know `es` comes first, followed by either `cjs` or `umd` output chunks.
+				// So, chunk counters make it possible to infer build output format, based on sequence.
+
+				const chunkKey = JSON.stringify(chunk); // JSON serialization.
+				const chunkCounter = Number(rollupChunkCounters.get(chunkKey) || 0) + 1;
+
+				const chunkFormat = chunkCounter > 1 ? 'cjs|umd' : 'es';
+				const chunkExt = 'cjs|umd' === chunkFormat ? 'cjs' : 'js';
+
+				rollupChunkCounters.set(chunkKey, chunkCounter); // Updates counter.
+				return path.join(path.relative(distDir, a16sDir), '[name]-[hash].' + chunkExt);
+			},
+			assetFileNames: (/* asset */) => path.join(path.relative(distDir, a16sDir), '[name]-[hash].[ext]'),
 
 			// Preserves module structure in CMAs built explicitly as dependencies.
 			// The expectation is that peers will build w/ this flag set as false, which is

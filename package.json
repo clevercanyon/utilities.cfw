@@ -3,7 +3,7 @@
 	"publishConfig": {
 		"access": "restricted"
 	},
-	"version": "1.0.60",
+	"version": "1.0.61",
 	"license": "GPL-3.0-or-later",
 	"name": "@clevercanyon/utilities.cfw",
 	"description": "Utilities for JavaScript apps running in a Cloudflare Worker environment.",
@@ -50,14 +50,14 @@
 	},
 	"dependencies": {},
 	"peerDependencies": {
-		"@clevercanyon/utilities": "^1.0.115",
+		"@clevercanyon/utilities": "^1.0.116",
 		"@cloudflare/kv-asset-handler": "^0.2.0"
 	},
 	"peerDependenciesMeta": {},
 	"optionalDependencies": {},
 	"bundleDependencies": [],
 	"devDependencies": {
-		"@clevercanyon/skeleton-dev-deps": "^1.0.138",
+		"@clevercanyon/skeleton-dev-deps": "^1.0.141",
 		"@cloudflare/workers-types": "^4.20230307.0"
 	},
 	"overrides": {},
