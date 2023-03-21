@@ -189,7 +189,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 	/**
 	 * Pre-updates `package.json` properties impacting build process.
 	 */
-	await u.updatePkg({ type: updatePkg.type, sideEffects: updatePkg.sideEffects });
+	await u.updatePkg({ $set: { type: updatePkg.type, sideEffects: updatePkg.sideEffects } });
 
 	/**
 	 * Configures plugins for Vite.
@@ -238,7 +238,7 @@ export default async ({ mode, command /*, ssrBuild */ }) => {
 				/**
 				 * Updates `package.json`.
 				 */
-				await u.updatePkg(updatePkg);
+				await u.updatePkg({ $set: updatePkg });
 
 				/**
 				 * Copies `./.env.vault` to dist directory.
