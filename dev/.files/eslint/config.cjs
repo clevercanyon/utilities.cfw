@@ -148,6 +148,7 @@ const tsOverrides = {
 	rules: {
 		...baseConfig.rules,
 		'@typescript-eslint/require-await': ['off'],
+		'@typescript-eslint/import-namespace': ['off'],
 		'@typescript-eslint/no-empty-interface': ['off'],
 		'@typescript-eslint/no-inferrable-types': ['off'],
 		'@typescript-eslint/ban-ts-comment': [
