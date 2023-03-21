@@ -14,7 +14,7 @@ import {
 import { $env, $http, $str, $url } from '@clevercanyon/utilities';
 
 /**
- * Environment.
+ * Defines types.
  */
 export type Environment = {
 	readonly R2?: R2Bucket;
@@ -23,37 +23,20 @@ export type Environment = {
 	readonly __STATIC_CONTENT?: KVNamespace;
 	readonly [x: string]: unknown;
 };
-
-/**
- * Route interface.
- */
 export type Route = (x: FetchEventData) => Promise<Response>;
 
-/**
- * Routes interface.
- */
 export type Routes = {
 	readonly subpathGlobs: {
 		readonly [x: string]: Route;
 	};
 };
-
-/**
- * Initial fetch event data.
- */
-type InitialFetchEventData = {
+export type FetchEventData = {
 	readonly request: Request;
 	readonly env: Environment;
 	readonly ctx: ExecutionContext;
 	readonly routes: Routes;
-};
-
-/**
- * Fetch event data.
- */
-export interface FetchEventData extends InitialFetchEventData {
 	readonly url: URL;
-}
+};
 
 /**
  * Handles fetch events.
@@ -62,7 +45,7 @@ export interface FetchEventData extends InitialFetchEventData {
  *
  * @returns        Response promise.
  */
-export async function handleFetchEvent(feData: InitialFetchEventData | FetchEventData): Promise<Response> {
+export async function handleFetchEvent(feData: Omit<FetchEventData, 'url'> | FetchEventData): Promise<Response> {
 	let { request } = feData;
 	let url: URL | null = null;
 	const { env, ctx, routes } = feData;
