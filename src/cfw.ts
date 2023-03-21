@@ -16,13 +16,13 @@ import { $env, $http, $str, $url } from '@clevercanyon/utilities';
 /**
  * Environment.
  */
-export interface Environment {
+export type Environment = {
 	readonly R2?: R2Bucket;
 	readonly KV?: KVNamespace;
 	readonly DO?: DurableObjectNamespace;
 	readonly __STATIC_CONTENT?: KVNamespace;
 	readonly [x: string]: unknown;
-}
+};
 
 /**
  * Route interface.
@@ -32,21 +32,21 @@ export type Route = (x: FetchEventData) => Promise<Response>;
 /**
  * Routes interface.
  */
-export interface Routes {
+export type Routes = {
 	readonly subpathGlobs: {
 		readonly [x: string]: Route;
 	};
-}
+};
 
 /**
  * Initial fetch event data.
  */
-interface InitialFetchEventData {
+type InitialFetchEventData = {
 	readonly request: Request;
 	readonly env: Environment;
 	readonly ctx: ExecutionContext;
 	readonly routes: Routes;
-}
+};
 
 /**
  * Fetch event data.

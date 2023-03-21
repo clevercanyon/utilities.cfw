@@ -12,7 +12,7 @@ import type { FetchEventData } from './cfw.js';
  *
  * @returns     Geo property value.
  */
-export function prop(fed: FetchEventData, prop: string): string {
+export const prop = (fed: FetchEventData, prop: string): string => {
 	const { request: r } = fed; // Request extraction.
 	return String(r.cf && prop in r.cf ? r.cf[prop as keyof typeof r.cf] || '' : '');
-}
+};
