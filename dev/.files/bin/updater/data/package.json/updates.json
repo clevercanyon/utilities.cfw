@@ -48,6 +48,11 @@
 
 		"configꓺc10nꓺ&ꓺbuildꓺappType": "cma",
 		"configꓺc10nꓺ&ꓺbuildꓺtargetEnv": "any",
+		"configꓺc10nꓺ&ꓺbuildꓺentryFiles": [],
+
+		"configꓺc10nꓺ&ꓺssrBuildꓺappType": "",
+		"configꓺc10nꓺ&ꓺssrBuildꓺtargetEnv": "",
+		"configꓺc10nꓺ&ꓺssrBuildꓺentryFiles": [],
 
 		"configꓺc10nꓺ&ꓺgithubꓺteams": {},
 		"configꓺc10nꓺ&ꓺgithubꓺlabels": {},
@@ -115,6 +120,11 @@
 
 		"configꓺc10nꓺ&ꓺbuildꓺappType",
 		"configꓺc10nꓺ&ꓺbuildꓺtargetEnv",
+		"configꓺc10nꓺ&ꓺbuildꓺentryDirs",
+
+		"configꓺc10nꓺ&ꓺssrBuildꓺappType",
+		"configꓺc10nꓺ&ꓺssrBuildꓺtargetEnv",
+		"configꓺc10nꓺ&ꓺssrBuildꓺentryDirs",
 
 		"configꓺc10nꓺ&ꓺgithubꓺteams",
 		"configꓺc10nꓺ&ꓺgithubꓺlabels",

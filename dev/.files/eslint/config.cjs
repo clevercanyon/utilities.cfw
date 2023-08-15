@@ -40,18 +40,14 @@ const baseConfig = {
 
 	plugins: [
 		'import', //
-		'react',
-		'react-hooks',
 		'jsx-a11y',
-		'prettier', // Must come last.
+		'prettier',
 	],
 	extends: [
 		'eslint:recommended', //
 		'plugin:import/recommended',
-		'plugin:react/recommended',
-		'plugin:react-hooks/recommended',
 		'plugin:jsx-a11y/recommended',
-		'plugin:prettier/recommended', // Must come last.
+		'plugin:prettier/recommended',
 	],
 	ignorePatterns: [
 		'!**/.*', //

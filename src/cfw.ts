@@ -14,6 +14,11 @@ import {
 import { $env, $http, $str, $url } from '@clevercanyon/utilities';
 
 /**
+ * Exports worker request type.
+ */
+export type { Request } from '@cloudflare/workers-types/experimental';
+
+/**
  * Defines types.
  */
 export type Environment = {

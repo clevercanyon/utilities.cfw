@@ -22,8 +22,10 @@ Example `index.scss` starter file contents:
 @tailwind utilities;
 -------------------------------------------------------------------------------------------------------------------- */
 
+const fs = require('node:fs');
 const path = require('node:path');
 const projDir = path.resolve(__dirname, '../../..');
+const contentExtns = ['md', 'xml', 'html', 'shtml', 'php', 'ejs', 'js', 'jsx', 'cjs', 'cjsx', 'node', 'mjs', 'mjsx', 'ts', 'tsx', 'cts', 'ctsx', 'mts', 'mtsx'];
 
 /**
  * Composition.
@@ -36,5 +38,17 @@ module.exports = {
 			serif: ['Georgia', 'serif'],
 		},
 	},
-	content: [path.resolve(projDir, './src/**/*.{md,xml,html,shtml,php,ejs,js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}')],
+	content: [
+		path.resolve(projDir, './src/**/*.{' + contentExtns.join(',') + '}'),
+
+		// If this package is using `@clevercanyon/utilities` we can also scan preact files.
+		...(fs.existsSync(path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/preact'))
+			? [path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/preact/**/*.{' + contentExtns.join(',') + '}')]
+			: []),
+
+		// If this package is using `@clevercanyon/utilities` we can also scan EJS views.
+		...(fs.existsSync(path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/assets/ejs-views'))
+			? [path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/assets/ejs-views/**/*.{' + contentExtns.join(',') + '}')]
+			: []),
+	],
 };

@@ -28,4 +28,6 @@ const srcDir = path.resolve(projDir, './src');
  */
 export default {
 	'^@:src/(.+)$': path.resolve(srcDir, './$1'),
+	'^react$': path.resolve(projDir, './node_modules/preact/compat'),
+	'^react-dom$': path.resolve(projDir, './node_modules/preact/compat'),
 };

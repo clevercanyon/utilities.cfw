@@ -35,9 +35,9 @@ const baseConfig = {
 	],
 	rules: {
 		'indentation': 'tab',
-		'no-duplicate-selectors': false,
-		'selector-type-no-unknown': false,
-		'no-descending-specificity': false,
+		'no-duplicate-selectors': null,
+		'selector-type-no-unknown': null,
+		'no-descending-specificity': null,
 		'selector-class-pattern': '^[_-]?[a-z][a-z0-9]*(?:[_-]{1,2}[a-z0-9]+)*$',
 		'selector-id-pattern': '^[a-z][a-z0-9]*(?:[_-]{1,2}[a-z0-9]+)*$',
 		'at-rule-no-unknown': [true, { ignoreAtRules: ['tailwind', 'apply', 'variants', 'responsive', 'screen'] }],

@@ -14,7 +14,7 @@ import fsp from 'node:fs/promises';
 
 import u from '../../bin/includes/utilities.mjs';
 import { $fs } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $is, $fn, $url, $brand } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $is, $fn, $str, $url, $brand } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 
 const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../../..');
@@ -94,6 +94,21 @@ export default {
 			});
 
 			/**
+			 * Updates `./.wrangler.toml` file in new project directory.
+			 */
+
+			const wranglerFile = path.resolve(projDir, './.wrangler.toml');
+
+			if (fs.existsSync(wranglerFile)) {
+				let wrangler = fs.readFileSync(wranglerFile).toString(); // toML.
+
+				wrangler = wrangler.replace(/^(name\s*=\s*")([^"]*)(")/gmu, '$1' + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + '$3');
+				wrangler = wrangler.replace(/^(route\s*=\s*\{\s*pattern\s*=\s*")([^"]*)(")/gmu, '$1' + path.basename(args.pkgName || dirBasename) + '$3');
+
+				await fsp.writeFile(wranglerFile, wrangler); // Updates `./.wrangler.toml` file.
+			}
+
+			/**
 			 * Updates `./README.md` file in new project directory.
 			 */
 
@@ -102,7 +117,7 @@ export default {
 			if (fs.existsSync(readmeFile)) {
 				let readme = fs.readFileSync(readmeFile).toString(); // Markdown.
 
-				readme = readme.replace(/@clevercanyon\/[^/?#\s]+/gu, args.pkgName || '@' + parentDirOwner + '/' + dirBasename);
+				readme = readme.replace(/^(#\s+)(@[^/?#\s]+\/[^/?#\s]+)/gmu, '$1' + (args.pkgName || '@' + parentDirOwner + '/' + dirBasename));
 				await fsp.writeFile(readmeFile, readme); // Updates `./README.md` file.
 			}
 
