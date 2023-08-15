@@ -5,8 +5,8 @@
 import './resources/init-env.js';
 
 import type {
-	FetchEventData, //
-	Request as $cfwꓺRequest,
+	Request as $cfwꓺRequest, //
+	FetchEventData as $cfwꓺFetchEventData,
 } from './cfw.js';
 
 /**
@@ -16,7 +16,7 @@ import type {
  *
  * @returns     Geo property value.
  */
-export const prop = (fed: FetchEventData, prop: string): string => {
+export const prop = (fed: $cfwꓺFetchEventData, prop: string): string => {
 	const { request } = fed; // Request extraction.
 	const r = request as unknown as $cfwꓺRequest; // Cast type.
 
