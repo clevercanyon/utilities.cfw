@@ -35,7 +35,7 @@ const require = createRequire(import.meta.url);
  *
  * @returns      Vite configuration object properties.
  */
-export default async ({ mode, command, ssrBuild }) => {
+export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 	/**
 	 * Directory vars.
 	 */
@@ -92,24 +92,33 @@ export default async ({ mode, command, ssrBuild }) => {
 	appLibName = appLibName.replace(/[^a-z.0-9]([^.])/gu, (m0, m1) => m1.toUpperCase());
 	appLibName = appLibName.replace(/^\.|\.$/u, '');
 
-	const appType = $obp.get(pkg, 'config.c10n.&.' + (ssrBuild ? 'ssrBuild' : 'build') + '.appType') || 'cma';
-	const targetEnv = $obp.get(pkg, 'config.c10n.&.' + (ssrBuild ? 'ssrBuild' : 'build') + '.targetEnv') || 'any';
-	const entryFiles = $obp.get(pkg, 'config.c10n.&.' + (ssrBuild ? 'ssrBuild' : 'build') + '.entryFiles') || [];
+	const appType = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.appType') || 'cma';
+	const targetEnv = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.targetEnv') || 'any';
+	const entryFiles = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.entryFiles') || [];
 
 	const appDefaultEntryFiles = ['spa'].includes(appType) ? ['./src/index.html'] : ['mpa'].includes(appType) ? ['./src/**/index.html'] : ['./src/*.{ts,tsx}'];
 	const appEntryFiles = (entryFiles.length ? entryFiles : appDefaultEntryFiles).map((v) => $str.lTrim(v, './'));
 	const appEntries = appEntryFiles.length ? await $glob.promise(appEntryFiles, { cwd: projDir }) : [];
 
 	const appEntriesAsProjRelPaths = appEntries.map((absPath) => './' + path.relative(projDir, absPath));
-	const appEntriesAsSrcRelPaths = appEntries.map((absPath) => './' + path.relative(srcDir, absPath));
 	const appEntriesAsSrcSubpaths = appEntries.map((absPath) => path.relative(srcDir, absPath));
 	const appEntriesAsSrcSubpathsNoExt = appEntriesAsSrcSubpaths.map((subpath) => subpath.replace(/\.[^.]+$/u, ''));
+
+	const isTargetEnvSSR = ['cfw', 'node'].includes(targetEnv); // Target environment requires server-side rendering?
+	const shouldPreserveModules = ['cma'].includes(appType) && appEntries.length > 1 && Object.keys(pkg.peerDependencies || {}).length > 0;
+	const shouldMinify = 'dev' === mode || shouldPreserveModules ? false : true; // Should minify output files?
 
 	/**
 	 * Validates all of the above.
 	 */
 	if (!pkg.name || !appLibName) {
 		throw new Error('Apps must have a name.');
+	}
+	if (!appEntryFiles.length || !appEntries.length) {
+		throw new Error('Apps must have at least one entry point.');
+	}
+	if (isSSRBuild && !isTargetEnvSSR) {
+		throw new Error('SSR builds must target an SSR environment.');
 	}
 	if (!['dev', 'ci', 'stage', 'prod'].includes(mode)) {
 		throw new Error('Required `mode` is missing or invalid. Expecting `dev|ci|stage|prod`.');
@@ -123,16 +132,13 @@ export default async ({ mode, command, ssrBuild }) => {
 	if (!['any', 'node', 'cfw', 'cfp', 'web', 'webw'].includes(targetEnv)) {
 		throw new Error('Must have a valid `config.c10n.&.build.targetEnv` in `package.json`.');
 	}
-	if (!appEntryFiles.length || !appEntries.length) {
-		throw new Error('Apps must have at least one entry point.');
-	}
 
 	/**
 	 * Prepares `package.json` build-related properties.
 	 */
 	const updatePkg = {}; // Initialize.
 
-	if (ssrBuild) {
+	if (isSSRBuild) {
 		updatePkg.type = 'module'; // ESM; always.
 		updatePkg.sideEffects = pkg.sideEffects || []; // <https://o5p.me/xVY39g>.
 	} else {
@@ -148,7 +154,7 @@ export default async ({ mode, command, ssrBuild }) => {
 				if (!appEntryIndexAsSrcSubpath || !appEntryIndexAsSrcSubpathNoExt) {
 					throw new Error('Custom apps must have an `./index.{ts,tsx}` entry point.');
 				}
-				if (['cfw', 'node'].includes(targetEnv) || appEntries.length > 1) {
+				if (isTargetEnvSSR || appEntries.length > 1) {
 					updatePkg.exports = {
 						'.': {
 							import: './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js',
@@ -239,7 +245,7 @@ export default async ({ mode, command, ssrBuild }) => {
 	const pluginBasicSSLConfig = pluginBasicSSL();
 
 	const pluginEJSConfig = pluginEJS(
-		{ $build: { require, pkg, mode, env, projDir } },
+		{ $: { require, pkg, mode, env, projDir } },
 		{
 			ejs: /* <https://o5p.me/wGv5nM> */ {
 				strict: true, // JS strict mode.
@@ -254,11 +260,6 @@ export default async ({ mode, command, ssrBuild }) => {
 					//
 					path.resolve(srcDir, './resources/ejs-views'), // Our standard location for internal EJS views.
 					path.resolve(srcDir, './cargo/assets/ejs-views'), // Our standard location for distributed EJS views.
-
-					// If this package is using `@clevercanyon/utilities` we can also leverage EJS fallback utility views.
-					...(fs.existsSync(path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/assets/ejs-views'))
-						? [path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/assets/ejs-views')]
-						: []),
 				],
 			},
 		},
@@ -277,7 +278,7 @@ export default async ({ mode, command, ssrBuild }) => {
 				/**
 				 * Not during SSR builds.
 				 */
-				if (ssrBuild) return;
+				if (isSSRBuild) return;
 
 				/**
 				 * Updates `package.json`.
@@ -289,6 +290,22 @@ export default async ({ mode, command, ssrBuild }) => {
 				 */
 				if (fs.existsSync(path.resolve(projDir, './.env.vault'))) {
 					await fsp.copyFile(path.resolve(projDir, './.env.vault'), path.resolve(distDir, './.env.vault'));
+				}
+
+				/**
+				 * Generates typescript type declaration file(s).
+				 */
+				if ('build' === command /* Also does important type checking at build time. */) {
+					await u.spawn('npx', ['tsc', '--emitDeclarationOnly']);
+				}
+
+				/**
+				 * Deletes a few files that interfere with apps running on Cloudflare Pages.
+				 */
+				if ('build' === command && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
+					for (const fileOrDir of await $glob.promise(['types', '.env.vault', 'index.*'], { cwd: distDir, onlyFiles: false })) {
+						await fsp.rm(fileOrDir, { force: true, recursive: true });
+					}
 				}
 
 				/**
@@ -314,7 +331,7 @@ export default async ({ mode, command, ssrBuild }) => {
 						} else if (['json'].includes(fileExt)) {
 							fileContents = fileContents.replace(/\/\*[\s\S]*?\*\/\n?/gu, '');
 							//
-						} else if (['xml'].includes(fileExt)) {
+						} else if (['xml', 'html'].includes(fileExt)) {
 							fileContents = fileContents.replace(/<!--[\s\S]*?-->\n?/gu, '');
 						}
 						fileContents = $str.trim(fileContents.replace(/\n{3,}/gu, '\n\n'));
@@ -328,13 +345,6 @@ export default async ({ mode, command, ssrBuild }) => {
 				 */
 				if ('build' === command && $obp.get(pkg, 'config.c10n.&.ssrBuild.appType')) {
 					await u.spawn('npx', ['vite', 'build', '--mode', mode, '--ssr']);
-				}
-
-				/**
-				 * Generates typescript type declaration file(s).
-				 */
-				if ('build' === command) {
-					await u.spawn('npx', ['tsc', '--emitDeclarationOnly']);
 				}
 
 				/**
@@ -358,7 +368,9 @@ export default async ({ mode, command, ssrBuild }) => {
 	 * @see https://rollupjs.org/guide/en/#big-list-of-options
 	 * @see https://vitejs.dev/config/build-options.html#build-rollupoptions
 	 */
+	const rollupEntryCounters = new Map();
 	const rollupChunkCounters = new Map();
+
 	const rollupConfig = {
 		input: appEntries,
 
@@ -372,8 +384,36 @@ export default async ({ mode, command, ssrBuild }) => {
 			esModule: true, // Matches TypeScript config.
 
 			extend: true, // i.e., UMD global `||` checks.
-			noConflict: true, // Like `jQuery.noConflict()`.
-			compact: 'prod' === mode, // Minify auto-generated snippets.
+			noConflict: true, // Behaves the same as `jQuery.noConflict()`.
+			compact: shouldMinify ? true : false, // Minify auto-generated snippets?
+
+			// By default, special chars in a path like `[[name]].js` get changed to `__name__.js`.
+			// This prevents that by enforcing the original and unmodified pathname consistently.
+			sanitizeFileName: false, // See: <https://o5p.me/Y2fNf9> for details.
+
+			// By default, in SSR mode, Vite forces all entry files into the distDir root.
+			// This prevents that by enforcing a consistently relative location for all entries.
+			entryFileNames: (entry) => {
+				// This function doesn’t have access to the current output format, unfortunately.
+				// However, we are setting `build.lib.formats` explicitly in the configuration below.
+				// Therefore, we know `es` comes first, followed by either `cjs` or `umd` output entries.
+				// So, entry counters make it possible to infer build output format, based on sequence.
+
+				const entryKey = JSON.stringify(entry); // JSON serialization.
+				const entryCounter = Number(rollupEntryCounters.get(entryKey) || 0) + 1;
+
+				const entryFormat = entryCounter > 1 ? 'cjs|umd' : 'es';
+				const entryExt = 'cjs|umd' === entryFormat ? 'cjs' : 'js';
+
+				rollupEntryCounters.set(entryKey, entryCounter); // Updates counter.
+
+				if ('.html' === path.extname(entry.facadeModuleId)) {
+					if (/\//u.test(entry.name)) return '[name]-[hash].' + entryExt;
+					return path.join(path.relative(distDir, a16sDir), '[name]-[hash].' + entryExt);
+				}
+				if (/\//u.test(entry.name)) return '[name].' + entryExt; // Already a subpath.
+				return path.join(path.relative(srcDir, path.dirname(entry.facadeModuleId)), '[name].' + entryExt);
+			},
 
 			// By default, in library mode, Vite ignores `build.assetsDir`.
 			// This prevents that by enforcing a consistent location for chunks and assets.
@@ -399,10 +439,10 @@ export default async ({ mode, command, ssrBuild }) => {
 			// recommended, because preserving module structure in a final build has performance costs.
 			// However, in builds that are not final (e.g., CMAs with peer dependencies), preserving modules
 			// has performance benefits, as it allows for tree-shaking optimization in final builds.
-			preserveModules: ['cma'].includes(appType) && appEntries.length > 1 && Object.keys(pkg.peerDependencies || {}).length > 0,
+			...(shouldPreserveModules ? { preserveModules: true } : {}),
 
 			// Cannot inline dynamic imports when `preserveModules` is enabled, so set as `false` explicitly.
-			...(['cma'].includes(appType) && appEntries.length > 1 && Object.keys(pkg.peerDependencies || {}).length > 0 ? { inlineDynamicImports: false } : {}),
+			...(shouldPreserveModules ? { inlineDynamicImports: false } : {}),
 		},
 	};
 	// <https://vitejs.dev/guide/features.html#web-workers>
@@ -511,8 +551,8 @@ export default async ({ mode, command, ssrBuild }) => {
 		define: $obj.map(staticDefs, (v) => JSON.stringify(v)),
 
 		root: srcDir, // Absolute. Where entry indexes live.
-		publicDir: ssrBuild ? false : path.relative(srcDir, cargoDir), // Relative to `root` directory.
-		base: appBasePath + '/', // Analagous to `<base href="/">` — leading & trailing slash.
+		publicDir: isSSRBuild ? false : path.relative(srcDir, cargoDir), // Relative to `root`.
+		base: appBasePath + '/', // Analagous to `<base href="/">`; i.e., leading & trailing slash.
 
 		appType: ['spa', 'mpa'].includes(appType) ? appType : 'custom', // See: <https://o5p.me/ZcTkEv>.
 		resolve: { alias: importAliases }, // Matches TypeScript config import aliases.
@@ -523,7 +563,7 @@ export default async ({ mode, command, ssrBuild }) => {
 		server: { open: true, https: true }, // Vite dev server.
 		plugins, // Additional Vite plugins that were configured above.
 
-		...(['cfw', 'node'].includes(targetEnv) // <https://vitejs.dev/config/ssr-options.html>.
+		...(isTargetEnvSSR // <https://vitejs.dev/config/ssr-options.html>.
 			? {
 					ssr: {
 						noExternal: ['cfw'].includes(targetEnv),
@@ -539,25 +579,25 @@ export default async ({ mode, command, ssrBuild }) => {
 		build: /* <https://vitejs.dev/config/build-options.html> */ {
 			target: 'es2021', // Matches TypeScript config.
 
-			emptyOutDir: ssrBuild ? false : true, // Not during SSR builds.
+			emptyOutDir: isSSRBuild ? false : true, // Not during SSR builds.
 			outDir: path.relative(srcDir, distDir), // Relative to `root` directory.
 			assetsDir: path.relative(distDir, a16sDir), // Relative to `outDir` directory.
 			// Note: `a16s` = numeronym for 'acquired resources'.
 
-			ssr: ['cfw', 'node'].includes(targetEnv), // Server-side rendering?
-			...(['cfw', 'node'].includes(targetEnv) ? { ssrManifest: 'dev' === mode } : {}),
+			ssr: isTargetEnvSSR ? true : false, // Server-side rendering?
 
-			sourcemap: 'dev' === mode, // Enables creation of sourcemaps.
-			manifest: 'dev' === mode, // Enables creation of manifest for assets.
-			minify: 'dev' === mode ? false : 'esbuild', // See: <https://o5p.me/ZyQ4sv>.
+			manifest: !isSSRBuild, // Enables creation of manifest (for assets).
+			sourcemap: 'dev' === mode, // Enables creation of sourcemaps (for debugging).
+
+			minify: shouldMinify ? 'esbuild' : false, // See: <https://o5p.me/ZyQ4sv>.
+			...(isTargetEnvSSR ? { modulePreload: { resolveDependencies: () => [] } } : {}),
 
 			...(['cma'].includes(appType) // Custom-made apps = library code.
 				? {
 						lib: {
-							name: appLibName,
-							entry: appEntriesAsSrcRelPaths,
-							// Default formats explicitly. See: <https://o5p.me/v0FR3s>.
-							formats: appEntries.length > 1 ? ['es', 'cjs'] : ['es', 'umd'],
+							name: appLibName, // Name of UMD window global var.
+							entry: appEntries, // Should match up with `rollupOptions.input`.
+							formats: isSSRBuild ? ['es'] : appEntries.length > 1 ? ['es', 'cjs'] : ['es', 'umd'],
 						},
 				  }
 				: {}),

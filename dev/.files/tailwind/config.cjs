@@ -45,10 +45,5 @@ module.exports = {
 		...(fs.existsSync(path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/preact'))
 			? [path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/preact/**/*.{' + contentExtns.join(',') + '}')]
 			: []),
-
-		// If this package is using `@clevercanyon/utilities` we can also scan EJS views.
-		...(fs.existsSync(path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/assets/ejs-views'))
-			? [path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/assets/ejs-views/**/*.{' + contentExtns.join(',') + '}')]
-			: []),
 	],
 };

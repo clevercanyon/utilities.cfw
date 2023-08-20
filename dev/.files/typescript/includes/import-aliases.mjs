@@ -17,7 +17,6 @@ import { $fs } from '../../../../node_modules/@clevercanyon/utilities.node/dist/
 
 const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../../..');
-const srcDir = path.resolve(projDir, './src');
 
 /**
  * Defines TypeScript import aliases.
@@ -27,7 +26,6 @@ const srcDir = path.resolve(projDir, './src');
  * @note See also: `../jest/config.mjs`.
  */
 export default {
-	'^@:src/(.+)$': path.resolve(srcDir, './$1'),
 	'^react$': path.resolve(projDir, './node_modules/preact/compat'),
 	'^react-dom$': path.resolve(projDir, './node_modules/preact/compat'),
 };

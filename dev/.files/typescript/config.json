@@ -41,7 +41,6 @@
 
 		"paths": {
 			// Note: Use just a single array item for Vite/Jest compatibility.
-			"@:src/*": ["./*"], // Relative to `baseUrl`.
 			"react": ["../node_modules/preact/compat"],
 			"react-dom": ["../node_modules/preact/compat"]
 		},

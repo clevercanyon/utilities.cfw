@@ -12,26 +12,22 @@ import {
 } from '@cloudflare/kv-asset-handler';
 
 import { $env, $http, $str, $url } from '@clevercanyon/utilities';
-
-/**
- * Exports worker types.
- */
-export type {
-	Request, //
-	ExecutionContext as Context,
-} from '@cloudflare/workers-types/experimental';
+import type * as core from '@cloudflare/workers-types/experimental';
 
 /**
  * Defines types.
  */
+export type Context = core.ExecutionContext;
+
 export type Environment = {
-	readonly R2?: R2Bucket;
-	readonly KV?: KVNamespace;
-	readonly DO?: DurableObjectNamespace;
-	readonly __STATIC_CONTENT?: KVNamespace;
+	readonly D1?: core.D1Database;
+	readonly R2?: core.R2Bucket;
+	readonly KV?: core.KVNamespace;
+	readonly DO?: core.DurableObjectNamespace;
+	readonly __STATIC_CONTENT?: core.KVNamespace;
 	readonly [x: string]: unknown;
 };
-export type Route = (x: FetchEventData) => Promise<Response>;
+export type Route = (x: FetchEventData) => Promise<core.Response>;
 
 export type Routes = {
 	readonly subpathGlobs: {
@@ -39,12 +35,19 @@ export type Routes = {
 	};
 };
 export type FetchEventData = {
-	readonly request: Request;
+	readonly request: core.Request;
 	readonly env: Environment;
-	readonly ctx: ExecutionContext;
+	readonly ctx: Context;
 	readonly routes: Routes;
-	readonly url: URL;
+	readonly url: core.URL;
 };
+export type InitialFetchEventData = {
+	readonly request: core.Request;
+	readonly env: Environment;
+	readonly ctx: Context;
+	readonly routes: Routes;
+};
+export type { core };
 
 /**
  * Handles fetch events.
@@ -53,22 +56,26 @@ export type FetchEventData = {
  *
  * @returns        Response promise.
  */
-export async function handleFetchEvent(feData: Omit<FetchEventData, 'url'> | FetchEventData): Promise<Response> {
-	let { request } = feData;
-	let url: URL | null = null;
-	const { env, ctx, routes } = feData;
+export async function handleFetchEvent(ifeData: InitialFetchEventData): Promise<core.Response> {
+	let { request } = ifeData;
+	let url: core.URL | null = null;
+	const { env, ctx, routes } = ifeData;
 
 	$env.capture('@global', env);
 
 	const basePath = $env.get('@top', 'APP_BASE_PATH', '') as string;
 
 	try {
-		request = $http.prepareRequest(request, {});
-		url = $url.parse(request.url) as URL;
+		request = $http.prepareRequest(request, {}) as core.Request;
+		url = $url.parse(request.url) as core.URL;
+		//
 	} catch (error) {
-		return error instanceof Response ? error : $http.prepareResponse(request, { status: 500 });
+		if (error instanceof Response) {
+			return error as unknown as core.Response;
+		}
+		return $http.prepareResponse(request, { status: 500 }) as core.Response;
 	}
-	feData = { request, env, ctx, routes, url }; // Recompiles data.
+	const feData = { request, env, ctx, routes, url }; // Recompiles data.
 
 	if (
 		$http.requestPathIsStatic(request, url) && //
@@ -87,7 +94,7 @@ export async function handleFetchEvent(feData: Omit<FetchEventData, 'url'> | Fet
  *
  * @returns        Response promise.
  */
-async function handleFetchDynamics(feData: FetchEventData): Promise<Response> {
+async function handleFetchDynamics(feData: FetchEventData): Promise<core.Response> {
 	const { request, routes, url } = feData;
 	const basePath = $env.get('@top', 'APP_BASE_PATH', '') as string;
 
@@ -96,7 +103,7 @@ async function handleFetchDynamics(feData: FetchEventData): Promise<Response> {
 			return routeSubpathHandler(feData);
 		}
 	}
-	return $http.prepareResponse(request, { status: 404 });
+	return $http.prepareResponse(request, { status: 404 }) as core.Response;
 }
 
 /**
@@ -106,18 +113,18 @@ async function handleFetchDynamics(feData: FetchEventData): Promise<Response> {
  *
  * @returns        Response promise.
  */
-async function handleFetchStaticAssets(feData: FetchEventData): Promise<Response> {
+async function handleFetchStaticAssets(feData: FetchEventData): Promise<core.Response> {
 	const { request, ctx } = feData;
 	const basePath = $env.get('@top', 'APP_BASE_PATH', '') as string;
 
 	try {
-		const eventProps = {
-			request: request, // Rewritten below.
+		const kvAssetEventData = {
+			request: request as unknown as Request,
 			waitUntil(promise: Promise<void>): void {
 				ctx.waitUntil(promise);
 			},
 		};
-		const response = await cfKVAꓺgetAssetFromKV(eventProps, {
+		const response = await cfKVAꓺgetAssetFromKV(kvAssetEventData, {
 			ASSET_NAMESPACE: $env.get('@top', '__STATIC_CONTENT') as string,
 			// @ts-ignore: This is dynamically resolved by Cloudflare.
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, import/no-unresolved
@@ -138,14 +145,15 @@ async function handleFetchStaticAssets(feData: FetchEventData): Promise<Response
 		});
 		return $http.prepareResponse(request, {
 			response: new Response(response.body, response),
-		});
+		}) as core.Response;
+		//
 	} catch (error) {
 		if (error instanceof cfKVAꓺNotFoundError) {
-			return $http.prepareResponse(request, { status: 404 });
+			return $http.prepareResponse(request, { status: 404 }) as core.Response;
 		}
 		if (error instanceof cfKVAꓺMethodNotAllowedError) {
-			return $http.prepareResponse(request, { status: 405 });
+			return $http.prepareResponse(request, { status: 405 }) as core.Response;
 		}
-		return $http.prepareResponse(request, { status: 500 });
+		return $http.prepareResponse(request, { status: 500 }) as core.Response;
 	}
 }
