@@ -143,9 +143,7 @@ async function handleFetchStaticAssets(feData: FetchEventData): Promise<core.Res
 				return cfKVAꓺmapRequestToAsset(new Request(url, request));
 			},
 		});
-		return $http.prepareResponse(request, {
-			response: new Response(response.body, response),
-		}) as core.Response;
+		return $http.prepareResponse(request, { ...response }) as core.Response;
 		//
 	} catch (error) {
 		if (error instanceof cfKVAꓺNotFoundError) {

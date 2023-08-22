@@ -9,12 +9,8 @@
 ##
 
 compatibility_date = "2023-08-15"
-
-send_metrics = false    # Don't share usage.
-usage_model = "bundled" # 10M/mo free + $0.50/M.
-
-account_id = "f1176464a976947aa5665d989814a4b1"
-zone_id = "a53c8701e8dffd42e05c53010869f580"
+send_metrics = false              # Don't share usage.
+usage_model = "bundled"           # 10M/mo free + $0.50/M.
 
 workers_dev = false
 env.dev.workers_dev = true
@@ -51,6 +47,8 @@ env.dev.build.command = "npx @clevercanyon/madrun build --mode=dev"
 # <custom:start>
 
 name = "utilities-cfw"
-route = { pattern = "utilities.cfw", custom_domain = true }
+route.zone_name = "hop.gdn"
+route.pattern = "workers.hop.gdn/utilities-cfw/*"
+account_id = "f1176464a976947aa5665d989814a4b1"
 
 # </custom:end>

@@ -103,7 +103,7 @@ export default {
 				let wrangler = fs.readFileSync(wranglerFile).toString(); // toML.
 
 				wrangler = wrangler.replace(/^(name\s*=\s*")([^"]*)(")/gmu, '$1' + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + '$3');
-				wrangler = wrangler.replace(/^(route\s*=\s*\{\s*pattern\s*=\s*")([^"]*)(")/gmu, '$1' + path.basename(args.pkgName || dirBasename) + '$3');
+				wrangler = wrangler.replace(/^(route\.pattern\s*=\s*")([^"]+\/)([^/"]*)(")/gmu, '$1$2' + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + '/*$4');
 
 				await fsp.writeFile(wranglerFile, wrangler); // Updates `./.wrangler.toml` file.
 			}

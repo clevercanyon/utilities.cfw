@@ -23,7 +23,8 @@ import { ViteMinifyPlugin as pluginMinifyHTML } from 'vite-plugin-minify';
 import u from '../bin/includes/utilities.mjs';
 import importAliases from './includes/import-aliases.mjs';
 import { $fs, $glob } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $is, $str, $obj, $obp, $http, $time } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $http as $cfpꓺhttp } from '../../../node_modules/@clevercanyon/utilities.cfp/dist/index.js';
+import { $is, $str, $obj, $obp, $time } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -44,12 +45,15 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 
 	const srcDir = path.resolve(__dirname, '../../../src');
 	const cargoDir = path.resolve(__dirname, '../../../src/cargo');
+	const distDir = path.resolve(__dirname, '../../../dist');
 
 	const envsDir = path.resolve(__dirname, '../../../dev/.envs');
 	const logsDir = path.resolve(__dirname, '../../../dev/.logs');
 
-	const distDir = path.resolve(__dirname, '../../../dist');
-	const a16sDir = path.resolve(__dirname, '../../../dist/assets/a16s');
+	// In the case of doing a secondary SSR build, we need to separate the SSR assets from the client-side assets.
+	// The special folder `node_modules` was selected because it's ignored by the Wrangler CLI; see <https://o5p.me/EqPjmv>.
+	// Wrangler compiles all of the SSR assets (wherever they live) when it does it's own bundling of the `./dist` directory.
+	const a16sDir = path.resolve(__dirname, '../../../dist' + (isSSRBuild ? '/node_modules' : '') + '/assets/a16s');
 
 	/**
 	 * Package-related vars.
@@ -303,7 +307,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 				 * Deletes a few files that interfere with apps running on Cloudflare Pages.
 				 */
 				if ('build' === command && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
-					for (const fileOrDir of await $glob.promise(['types', '.env.vault', 'index.*'], { cwd: distDir, onlyFiles: false })) {
+					for (const fileOrDir of await $glob.promise(['types', '.env.vault', 'manifest.json', 'index.*'], { cwd: distDir, onlyFiles: false })) {
 						await fsp.rm(fileOrDir, { force: true, recursive: true });
 					}
 				}
@@ -312,7 +316,9 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 				 * Updates a few files that configure apps running on Cloudflare Pages.
 				 */
 				if ('build' === command && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
-					for (const file of await $glob.promise(['_headers', '_redirects', '_routes.json', 'robots.txt', 'sitemap.xml', 'sitemaps/**/*.xml'], { cwd: distDir })) {
+					for (const file of await $glob.promise(['_headers', '_redirects', '_routes.json', '404.html', 'robots.txt', 'sitemap.xml', 'sitemaps/**/*.xml'], {
+						cwd: distDir,
+					})) {
 						const fileExt = $str.trim(path.extname(file), '.');
 						const fileRelPath = path.relative(distDir, file);
 
@@ -322,7 +328,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 							fileContents = fileContents.replace(new RegExp($str.escRegExp(key), 'gu'), staticDefs[key]);
 						}
 						if (['_headers'].includes(fileRelPath)) {
-							const cfpDefaultHeaders = $http.prepareCFPDefaultHeaders({ appType, isC10n: env.APP_IS_C10N || false });
+							const cfpDefaultHeaders = $cfpꓺhttp.prepareDefaultHeaders({ appType, isC10n: env.APP_IS_C10N || false });
 							fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_HEADERS__$$', cfpDefaultHeaders);
 						}
 						if (['_headers', '_redirects', 'robots.txt'].includes(fileRelPath)) {
@@ -368,8 +374,8 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 	 * @see https://rollupjs.org/guide/en/#big-list-of-options
 	 * @see https://vitejs.dev/config/build-options.html#build-rollupoptions
 	 */
-	const rollupEntryCounters = new Map();
-	const rollupChunkCounters = new Map();
+	const rollupEntryCounters = new Map(),
+		rollupChunkCounters = new Map();
 
 	const rollupConfig = {
 		input: appEntries,
@@ -581,8 +587,10 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 
 			emptyOutDir: isSSRBuild ? false : true, // Not during SSR builds.
 			outDir: path.relative(srcDir, distDir), // Relative to `root` directory.
+
+			assetsInlineLimit: 0, // Disable entirely. Use import `?raw`, `?url`, etc.
 			assetsDir: path.relative(distDir, a16sDir), // Relative to `outDir` directory.
-			// Note: `a16s` = numeronym for 'acquired resources'.
+			// Note: `a16s` is a numeronym for 'acquired resources'; i.e. via imports.
 
 			ssr: isTargetEnvSSR ? true : false, // Server-side rendering?
 
