@@ -56,7 +56,7 @@ export type { core };
  *
  * @returns        Response promise.
  */
-export async function handleFetchEvent(ifeData: InitialFetchEventData): Promise<core.Response> {
+export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<core.Response> => {
 	let { request } = ifeData;
 	let url: core.URL | null = null;
 	const { env, ctx, routes } = ifeData;
@@ -85,7 +85,7 @@ export async function handleFetchEvent(ifeData: InitialFetchEventData): Promise<
 		return handleFetchStaticAssets(feData);
 	}
 	return handleFetchDynamics(feData);
-}
+};
 
 /**
  * Fetches dynamics.
@@ -94,7 +94,7 @@ export async function handleFetchEvent(ifeData: InitialFetchEventData): Promise<
  *
  * @returns        Response promise.
  */
-async function handleFetchDynamics(feData: FetchEventData): Promise<core.Response> {
+export const handleFetchDynamics = async (feData: FetchEventData): Promise<core.Response> => {
 	const { request, routes, url } = feData;
 	const basePath = $env.get('@top', 'APP_BASE_PATH', '') as string;
 
@@ -104,7 +104,7 @@ async function handleFetchDynamics(feData: FetchEventData): Promise<core.Respons
 		}
 	}
 	return $http.prepareResponse(request, { status: 404 }) as core.Response;
-}
+};
 
 /**
  * Fetches static assets.
