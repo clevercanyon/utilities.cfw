@@ -1,0 +1,92 @@
+##
+# Browserslist config file.
+#
+# Many packages are aware of this config file's location.
+#
+# @note CUSTOM EDITS ONLY PLEASE!
+# @note In the future this file will be updated automatically.
+# @note Only `<custom:start.../custom:end>` will be preserved below.
+#
+# Generated using <https://www.npmjs.com/package/browserslist-generator>.
+#
+#     import BLG from 'browserslist-generator';
+#     console.log( BLG.browsersWithSupportForEcmaVersion( 'es2021' ).join( '\n' ) );
+#
+# - Review BLG source: <https://o5p.me/4DC1Vq>.
+# - Review browserlist report on production config: <https://o5p.me/Fvs3WP>.
+# - Review our transpiler: <https://esbuild.github.io/content-types/#javascript>.
+##
+
+[production]
+last 1 chrome versions
+node >= 19.2.0
+and_chr >= 85
+chrome >= 85
+and_ff >= 79
+android >= 108
+edge >= 85
+samsung >= 14.0
+safari >= 14
+ios_saf >= 14.4
+opera >= 71
+firefox >= 79
+not dead
+
+[any]
+last 1 chrome versions
+node >= 19.2.0
+and_chr >= 85
+chrome >= 85
+and_ff >= 79
+android >= 108
+edge >= 85
+samsung >= 14.0
+safari >= 14
+ios_saf >= 14.4
+opera >= 71
+firefox >= 79
+not dead
+
+[cfp]
+last 1 chrome versions
+not dead
+
+[cfw]
+last 1 chrome versions
+not dead
+
+[node]
+node >= 19.2.0
+not dead
+
+[web]
+and_chr >= 85
+chrome >= 85
+and_ff >= 79
+android >= 108
+edge >= 85
+samsung >= 14.0
+safari >= 14
+ios_saf >= 14.4
+opera >= 71
+firefox >= 79
+not dead
+
+[webw]
+and_chr >= 85
+chrome >= 85
+and_ff >= 79
+android >= 108
+edge >= 85
+samsung >= 14.0
+safari >= 14
+ios_saf >= 14.4
+opera >= 71
+firefox >= 79
+not dead
+
+##
+# Customizations.
+# <custom:start>
+
+# </custom:end>

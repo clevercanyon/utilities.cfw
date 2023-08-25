@@ -1,0 +1,54 @@
+##
+# Wrangler configuration.
+#
+# Wrangler is aware of this config file's location.
+#
+# @note CUSTOM EDITS ONLY PLEASE!
+# @note In the future this file will be updated automatically.
+# @note Only `<custom:start.../custom:end>` will be preserved below.
+##
+
+compatibility_date = "2023-08-15"
+send_metrics = false              # Don't share usage.
+usage_model = "bundled"           # 10M/mo free + $0.50/M.
+
+workers_dev = false
+env.dev.workers_dev = true
+
+main = "./dist/index.js"
+rules = [
+  { type = "Text", globs = [
+    "**/*.md",
+    "**/*.txt",
+    "**/*.xml",
+    "**/*.html",
+    "**/*.shtml",
+    "**/*.ejs",
+  ], fallthrough = false },
+]
+site.bucket = "./dist/assets"
+site.exclude = [
+  "/a16s/",
+  "dist/",
+  ".yarn/",
+  "vendor/",
+  "node_modules/",
+  "jspm_packages/",
+  "bower_components/",
+]
+build.cwd = "./"
+build.watch_dir = "./src"
+
+build.command = "npx @clevercanyon/madrun build --mode=prod"
+env.dev.build.command = "npx @clevercanyon/madrun build --mode=dev"
+
+##
+# Customizations.
+# <custom:start>
+
+name = "utilities-cfw"
+route.zone_name = "hop.gdn"
+route.pattern = "workers.hop.gdn/utilities-cfw/*"
+account_id = "f1176464a976947aa5665d989814a4b1"
+
+# </custom:end>

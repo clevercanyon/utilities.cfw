@@ -1,0 +1,100 @@
+{
+	"private": false,
+	"publishConfig": {
+		"access": "restricted"
+	},
+	"version": "1.0.79",
+	"license": "GPL-3.0-or-later",
+	"name": "@clevercanyon/utilities.cfw",
+	"description": "Utilities for JavaScript apps running in a Cloudflare Worker environment.",
+	"repository": "https://github.com/clevercanyon/utilities.cfw",
+	"homepage": "https://github.com/clevercanyon/utilities.cfw#readme",
+	"bugs": "https://github.com/clevercanyon/utilities.cfw/issues",
+	"funding": "https://github.com/sponsors/clevercanyon",
+	"keywords": ["clevercanyon"],
+	"author": {
+		"name": "Clever Canyon",
+		"url": "https://clevercanyon.com"
+	},
+	"contributors": [],
+	"type": "module",
+	"bin": {},
+	"imports": {},
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs",
+			"types": "./dist/types/index.d.ts"
+		},
+		"./cfw": {
+			"import": "./dist/cfw.js",
+			"require": "./dist/cfw.cjs",
+			"types": "./dist/types/cfw.d.ts"
+		},
+		"./geo": {
+			"import": "./dist/geo.js",
+			"require": "./dist/geo.cjs",
+			"types": "./dist/types/geo.d.ts"
+		}
+	},
+	"sideEffects": ["./src/resources/init-env.ts", "./src/cfw.ts", "./src/geo.ts", "./src/index.ts"],
+	"module": "./dist/index.js",
+	"main": "./dist/index.cjs",
+	"browser": "",
+	"unpkg": "./dist/index.js",
+	"types": "./dist/types/index.d.ts",
+	"typesVersions": {
+		">=3.1": {
+			"./*": ["./dist/types/*"]
+		}
+	},
+	"dependencies": {},
+	"peerDependencies": {
+		"@clevercanyon/utilities": "^1.0.199",
+		"@cloudflare/kv-asset-handler": "^0.2.0"
+	},
+	"peerDependenciesMeta": {},
+	"optionalDependencies": {},
+	"bundleDependencies": [],
+	"devDependencies": {
+		"@clevercanyon/dev-deps": "^1.0.167"
+	},
+	"overrides": {},
+	"cpu": ["x64", "arm64"],
+	"os": ["darwin", "linux"],
+	"engines": {
+		"node": "^19.2.0 || ^19.4.0",
+		"npm": "^8.19.3 || ^9.2.0"
+	},
+	"config": {
+		"c10n": {
+			"&": {
+				"dotfiles": {
+					"lock": []
+				},
+				"build": {
+					"appType": "lib",
+					"targetEnv": "cfw",
+					"entryFiles": []
+				},
+				"ssrBuild": {
+					"appType": "",
+					"targetEnv": "",
+					"entryFiles": []
+				},
+				"github": {
+					"teams": {
+						"engineers": "pull",
+						"architects": "push"
+					},
+					"labels": {},
+					"configVersion": "1.0.3",
+					"envsVersion": ""
+				},
+				"npmjs": {
+					"configVersions": "1.0.3,1.0.3"
+				}
+			}
+		}
+	}
+}

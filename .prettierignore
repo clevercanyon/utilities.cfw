@@ -1,0 +1,25 @@
+##
+# Prettier ignore file.
+#
+# Prettier is aware of this config file's location.
+#
+# @note CUSTOM EDITS ONLY PLEASE!
+# @note In the future this file will be updated automatically.
+# @note Only `<custom:start.../custom:end>` will be preserved below.
+##
+
+# `.npmrc` unsupported at this time.
+# It's a properties file, but prettier chokes on `:` in auth tokens.
+
+*.npmrc
+
+# EJS unsupported at this time.
+# @todo Build or find an EJS plugin.
+
+*.ejs
+
+##
+# Customizations.
+# <custom:start>
+
+# </custom:end>

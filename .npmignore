@@ -1,0 +1,336 @@
+##
+# NPM ignore file.
+#
+# NPM is aware of this config file's location.
+#
+# Run the following to test configuration:
+#
+#     $ npm pack --dry-run
+#
+# Please keep in mind that if `files` is used in `./package.json`,
+# the `files` setting will **not** be altered by an `./.npmignore` in the
+# main project directory. In such a case, `./.npmignore` is meaningless.
+#
+# @note CUSTOM EDITS ONLY PLEASE!
+# @note In the future this file will be updated automatically.
+# @note Only `<custom:start.../custom:end>` will be preserved below.
+##
+
+##
+# This part follows `.gitignore` exactly.
+##
+
+# Locals.
+
+.#*
+.~*
+*.local
+
+# Logs.
+
+*.log
+*.logs
+
+# Backups.
+
+*~
+*.bak
+
+# Patches.
+
+*.rej
+*.orig
+*.patch
+*.diff
+
+# IntelliJ.
+
+.idea
+
+# Sublime.
+
+*.sublime-project
+*.sublime-workspace
+
+# Netbeans.
+
+*.nbproject
+
+# VS Code.
+
+.vscode
+*.code-search
+*.code-workspace
+
+# Dists (must exclude).
+# May contain APP_ env vars.
+
+dist
+
+# Yarn.
+
+.yarn
+
+# Vendor.
+
+vendor
+
+# NodeJS.
+
+node_modules
+
+# JSPM.
+
+jspm_packages
+
+# Bower.
+
+bower_components
+
+# Dotenv.
+
+.env*
+.flaskenv*
+
+!.env.vault
+!.env.project
+
+# TypeScript.
+
+typings
+.tscache
+*.tsbuildinfo
+
+# Vite.
+
+.vite
+.vitest
+
+# Wrangler.
+
+.wrangler
+.dev.vars
+.dev.vars.*
+
+# Rollup.
+
+.rollup
+
+# Webpack.
+
+.webpack
+
+# Linaria.
+
+.linaria-cache
+
+# SASS.
+
+.sass-cache
+
+# Docker.
+
+.docker
+
+# Vagrant.
+
+.vagrant
+
+# Elastic Beanstalk.
+
+.elasticbeanstalk
+
+# CTAGs.
+
+*.ctags
+*.tags
+
+# VCS.
+
+.git
+
+.svn
+_svn
+.svnignore
+
+CVS
+.cvsignore
+
+.bzr
+.bzrignore
+
+.hg
+.hgignore
+
+SCCS
+RCS
+
+# PC files.
+
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# PC directories.
+
+$RECYCLE.BIN
+
+# Mac files.
+
+._*
+Icon?
+!Icons
+*.icloud
+.DS_Store
+.disk_label
+.LSOverride
+.VolumeIcon.icns
+.com.apple.timemachine.*
+
+# Mac directories.
+
+.apdisk
+*.icloud
+.fseventsd
+.AppleDB
+.AppleDesktop
+.AppleDouble
+.Trashes
+.TemporaryItems
+.Spotlight-V100
+.DocumentRevisions-V100
+Network Trash Folder
+Temporary Items
+
+##
+# These are in addition to what we have in `.gitignore`.
+##
+
+# Dist (allow).
+
+!dist
+
+# Configs.
+
+.*
+
+*config.*
+!dist/**/*config.*
+
+*.config.*
+!dist/**/*.config.*
+
+wrangler.*
+!dist/**/wrangler.*
+
+# Uncompiled sources.
+
+src
+__src__
+
+*.scss
+!dist/**/*.scss
+
+*.less
+!dist/**/*.less
+
+*.ejs
+!dist/**/*.ejs
+
+*.jsx
+!dist/**/*.jsx
+
+*.ts
+!*.d.ts
+!dist/**/*.ts
+
+*.tsx
+!*.d.tsx
+!dist/**/*.tsx
+
+*.cts
+!*.d.cts
+!dist/**/*.cts
+
+*.ctsx
+!*.d.ctsx
+!dist/**/*.ctsx
+
+*.mts
+!*.d.mts
+!dist/**/*.mts
+
+*.mtsx
+!*.d.mtsx
+!dist/**/*.mtsx
+
+# Dev.
+
+dev
+__dev__
+
+# Docs.
+
+doc
+docs
+__doc__
+__docs__
+*.doc.*
+*.docs.*
+*.readme.*
+*.readmes.*
+
+# Tests.
+
+test
+tests
+__test__
+__tests__
+*.test.*
+*.tests.*
+*.test-d.*
+*.tests-d.*
+
+# Specs.
+
+spec
+specs
+__spec__
+__specs__
+*.spec.*
+*.specs.*
+*.spec-d.*
+*.specs-d.*
+
+# Examples.
+
+example
+examples
+__example__
+__examples__
+*.example.*
+*.examples.*
+
+# Benchmarks.
+
+bench
+benchmark
+benchmarks
+__bench__
+__benchmark__
+__benchmarks__
+*.bench.*
+*.benchmark.*
+*.benchmarks.*
+
+##
+# There are also a few items always included and/or excluded by NPM.
+# See: <https://docs.npmjs.com/cli/v9/configuring-npm/package-json#files>
+# See: <https://docs.npmjs.com/cli/v8/using-npm/developers?v=true#keeping-files-out-of-your-package>
+##
+
+##
+# Customizations.
+# <custom:start>
+
+# </custom:end>
