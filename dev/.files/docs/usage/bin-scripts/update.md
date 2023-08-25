@@ -32,7 +32,8 @@ See Also: [Prerequisites](./prerequisites.md)
     ```
 
     These are the properties that we explicitly disallow.
-    - Instead of `"scripts"` we use `$ madrun` to configure scripts. See: [Prerequisites](./prerequisites.md).
+
+    -   Instead of `"scripts"` we use `$ madrun` to configure scripts. See: [Prerequisites](./prerequisites.md).
 
     ```json
     ["typings", "scripts", "workspaces"]
@@ -52,7 +53,7 @@ See Also: [Prerequisites](./prerequisites.md)
     "typesVersions": {}
     ```
 
-    - Note the absence of `"files": []` in the lists above, which we discourage. Instead, use `./.npmignore` as the recommended way to establish which files are part of a package. However, `files` is not forbidden, so define and customize `files`, if you must. Just keep in mind that `./.npmignore` is meaningless if you use `files`.
+    -   Note the absence of `"files": []` in the lists above, which we discourage. Instead, use `./.npmignore` as the recommended way to establish which files are part of a package. However, `files` is not forbidden, so define and customize `files`, if you must. Just keep in mind that `./.npmignore` is meaningless if you use `files`.
 
 ## Updates Project
 
@@ -110,10 +111,10 @@ _Note: This list of projects is not a suggestion regarding which repos to clone,
 ```text
 ~/Projects/clevercanyon
  - madrun
+ - dev-deps
  - my-project
  - project.fork
  - skeleton
- - skeleton-dev-deps
  - skeleton.cma.web
  - utilities
  - utilities.node

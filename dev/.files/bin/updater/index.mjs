@@ -180,14 +180,14 @@ export default async ({ projDir }) => {
 			if (!$is.plainObject(jsonUpdates)) {
 				throw new Error('updater: Unable to parse `' + jsonUpdatesFile + '`.');
 			}
-			if ('./package.json' === relPath && (await isPkgRepo('clevercanyon/skeleton-dev-deps'))) {
-				if (jsonUpdates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/skeleton-dev-deps']) {
-					delete jsonUpdates.$ꓺdefaults['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
+			if ('./package.json' === relPath && (await isPkgRepo('clevercanyon/dev-deps'))) {
+				if (jsonUpdates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/dev-deps']) {
+					delete jsonUpdates.$ꓺdefaults['devDependenciesꓺ@clevercanyon/dev-deps'];
 				}
 				if ($is.array(jsonUpdates.$ꓺunset)) {
-					jsonUpdates.$ꓺunset.push('devDependenciesꓺ@clevercanyon/skeleton-dev-deps');
+					jsonUpdates.$ꓺunset.push('devDependenciesꓺ@clevercanyon/dev-deps');
 				} else {
-					jsonUpdates.$ꓺunset = ['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
+					jsonUpdates.$ꓺunset = ['devDependenciesꓺ@clevercanyon/dev-deps'];
 				}
 			}
 			$obj.patchDeep(json, jsonUpdates); // Potentially declarative ops.
@@ -197,10 +197,10 @@ export default async ({ projDir }) => {
 	}
 
 	/**
-	 * Updates `@clevercanyon/skeleton-dev-deps` in project dir.
+	 * Updates `@clevercanyon/dev-deps` in project dir.
 	 */
-	if (!(await isPkgRepo('clevercanyon/skeleton-dev-deps'))) {
-		log($chalk.green('Updating project to latest `@clevercanyon/skeleton-dev-deps`.'));
-		await $cmd.spawn('npm', ['udpate', '@clevercanyon/skeleton-dev-deps'], { cwd: projDir });
+	if (!(await isPkgRepo('clevercanyon/dev-deps'))) {
+		log($chalk.green('Updating project to latest `@clevercanyon/dev-deps`.'));
+		await $cmd.spawn('npm', ['udpate', '@clevercanyon/dev-deps'], { cwd: projDir });
 	}
 };

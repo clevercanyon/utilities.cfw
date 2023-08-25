@@ -11,7 +11,7 @@ export default {
 	updates: {
 		ignore: [],
 		order: [
-			'skeleton-dev-deps',
+			'dev-deps',
 			'skeleton',
 			'madrun',
 

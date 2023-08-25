@@ -169,14 +169,14 @@ export default class u {
 		if (!$is.plainObject(updates)) {
 			throw new Error('u.updatePkg: Unable to parse `' + updatesFile + '`.');
 		}
-		if (await u.isPkgRepo('clevercanyon/skeleton-dev-deps')) {
-			if (updates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/skeleton-dev-deps']) {
-				delete updates.$ꓺdefaults['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
+		if (await u.isPkgRepo('clevercanyon/dev-deps')) {
+			if (updates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/dev-deps']) {
+				delete updates.$ꓺdefaults['devDependenciesꓺ@clevercanyon/dev-deps'];
 			}
 			if ($is.array(updates.$ꓺunset)) {
-				updates.$ꓺunset.push('devDependenciesꓺ@clevercanyon/skeleton-dev-deps');
+				updates.$ꓺunset.push('devDependenciesꓺ@clevercanyon/dev-deps');
 			} else {
-				updates.$ꓺunset = ['devDependenciesꓺ@clevercanyon/skeleton-dev-deps'];
+				updates.$ꓺunset = ['devDependenciesꓺ@clevercanyon/dev-deps'];
 			}
 		}
 		$obj.patchDeep(pkg, updates); // Potentially declarative ops.

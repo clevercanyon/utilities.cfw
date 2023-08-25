@@ -37,7 +37,7 @@
 		"optionalDependencies": {},
 		"bundleDependencies": [],
 		"devDependencies": {},
-		"devDependenciesꓺ@clevercanyon/skeleton-dev-deps": "*",
+		"devDependenciesꓺ@clevercanyon/dev-deps": "*",
 		"overrides": {},
 
 		"cpu": [],
