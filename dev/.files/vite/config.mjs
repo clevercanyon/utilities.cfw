@@ -251,7 +251,9 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 	/**
 	 * Pre-updates `package.json` properties impacting build process.
 	 */
-	await u.updatePkg({ $set: { type: updatePkg.type, sideEffects: updatePkg.sideEffects } });
+	if ('build' === command /* Only when building the app. */) {
+		await u.updatePkg({ $set: { type: updatePkg.type, sideEffects: updatePkg.sideEffects } });
+	}
 
 	/**
 	 * Configures plugins for Vite.
@@ -301,12 +303,14 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 				/**
 				 * Updates `package.json`.
 				 */
-				await u.updatePkg({ $set: updatePkg });
+				if ('build' === command) {
+					await u.updatePkg({ $set: updatePkg });
+				}
 
 				/**
 				 * Copies `./.env.vault` to dist directory.
 				 */
-				if (fs.existsSync(path.resolve(projDir, './.env.vault'))) {
+				if ('build' === command && fs.existsSync(path.resolve(projDir, './.env.vault'))) {
 					await fsp.copyFile(path.resolve(projDir, './.env.vault'), path.resolve(distDir, './.env.vault'));
 				}
 
@@ -318,7 +322,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 				}
 
 				/**
-				 * Deletes a few files that interfere with apps running on Cloudflare Pages.
+				 * Deletes a few files that are not needed for apps running on Cloudflare Pages.
 				 */
 				if ('build' === command && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
 					for (const fileOrDir of await $glob.promise(['types', '.env.vault', 'index.*'], { cwd: distDir, onlyFiles: false })) {

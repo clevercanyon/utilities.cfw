@@ -29,7 +29,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node-version: [19.1.0, 20.5.1]
+        node-version: [20.5.1]
 
     runs-on: ${{matrix.os}}
     environment: ci # CI environment.
@@ -44,6 +44,7 @@ jobs:
       USER_NPM_TOKEN: ${{secrets.USER_NPM_TOKEN}}
 
       # Supplied by repo environment secrets.
+      # Only available for repos using a Dotenv Vault.
       USER_DOTENV_KEY_MAIN: ${{secrets.USER_DOTENV_KEY_MAIN || ''}}
       USER_DOTENV_KEY_CI: ${{secrets.USER_DOTENV_KEY_CI || ''}}
 
@@ -55,7 +56,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{matrix.node-version}}
-          cache: npm # Cache NPM dependencies.
+          cache: npm # Caches NPM dependencies.
+
+      - name: Get Package JSON
+        shell: bash
+        run: |
+          echo 'PKG_JSON='"$(jq -c . ./package.json)" >> $GITHUB_ENV;
+          echo 'PKG_JSON_C10N='"$(jq -c '.config | .c10n | .["&"]' ./package.json)" >> $GITHUB_ENV;
 
       - name: Install Project
         shell: bash
@@ -63,6 +70,7 @@ jobs:
           npx @clevercanyon/madrun install project --mode=ci;
 
       - name: Run Project Tests
+        if: fromJson(env.PKG_JSON_C10N).build.appType
         shell: bash
         run: |
           npx @clevercanyon/madrun tests --mode=ci;
