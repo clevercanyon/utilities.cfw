@@ -102,7 +102,9 @@ export default async ({ projDir }) => {
 	 * Updates semi-immutable dotfiles.
 	 */
 	for (const relPath of [
+		'./.github/CODEOWNERS',
 		'./.github/dependabot.yml',
+		'./.github/workflows/ci.yml',
 		'./.browserslistrc',
 		'./.editorconfig',
 		'./.eslintignore',

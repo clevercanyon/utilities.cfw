@@ -44,11 +44,13 @@ const { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType } = (() => 
 const Octokit = OctokitCore.plugin(OctokitPluginPaginateRest);
 const octokit = new Octokit({ auth: process.env.USER_GITHUB_TOKEN || '' });
 
-const githubConfigVersion = '1.0.3'; // Bump when config changes in routines below.
-const githubEnvsVersion = '1.0.3'; // Bump when environments change in routines below.
-const npmjsConfigVersion = '1.0.3'; // Bump when config changes in routines below.
+const githubConfigVersion = '1.0.9'; // Bump when config changes in routines below.
+const githubEnvsVersion = '1.0.9'; // Bump when environments change in routines below.
+const npmjsConfigVersion = '1.0.9'; // Bump when config changes in routines below.
 
 const c10nLogo = path.resolve(__dirname, '../../assets/brands/c10n/logo.png');
+
+const s = {}; // Used instead of static class members, which are only supported in ES2022 or above.
 
 /**
  * Utilities.
@@ -375,7 +377,9 @@ export default class u {
 		if ('main' !== repoData.default_branch) {
 			throw new Error('githubCheckRepoOrgWideStandards: Default branch at GitHub must be `main`.');
 		}
-		const alwaysOnRequiredLabels = {
+		await u._githubEnsureRepoEnvs({ dryRun: opts.dryRun }); // Creates|deletes repo envs.
+
+		const requiredLabels = {
 			'bug report': {
 				color: 'b60205',
 				desc: 'Something isn’t working.',
@@ -401,15 +405,72 @@ export default class u {
 				desc: 'Something is being suggested.',
 			},
 		};
-		const labels = $obj.assign({}, $obp.get(pkg, 'config.c10n.&.github.labels', {}), alwaysOnRequiredLabels);
+		const rulesets = {
+			main: {
+				name: 'main',
+				target: 'branch',
+				enforcement: 'active',
+				conditions: { ref_name: { include: ['refs/heads/main'], exclude: [] } },
+				rules: [
+					{ type: 'creation' },
+					{ type: 'deletion' },
+					{ type: 'non_fast_forward' },
+					{ type: 'required_signatures' },
+					{ type: 'required_linear_history' },
+					{ type: 'update', parameters: { update_allows_fetch_and_merge: true } },
+					{ type: 'required_deployments', parameters: { required_deployment_environments: ['ci'] } },
+					{
+						type: 'pull_request',
+						parameters: {
+							require_code_owner_review: true,
+							require_last_push_approval: true,
+							required_approving_review_count: 1,
+							dismiss_stale_reviews_on_push: true,
+							required_review_thread_resolution: true,
+						},
+					},
+				],
+				bypass_actors: [{ actor_id: 7256007 /* owners */, actor_type: 'Team', bypass_mode: 'always' }],
+			},
+		};
+		const protectedBranches = {
+			main: {
+				lock_branch: false,
+				block_creations: true,
+				allow_deletions: false,
+				allow_fork_syncing: false,
+				allow_force_pushes: false,
+
+				required_signatures: true,
+				required_linear_history: true,
+				required_conversation_resolution: true,
+				required_status_checks: null, // We don't use.
+
+				// required_deployment_environments: { environments: ['ci'] },
+				// Deployments not currently implemented for branch protections via API.
+				// In order to pull this off it has to be done through a ruleset.
+
+				restrictions: { users: [], teams: ['owners'], apps: [] },
+				required_pull_request_reviews: {
+					dismiss_stale_reviews: true,
+					require_code_owner_reviews: true,
+					required_approving_review_count: 1,
+					require_last_push_approval: true,
+					dismissal_restrictions: { users: [], teams: ['owners'], apps: [] },
+					bypass_pull_request_allowances: { users: [], teams: ['owners'], apps: [] },
+				},
+				enforce_admins: false, // No. Let's not get too crazy.
+			},
+		};
+		const labels = $obj.assign({}, $obp.get(pkg, 'config.c10n.&.github.labels', {}), requiredLabels);
 		const labelsToDelete = await u._githubRepoLabels(); // Current list of repo’s labels.
 
-		const alwaysOnRequiredTeams = { owners: 'admin', 'security-managers': 'pull' }; // No exceptions.
-		const teams = $obj.assign({}, $obp.get(pkg, 'config.c10n.&.github.teams', {}), alwaysOnRequiredTeams);
+		const requiredTeams = { owners: 'admin', 'security-managers': 'pull' }; // No exceptions.
+		const teams = $obj.assign({}, $obp.get(pkg, 'config.c10n.&.github.teams', {}), requiredTeams);
 		const teamsToDelete = await u._githubRepoTeams(); // Current list of repo’s teams.
 
-		const protectedBranches = await u._githubRepoProtectedBranches();
-		const protectedBranchesToDelete = $obj.assign({}, protectedBranches);
+		const rulesetsToDelete = await u._githubRepoRulesets();
+		const protectedBranchesToDelete = await u._githubRepoProtectedBranches();
 
 		const defaultHomepage = 'https://github.com/' + $url.encode(owner) + '/' + $url.encode(repo) + '#readme';
 		const defaultDescription = 'Another great project by @' + repoData.owner.login + '.';
@@ -426,24 +487,36 @@ export default class u {
 				has_discussions: true,
 				has_downloads: true,
 
-				// allow_forking: false,
-				// Cannot configure this via API.
-				// Disabled already by org @ GitHub.com.
-
 				allow_auto_merge: false,
 				allow_squash_merge: true,
 				allow_merge_commit: false,
 				allow_rebase_merge: false,
 				allow_update_branch: true,
 				delete_branch_on_merge: true,
+				web_commit_signoff_required: false,
 
+				// allow_forking: false,
+				// Not possible to configure forking via API ops.
+				// Disabled for private repos at org level already.
+				// Public repos are always forkable repos, no exceptions.
+
+				...(!repoData.private // Available for public repos only.
+					? {
+							security_and_analysis: {
+								// advanced_security: { status: 'enabled' },
+								// Always on for public repos, and throws warning when attempting to enable.
+								// For private repos, these features are currently unavailable on the pro plan.
+
+								secret_scanning: { status: 'enabled' },
+								secret_scanning_push_protection: { status: 'enabled' },
+							},
+					  }
+					: {}),
 				merge_commit_title: 'MERGE_MESSAGE',
 				merge_commit_message: 'PR_TITLE',
 
 				squash_merge_commit_title: 'PR_TITLE',
 				squash_merge_commit_message: 'COMMIT_MESSAGES',
-
-				web_commit_signoff_required: false,
 
 				homepage: pkg.homepage || defaultHomepage,
 				description: pkg.description || defaultDescription,
@@ -452,6 +525,10 @@ export default class u {
 			});
 			await octokit.request('PUT /repos/{owner}/{repo}/vulnerability-alerts', { owner, repo });
 			await octokit.request('PUT /repos/{owner}/{repo}/automated-security-fixes', { owner, repo });
+
+			if (!repoData.private /* Available for public repos only. */) {
+				await octokit.request('PUT /repos/{owner}/{repo}/private-vulnerability-reporting', { owner, repo });
+			}
 		}
 
 		for (const [labelName, labelData] of Object.entries(labels)) {
@@ -476,65 +553,59 @@ export default class u {
 			}
 		}
 
-		for (const [team, permission] of Object.entries(teams)) {
-			delete teamsToDelete[team]; // Don't delete.
+		for (const [teamSlug, permission] of Object.entries(teams)) {
+			delete teamsToDelete[teamSlug]; // Don't delete.
 
-			u.log($chalk.gray('Adding `' + team + '` team to GitHub repo with `' + permission + '` permission.'));
+			u.log($chalk.gray('Adding `' + teamSlug + '` team to GitHub repo with `' + permission + '` permission.'));
 			if (!opts.dryRun) {
-				await octokit.request('PUT /orgs/{org}/teams/{team}/repos/{owner}/{repo}', { org: owner, owner, repo, team, permission });
+				await octokit.request('PUT /orgs/{org}/teams/{teamSlug}/repos/{owner}/{repo}', { org: owner, owner, repo, teamSlug, permission });
 			}
 		}
-		for (const [team, teamData] of Object.entries(teamsToDelete)) {
-			u.log($chalk.gray('Deleting `' + team + '` (unused) team with `' + teamData.permission + '` permission from GitHub repo.'));
+		for (const [teamSlug, teamData] of Object.entries(teamsToDelete)) {
+			u.log($chalk.gray('Deleting `' + teamSlug + '` (unused) team with `' + teamData.permission + '` permission from GitHub repo.'));
 			if (!opts.dryRun) {
-				await octokit.request('DELETE /orgs/{org}/teams/{team}/repos/{owner}/{repo}', { org: owner, owner, repo, team });
+				await octokit.request('DELETE /orgs/{org}/teams/{teamSlug}/repos/{owner}/{repo}', { org: owner, owner, repo, teamSlug });
 			}
 		}
 
-		for (const branch of ['main'] /* Always protect `main` branch. */) {
-			delete protectedBranchesToDelete[branch]; // Don't delete.
+		for (const [rulesetName, rulesetProtections] of Object.entries(rulesets)) {
+			if (rulesetsToDelete[rulesetName]) {
+				const rulesetId = rulesetsToDelete[rulesetName].id; // Needed below.
+				delete rulesetsToDelete[rulesetName]; // Don't delete.
 
-			u.log($chalk.gray('Protecting `' + branch + '` branch in GitHub repo.'));
-			if (!opts.dryRun) {
-				await octokit.request('PUT /repos/{owner}/{repo}/branches/{branch}/protection', {
-					owner,
-					repo,
-					branch,
-
-					lock_branch: false,
-					block_creations: true,
-					allow_deletions: false,
-					allow_fork_syncing: false,
-					allow_force_pushes: false,
-
-					required_signatures: true,
-					required_linear_history: true,
-					required_conversation_resolution: true,
-					required_status_checks: null, // We don't use.
-
-					// @review Not implemented. See: <https://o5p.me/hfPAag>.
-					// Not currently an issue since we already have an org-wide required workflow.
-					// required_deployment_environments: { environments: ['ci'] },
-
-					restrictions: { users: [], teams: ['owners'], apps: [] },
-					required_pull_request_reviews: {
-						dismiss_stale_reviews: true,
-						require_code_owner_reviews: true,
-						required_approving_review_count: 1,
-						require_last_push_approval: true,
-						dismissal_restrictions: { users: [], teams: ['owners'], apps: [] },
-						bypass_pull_request_allowances: { users: [], teams: ['owners'], apps: [] },
-					},
-					enforce_admins: false, // No. Let's not get too crazy.
-				});
+				u.log($chalk.gray('Updating `' + rulesetName + '` ruleset in GitHub repo.'));
+				if (!opts.dryRun) {
+					await octokit.request('PUT /repos/{owner}/{repo}/rulesets/{rulesetId}', { owner, repo, rulesetId, ...rulesetProtections });
+				}
+			} else {
+				u.log($chalk.gray('Adding `' + rulesetName + '` ruleset to GitHub repo.'));
+				if (!opts.dryRun) {
+					await octokit.request('POST /repos/{owner}/{repo}/rulesets', { owner, repo, ...rulesetProtections });
+				}
 			}
 		}
-		for (const [branch] of Object.entries(protectedBranchesToDelete)) {
-			u.log($chalk.gray('Deleting `' + branch + '` (unused) branch protection in GitHub repo.'));
+		for (const [rulesetName, rulesetData] of Object.entries(rulesetsToDelete)) {
+			u.log($chalk.gray('Deleting `' + rulesetName + '` (unused) ruleset from GitHub repo.'));
 			if (!opts.dryRun) {
-				await octokit.request('DELETE /repos/{owner}/{repo}/branches/{branch}/protection', { owner, repo, branch });
+				await octokit.request('DELETE /repos/{owner}/{repo}/rulesets/{rulesetId}', { owner, repo, rulesetId: rulesetData.id });
 			}
 		}
+
+		for (const [branchName, branchProtections] of Object.entries(protectedBranches)) {
+			delete protectedBranchesToDelete[branchName]; // Don't delete.
+
+			u.log($chalk.gray('Protecting `' + branchName + '` branch in GitHub repo.'));
+			if (!opts.dryRun) {
+				await octokit.request('PUT /repos/{owner}/{repo}/branches/{branchName}/protection', { owner, repo, branchName, ...branchProtections });
+			}
+		}
+		for (const [branchName] of Object.entries(protectedBranchesToDelete)) {
+			u.log($chalk.gray('Deleting `' + branchName + '` (unused) branch protection in GitHub repo.'));
+			if (!opts.dryRun) {
+				await octokit.request('DELETE /repos/{owner}/{repo}/branches/{branchName}/protection', { owner, repo, branchName });
+			}
+		}
+
 		if (!opts.dryRun) {
 			await u.updatePkg('config.c10n.&.github.configVersion', githubConfigVersion);
 		}
@@ -668,6 +739,25 @@ export default class u {
 		return repoProtectedBranches;
 	}
 
+	static async _githubRepoRulesets() {
+		const repoRulesets = {};
+		const { owner, repo } = await u.githubOrigin();
+		const i6r = octokit.paginate.iterator('GET /repos/{owner}/{repo}/rulesets{?includes_parents,per_page}', { owner, repo, includes_parents: false, per_page: 100 });
+
+		if (!$is.object(i6r)) {
+			throw new Error('u._githubRepoRulesets: Failed to acquire GitHub repository’s rulesets.');
+		}
+		for await (const { data } of i6r) {
+			for (const repoRuleset of data) {
+				if (!$is.object(repoRuleset) || !repoRuleset.name) {
+					throw new Error('u._githubRepoRulesets: Failed to acquire a GitHub repository’s ruleset data.');
+				}
+				repoRulesets[repoRuleset.name] = repoRuleset;
+			}
+		}
+		return repoRulesets;
+	}
+
 	static async _githubRepoEnvs() {
 		const envs = {}; // Initialize.
 		const { owner, repo } = await u.githubOrigin();
@@ -734,6 +824,9 @@ export default class u {
 	}
 
 	static async _githubEnsureRepoEnvs(opts = { dryRun: false }) {
+		if (s._githubRepoEnvsEnsured) return;
+		s._githubRepoEnvsEnsured = true; // Once only.
+
 		const envFiles = await u.envFiles();
 		const { owner, repo } = await u.githubOrigin();
 		const repoEnvs = await u._githubRepoEnvs();

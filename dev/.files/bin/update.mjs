@@ -166,7 +166,7 @@ class Project {
 		}
 
 		/**
-		 * Pushes all Dotenv Vault envs; else recompiles only.
+		 * Pushes Dotenv Vault envs; else recompiles only.
 		 */
 
 		if (this.args.repos && (await u.isEnvsVault())) {
