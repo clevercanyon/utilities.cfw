@@ -49,7 +49,7 @@ jobs:
       USER_DOTENV_KEY_CI: ${{secrets.USER_DOTENV_KEY_CI || ''}}
 
     steps:
-      - name: Checkout Repo
+      - name: Checkout Project Repo
         uses: actions/checkout@v3
 
       - name: Setup Node v${{matrix.node-version}}
@@ -58,22 +58,27 @@ jobs:
           node-version: ${{matrix.node-version}}
           cache: npm # Caches NPM dependencies.
 
-      - name: Get Package JSON
+      - name: Parse Project Package JSON
         shell: bash
         run: |
           echo 'PKG_JSON='"$(jq -c . ./package.json)" >> $GITHUB_ENV;
           echo 'PKG_JSON_C10N='"$(jq -c '.config | .c10n | .["&"]' ./package.json)" >> $GITHUB_ENV;
 
+      - name: Install Madrun Dependency
+        shell: bash
+        run: |
+          npm install -g @clevercanyon/madrun;
+
       - name: Install Project
         shell: bash
         run: |
-          npx @clevercanyon/madrun install project --mode=ci;
+          madrun install project --mode=ci;
 
       - name: Run Project Tests
         if: fromJson(env.PKG_JSON_C10N).build.appType
         shell: bash
         run: |
-          npx @clevercanyon/madrun tests --mode=ci;
+          madrun tests --mode=ci;
 
 #
 ##
