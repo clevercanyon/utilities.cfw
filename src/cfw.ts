@@ -61,13 +61,23 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
 	let url: core.URL | null = null;
 	const { env, ctx, routes } = ifeData;
 
-	$env.capture('@global', env);
+	$env.capture('@global', env); // Captures environment vars.
 
-	const basePath = $env.get('@top', 'APP_BASE_PATH', '') as string;
+	const basePath = String($env.get('@top', 'APP_BASE_PATH', ''));
 
 	try {
 		request = $http.prepareRequest(request, {}) as core.Request;
 		url = $url.parse(request.url) as core.URL;
+
+		const feData = { request, env, ctx, routes, url }; // Recompiles data.
+		if (
+			$http.requestPathIsStatic(request, url) && //
+			$env.get('@top', '__STATIC_CONTENT' /* Worker site? */) &&
+			$str.matches(url.pathname, basePath + '/assets/**')
+		) {
+			return handleFetchStaticAssets(feData);
+		}
+		return handleFetchDynamics(feData);
 		//
 	} catch (error) {
 		if (error instanceof Response) {
@@ -75,16 +85,6 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
 		}
 		return $http.prepareResponse(request, { status: 500 }) as core.Response;
 	}
-	const feData = { request, env, ctx, routes, url }; // Recompiles data.
-
-	if (
-		$http.requestPathIsStatic(request, url) && //
-		$env.get('@top', '__STATIC_CONTENT' /* Worker site? */) &&
-		$str.matches(url.pathname, basePath + '/assets/**')
-	) {
-		return handleFetchStaticAssets(feData);
-	}
-	return handleFetchDynamics(feData);
 };
 
 /**

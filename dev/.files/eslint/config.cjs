@@ -92,6 +92,7 @@ const baseConfig = {
 				args: 'after-used',
 				caughtErrors: 'none',
 				ignoreRestSiblings: false,
+				argsIgnorePattern: '^unusedꓺ',
 				varsIgnorePattern: '^unusedꓺ',
 				caughtErrorsIgnorePattern: '^unusedꓺ',
 				destructuredArrayIgnorePattern: '^unusedꓺ',
