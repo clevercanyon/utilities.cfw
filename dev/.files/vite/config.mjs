@@ -539,8 +539,13 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 		// See: <https://o5p.me/8Pjw1d> for `environment`, `environmentMatchGlobs` precedence.
 		environmentMatchGlobs: [
 			['**/*.{cfp,web,webw}.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'jsdom'],
+			['**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.{cfp,web,webw}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'jsdom'],
+
 			['**/*.cfw.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'miniflare'],
+			['**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.cfw.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'miniflare'],
+
 			['**/*.{node,any}.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'node'],
+			['**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.{node,any}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'node'],
 		],
 		server: { deps: { external: ['**/dist/**', '**/node_modules/**'].concat(rollupConfig.external) } },
 		cache: { dir: path.resolve(projDir, './node_modules/.vitest') },

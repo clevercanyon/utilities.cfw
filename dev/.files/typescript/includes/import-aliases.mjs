@@ -27,5 +27,8 @@ const projDir = path.resolve(__dirname, '../../../..');
  */
 export default {
 	'^react$': path.resolve(projDir, './node_modules/preact/compat'),
+	'^react/jsx-runtime$': path.resolve(projDir, './node_modules/preact/jsx-runtime'),
+
 	'^react-dom$': path.resolve(projDir, './node_modules/preact/compat'),
+	'^react-dom/test-utils$': path.resolve(projDir, './node_modules/preact/test-utils'),
 };
