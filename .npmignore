@@ -58,7 +58,6 @@
 
 # VS Code.
 
-.vscode
 *.code-search
 *.code-workspace
 
@@ -205,6 +204,10 @@ Temporary Items
 ##
 # These are in addition to what we have in `.gitignore`.
 ##
+
+# VS Code.
+
+.vscode
 
 # Dist (allow).
 

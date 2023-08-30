@@ -8,6 +8,10 @@
 # @note Only `<custom:start.../custom:end>` will be preserved below.
 ##
 
+# Ignore sandbox test files.
+
+sandbox
+
 ##
 # Customizations.
 # <custom:start>
