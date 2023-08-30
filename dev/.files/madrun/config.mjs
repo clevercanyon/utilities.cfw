@@ -24,6 +24,7 @@ export default async (/* {cmd, args, ctx} */) => {
 		'build': async ({ args }) => 'npx vite build' + (args.mode ? '' : ' --mode=prod') + ' {{@}}',
 
 		'tests': async ({ args }) => 'npx vitest' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
+		'tests:sandbox': async ({ args }) => 'VITEST_SANDBOX_ENABLE=true npx vitest' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
 		'tests:ui': async ({ args }) => 'npx vitest --watch --ui' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
 
 		'jest': 'npx jest {{@}}', // Runs project Jest tests.

@@ -122,6 +122,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 	const useMinifier = 'dev' !== mode && !['lib'].includes(appType);
 	const preserveModules = ['lib'].includes(appType) && appEntries.length > 1;
 	const useUMD = !isSSRBuild && !targetEnvIsServer && !preserveModules && !peerDepKeys.length && useLibMode && 1 === appEntries.length;
+	const vitestSandboxEnable = $str.parseValue(String(process.env.VITEST_SANDBOX_ENABLE || '')); // We invented this environment variable.
 
 	/**
 	 * Validates all of the above.
@@ -500,20 +501,37 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 		'**/node_modules/**',
 		'**/jspm_packages/**',
 		'**/bower_components/**',
+		'**/{x-*}/**', // Deliberate exclusions.
+		...(vitestSandboxEnable ? [] : ['**/sandbox/**']),
 		'**/*.d.{ts,tsx,cts,ctsx,mts,mtsx}',
 	];
-	const vitestIncludes = [
-		'**/*.{test,tests,spec,specs}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
-		'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
-	];
-	const vitestTypecheckIncludes = [
-		'**/*.{test,tests,spec,specs}-d.{ts,tsx,cts,ctsx,mts,mtsx}', //
-		'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*-d.{ts,tsx,cts,ctsx,mts,mtsx}',
-	];
-	const vitestBenchIncludes = [
-		'**/*.{bench,benchmark,benchmarks}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
-		'**/{bench,benchmark,benchmarks,__bench__,__benchmark__,__benchmarks__}/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
-	];
+	const vitestIncludes = vitestSandboxEnable
+		? [
+				'**/sandbox/**/*.{test,tests,spec,specs}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/sandbox/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+		  ]
+		: [
+				'**/*.{test,tests,spec,specs}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+		  ];
+	const vitestTypecheckIncludes = vitestSandboxEnable
+		? [
+				'**/sandbox/**/*.{test,tests,spec,specs}-d.{ts,tsx,cts,ctsx,mts,mtsx}', //
+				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/sandbox/**/*-d.{ts,tsx,cts,ctsx,mts,mtsx}',
+		  ]
+		: [
+				'**/*.{test,tests,spec,specs}-d.{ts,tsx,cts,ctsx,mts,mtsx}', //
+				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*-d.{ts,tsx,cts,ctsx,mts,mtsx}',
+		  ];
+	const vitestBenchIncludes = vitestSandboxEnable
+		? [
+				'**/sandbox/**/*.{bench,benchmark,benchmarks}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+				'**/{bench,benchmark,benchmarks,__bench__,__benchmark__,__benchmarks__}/**/sandbox/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+		  ]
+		: [
+				'**/*.{bench,benchmark,benchmarks}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+				'**/{bench,benchmark,benchmarks,__bench__,__benchmark__,__benchmarks__}/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+		  ];
 	const vitestExtensions = ['.js', '.jsx', '.cjs', '.cjsx', '.json', '.node', '.mjs', '.mjsx', '.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx'];
 
 	const vitestConfig = {
@@ -529,8 +547,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 		unstubEnvs: true, // Remove all env stubs before a test begins.
 		unstubGlobals: true, // Remove all global stubs before a test begins.
 
-		// @todo Enhance web worker support.
-		// @todo Fix and enhance miniflare support.
+		// @todo Implement web worker support. No DOM in web workers.
 		environment: ['cfp', 'web', 'webw'].includes(targetEnv) ? 'jsdom' // <https://o5p.me/Gf9Cy5>.
 			: ['cfw'].includes(targetEnv) ? 'miniflare' // <https://o5p.me/TyF9Ot>.
 			: ['node', 'any'].includes(targetEnv) ? 'node' // <https://o5p.me/Gf9Cy5>.
