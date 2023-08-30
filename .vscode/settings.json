@@ -339,11 +339,15 @@
 	"eslint.lintTask.enable": false,
 	"eslint.codeActionsOnSave.mode": "all",
 
+	"javascript.validate.enable": true,
+	"typescript.validate.enable": true,
+	"js/ts.implicitProjectConfig.target": "ES2021",
+
 	"[javascript]": {
 		"editor.codeActionsOnSave": {
 			"source.fixAll": true
 		},
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
 	},
 
 	"[javascriptreact]": {

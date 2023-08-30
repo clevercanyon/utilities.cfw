@@ -68,6 +68,15 @@ export default async ({ projDir }) => {
 	};
 
 	/**
+	 * Tests `pkgRepository` to see if it’s a fork.
+	 *
+	 * @returns {boolean} True if current package repo is a fork.
+	 */
+	const isPkgRepoFork = async () => {
+		return /[:/][^/]+\/[^/]+\.fork(?:\.git)?$/iu.test(pkgRepository);
+	};
+
+	/**
 	 * Checks dotfile locks.
 	 *
 	 * @param   {string}  relPath Relative dotfile path.
@@ -106,6 +115,9 @@ export default async ({ projDir }) => {
 		'./.github/dependabot.yml',
 		'./.github/workflows/ci.yml',
 		'./.vscode/settings.json',
+		'./.vscode/extensions.json',
+		// This file is not added or modified in fork repos.
+		...((await isPkgRepoFork()) ? [] : ['./src/tests/sandbox/.vscode/settings.json']),
 		'./.browserslistrc',
 		'./.editorconfig',
 		'./.eslintignore',

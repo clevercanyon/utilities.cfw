@@ -1,0 +1,31 @@
+/**
+ * VSCode config file.
+ *
+ * VSCode is aware of this config file's location.
+ *
+ * @note CUSTOM EDITS ONLY PLEASE!
+ * @note In the future this file will be updated automatically.
+ * @note Only `<custom:start.../custom:end>` will be preserved below.
+ */
+{
+	"recommendations": [
+		"dbaeumer.vscode-eslint",
+		"duniul.dircolors",
+		"esbenp.prettier-vscode",
+		"exiasr.hadolint",
+		"ExodiusStudios.comment-anchors",
+		"leonzalion.vscode-ejs",
+		"mrmlnc.vscode-apache",
+		"rohit-gohri.format-code-action",
+		"stylelint.vscode-stylelint",
+		"tamasfe.even-better-toml",
+		"timonwong.shellcheck",
+		"webben.browserslist"
+	]
+
+	/*
+	 * Customizations.
+	 * <custom:start> */
+
+	/* </custom:end> */
+}

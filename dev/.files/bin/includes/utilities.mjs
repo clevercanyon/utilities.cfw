@@ -128,8 +128,12 @@ export default class u {
 		return new RegExp('[:/]' + $str.escRegExp(ownerRepo) + '(?:\\.git)?$', 'iu').test(pkgRepository);
 	}
 
+	static async isPkgRepoFork() {
+		return /[:/][^/]+\/[^/]+\.fork(?:\.git)?$/iu.test(pkgRepository);
+	}
+
 	static async isPkgRepoTemplate() {
-		return /[:/][^/]+\/skeleton(?:\.[^/]+)?(?:\.git)?$/gi.test(pkgRepository);
+		return /[:/][^/]+\/skeleton(?:\.[^/]+)?(?:\.git)?$/iu.test(pkgRepository);
 	}
 
 	static async pkgIncrementVersion(opts = { dryRun: false }) {

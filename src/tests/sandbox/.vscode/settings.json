@@ -1,0 +1,43 @@
+/**
+ * VSCode config file.
+ *
+ * VSCode is aware of this config file's location. However, only when
+ * the sandbox directory is added to an open workspace, such that it becomes
+ * part of a multi-root workspace; i.e., VSCode doesn’t currently support
+ * folder-specific settings, except in the case of a multi-root workspace.
+ *
+ * @note CUSTOM EDITS ONLY PLEASE!
+ * @note In the future this file will be updated automatically.
+ * @note Only `<custom:start.../custom:end>` will be preserved below.
+ */
+{
+	/**
+	 * JS/TS/React options.
+	 */
+
+	"eslint.format.enable": false,
+	"javascript.validate.enable": false,
+	"typescript.validate.enable": false,
+
+	"[javascript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	"[javascriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	}
+
+	/*
+	 * Customizations.
+	 * <custom:start> */
+
+	/* </custom:end> */
+}
