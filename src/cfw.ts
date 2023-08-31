@@ -11,23 +11,23 @@ import {
 	NotFoundError as cfKVAꓺNotFoundError,
 } from '@cloudflare/kv-asset-handler';
 
+import type { $type } from '@clevercanyon/utilities';
 import { $env, $http, $str, $url } from '@clevercanyon/utilities';
-import type * as core from '@cloudflare/workers-types/experimental';
 
 /**
  * Defines types.
  */
-export type Context = core.ExecutionContext;
+export type Context = $type.cfw.ExecutionContext;
 
 export type Environment = {
-	readonly D1?: core.D1Database;
-	readonly R2?: core.R2Bucket;
-	readonly KV?: core.KVNamespace;
-	readonly DO?: core.DurableObjectNamespace;
-	readonly __STATIC_CONTENT?: core.KVNamespace;
+	readonly D1?: $type.cfw.D1Database;
+	readonly R2?: $type.cfw.R2Bucket;
+	readonly KV?: $type.cfw.KVNamespace;
+	readonly DO?: $type.cfw.DurableObjectNamespace;
+	readonly __STATIC_CONTENT?: $type.cfw.KVNamespace;
 	readonly [x: string]: unknown;
 };
-export type Route = (x: FetchEventData) => Promise<core.Response>;
+export type Route = (x: FetchEventData) => Promise<$type.cfw.Response>;
 
 export type Routes = {
 	readonly subpathGlobs: {
@@ -35,19 +35,18 @@ export type Routes = {
 	};
 };
 export type FetchEventData = {
-	readonly request: core.Request;
+	readonly request: $type.cfw.Request;
 	readonly env: Environment;
 	readonly ctx: Context;
 	readonly routes: Routes;
-	readonly url: core.URL;
+	readonly url: $type.cfw.URL;
 };
 export type InitialFetchEventData = {
-	readonly request: core.Request;
+	readonly request: $type.cfw.Request;
 	readonly env: Environment;
 	readonly ctx: Context;
 	readonly routes: Routes;
 };
-export type { core };
 
 /**
  * Handles fetch events.
@@ -56,17 +55,16 @@ export type { core };
  *
  * @returns        Response promise.
  */
-export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<core.Response> => {
+export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<$type.cfw.Response> => {
 	let { request } = ifeData;
-	let url: core.URL | null = null;
 	const { env, ctx, routes } = ifeData;
 
 	$env.capture('@global', env); // Captures environment vars.
 	const appBasePath = String($env.get('@top', 'APP_BASE_PATH', ''));
 
 	try {
-		request = $http.prepareRequest(request, {}) as core.Request;
-		url = $url.parse(request.url) as core.URL;
+		request = $http.prepareRequest(request, {}) as $type.cfw.Request;
+		const url = $url.parse(request.url) as $type.cfw.URL;
 
 		const feData = { request, env, ctx, routes, url }; // Recompiles data.
 		if (
@@ -80,9 +78,9 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
 		//
 	} catch (error) {
 		if (error instanceof Response) {
-			return error as unknown as core.Response;
+			return error as unknown as $type.cfw.Response;
 		}
-		return $http.prepareResponse(request, { status: 500 }) as core.Response;
+		return $http.prepareResponse(request, { status: 500 }) as $type.cfw.Response;
 	}
 };
 
@@ -93,7 +91,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
  *
  * @returns        Response promise.
  */
-export const handleFetchDynamics = async (feData: FetchEventData): Promise<core.Response> => {
+export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cfw.Response> => {
 	const { request, routes, url } = feData;
 	const appBasePath = String($env.get('@top', 'APP_BASE_PATH', ''));
 
@@ -102,7 +100,7 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<core.
 			return routeSubpathHandler(feData);
 		}
 	}
-	return $http.prepareResponse(request, { status: 404 }) as core.Response;
+	return $http.prepareResponse(request, { status: 404 }) as $type.cfw.Response;
 };
 
 /**
@@ -112,7 +110,7 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<core.
  *
  * @returns        Response promise.
  */
-async function handleFetchStaticAssets(feData: FetchEventData): Promise<core.Response> {
+async function handleFetchStaticAssets(feData: FetchEventData): Promise<$type.cfw.Response> {
 	const { request, ctx } = feData;
 	const appBasePath = String($env.get('@top', 'APP_BASE_PATH', ''));
 
@@ -142,15 +140,15 @@ async function handleFetchStaticAssets(feData: FetchEventData): Promise<core.Res
 				return cfKVAꓺmapRequestToAsset(new Request(url, request));
 			},
 		});
-		return $http.prepareResponse(request, { ...response }) as core.Response;
+		return $http.prepareResponse(request, { ...response }) as $type.cfw.Response;
 		//
 	} catch (error) {
 		if (error instanceof cfKVAꓺNotFoundError) {
-			return $http.prepareResponse(request, { status: 404 }) as core.Response;
+			return $http.prepareResponse(request, { status: 404 }) as $type.cfw.Response;
 		}
 		if (error instanceof cfKVAꓺMethodNotAllowedError) {
-			return $http.prepareResponse(request, { status: 405 }) as core.Response;
+			return $http.prepareResponse(request, { status: 405 }) as $type.cfw.Response;
 		}
-		return $http.prepareResponse(request, { status: 500 }) as core.Response;
+		return $http.prepareResponse(request, { status: 500 }) as $type.cfw.Response;
 	}
 }

@@ -27,8 +27,8 @@ import { $fs, $glob } from '../../../node_modules/@clevercanyon/utilities.node/d
 import { $http as $cfpꓺhttp } from '../../../node_modules/@clevercanyon/utilities.cfp/dist/index.js';
 import { $is, $str, $obj, $obp, $time } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 
-import { StandAlone as $preactꓺ404ꓺStandAlone } from '../../../node_modules/@clevercanyon/utilities/dist/preact/components/404.js';
-import { renderToString as $preactꓺrenderToString } from '../../../node_modules/@clevercanyon/utilities/dist/preact/apis/ssr.js';
+import { StandAlone as $preactꓺcomponentsꓺ404ꓺStandAlone } from '../../../node_modules/@clevercanyon/utilities/dist/preact/routes/404.js';
+import { renderToString as $preactꓺapisꓺssrꓺrenderToString } from '../../../node_modules/@clevercanyon/utilities/dist/preact/apis/ssr.js';
 
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -351,7 +351,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 							fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_HEADERS__$$', cfpDefaultHeaders);
 						}
 						if (['404.html'].includes(fileRelPath)) {
-							const cfpDefault404 = '<!DOCTYPE html>' + $preactꓺrenderToString(preact.h($preactꓺ404ꓺStandAlone));
+							const cfpDefault404 = '<!DOCTYPE html>' + $preactꓺapisꓺssrꓺrenderToString(preact.h($preactꓺcomponentsꓺ404ꓺStandAlone));
 							fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_404_HTML__$$', cfpDefault404);
 						}
 						if (['_headers', '_redirects', 'robots.txt'].includes(fileRelPath)) {

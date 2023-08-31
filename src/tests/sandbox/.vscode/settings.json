@@ -12,26 +12,430 @@
  */
 {
 	/**
+	 * Editor options.
+	 */
+
+	"editor.tabSize": 4,
+	"editor.autoIndent": "full",
+	"editor.insertSpaces": false,
+	"editor.detectIndentation": true,
+
+	"editor.wordWrap": "off",
+	"editor.wordWrapColumn": 180,
+	"editor.wrappingIndent": "indent",
+
+	/**
+	 * File and search options.
+	 */
+
+	"files.eol": "\n",
+	"files.encoding": "utf8",
+
+	"files.trimFinalNewlines": true,
+	"files.insertFinalNewline": true,
+	"files.trimTrailingWhitespace": true,
+
+	"files.associations": {
+		".inputrc": "text",
+		"**/src/_headers": "text",
+		"**/src/_redirects": "text",
+		".env{,.*}": "properties",
+		"**/*.exacolors": "properties",
+		"**/src/cargo/_routes.json": "jsonc",
+		"**/dev/.files/typescript/config.json": "jsonc"
+	},
+	"files.exclude": {
+		// Locals.
+
+		"**/.~*": true,
+
+		// Logs.
+
+		"**/*.log": true,
+
+		// Patches.
+
+		"**/*.rej": true,
+		"**/*.orig": true,
+		"**/*.patch": true,
+		"**/*.diff": true,
+
+		// IntelliJ.
+
+		"**/.idea": true,
+
+		// Sublime.
+
+		"**/*.sublime-project": true,
+		"**/*.sublime-workspace": true,
+
+		// Netbeans.
+
+		"**/*.nbproject": true,
+
+		// VS Code.
+
+		"**/*.code-workspace": true,
+
+		// TypeScript.
+
+		"**/.tscache": true,
+		"**/*.tsbuildinfo": true,
+
+		// Vite.
+
+		"**/.vite": true,
+		"**/.vitest": true,
+
+		// Wrangler.
+
+		"**/.wrangler": true,
+
+		// Rollup.
+
+		"**/.rollup": true,
+
+		// Webpack.
+
+		"**/.webpack": true,
+
+		// Linaria.
+
+		"**/.linaria-cache": true,
+
+		// SASS.
+
+		"**/.sass-cache": true,
+
+		// Docker.
+
+		"**/.docker": true,
+
+		// Vagrant.
+
+		"**/.vagrant": true,
+
+		// Elastic Beanstalk.
+
+		"**/.elasticbeanstalk": true,
+
+		// CTAGs.
+
+		"**/*.ctags": true,
+		"**/*.tags": true,
+
+		// VCS.
+
+		"**/.git": true,
+
+		"**/.svn": true,
+		"**/_svn": true,
+		"**/.svnignore": true,
+
+		"**/CVS": true,
+		"**/.cvsignore": true,
+
+		"**/.bzr": true,
+		"**/.bzrignore": true,
+
+		"**/.hg": true,
+		"**/.hgignore": true,
+
+		"**/SCCS": true,
+		"**/RCS": true,
+
+		// PC files.
+
+		"**/Thumbs.db": true,
+		"**/ehthumbs.db": true,
+		"**/Desktop.ini": true,
+
+		// PC directories.
+
+		"**/$RECYCLE.BIN": true,
+
+		// Mac files.
+
+		"**/._*": true,
+		"**/Icon?": true,
+		"!**/Icons": true,
+		"**/.DS_Store": true,
+		"**/.disk_label": true,
+		"**/.LSOverride": true,
+		"**/.VolumeIcon.icns": true,
+		"**/.com.apple.timemachine.*": true,
+
+		// Mac directories.
+
+		"**/.apdisk": true,
+		"**/*.icloud": true,
+		"**/.fseventsd": true,
+		"**/.AppleDB": true,
+		"**/.AppleDesktop": true,
+		"**/.AppleDouble": true,
+		"**/.Trashes": true,
+		"**/.TemporaryItems": true,
+		"**/.Spotlight-V100": true,
+		"**/.DocumentRevisions-V100": true,
+		"**/Network Trash Folder": true,
+		"**/Temporary Items": true
+	},
+	"search.exclude": {
+		"**/.#*": true,
+		"**/*.logs": true,
+		"**/yarn.lock": true,
+		"**/composer.lock": true,
+		"**/package-lock.json": true,
+		"**/*.code-search": true,
+		"**/.vscode": true
+	},
+	"search.useIgnoreFiles": true,
+	"search.useGlobalIgnoreFiles": false,
+	"search.useParentIgnoreFiles": false,
+
+	/**
+	 * Comment anchor options.
+	 */
+	"commentAnchors.tags.anchors": {
+		"@todo": {
+			"scope": "workspace",
+			"iconColor": "#fff0b5",
+			"highlightColor": "#fff0b5",
+			"styleMode": "tag"
+		},
+		"@review": {
+			"scope": "workspace",
+			"iconColor": "#8a826d",
+			"highlightColor": "#8a826d",
+			"styleMode": "tag"
+		}
+	},
+	"commentAnchors.tags.matchCase": true,
+	"commentAnchors.tags.separators": [" ", ": "],
+
+	"commentAnchors.workspace.matchFiles": "{**/.*/**/.*,**/.*/**/*,**/.*,**/*}.{md,xml,html,shtml,php,ejs,js,cjs,mjs,jsx,ts,tsx,json,bash}",
+	"commentAnchors.workspace.excludeFiles": "**/{.git,dist,.yarn,vendor,node_modules,jspm_packages,bower_components}/**",
+
+	/**
+	 * Prettier options.
+	 */
+
+	"prettier.ignorePath": ".prettierignore",
+
+	/**
+	 * PHP options.
+	 */
+
+	"[php]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	/**
+	 * Ruby options.
+	 */
+
+	"[ruby]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	/**
+	 * SQL options.
+	 */
+
+	"[sql]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	/**
+	 * INI options.
+	 */
+
+	"[ini]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	/**
+	 * Properties options.
+	 */
+
+	"[properties]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	/**
+	 * XML/HTML/MD options.
+	 */
+
+	"[xml]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	"[html]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	"[markdown]": {
+		"editor.wordWrap": "on",
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	/**
+	 * SCSS/LESS/CSS options.
+	 */
+
+	"scss.validate": false,
+	"less.validate": false,
+	"css.validate": false,
+	"stylelint.validate": ["scss", "css"],
+
+	"[scss]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	"[less]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	"[css]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	/**
 	 * JS/TS/React options.
 	 */
 
+	"eslint.run": "onType",
 	"eslint.format.enable": false,
+	"eslint.lintTask.enable": false,
+	"eslint.codeActionsOnSave.mode": "all",
+
 	"javascript.validate.enable": false,
 	"typescript.validate.enable": false,
+	"js/ts.implicitProjectConfig.target": "ES2021",
 
 	"[javascript]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
 
 	"[javascriptreact]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
 
 	"[typescript]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
 
 	"[typescriptreact]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	/**
+	 * JSON options.
+	 */
+
+	"[json]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	"[jsonc]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	/**
+	 * TOML options.
+	 */
+
+	"[toml]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "tamasfe.even-better-toml"
+	},
+
+	/**
+	 * YAML options.
+	 */
+
+	"[yaml]": {
+		"editor.tabSize": 2,
+		"editor.insertSpaces": true,
+
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	/**
+	 * Shell options.
+	 */
+
+	"[shellscript]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	/**
+	 * Docker options.
+	 */
+
+	"[dockerfile]": {
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	}
 
