@@ -16,6 +16,6 @@ import type { FetchEventData as $cfwꓺFetchEventData } from './cfw.js';
  */
 export const prop = (fed: $cfwꓺFetchEventData, prop: string): string => {
 	const { request } = fed; // Request extraction.
-	const r = request as unknown as $type.cfw.Request; // Includes `cf` property.
+	const r = request as unknown as $type.cf.Request; // Includes `cf` property.
 	return String(r.cf && prop in r.cf ? r.cf[prop as keyof typeof r.cf] || '' : '');
 };

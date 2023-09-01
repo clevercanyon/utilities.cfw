@@ -17,17 +17,17 @@ import { $env, $http, $str, $url } from '@clevercanyon/utilities';
 /**
  * Defines types.
  */
-export type Context = $type.cfw.ExecutionContext;
+export type Context = $type.cf.ExecutionContext;
 
 export type Environment = {
-	readonly D1?: $type.cfw.D1Database;
-	readonly R2?: $type.cfw.R2Bucket;
-	readonly KV?: $type.cfw.KVNamespace;
-	readonly DO?: $type.cfw.DurableObjectNamespace;
-	readonly __STATIC_CONTENT?: $type.cfw.KVNamespace;
+	readonly D1?: $type.cf.D1Database;
+	readonly R2?: $type.cf.R2Bucket;
+	readonly KV?: $type.cf.KVNamespace;
+	readonly DO?: $type.cf.DurableObjectNamespace;
+	readonly __STATIC_CONTENT?: $type.cf.KVNamespace;
 	readonly [x: string]: unknown;
 };
-export type Route = (x: FetchEventData) => Promise<$type.cfw.Response>;
+export type Route = (x: FetchEventData) => Promise<$type.cf.Response>;
 
 export type Routes = {
 	readonly subpathGlobs: {
@@ -35,14 +35,14 @@ export type Routes = {
 	};
 };
 export type FetchEventData = {
-	readonly request: $type.cfw.Request;
+	readonly request: $type.cf.Request;
 	readonly env: Environment;
 	readonly ctx: Context;
 	readonly routes: Routes;
-	readonly url: $type.cfw.URL;
+	readonly url: $type.cf.URL;
 };
 export type InitialFetchEventData = {
-	readonly request: $type.cfw.Request;
+	readonly request: $type.cf.Request;
 	readonly env: Environment;
 	readonly ctx: Context;
 	readonly routes: Routes;
@@ -55,7 +55,7 @@ export type InitialFetchEventData = {
  *
  * @returns        Response promise.
  */
-export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<$type.cfw.Response> => {
+export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<$type.cf.Response> => {
 	let { request } = ifeData;
 	const { env, ctx, routes } = ifeData;
 
@@ -63,8 +63,8 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
 	const appBasePath = String($env.get('@top', 'APP_BASE_PATH', ''));
 
 	try {
-		request = $http.prepareRequest(request, {}) as $type.cfw.Request;
-		const url = $url.parse(request.url) as $type.cfw.URL;
+		request = $http.prepareRequest(request, {}) as $type.cf.Request;
+		const url = $url.parse(request.url) as $type.cf.URL;
 
 		const feData = { request, env, ctx, routes, url }; // Recompiles data.
 		if (
@@ -78,9 +78,9 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
 		//
 	} catch (error) {
 		if (error instanceof Response) {
-			return error as unknown as $type.cfw.Response;
+			return error as unknown as $type.cf.Response;
 		}
-		return $http.prepareResponse(request, { status: 500 }) as $type.cfw.Response;
+		return $http.prepareResponse(request, { status: 500 }) as $type.cf.Response;
 	}
 };
 
@@ -91,7 +91,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
  *
  * @returns        Response promise.
  */
-export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cfw.Response> => {
+export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cf.Response> => {
 	const { request, routes, url } = feData;
 	const appBasePath = String($env.get('@top', 'APP_BASE_PATH', ''));
 
@@ -100,7 +100,7 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type
 			return routeSubpathHandler(feData);
 		}
 	}
-	return $http.prepareResponse(request, { status: 404 }) as $type.cfw.Response;
+	return $http.prepareResponse(request, { status: 404 }) as $type.cf.Response;
 };
 
 /**
@@ -110,7 +110,7 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type
  *
  * @returns        Response promise.
  */
-async function handleFetchStaticAssets(feData: FetchEventData): Promise<$type.cfw.Response> {
+async function handleFetchStaticAssets(feData: FetchEventData): Promise<$type.cf.Response> {
 	const { request, ctx } = feData;
 	const appBasePath = String($env.get('@top', 'APP_BASE_PATH', ''));
 
@@ -140,15 +140,15 @@ async function handleFetchStaticAssets(feData: FetchEventData): Promise<$type.cf
 				return cfKVAꓺmapRequestToAsset(new Request(url, request));
 			},
 		});
-		return $http.prepareResponse(request, { ...response }) as $type.cfw.Response;
+		return $http.prepareResponse(request, { ...response }) as $type.cf.Response;
 		//
 	} catch (error) {
 		if (error instanceof cfKVAꓺNotFoundError) {
-			return $http.prepareResponse(request, { status: 404 }) as $type.cfw.Response;
+			return $http.prepareResponse(request, { status: 404 }) as $type.cf.Response;
 		}
 		if (error instanceof cfKVAꓺMethodNotAllowedError) {
-			return $http.prepareResponse(request, { status: 405 }) as $type.cfw.Response;
+			return $http.prepareResponse(request, { status: 405 }) as $type.cf.Response;
 		}
-		return $http.prepareResponse(request, { status: 500 }) as $type.cfw.Response;
+		return $http.prepareResponse(request, { status: 500 }) as $type.cf.Response;
 	}
 }
