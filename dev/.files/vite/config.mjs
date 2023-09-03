@@ -501,10 +501,12 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 		'**/node_modules/**',
 		'**/jspm_packages/**',
 		'**/bower_components/**',
-		'**/{x-*}/**', // Deliberate exclusions.
+		'**/x-*/**', // Deliberate exclusions.
 		...(vitestSandboxEnable ? [] : ['**/sandbox/**']),
 		'**/*.d.{ts,tsx,cts,ctsx,mts,mtsx}',
 	];
+	const vitestWatchExcludes = vitestExcludes.filter((v) => '**/x-*/**' !== v);
+
 	const vitestIncludes = vitestSandboxEnable
 		? [
 				'**/sandbox/**/*.{test,tests,spec,specs}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
@@ -541,7 +543,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 		css: { include: /.+/u },
 
 		exclude: vitestExcludes,
-		watchExclude: vitestExcludes,
+		watchExclude: vitestWatchExcludes,
 
 		restoreMocks: true, // Remove all mocks before a test begins.
 		unstubEnvs: true, // Remove all env stubs before a test begins.
