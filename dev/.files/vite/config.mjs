@@ -9,28 +9,27 @@
  *
  * @see https://vitejs.dev/config/
  */
-/* eslint-env es2021, node */
 
 import fs from 'node:fs';
-import path from 'node:path';
 import fsp from 'node:fs/promises';
-
-import { loadEnv } from 'vite';
-import pluginBasicSSL from '@vitejs/plugin-basic-ssl';
-import { ViteEjsPlugin as pluginEJS } from 'vite-plugin-ejs';
-import { ViteMinifyPlugin as pluginMinifyHTML } from 'vite-plugin-minify';
-
-import * as preact from 'preact';
-import u from '../bin/includes/utilities.mjs';
-import importAliases from './includes/import-aliases.mjs';
-import { $fs, $glob } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $http as $cfpꓺhttp } from '../../../node_modules/@clevercanyon/utilities.cfp/dist/index.js';
-import { $is, $str, $obj, $obp, $time } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
-
-import { StandAlone as $preactꓺcomponentsꓺ404ꓺStandAlone } from '../../../node_modules/@clevercanyon/utilities/dist/preact/routes/404.js';
-import { renderToString as $preactꓺapisꓺssrꓺrenderToString } from '../../../node_modules/@clevercanyon/utilities/dist/preact/apis/ssr.js';
-
 import { createRequire } from 'node:module';
+import path from 'node:path';
+import * as preact from 'preact';
+import { loadEnv } from 'vite';
+import { $http as $cfpꓺhttp } from '../../../node_modules/@clevercanyon/utilities.cfp/dist/index.js';
+import { $fs, $glob } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $is, $json, $obj, $obp, $str, $time } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { renderToString as $preactꓺapisꓺssrꓺrenderToString } from '../../../node_modules/@clevercanyon/utilities/dist/preact/apis/ssr.js';
+import { StandAlone as $preactꓺcomponentsꓺ404ꓺStandAlone } from '../../../node_modules/@clevercanyon/utilities/dist/preact/routes/404.js';
+import esVersion from '../bin/includes/es-version.mjs';
+import exclusions from '../bin/includes/exclusions.mjs';
+import extensions from '../bin/includes/extensions.mjs';
+import importAliases from '../bin/includes/import-aliases.mjs';
+import u from '../bin/includes/utilities.mjs';
+
+// @todo Break this file apart into smaller pieces.
+// @todo Implement Vite prefresh, which is already provided by dev-deps.
+
 const require = createRequire(import.meta.url);
 
 /**
@@ -82,12 +81,12 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 		['$$__' + appEnvPrefixes[0] + 'PKG_REPOSITORY__$$']: pkg.repository || '',
 		['$$__' + appEnvPrefixes[0] + 'PKG_HOMEPAGE__$$']: pkg.homepage || '',
 		['$$__' + appEnvPrefixes[0] + 'PKG_BUGS__$$']: pkg.bugs || '',
+		['$$__' + appEnvPrefixes[0] + 'BUILD_TIME_YMD__$$']: $time.parse('now').toSQLDate() || '',
 	};
-	staticDefs['$$__' + appEnvPrefixes[0] + 'BUILD_TIME_YMD__$$'] = $time.parse('now').toSQLDate() || '';
-
 	Object.keys(env) // Add string env vars to static defines.
 		.filter((key) => new RegExp('^(?:' + appEnvPrefixes.map((v) => $str.escRegExp(v)).join('|') + ')', 'u').test(key))
-		.forEach((key) => ($is.string(env[key]) ? (staticDefs['$$__' + key + '__$$'] = env[key]) : null));
+		.filter((key) => $is.string($str.parseValue(env[key])) /* Only those which are truly string values. */)
+		.forEach((key) => (staticDefs['$$__' + key + '__$$'] = env[key]));
 
 	/**
 	 * App type, target, path, and related vars.
@@ -105,7 +104,11 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 	const targetEnv = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.targetEnv') || 'any';
 	const entryFiles = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.entryFiles') || [];
 
-	const appDefaultEntryFiles = ['spa'].includes(appType) ? ['./src/index.html'] : ['mpa'].includes(appType) ? ['./src/**/index.html'] : ['./src/*.{ts,tsx}'];
+	const appDefaultEntryFiles = // Based on app type.
+		['spa'].includes(appType) ? ['./src/index.' + extensions.asGlob(extensions.html)]
+		: ['mpa'].includes(appType) ? ['./src/**/index.' + extensions.asGlob(extensions.html)]
+		: ['./src/*.' + extensions.asGlob(extensions.sts)]; // prettier-ignore
+
 	const appEntryFiles = (entryFiles.length ? entryFiles : appDefaultEntryFiles).map((v) => $str.lTrim(v, './'));
 	const appEntries = appEntryFiles.length ? await $glob.promise(appEntryFiles, { cwd: projDir }) : [];
 
@@ -164,14 +167,14 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 
 		switch (true /* Conditional case handlers. */) {
 			case ['spa', 'mpa'].includes(appType): {
-				const appEntryIndexAsSrcSubpath = appEntriesAsSrcSubpaths.find((subpath) => $str.mm.isMatch(subpath, 'index.html'));
+				const appEntryIndexAsSrcSubpath = appEntriesAsSrcSubpaths.find((subpath) => $str.mm.isMatch(subpath, 'index.' + extensions.asGlob(extensions.html)));
 				const appEntryIndexAsSrcSubpathNoExt = appEntryIndexAsSrcSubpath.replace(/\.[^.]+$/u, '');
 
 				if (['spa'].includes(appType) && (!appEntryIndexAsSrcSubpath || !appEntryIndexAsSrcSubpathNoExt)) {
-					throw new Error('Single-page apps must have an `./index.html` entry point.');
+					throw new Error('Single-page apps must have an `./index.' + extensions.asGlob(extensions.html) + '` entry point.');
 					//
 				} else if (['mpa'].includes(appType) && (!appEntryIndexAsSrcSubpath || !appEntryIndexAsSrcSubpathNoExt)) {
-					throw new Error('Multipage apps must have an `./index.html` entry point.');
+					throw new Error('Multipage apps must have an `./index.' + extensions.asGlob(extensions.html) + '` entry point.');
 				}
 				(updatePkg.exports = null), (updatePkg.typesVersions = {});
 				updatePkg.module = updatePkg.main = updatePkg.browser = updatePkg.unpkg = updatePkg.types = '';
@@ -179,14 +182,14 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 				break; // Stop here.
 			}
 			case ['cma', 'lib'].includes(appType): {
-				const appEntryIndexAsSrcSubpath = appEntriesAsSrcSubpaths.find((subpath) => $str.mm.isMatch(subpath, 'index.{ts,tsx}'));
+				const appEntryIndexAsSrcSubpath = appEntriesAsSrcSubpaths.find((subpath) => $str.mm.isMatch(subpath, 'index.' + extensions.asGlob(extensions.sts)));
 				const appEntryIndexAsSrcSubpathNoExt = appEntryIndexAsSrcSubpath.replace(/\.[^.]+$/u, '');
 
 				if (['cma'].includes(appType) && (!appEntryIndexAsSrcSubpath || !appEntryIndexAsSrcSubpathNoExt)) {
-					throw new Error('Custom apps must have an `./index.{ts,tsx}` entry point.');
+					throw new Error('Custom apps must have an `./index.' + extensions.asGlob(extensions.sts) + '` entry point.');
 					//
 				} else if (['lib'].includes(appType) && (!appEntryIndexAsSrcSubpath || !appEntryIndexAsSrcSubpathNoExt)) {
-					throw new Error('Library apps must have an `./index.{ts,tsx}` entry point.');
+					throw new Error('Library apps must have an `./index.' + extensions.asGlob(extensions.sts) + '` entry point.');
 				}
 				if (useUMD) {
 					updatePkg.exports = {
@@ -245,9 +248,10 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 		}
 	}
 	for (const appEntryAsProjRelPath of appEntriesAsProjRelPaths) {
-		updatePkg.sideEffects.push(appEntryAsProjRelPath.replace(/\.html$/gu, '.tsx'));
+		const regExp = new RegExp('\\.' + extensions.asRegExpFrag(extensions.html) + '$', 'ug');
+		updatePkg.sideEffects.push(appEntryAsProjRelPath.replace(regExp, '.tsx'));
 	}
-	updatePkg.sideEffects = [...new Set(updatePkg.sideEffects)]; // Unique array.
+	updatePkg.sideEffects = [...new Set(updatePkg.sideEffects)]; // Unique array values.
 
 	/**
 	 * Pre-updates `package.json` properties impacting build process.
@@ -259,13 +263,11 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 	/**
 	 * Configures plugins for Vite.
 	 *
-	 * @see https://github.com/vitejs/vite-plugin-basic-ssl
 	 * @see https://github.com/trapcodeio/vite-plugin-ejs
+	 * @see https://github.com/vitejs/vite-plugin-basic-ssl
 	 * @see https://github.com/zhuweiyou/vite-plugin-minify
 	 */
-	const pluginBasicSSLConfig = pluginBasicSSL();
-
-	const pluginEJSConfig = pluginEJS(
+	const pluginEJSConfig = (await import('vite-plugin-ejs')).ViteEjsPlugin(
 		{ $: { require, pkg, mode, env, projDir } },
 		{
 			ejs: /* <https://o5p.me/wGv5nM> */ {
@@ -285,7 +287,8 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 			},
 		},
 	);
-	const pluginMinifyHTMLConfig = 'dev' === mode ? null : pluginMinifyHTML();
+	const pluginBasicSSLConfig = (await import('@vitejs/plugin-basic-ssl')).default();
+	const pluginMinifyHTMLConfig = 'dev' === mode ? null : (await import('vite-plugin-minify')).ViteMinifyPlugin();
 
 	const pluginC10NPostProcessConfig = ((postProcessed = false) => {
 		return {
@@ -388,8 +391,8 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 			},
 		};
 	})();
-	const plugins = [pluginBasicSSLConfig, pluginEJSConfig, pluginMinifyHTMLConfig, pluginC10NPostProcessConfig];
 	const importedWorkerPlugins = []; // <https://vitejs.dev/guide/features.html#web-workers>.
+	const plugins = [pluginBasicSSLConfig, pluginEJSConfig, pluginMinifyHTMLConfig, pluginC10NPostProcessConfig];
 
 	/**
 	 * Configures esbuild for Vite.
@@ -440,7 +443,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 				// Therefore, we know `es` comes first, followed by either `umd` or `cjs` output entries.
 				// So, entry counters make it possible to infer build output format, based on sequence.
 
-				const entryKey = JSON.stringify(entry); // JSON serialization.
+				const entryKey = $json.stringify(entry); // JSON serialization.
 				const entryCounter = Number(rollupEntryCounters.get(entryKey) || 0) + 1;
 
 				const entryFormat = entryCounter > 1 ? (useUMD ? 'umd' : 'cjs') : 'es';
@@ -464,7 +467,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 				// Therefore, we know `es` comes first, followed by either `umd` or `cjs` output chunks.
 				// So, chunk counters make it possible to infer build output format, based on sequence.
 
-				const chunkKey = JSON.stringify(chunk); // JSON serialization.
+				const chunkKey = $json.stringify(chunk); // JSON serialization.
 				const chunkCounter = Number(rollupChunkCounters.get(chunkKey) || 0) + 1;
 
 				const chunkFormat = chunkCounter > 1 ? (useUMD ? 'umd' : 'cjs') : 'es';
@@ -493,49 +496,52 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 	 * Vitest config for Vite.
 	 */
 	const vitestExcludes = [
-		'**/.*', //
-		'**/dev/**',
-		'**/dist/**',
-		'**/.yarn/**',
-		'**/vendor/**',
-		'**/node_modules/**',
-		'**/jspm_packages/**',
-		'**/bower_components/**',
-		'**/x-*/**', // Deliberate exclusions.
-		...(vitestSandboxEnable ? [] : ['**/sandbox/**']),
-		'**/*.d.{ts,tsx,cts,ctsx,mts,mtsx}',
+		...exclusions.vcsFilesDirs,
+		...exclusions.packageDirs,
+		...exclusions.dotFilesDirs,
+		...exclusions.dtsFiles,
+		...exclusions.distDirs,
+		...exclusions.devDirs,
+		...(vitestSandboxEnable ? [] : [...exclusions.sandboxDirs]),
+		...exclusions.xDirs, // Deliberate ad-hoc exclusions.
 	];
-	const vitestWatchExcludes = vitestExcludes.filter((v) => '**/x-*/**' !== v);
-
+	const vitestWatchExcludes = [
+		...exclusions.vcsFilesDirs,
+		...exclusions.packageDirs,
+		...exclusions.dotFilesDirs,
+		...exclusions.dtsFiles,
+		...exclusions.distDirs,
+		...exclusions.devDirs,
+		...(vitestSandboxEnable ? [] : [...exclusions.sandboxDirs]),
+		// ...exclusions.xDirs, Still watching deliberate ad-hoc exclusions.
+	];
 	const vitestIncludes = vitestSandboxEnable
 		? [
-				'**/sandbox/**/*.{test,tests,spec,specs}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
-				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/sandbox/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+				'**/sandbox/**/*.{test,tests,spec,specs}.' + extensions.asGlob(extensions.jts),
+				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/sandbox/**/*.' + extensions.asGlob(extensions.jts),
 		  ]
 		: [
-				'**/*.{test,tests,spec,specs}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
-				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+				'**/*.{test,tests,spec,specs}.' + extensions.asGlob(extensions.jts),
+				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.' + extensions.asGlob(extensions.jts),
 		  ];
 	const vitestTypecheckIncludes = vitestSandboxEnable
 		? [
-				'**/sandbox/**/*.{test,tests,spec,specs}-d.{ts,tsx,cts,ctsx,mts,mtsx}', //
-				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/sandbox/**/*-d.{ts,tsx,cts,ctsx,mts,mtsx}',
+				'**/sandbox/**/*.{test,tests,spec,specs}-d.' + extensions.asGlob(extensions.ts),
+				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/sandbox/**/*-d.' + extensions.asGlob(extensions.ts),
 		  ]
 		: [
-				'**/*.{test,tests,spec,specs}-d.{ts,tsx,cts,ctsx,mts,mtsx}', //
-				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*-d.{ts,tsx,cts,ctsx,mts,mtsx}',
+				'**/*.{test,tests,spec,specs}-d.' + extensions.asGlob(extensions.ts),
+				'**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*-d.' + extensions.asGlob(extensions.ts),
 		  ];
 	const vitestBenchIncludes = vitestSandboxEnable
 		? [
-				'**/sandbox/**/*.{bench,benchmark,benchmarks}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
-				'**/{bench,benchmark,benchmarks,__bench__,__benchmark__,__benchmarks__}/**/sandbox/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+				'**/sandbox/**/*.{bench,benchmark,benchmarks}.' + extensions.asGlob(extensions.jts),
+				'**/{bench,benchmark,benchmarks,__bench__,__benchmark__,__benchmarks__}/**/sandbox/**/*.' + extensions.asGlob(extensions.jts),
 		  ]
 		: [
-				'**/*.{bench,benchmark,benchmarks}.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
-				'**/{bench,benchmark,benchmarks,__bench__,__benchmark__,__benchmarks__}/**/*.{js,jsx,cjs,cjsx,node,mjs,mjsx,ts,tsx,cts,ctsx,mts,mtsx}',
+				'**/*.{bench,benchmark,benchmarks}.' + extensions.asGlob(extensions.jts),
+				'**/{bench,benchmark,benchmarks,__bench__,__benchmark__,__benchmarks__}/**/*.' + extensions.asGlob(extensions.jts),
 		  ];
-	const vitestExtensions = ['.js', '.jsx', '.cjs', '.cjsx', '.json', '.node', '.mjs', '.mjsx', '.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx'];
-
 	const vitestConfig = {
 		root: srcDir,
 
@@ -557,16 +563,16 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 
 		// See: <https://o5p.me/8Pjw1d> for `environment`, `environmentMatchGlobs` precedence.
 		environmentMatchGlobs: [
-			['**/*.{cfp,web,webw}.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'jsdom'],
-			['**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.{cfp,web,webw}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'jsdom'],
+			['**/*.{cfp,web,webw}.{test,tests,spec,specs}.' + extensions.asGlob(extensions.jts), 'jsdom'],
+			['**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.{cfp,web,webw}.' + extensions.asGlob(extensions.jts), 'jsdom'],
 
-			['**/*.cfw.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'miniflare'],
-			['**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.cfw.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'miniflare'],
+			['**/*.cfw.{test,tests,spec,specs}.' + extensions.asGlob(extensions.jts), 'miniflare'],
+			['**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.cfw.' + extensions.asGlob(extensions.jts), 'miniflare'],
 
-			['**/*.{node,any}.{test,tests,spec,specs}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'node'],
-			['**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.{node,any}.{' + vitestExtensions.map((e) => e.slice(1)).join(',') + '}', 'node'],
+			['**/*.{node,any}.{test,tests,spec,specs}.' + extensions.asGlob(extensions.jts), 'node'],
+			['**/{test,tests,spec,specs,__test__,__tests__,__spec__,__specs__}/**/*.{node,any}.' + extensions.asGlob(extensions.jts), 'node'],
 		],
-		server: { deps: { external: ['**/dist/**', '**/node_modules/**'].concat(rollupConfig.external) } },
+		server: { deps: { external: [...new Set([...exclusions.packageDirs].concat(rollupConfig.external))] } },
 		cache: { dir: path.resolve(projDir, './node_modules/.vitest') },
 
 		allowOnly: true, // Allows `describe.only`, `test.only`, `bench.only`.
@@ -587,12 +593,9 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 		},
 		coverage: {
 			all: true,
-			include: ['**'],
-			exclude: vitestExcludes //
-				.concat(vitestIncludes)
-				.concat(vitestTypecheckIncludes)
-				.concat(vitestBenchIncludes),
-			extension: vitestExtensions,
+			extension: extensions.jts,
+			include: ['**/*.' + extensions.asGlob(extensions.jts)],
+			exclude: [...new Set(vitestExcludes.concat(vitestIncludes).concat(vitestTypecheckIncludes).concat(vitestBenchIncludes))],
 			reporter: ['text', 'html', 'clover', 'json'],
 			reportsDirectory: path.resolve(logsDir, './coverage/vitest'),
 		},
@@ -616,20 +619,17 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 	 */
 	const baseConfig = {
 		c10n: { pkg, updatePkg },
-		define: $obj.map(staticDefs, (v) => JSON.stringify(v)),
+		define: $obj.map(staticDefs, (v) => $json.stringify(v)),
 
-		root: srcDir, // Absolute. Where entry indexes live.
+		root: srcDir, // Absolute path where entry indexes live.
 		publicDir: isSSRBuild ? false : path.relative(srcDir, cargoDir), // Relative to `root`.
 		base: appBasePath + '/', // Analagous to `<base href="/">`; i.e., leading & trailing slash.
-
-		appType: ['spa', 'mpa'].includes(appType) ? appType : 'custom', // See: <https://o5p.me/ZcTkEv>.
-		resolve: { alias: importAliases }, // Matches TypeScript config import aliases.
 
 		envDir: path.relative(srcDir, envsDir), // Relative to `root` directory.
 		envPrefix: appEnvPrefixes, // Env vars w/ these prefixes become part of the app.
 
-		server: { open: false, https: true }, // Vite dev server.
-		plugins, // Additional Vite plugins that were configured above.
+		appType: ['spa', 'mpa'].includes(appType) ? appType : 'custom',
+		plugins, // Additional Vite plugins; i.e., already configured above.
 
 		...(targetEnvIsServer // Target environment is server-side?
 			? {
@@ -639,13 +639,21 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 					},
 			  }
 			: {}),
+		server: {
+			open: false, // Do not open dev server.
+			https: true, // Enable basic https in dev server.
+		},
+		resolve: {
+			alias: importAliases.asFindReplaceRegExps,
+			extensions: extensions.json.concat(extensions.jts),
+		},
 		worker: /* <https://vitejs.dev/guide/features.html#web-workers> */ {
 			format: 'es',
 			plugins: importedWorkerPlugins,
 			rollupOptions: importedWorkerRollupConfig,
 		},
 		build: /* <https://vitejs.dev/config/build-options.html> */ {
-			target: 'es2021', // Matches TypeScript config.
+			target: 'es' + esVersion.year, // Matches TypeScript config.
 
 			emptyOutDir: isSSRBuild ? false : true, // Not during SSR builds.
 			outDir: path.relative(srcDir, distDir), // Relative to `root` directory.

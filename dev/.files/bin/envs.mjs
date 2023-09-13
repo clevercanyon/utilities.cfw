@@ -6,14 +6,12 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  */
-/* eslint-env es2021, node */
 
 import fs from 'node:fs';
-import path from 'node:path';
 import fsp from 'node:fs/promises';
-
+import path from 'node:path';
+import { $chalk, $fs, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 import u from './includes/utilities.mjs';
-import { $fs, $chalk, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 
 const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
@@ -472,7 +470,7 @@ class Decrypt {
 /**
  * Yargs ⛵🏴‍☠.
  */
-void (async () => {
+await (async () => {
 	await u.propagateUserEnvVars();
 	await (
 		await $yargs.cli({

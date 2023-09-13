@@ -9,17 +9,24 @@
  *
  * @see https://github.com/csstools/postcss-plugins/blob/main/plugin-packs/postcss-preset-env/FEATURES.md
  */
-/* eslint-env es2021, node */
 
-const path = require('node:path');
+import path from 'node:path';
+import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+
+const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
 
 /**
- * Composition.
+ * Defines PostCSS configuration.
  */
-module.exports = {
-	plugins: {
-		'tailwindcss': { config: path.resolve(projDir, './.tailwindrc.cjs') },
-		'postcss-preset-env': { stage: 3 }, // Includes autoprefixer.
-	},
+export default async () => {
+	/**
+	 * Composition.
+	 */
+	return {
+		plugins: {
+			'tailwindcss': { config: path.resolve(projDir, './tailwind.config.mjs') },
+			'postcss-preset-env': { stage: 3 }, // Includes autoprefixer.
+		},
+	};
 };

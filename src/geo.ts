@@ -2,10 +2,10 @@
  * Utility class.
  */
 
-import './resources/init-env.js';
+import './resources/init-env.ts';
 
 import type { $type } from '@clevercanyon/utilities';
-import type { FetchEventData as $cfwꓺFetchEventData } from './cfw.js';
+import type { FetchEventData as $cfwꓺFetchEventData } from './cfw.ts';
 
 /**
  * Gets geo property.

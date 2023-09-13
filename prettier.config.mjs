@@ -7,15 +7,16 @@
  * @note In the future this file will be updated automatically.
  * @note Only `<custom:start.../custom:end>` will be preserved below.
  */
-/* eslint-env es2021, node */
 
-const baseConfig = require('./dev/.files/prettier/config.cjs');
-const { $obj } = require('./node_modules/@clevercanyon/utilities/dist/index.cjs');
+import baseConfig from './dev/.files/prettier/config.mjs';
+import { $obj } from './node_modules/@clevercanyon/utilities/dist/index.js';
 
 /*
  * Customizations.
  * <custom:start> */
 
-module.exports = $obj.mergeDeep({}, baseConfig, {});
+export default await (async () => {
+	return $obj.mergeDeep({}, await baseConfig(), {});
+})();
 
 /* </custom:end> */

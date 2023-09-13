@@ -37,6 +37,7 @@
 
 	"files.associations": {
 		".inputrc": "text",
+		"CODEOWNERS": "ignore",
 		"**/src/_headers": "text",
 		"**/src/_redirects": "text",
 		".env{,.*}": "properties",
@@ -338,40 +339,43 @@
 	 */
 
 	"eslint.run": "onType",
-	"eslint.format.enable": false,
+	"eslint.format.enable": false, // Disabled in sandbox.
 	"eslint.lintTask.enable": false,
 	"eslint.codeActionsOnSave.mode": "all",
-
-	"javascript.validate.enable": false,
-	"typescript.validate.enable": false,
-	"js/ts.implicitProjectConfig.target": "ES2021",
+	"eslint.experimental.useFlatConfig": true,
+	"eslint.workingDirectories": [{ "mode": "auto" }],
+	"eslint.options": {
+		"overrideConfigFile": "eslint.config.mjs"
+	},
+	"javascript.validate.enable": false, // Disabled in sandbox.
+	"typescript.validate.enable": false, // Disabled in sandbox.
 
 	"[javascript]": {
 		"editor.codeActionsOnSave": {
 			"source.fixAll": true
 		},
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
+		"editor.defaultFormatter": "esbenp.prettier-vscode" // Prettier in sandbox.
 	},
 
 	"[javascriptreact]": {
 		"editor.codeActionsOnSave": {
 			"source.fixAll": true
 		},
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
+		"editor.defaultFormatter": "esbenp.prettier-vscode" // Prettier in sandbox.
 	},
 
 	"[typescript]": {
 		"editor.codeActionsOnSave": {
 			"source.fixAll": true
 		},
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
+		"editor.defaultFormatter": "esbenp.prettier-vscode" // Prettier in sandbox.
 	},
 
 	"[typescriptreact]": {
 		"editor.codeActionsOnSave": {
 			"source.fixAll": true
 		},
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
+		"editor.defaultFormatter": "esbenp.prettier-vscode" // Prettier in sandbox.
 	},
 
 	/**

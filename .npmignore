@@ -61,7 +61,7 @@
 *.code-search
 *.code-workspace
 
-# Dists (must exclude).
+# Dist (must exclude).
 # May contain APP_ env vars.
 
 dist
@@ -205,17 +205,11 @@ Temporary Items
 # These are in addition to what we have in `.gitignore`.
 ##
 
-# VS Code.
-
-.vscode
-
 # Dist (allow).
 
 !dist
 
 # Configs.
-
-.*
 
 *config.*
 !dist/**/*config.*
@@ -227,9 +221,6 @@ wrangler.*
 !dist/**/wrangler.*
 
 # Uncompiled sources.
-
-src
-__src__
 
 *.scss
 !dist/**/*.scss
@@ -266,6 +257,15 @@ __src__
 *.mtsx
 !*.d.mtsx
 !dist/**/*.mtsx
+
+# Dots.
+
+.*
+
+# Src.
+
+src
+__src__
 
 # Dev.
 

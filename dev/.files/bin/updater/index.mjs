@@ -5,15 +5,13 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  */
-/* eslint-env es2021, node */
 
 import fs from 'node:fs';
-import path from 'node:path';
 import fsp from 'node:fs/promises';
-
+import path from 'node:path';
+import { $chalk, $cmd, $fs, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $is, $json, $obj, $obp, $str } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import customRegexp from './data/custom-regexp.mjs';
-import { $is, $str, $obj, $obp } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
-import { $fs, $cmd, $chalk, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 
 const { log } = console; // Shorter reference.
 
@@ -35,7 +33,7 @@ export default async ({ projDir }) => {
 		if (!fs.existsSync(pkgFile)) {
 			throw new Error('updater.getPkg: Missing `./package.json`.');
 		}
-		const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
+		const pkg = $json.parse(fs.readFileSync(pkgFile).toString());
 
 		if (!$is.plainObject(pkg)) {
 			throw new Error('updater.getPkg: Unable to parse `./package.json`.');
@@ -108,34 +106,58 @@ export default async ({ projDir }) => {
 	await fsp.chmod(path.resolve(projDir, './dev/.files/bin/update.mjs'), 0o700);
 
 	/**
+	 * Deletes outdated dotfiles no longer in use.
+	 */
+	for (const relPath of [
+		// './.madrun.mjs', // @todo After all projects get `madrun.config.mjs`.
+		'./.eslintrc.cjs',
+		'./.eslintignore',
+		'./.postcssrc.cjs',
+		'./.prettierrc.cjs',
+		'./.stylelintrc.cjs',
+		'./.tailwindrc.cjs',
+	]) {
+		if (await isLocked(relPath)) {
+			continue; // Locked 🔒.
+		}
+		await fsp.rm(path.resolve(projDir, relPath), { recursive: true, force: true });
+	}
+
+	/**
 	 * Updates semi-immutable dotfiles.
 	 */
 	for (const relPath of [
+		'./.npmrc',
+		'./.npmignore',
+
+		'./.gitignore',
+		'./.gitattributes',
+
 		'./.github/CODEOWNERS',
 		'./.github/dependabot.yml',
 		'./.github/workflows/ci.yml',
+
+		'./.editorconfig',
 		'./.vscode/settings.json',
 		'./.vscode/extensions.json',
-		// This file is not added or modified in fork repos.
+		// Sandbox files are not added or modified when updating fork repos.
 		...((await isPkgRepoFork()) ? [] : ['./src/tests/sandbox/.vscode/settings.json']),
-		'./.browserslistrc',
-		'./.editorconfig',
-		'./.eslintignore',
-		'./.eslintrc.cjs',
-		'./.gitattributes',
-		'./.gitignore',
-		'./.madrun.mjs',
-		'./.npmignore',
-		'./.npmrc',
-		'./.postcssrc.cjs',
-		'./.prettierignore',
-		'./.prettierrc.cjs',
-		'./.shellcheckrc',
-		'./.stylelintrc.cjs',
-		'./.tailwindrc.cjs',
-		'./jest.config.mjs',
+		...((await isPkgRepoFork()) ? [] : ['./src/tests/sandbox/.vscode/extensions.json']),
+
 		'./tsconfig.d.ts',
 		'./tsconfig.json',
+
+		'./.prettierignore',
+		'./prettier.config.mjs',
+
+		'./.shellcheckrc',
+		'./.browserslistrc',
+		'./eslint.config.mjs',
+		'./jest.config.mjs',
+		'./madrun.config.mjs',
+		'./postcss.config.mjs',
+		'./stylelint.config.mjs',
+		'./tailwind.config.mjs',
 		'./vite.config.mjs',
 		'./wrangler.toml',
 	]) {
@@ -183,14 +205,15 @@ export default async ({ projDir }) => {
 		if (!fs.existsSync(path.resolve(projDir, relPath))) {
 			await fsp.cp(path.resolve(skeletonDir, relPath), path.resolve(projDir, relPath));
 		}
-		let json = JSON.parse((await fsp.readFile(path.resolve(projDir, relPath))).toString());
-		const jsonUpdatesFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', relPath, './updates.json');
+		let json = $json.parse((await fsp.readFile(path.resolve(projDir, relPath))).toString());
+		const jsonUpdatesRelPath = relPath.replace(/(^|\/)([^/]+\.[^.]+)$/u, '$1_$2'); // Leading underscore in basename.
+		const jsonUpdatesFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', jsonUpdatesRelPath, './updates.json');
 
 		if (!$is.plainObject(json)) {
 			throw new Error('updater: Unable to parse `' + relPath + '`.');
 		}
 		if (fs.existsSync(jsonUpdatesFile)) {
-			const jsonUpdates = JSON.parse((await fsp.readFile(jsonUpdatesFile)).toString());
+			const jsonUpdates = $json.parse((await fsp.readFile(jsonUpdatesFile)).toString());
 
 			if (!$is.plainObject(jsonUpdates)) {
 				throw new Error('updater: Unable to parse `' + jsonUpdatesFile + '`.');
@@ -207,7 +230,7 @@ export default async ({ projDir }) => {
 			}
 			$obj.patchDeep(json, jsonUpdates); // Potentially declarative ops.
 			const prettierCfg = { ...(await $prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
-			await fsp.writeFile(path.resolve(projDir, relPath), $prettier.format(JSON.stringify(json, null, 4), prettierCfg));
+			await fsp.writeFile(path.resolve(projDir, relPath), await $prettier.format($json.stringify(json, { pretty: true }), prettierCfg));
 		}
 	}
 

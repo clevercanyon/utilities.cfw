@@ -2,17 +2,16 @@
  * Utility class.
  */
 
-import './resources/init-env.js';
-
-import {
-	getAssetFromKV as cfKVAꓺgetAssetFromKV,
-	mapRequestToAsset as cfKVAꓺmapRequestToAsset,
-	MethodNotAllowedError as cfKVAꓺMethodNotAllowedError,
-	NotFoundError as cfKVAꓺNotFoundError,
-} from '@cloudflare/kv-asset-handler';
+import './resources/init-env.ts';
 
 import type { $type } from '@clevercanyon/utilities';
-import { $env, $http, $str, $url } from '@clevercanyon/utilities';
+import { $env, $http, $json, $str, $url } from '@clevercanyon/utilities';
+import {
+	MethodNotAllowedError as cfKVAꓺMethodNotAllowedError,
+	NotFoundError as cfKVAꓺNotFoundError,
+	getAssetFromKV as cfKVAꓺgetAssetFromKV,
+	mapRequestToAsset as cfKVAꓺmapRequestToAsset,
+} from '@cloudflare/kv-asset-handler';
 
 const cache = (caches as unknown as $type.cf.CacheStorage).default;
 
@@ -158,8 +157,8 @@ export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$
 		const response = await cfKVAꓺgetAssetFromKV(kvAssetEventData, {
 			ASSET_NAMESPACE: $env.get('@top', '__STATIC_CONTENT') as string,
 			// @ts-ignore: This is dynamically resolved by Cloudflare.
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, import/no-unresolved
-			ASSET_MANIFEST: JSON.parse(await import('__STATIC_CONTENT_MANIFEST')) as { [x: string]: string },
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- manifest ok.
+			ASSET_MANIFEST: $json.parse(await import('__STATIC_CONTENT_MANIFEST')) as { [x: string]: string },
 
 			defaultDocument: 'index.html',
 			defaultMimeType: 'application/octet-stream',

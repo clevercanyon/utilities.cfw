@@ -2,7 +2,7 @@
  * Utility exports.
  */
 
-import './resources/init-env.js';
+import './resources/init-env.ts';
 
-export * as $cfw from './cfw.js';
-export * as $geo from './geo.js';
+export * as $cfw from './cfw.ts';
+export * as $geo from './geo.ts';

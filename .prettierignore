@@ -8,6 +8,50 @@
 # @note Only `<custom:start.../custom:end>` will be preserved below.
 ##
 
+# Dist.
+
+dist
+
+# Yarn.
+
+.yarn
+
+# Vendor.
+
+vendor
+
+# NodeJS.
+
+node_modules
+
+# JSPM.
+
+jspm_packages
+
+# Bower.
+
+bower_components
+
+# VCS.
+
+.git
+
+.svn
+_svn
+.svnignore
+
+CVS
+.cvsignore
+
+.bzr
+.bzrignore
+
+.hg
+.hgignore
+
+SCCS
+RCS
+
 # `.npmrc` unsupported at this time.
 # It's a properties file, but prettier chokes on `:` in auth tokens.
 

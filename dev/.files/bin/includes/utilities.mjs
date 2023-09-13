@@ -5,19 +5,16 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  */
-/* eslint-env es2021, node */
 
-import os from 'node:os';
-import fs from 'node:fs';
-import path from 'node:path';
-import fsp from 'node:fs/promises';
-
-import sodium from 'libsodium-wrappers';
 import { Octokit as OctokitCore } from '@octokit/core';
 import { paginateRest as OctokitPluginPaginateRest } from '@octokit/plugin-paginate-rest';
-
-import { $is, $str, $obj, $obp, $url, $version } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
-import { $fs, $cmd, $chalk, $dotenv, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import sodium from 'libsodium-wrappers';
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { $chalk, $cmd, $dotenv, $fs, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $is, $json, $obj, $obp, $str, $url, $version } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 
 const __dirname = $fs.imuDirname(import.meta.url);
 const binDir = path.resolve(__dirname, '..');
@@ -29,7 +26,7 @@ const { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType } = (() => 
 	if (!fs.existsSync(pkgFile)) {
 		throw new Error('u: Missing `./package.json`.');
 	}
-	const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
+	const pkg = $json.parse(fs.readFileSync(pkgFile).toString());
 
 	if (!$is.plainObject(pkg)) {
 		throw new Error('u: Unable to parse `./package.json`.');
@@ -50,12 +47,16 @@ const npmjsConfigVersion = '1.0.9'; // Bump when config changes in routines belo
 
 const c10nLogo = path.resolve(__dirname, '../../assets/brands/c10n/logo.png');
 
-const s = {}; // Used instead of static class members, which are only supported in ES2022 or above.
-
 /**
  * Utilities.
  */
 export default class u {
+	/**
+	 * Static props.
+	 */
+
+	static s = {}; // Initialize.
+
 	/**
 	 * Synchronous utilities.
 	 */
@@ -116,7 +117,7 @@ export default class u {
 		if (!fs.existsSync(pkgFile)) {
 			throw new Error('u.pkg: Missing `./package.json`.');
 		}
-		const pkg = JSON.parse(fs.readFileSync(pkgFile).toString());
+		const pkg = $json.parse(fs.readFileSync(pkgFile).toString());
 
 		if (!$is.plainObject(pkg)) {
 			throw new Error('u.pkg: Unable to parse `./package.json`.');
@@ -169,8 +170,8 @@ export default class u {
 		} else {
 			throw new Error('u.updatePkg: Invalid arguments.');
 		}
-		const updatesFile = path.resolve(projDir, './dev/.files/bin/updater/data/package.json/updates.json');
-		const updates = JSON.parse((await fsp.readFile(updatesFile)).toString());
+		const updatesFile = path.resolve(projDir, './dev/.files/bin/updater/data/_package.json/updates.json');
+		const updates = $json.parse((await fsp.readFile(updatesFile)).toString());
 
 		if (!$is.plainObject(updates)) {
 			throw new Error('u.updatePkg: Unable to parse `' + updatesFile + '`.');
@@ -187,7 +188,7 @@ export default class u {
 		}
 		$obj.patchDeep(pkg, updates); // Potentially declarative ops.
 		const pkgPrettierCfg = { ...(await $prettier.resolveConfig(pkgFile)), parser: 'json' };
-		await fsp.writeFile(pkgFile, $prettier.format(JSON.stringify(pkg, null, 4), pkgPrettierCfg));
+		await fsp.writeFile(pkgFile, await $prettier.format($json.stringify(pkg, { pretty: true }), pkgPrettierCfg));
 	}
 
 	/*
@@ -828,8 +829,8 @@ export default class u {
 	}
 
 	static async _githubEnsureRepoEnvs(opts = { dryRun: false }) {
-		if (s._githubRepoEnvsEnsured) return;
-		s._githubRepoEnvsEnsured = true; // Once only.
+		if (u.s._githubRepoEnvsEnsured) return;
+		u.s._githubRepoEnvsEnsured = true; // Once only.
 
 		const envFiles = await u.envFiles();
 		const { owner, repo } = await u.githubOrigin();
@@ -1077,7 +1078,7 @@ export default class u {
 		for (let [name, value] of Object.entries(env)) {
 			json[name] = String(value);
 		}
-		return JSON.stringify(json, null, 4);
+		return $json.stringify(json, { pretty: true });
 	}
 
 	static async _envToText(envName, env) {
@@ -1218,7 +1219,7 @@ export default class u {
 	}
 
 	static async _npmjsOrgUsers(org) {
-		const members = JSON.parse(String(await u.spawn('npm', ['org', 'ls', org, '--json'], { quiet: true })));
+		const members = $json.parse(String(await u.spawn('npm', ['org', 'ls', org, '--json'], { quiet: true })));
 
 		if (!$is.plainObject(members)) {
 			throw new Error('u._npmjsOrgMembers: Failed to acquire list of NPM team members for `' + org + '`.');
@@ -1227,7 +1228,7 @@ export default class u {
 	}
 
 	static async _npmjsOrgTeams(org) {
-		const teams = JSON.parse(String(await u.spawn('npm', ['team', 'ls', org, '--json'], { quiet: true })));
+		const teams = $json.parse(String(await u.spawn('npm', ['team', 'ls', org, '--json'], { quiet: true })));
 
 		if (!$is.array(teams)) {
 			throw new Error('u._npmjsOrgTeams: Failed to acquire list of NPM teams for `' + org + '` org.');

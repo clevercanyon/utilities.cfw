@@ -49,7 +49,7 @@
 *.code-search
 *.code-workspace
 
-# Dists (must exclude).
+# Dist (must exclude).
 # May contain APP_ env vars.
 
 dist

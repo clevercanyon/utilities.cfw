@@ -2,11 +2,11 @@
  * Environment vars.
  */
 
-import {
-	capture as $envꓺcapture, //
-	setTopLevelObp as $envꓺsetTopLevelObp,
-} from '@clevercanyon/utilities/env';
+import { capture as $envꓺcapture, setTopLevelObp as $envꓺsetTopLevelObp } from '@clevercanyon/utilities/env';
 
+/**
+ * Acquires app package name.
+ */
 const appPkgName = $$__APP_PKG_NAME__$$;
 
 /**

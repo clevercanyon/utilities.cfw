@@ -34,6 +34,7 @@
 
 	"files.associations": {
 		".inputrc": "text",
+		"CODEOWNERS": "ignore",
 		"**/src/_headers": "text",
 		"**/src/_redirects": "text",
 		".env{,.*}": "properties",
@@ -338,10 +339,13 @@
 	"eslint.format.enable": true,
 	"eslint.lintTask.enable": false,
 	"eslint.codeActionsOnSave.mode": "all",
-
+	"eslint.experimental.useFlatConfig": true,
+	"eslint.workingDirectories": [{ "mode": "auto" }],
+	"eslint.options": {
+		"overrideConfigFile": "eslint.config.mjs"
+	},
 	"javascript.validate.enable": true,
 	"typescript.validate.enable": true,
-	"js/ts.implicitProjectConfig.target": "ES2021",
 
 	"[javascript]": {
 		"editor.codeActionsOnSave": {

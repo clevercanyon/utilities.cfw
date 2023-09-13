@@ -14,8 +14,8 @@
 	 * <custom:start> */
 
 	"compilerOptions": {
-		"lib": ["es2021", "dom"],
-		"types": ["vite/client", "@cloudflare/workers-types/experimental"]
+		"lib": ["es2022", "dom"],
+		"types": ["vite/client"]
 	}
 	/* </custom:end> */
 }

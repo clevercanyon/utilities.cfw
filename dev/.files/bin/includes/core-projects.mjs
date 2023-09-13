@@ -5,8 +5,10 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  */
-/* eslint-env es2021, node */
 
+/**
+ * Defines core projects.
+ */
 export default {
 	updates: {
 		ignore: [],
@@ -41,7 +43,7 @@ export default {
 			'utilities.*',
 			'skeleton.*',
 
-			'private',
+			'canyon',
 			'.github',
 		],
 	},

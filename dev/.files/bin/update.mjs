@@ -6,18 +6,15 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  */
-/* eslint-env es2021, node */
-
-import os from 'node:os';
 
 import fs from 'node:fs';
-import path from 'node:path';
 import fsp from 'node:fs/promises';
-
-import u from './includes/utilities.mjs';
-import coreProjects from './includes/core-projects.mjs';
+import os from 'node:os';
+import path from 'node:path';
+import { $chalk, $cmd, $fs, $glob, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 import { $str } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
-import { $fs, $chalk, $cmd, $glob, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import coreProjects from './includes/core-projects.mjs';
+import u from './includes/utilities.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
@@ -428,7 +425,7 @@ class Projects {
 /**
  * Yargs ⛵🏴‍☠.
  */
-void (async () => {
+await (async () => {
 	await u.propagateUserEnvVars();
 	await (
 		await $yargs.cli({

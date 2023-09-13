@@ -9,8 +9,8 @@
 #
 # Generated using <https://www.npmjs.com/package/browserslist-generator>.
 #
-#     import BLG from 'browserslist-generator';
-#     console.log( BLG.browsersWithSupportForEcmaVersion( 'es2021' ).join( '\n' ) );
+#     const BLG = require("browserslist-generator")
+#     console.log(BLG.browsersWithSupportForEcmaVersion('es2022').join('\n'));
 #
 # - Review BLG source: <https://o5p.me/4DC1Vq>.
 # - Review browserlist report on production config: <https://o5p.me/Fvs3WP>.
@@ -19,32 +19,32 @@
 
 [production]
 last 1 chrome versions
-node >= 19.1.0
-and_chr >= 85
-chrome >= 85
-and_ff >= 79
-android >= 108
-edge >= 85
-samsung >= 14.0
-safari >= 14
-ios_saf >= 14.4
-opera >= 71
-firefox >= 79
+node >= 20.5.1
+and_chr >= 92
+chrome >= 92
+and_ff >= 90
+android >= 116
+edge >= 92
+samsung >= 16.0
+safari >= 15.4
+ios_saf >= 15.4
+opera >= 78
+firefox >= 90
 not dead
 
 [any]
 last 1 chrome versions
-node >= 19.1.0
-and_chr >= 85
-chrome >= 85
-and_ff >= 79
-android >= 108
-edge >= 85
-samsung >= 14.0
-safari >= 14
-ios_saf >= 14.4
-opera >= 71
-firefox >= 79
+node >= 20.5.1
+and_chr >= 92
+chrome >= 92
+and_ff >= 90
+android >= 116
+edge >= 92
+samsung >= 16.0
+safari >= 15.4
+ios_saf >= 15.4
+opera >= 78
+firefox >= 90
 not dead
 
 [cfp]
@@ -56,33 +56,33 @@ last 1 chrome versions
 not dead
 
 [node]
-node >= 19.1.0
+node >= 20.5.1
 not dead
 
 [web]
-and_chr >= 85
-chrome >= 85
-and_ff >= 79
-android >= 108
-edge >= 85
-samsung >= 14.0
-safari >= 14
-ios_saf >= 14.4
-opera >= 71
-firefox >= 79
+and_chr >= 92
+chrome >= 92
+and_ff >= 90
+android >= 116
+edge >= 92
+samsung >= 16.0
+safari >= 15.4
+ios_saf >= 15.4
+opera >= 78
+firefox >= 90
 not dead
 
 [webw]
-and_chr >= 85
-chrome >= 85
-and_ff >= 79
-android >= 108
-edge >= 85
-samsung >= 14.0
-safari >= 14
-ios_saf >= 14.4
-opera >= 71
-firefox >= 79
+and_chr >= 92
+chrome >= 92
+and_ff >= 90
+android >= 116
+edge >= 92
+samsung >= 16.0
+safari >= 15.4
+ios_saf >= 15.4
+opera >= 78
+firefox >= 90
 not dead
 
 ##
