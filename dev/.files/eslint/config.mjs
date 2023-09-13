@@ -83,19 +83,7 @@ export default async () => {
 
 					...esVersion.globals,
 
-					// Declares Vite global app constants.
-					// @note Also in `../../../tsconfig.d.ts`.
-					// These are needed only to satisfy the `no-undef` rule.
-
-					$$__APP_PKG_NAME__$$: 'readonly',
-					$$__APP_PKG_VERSION__$$: 'readonly',
-					$$__APP_PKG_REPOSITORY__$$: 'readonly',
-					$$__APP_PKG_HOMEPAGE__$$: 'readonly',
-					$$__APP_PKG_BUGS__$$: 'readonly',
-					$$__APP_BUILD_TIME_YMD__$$: 'readonly',
-
 					// Declares globals based on target environment(s).
-					// These are needed only to satisfy the `no-undef` rule.
 					// For docs on our target environments; {@see https://o5p.me/nCnEkQ}.
 
 					...(targetEnv // Globals for target environment.
