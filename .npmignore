@@ -17,76 +17,88 @@
 ##
 
 ##
-# This part follows `.gitignore` exactly.
+# This part is an exact copy of `./.gitignore`.
 ##
 
-# Locals.
+# Locals
 
-.#*
+._*
 .~*
+.#*
 *.local
 
-# Logs.
+# Logs
 
 *.log
 *.logs
 
-# Backups.
+# Backups
 
 *~
 *.bak
 
-# Patches.
+# Patches
 
 *.rej
 *.orig
 *.patch
 *.diff
 
-# IntelliJ.
+# Editors
+
+# :: Vim
+
+.*.swp
+
+# :: IntelliJ
 
 .idea
 
-# Sublime.
+# :: Sublime
 
 *.sublime-project
 *.sublime-workspace
 
-# Netbeans.
+# :: Netbeans
 
 *.nbproject
 
-# VS Code.
+# :: VS Code
 
 *.code-search
 *.code-workspace
 
-# Dist (must exclude).
-# May contain APP_ env vars.
+# :: CTAGs
+
+*.ctags
+
+# Dist
 
 dist
 
-# Yarn.
+# Packages
+
+# :: Yarn
 
 .yarn
 
-# Vendor.
+# :: Vendor
 
 vendor
 
-# NodeJS.
+# :: NodeJS
 
 node_modules
 
-# JSPM.
+# :: JSPM
 
 jspm_packages
 
-# Bower.
+# :: Bower
 
 bower_components
 
-# Dotenv.
+# Dotenv
 
 .env*
 .flaskenv*
@@ -94,89 +106,87 @@ bower_components
 !.env.vault
 !.env.project
 
-# TypeScript.
+# TypeScript
 
-typings
 .tscache
 *.tsbuildinfo
 
-# Vite.
+# Vite
 
 .vite
 .vitest
 
-# Wrangler.
+# Wrangler
 
 .wrangler
 .dev.vars
 .dev.vars.*
 
-# Rollup.
+# Rollup
 
 .rollup
 
-# Webpack.
+# Webpack
 
 .webpack
 
-# Linaria.
+# Linaria
 
 .linaria-cache
 
-# SASS.
+# SASS
 
 .sass-cache
 
-# Docker.
+# Docker
 
 .docker
 
-# Vagrant.
+# Vagrant
 
 .vagrant
 
-# Elastic Beanstalk.
+# Elastic Beanstalk
 
 .elasticbeanstalk
 
-# CTAGs.
+# Version Control
 
-*.ctags
-*.tags
-
-# VCS.
+# :: Git
 
 .git
+
+# :: Subversion
 
 .svn
 _svn
 .svnignore
 
-CVS
-.cvsignore
+# :: Bazaar
 
 .bzr
 .bzrignore
 
+# :: Mercurial
+
 .hg
 .hgignore
 
-SCCS
-RCS
+# Operating Systems
 
-# PC files.
+# :: Windows Files
 
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# PC directories.
+# :: Windows Directories
 
 $RECYCLE.BIN
 
-# Mac files.
+# :: MacOS Files
 
-._*
+# ._* Already listed above.
 Icon?
 !Icons
 *.icloud
@@ -186,7 +196,7 @@ Icon?
 .VolumeIcon.icns
 .com.apple.timemachine.*
 
-# Mac directories.
+# :: MacOS Directories
 
 .apdisk
 *.icloud
@@ -202,126 +212,79 @@ Network Trash Folder
 Temporary Items
 
 ##
-# These are in addition to what we have in `.gitignore`.
+# This part goes beyond the scope of `./.gitignore`.
 ##
 
-# Dist (allow).
+# Dist
 
 !dist
 
-# Configs.
+# Configs
 
-*config.*
-!dist/**/*config.*
-
-*.config.*
-!dist/**/*.config.*
-
+tsconfig.*
 wrangler.*
-!dist/**/wrangler.*
+*.config.*
+config.gypi
 
-# Uncompiled sources.
+# Locks
 
-*.scss
-!dist/**/*.scss
+yarn.lock
+composer.lock
+package-lock.json
 
-*.less
-!dist/**/*.less
-
-*.ejs
-!dist/**/*.ejs
-
-*.jsx
-!dist/**/*.jsx
-
-*.ts
-!*.d.ts
-!dist/**/*.ts
-
-*.tsx
-!*.d.tsx
-!dist/**/*.tsx
-
-*.cts
-!*.d.cts
-!dist/**/*.cts
-
-*.ctsx
-!*.d.ctsx
-!dist/**/*.ctsx
-
-*.mts
-!*.d.mts
-!dist/**/*.mts
-
-*.mtsx
-!*.d.mtsx
-!dist/**/*.mtsx
-
-# Dots.
+# Dots
 
 .*
 
-# Src.
+# Src
 
 src
-__src__
 
-# Dev.
+# Dev
 
 dev
-__dev__
 
-# Docs.
+# Sandbox
+
+sandbox
+
+# Examples
+
+example
+examples
+
+# Docs
 
 doc
 docs
-__doc__
-__docs__
 *.doc.*
 *.docs.*
+readme.*
 *.readme.*
-*.readmes.*
 
-# Tests.
+# Tests
 
 test
 tests
-__test__
-__tests__
 *.test.*
 *.tests.*
 *.test-d.*
 *.tests-d.*
 
-# Specs.
+# Specs
 
 spec
 specs
-__spec__
-__specs__
 *.spec.*
 *.specs.*
 *.spec-d.*
 *.specs-d.*
 
-# Examples.
-
-example
-examples
-__example__
-__examples__
-*.example.*
-*.examples.*
-
-# Benchmarks.
+# Benchmarks
 
 bench
 benchmark
 benchmarks
-__bench__
-__benchmark__
-__benchmarks__
 *.bench.*
 *.benchmark.*
 *.benchmarks.*
@@ -330,10 +293,18 @@ __benchmarks__
 # There are also a few items always included and/or excluded by NPM.
 # See: <https://docs.npmjs.com/cli/v9/configuring-npm/package-json#files>
 # See: <https://docs.npmjs.com/cli/v8/using-npm/developers?v=true#keeping-files-out-of-your-package>
+# Other than `package.json`, `README`, `LICENSE|LICENCE`, our rules already cover everything that NPM does.
 ##
 
 ##
 # Customizations.
+#
+# Please do not attempt to inject exceptions by customizing your project’s `./.npmignore` file
+# in ways that loosen our standard defaults. We have tooling in place that will conflict with your efforts.
+# For example, `vite-plugin-c10n-post-process` will automatically prune files from a resulting `./.dist`
+# built with our tooling. The pruning that it does strictly adheres to our default `./.npmignore` rules,
+# and intentionally does not factor in your customizations.
+#
 # <custom:start>
 
 # </custom:end>

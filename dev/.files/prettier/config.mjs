@@ -78,14 +78,112 @@ export default async () => {
 		overrides: [
 			{
 				/**
+				 * Enforce Babel parser.
+				 *
+				 * @see https://o5p.me/sj8jjz
+				 */
+				files: ['*.' + extensions.asGlob([...extensions.js])],
+				options: { parser: 'babel' },
+			},
+
+			{
+				/**
+				 * Enforce TypeScript parser.
+				 *
+				 * @see https://o5p.me/sj8jjz
+				 */
+				files: ['*.' + extensions.asGlob([...extensions.ts])],
+				options: { parser: 'typescript' },
+			},
+
+			{
+				/**
+				 * Enforce HTML parser.
+				 *
+				 * @see https://o5p.me/sj8jjz
+				 */
+				files: ['*.' + extensions.asGlob([...extensions.html])],
+				options: { parser: 'html' },
+			},
+
+			{
+				/**
+				 * Enforce MD parser.
+				 *
+				 * @see https://o5p.me/sj8jjz
+				 */
+				files: ['*.' + extensions.asGlob([...extensions.md])],
+				options: { parser: 'markdown' },
+			},
+
+			{
+				/**
+				 * Enforce MDX parser.
+				 *
+				 * @see https://o5p.me/sj8jjz
+				 */
+				files: ['*.' + extensions.asGlob([...extensions.mdx])],
+				options: { parser: 'mdx' },
+			},
+
+			{
+				/**
+				 * Enforce CSS parser.
+				 *
+				 * @see https://o5p.me/sj8jjz
+				 */
+				files: ['*.' + extensions.asGlob([...extensions.css])],
+				options: { parser: 'css' },
+			},
+
+			{
+				/**
+				 * Enforce SCSS parser.
+				 *
+				 * @see https://o5p.me/sj8jjz
+				 */
+				files: ['*.' + extensions.asGlob([...extensions.scss])],
+				options: { parser: 'scss' },
+			},
+
+			{
+				/**
+				 * Enforce Less parser.
+				 *
+				 * @see https://o5p.me/sj8jjz
+				 */
+				files: ['*.' + extensions.asGlob([...extensions.less])],
+				options: { parser: 'less' },
+			},
+
+			{
+				/**
+				 * Enforce Yaml parser.
+				 *
+				 * @see https://o5p.me/sj8jjz
+				 */
+				files: ['*.' + extensions.asGlob([...extensions.yaml])],
+				options: { parser: 'yaml' },
+			},
+
+			{
+				/**
 				 * Enforce JSON parser.
 				 *
 				 * @see https://o5p.me/sj8jjz
 				 */
 				files: ['*.' + extensions.asGlob(extensions.json)],
-				options: {
-					parser: 'json', // Not `json-stringify`.
-				},
+				options: { parser: 'json' },
+			},
+
+			{
+				/**
+				 * Enforce JSON5 parser.
+				 *
+				 * @see https://o5p.me/sj8jjz
+				 */
+				files: ['*.' + extensions.asGlob(extensions.json5)],
+				options: { parser: 'json5' },
 			},
 
 			{

@@ -7,140 +7,85 @@
  */
 
 import path from 'node:path';
-import { $str } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
-
-/**
- * Converts an array of exclusions into regular expressions.
- *
- * @param   e Array of exclusions.
- *
- * @returns   Exclusions as regular expressions.
- */
-const asRegExps = (e) => asRegExpStrings(e).map((e) => new RegExp(e, 'u'));
+import { $obj, $path } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 
 /**
  * Converts an array of exclusions into regular expression strings.
  *
- * @param   e Array of exclusions.
+ * @param   globs Array of exclusion globs.
  *
- * @returns   Exclusions as regular expression strings.
+ * @returns       Exclusions as regular expression strings.
  */
-const asRegExpStrings = (e) =>
-	e.map(
-		(e) =>
-			'^' +
-			$str
-				.escRegExp(e)
-				.replace(/\\\*\\\*/gu, '.*')
-				.replace(/\\\*/gu, '[^\\/]*') +
-			'$',
-	);
+const asRegExpStrings = (globs) => [...new Set(globs)].map((glob) => $path.globToRegExpString(glob));
+
+/**
+ * Converts an array of exclusions into regular expressions.
+ *
+ * @param   globs Array of exclusion globs.
+ *
+ * @returns       Exclusions as regular expressions.
+ */
+const asRegExps = (globs) => asRegExpStrings(globs).map((rxs) => new RegExp(rxs, 'ui'));
 
 /**
  * Converts an array of exclusions into relative globs.
  *
- * @param   f From path for relative calculation.
- * @param   e Array of exclusions.
+ * @param   from  From path.
+ * @param   globs Array of exclusion globs.
  *
- * @returns   Exclusions as relative globs.
+ * @returns       Exclusions as relative globs.
  */
-const asRelativeGlobs = (f, e) => e.map((e) => path.relative(f, e));
+const asRelativeGlobs = (from, globs) => {
+	return [...new Set(globs)].map((glob) => {
+		return /^\*\*/u.test(glob) ? glob : path.relative(from, glob);
+	});
+};
 
 /**
- * Defines exclusions.
+ * Converts an array of exclusions into negated globs.
  *
- * @note Not using any `{}` brace expansions due to TypeScript being incompatible.
- *       i.e., These exclusions are also used by our TypeScript config file generator.
+ * @param   globs Array of exclusion globs.
+ *
+ * @returns       Exclusions as negated globs.
+ */
+const asNegatedGlobs = (globs) => [...new Set(globs)].map((glob) => '!' + glob);
+
+/**
+ * Defines exclusions globs.
+ *
+ * - Don’t declare any negations here. Instead, use {@see asNegatedGlobs()}.
+ * - Don’t use `{}` brace expansions here. Not compatible with TypeScript config.
  */
 export default {
+	/**
+	 * Default Git/NPM ignores, by category. Categories added to the default export here. Provided by
+	 * `@clevercanyon/utilities`. Includes everything we have in our default `./.gitignore`, `./.npmignore`.
+	 */
+	...$obj.map($path.defaultGitNPMIgnoresByCategory, (category) => {
+		return category.map((glob) => '**/' + glob + '/**');
+	}),
+
+	/**
+	 * We intentionally use our 'default' NPM ignores when pruning; i.e., as opposed to using the current and
+	 * potentially customized `./.npmignore` file in the current project directory. The reason is because we intend to
+	 * enforce our standards. For further details {@see https://o5p.me/MuskgW}.
+	 */
+	defaultNPMIgnores: $path.defaultNPMIgnores.map((glob) => {
+		const isNegated = /^!/u.test(glob);
+		glob = isNegated ? glob.replace(/^!/u, '') : glob;
+		return (isNegated ? '!' : '') + '**/' + glob + '/**';
+	}),
+
+	/**
+	 * Specifically for use in our projects.
+	 */
+	adhocXIgnores: ['**/x-*/**'], // For special use cases.
+
+	/**
+	 * Utilities.
+	 */
 	asRegExps,
 	asRegExpStrings,
 	asRelativeGlobs,
-
-	vcsFilesDirs: [
-		'**/.git/**', //
-
-		'**/.svn/**',
-		'**/_svn/**',
-		'**/.svnignore/**',
-
-		'**/CVS/**',
-		'**/.cvsignore/**',
-
-		'**/.bzr/**',
-		'**/.bzrignore/**',
-
-		'**/.hg/**',
-		'**/.hgignore/**',
-
-		'**/SCCS/**',
-		'**/RCS/**',
-	],
-	packageDirs: [
-		'**/.yarn/**', //
-		'**/vendor/**',
-		'**/node_modules/**',
-		'**/jspm_packages/**',
-		'**/bower_components/**',
-	],
-	dotFilesDirs: [
-		'**/.*/**', //
-	],
-	dtsFiles: [
-		'**/*.d.ts', //
-		'**/*.d.tsx',
-		'**/*.d.cts',
-		'**/*.d.ctsx',
-		'**/*.d.mts',
-		'**/*.d.mtsx',
-	],
-	srcDirs: [
-		'**/src/**', //
-		'**/__src__/**',
-	],
-	distDirs: [
-		'**/dist/**', //
-	],
-	devDirs: [
-		'**/dev/**', //
-		'**/__dev__/**',
-	],
-	sandboxDirs: [
-		'**/sandbox/**', //
-		'**/__sandbox__/**',
-	],
-	docDirs: [
-		'**/doc/**', //
-		'**/docs/**',
-		'**/__doc__/**',
-		'**/__docs__/**',
-	],
-	testDirs: [
-		'**/test/**', //
-		'**/tests/**',
-		'**/spec/**',
-		'**/specs/**',
-		'**/__test__/**',
-		'**/__tests__/**',
-		'**/__spec__/**',
-		'**/__specs__/**',
-	],
-	exampleDirs: [
-		'**/example/**', //
-		'**/examples/**',
-		'**/__example__/**',
-		'**/__examples__/**',
-	],
-	benchmarkDirs: [
-		'**/bench/**', //
-		'**/benchmark/**',
-		'**/benchmarks/**',
-		'**/__bench__/**',
-		'**/__benchmark__/**',
-		'**/__benchmarks__/**',
-	],
-	xDirs: [
-		'**/x-*/**', //
-		'**/__x-*__/**',
-	],
+	asNegatedGlobs,
 };

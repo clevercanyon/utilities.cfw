@@ -13,7 +13,7 @@
  *
  * @returns   Array of extensions (not dot).
  */
-const noDot = (e) => e.map((e) => e.replace(/^\./u, ''));
+const noDot = (e) => [...new Set(e)].map((e) => e.replace(/^\./u, ''));
 
 /**
  * Converts an array of extensions into a glob pattern.
@@ -24,7 +24,10 @@ const noDot = (e) => e.map((e) => e.replace(/^\./u, ''));
  *
  * @note Don’t use these `{}` brace expansions in TypeScript config files; i.e., incompatible.
  */
-const asGlob = (e) => (e.length > 1 ? '{' : '') + noDot(e).join(',') + (e.length > 1 ? '}' : '');
+const asGlob = (e) => {
+	e = [...new Set(e)]; // Unique.
+	return (e.length > 1 ? '{' : '') + noDot(e).join(',') + (e.length > 1 ? '}' : '');
+};
 
 /**
  * Converts an array of extensions into a regular expression fragment.
@@ -33,7 +36,10 @@ const asGlob = (e) => (e.length > 1 ? '{' : '') + noDot(e).join(',') + (e.length
  *
  * @returns   Extensions as a regular expression fragment.
  */
-const asRegExpFrag = (e) => (e.length > 1 ? '(?:' : '') + noDot(e).join('|') + (e.length > 1 ? ')' : '');
+const asRegExpFrag = (e) => {
+	e = [...new Set(e)]; // Unique.
+	return (e.length > 1 ? '(?:' : '') + noDot(e).join('|') + (e.length > 1 ? ')' : '');
+};
 
 /**
  * Defines extensions.
@@ -43,45 +49,58 @@ export default {
 	asGlob,
 	asRegExpFrag,
 
-	css: ['.css'],
-	scss: ['.scss'],
+	md: ['.md'],
+	mdx: ['.mdx'],
 
 	xml: ['.xml'],
 	html: ['.html'],
-
-	ini: ['.ini'],
-	json: ['.json'],
-	toml: ['.toml'],
-	yaml: ['.yml', '.yaml'],
-	properties: ['.properties', '.env'],
 
 	php: ['.php'],
 	sql: ['.sql'],
 	ruby: ['.rb'],
 	bash: ['.bash'],
 
+	css: ['.css'],
+	scss: ['.scss'],
+	less: ['.less'],
+
+	json: ['.json'],
+	json5: ['.json5'],
+
+	ini: ['.ini'],
+	toml: ['.toml'],
+	yaml: ['.yml', '.yaml'],
+	properties: ['.properties', '.env'],
+
 	js: ['.js', '.jsx', '.cjs', '.cjsx', '.node', '.mjs', '.mjsx'],
 	ts: ['.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx'],
-	jts: ['.js', '.jsx', '.cjs', '.cjsx', '.node', '.mjs', '.mjsx'] //
-		.concat(['.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx']),
+	jts: [...['.js', '.jsx', '.cjs', '.cjsx', '.node', '.mjs', '.mjsx'], ...['.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx']],
 
 	sjs: ['.js', '.jsx'],
 	sts: ['.ts', '.tsx'],
-	sjts: ['.js', '.jsx'].concat(['.ts', '.tsx']),
+	sjts: [...['.js', '.jsx'], ...['.ts', '.tsx']],
 
 	cjs: ['.cjs', '.cjsx', '.node'],
 	cts: ['.cts', '.ctsx'],
-	cjts: ['.cjs', '.cjsx', '.node'].concat(['.cts', '.ctsx']),
+	cjts: [...['.cjs', '.cjsx', '.node'], ...['.cts', '.ctsx']],
 
 	mjs: ['.mjs', '.mjsx'],
 	mts: ['.mts', '.mtsx'],
-	mjts: ['.mjs', '.mjsx'].concat(['.mts', '.mtsx']),
+	mjts: [...['.mjs', '.mjsx'], ...['.mts', '.mtsx']],
 
 	jsx: ['.jsx', '.cjsx', '.mjsx'],
 	tsx: ['.tsx', '.ctsx', '.mtsx'],
-	jtsx: ['.jsx', '.cjsx', '.mjsx'].concat(['.tsx', '.ctsx', '.mtsx']),
+	jtsx: [...['.jsx', '.cjsx', '.mjsx'], ...['.tsx', '.ctsx', '.mtsx']],
 
-	content: ['.js', '.jsx', '.cjs', '.cjsx', '.node', '.mjs', '.mjsx']
-		.concat(['.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx'])
-		.concat(['md', 'xml', 'html', 'shtml', 'php', 'ejs']),
+	content: [
+		...['.js', '.jsx', '.cjs', '.cjsx', '.node', '.mjs', '.mjsx'],
+		...['.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx'],
+		...['md', 'mdx', 'xml', 'html', 'shtml', 'php', 'ejs'],
+	],
+	onImportWithNoExtensionTry: [
+		...['.ts', '.tsx', '.mts', '.mtsx', '.cts', '.ctsx'],
+		...['.js', '.jsx', '.mjs', '.mjsx', '.cjs', '.cjsx', '.node'],
+		...['json'],
+		...['md', 'mdx'],
+	],
 };

@@ -9,16 +9,15 @@
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
-import { $chalk, $cmd, $fs, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $chalk, $fs, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 import { $is, $json, $obj, $obp, $str } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import customRegexp from './data/custom-regexp.mjs';
-
-const { log } = console; // Shorter reference.
 
 export default async ({ projDir }) => {
 	/**
 	 * Initializes vars.
 	 */
+	const { log } = console;
 	const __dirname = $fs.imuDirname(import.meta.url);
 	const skeletonDir = path.resolve(__dirname, '../../../..');
 
@@ -66,15 +65,6 @@ export default async ({ projDir }) => {
 	};
 
 	/**
-	 * Tests `pkgRepository` to see if it’s a fork.
-	 *
-	 * @returns {boolean} True if current package repo is a fork.
-	 */
-	const isPkgRepoFork = async () => {
-		return /[:/][^/]+\/[^/]+\.fork(?:\.git)?$/iu.test(pkgRepository);
-	};
-
-	/**
 	 * Checks dotfile locks.
 	 *
 	 * @param   {string}  relPath Relative dotfile path.
@@ -108,15 +98,7 @@ export default async ({ projDir }) => {
 	/**
 	 * Deletes outdated dotfiles no longer in use.
 	 */
-	for (const relPath of [
-		// './.madrun.mjs', // @todo After all projects get `madrun.config.mjs`.
-		'./.eslintrc.cjs',
-		'./.eslintignore',
-		'./.postcssrc.cjs',
-		'./.prettierrc.cjs',
-		'./.stylelintrc.cjs',
-		'./.tailwindrc.cjs',
-	]) {
+	for (const relPath of ['./.madrun.mjs', './tsconfig.d.ts']) {
 		if (await isLocked(relPath)) {
 			continue; // Locked 🔒.
 		}
@@ -140,26 +122,26 @@ export default async ({ projDir }) => {
 		'./.editorconfig',
 		'./.vscode/settings.json',
 		'./.vscode/extensions.json',
-		// Sandbox files are not added or modified when updating fork repos.
-		...((await isPkgRepoFork()) ? [] : ['./src/tests/sandbox/.vscode/settings.json']),
-		...((await isPkgRepoFork()) ? [] : ['./src/tests/sandbox/.vscode/extensions.json']),
 
-		'./tsconfig.d.ts',
+		'./ts-types.d.ts',
 		'./tsconfig.json',
+		'./tsconfig.mjs',
 
-		'./.prettierignore',
-		'./prettier.config.mjs',
+		'./wrangler.toml',
+		'./wrangler.mjs',
 
-		'./.shellcheckrc',
 		'./.browserslistrc',
+		'./.prettierignore',
+		'./.remarkrc.mjs',
+		'./.shellcheckrc',
 		'./eslint.config.mjs',
 		'./jest.config.mjs',
 		'./madrun.config.mjs',
 		'./postcss.config.mjs',
+		'./prettier.config.mjs',
 		'./stylelint.config.mjs',
 		'./tailwind.config.mjs',
 		'./vite.config.mjs',
-		'./wrangler.toml',
 	]) {
 		if (await isLocked(relPath)) {
 			continue; // Locked 🔒.
@@ -229,16 +211,22 @@ export default async ({ projDir }) => {
 				}
 			}
 			$obj.patchDeep(json, jsonUpdates); // Potentially declarative ops.
-			const prettierCfg = { ...(await $prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
-			await fsp.writeFile(path.resolve(projDir, relPath), await $prettier.format($json.stringify(json, { pretty: true }), prettierCfg));
+			const prettierConfig = { ...(await $prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
+			await fsp.writeFile(path.resolve(projDir, relPath), await $prettier.format($json.stringify(json, { pretty: true }), prettierConfig));
 		}
 	}
 
 	/**
-	 * Updates `@clevercanyon/dev-deps` in project dir.
+	 * Recompiles `./tsconfig.json`; i.e., following update.
 	 */
-	if (!(await isPkgRepo('clevercanyon/dev-deps'))) {
-		log($chalk.green('Updating project to latest `@clevercanyon/dev-deps`.'));
-		await $cmd.spawn('npm', ['udpate', '@clevercanyon/dev-deps'], { cwd: projDir });
-	}
+
+	log($chalk.green('Recompiling `./tsconfig.json` using latest dotfiles.'));
+	await (await import(path.resolve(projDir, './dev/.files/bin/tsconfig/index.mjs'))).default({ projDir });
+
+	/**
+	 * Recompiles `./wrangler.toml`; i.e., following update.
+	 */
+
+	log($chalk.green('Recompiling `./wrangler.toml` using latest dotfiles.'));
+	await (await import(path.resolve(projDir, './dev/.files/bin/wrangler/index.mjs'))).default({ projDir });
 };

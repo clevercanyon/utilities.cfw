@@ -3,9 +3,9 @@
  */
 // @ts-nocheck -- sandbox.
 
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-describe('sandbox: index', async () => {
+describe('sandbox/tests: index', async () => {
 	test('expect', async () => {
 		expect(true).toBe(true);
 	});

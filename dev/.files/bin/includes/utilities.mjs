@@ -187,8 +187,8 @@ export default class u {
 			}
 		}
 		$obj.patchDeep(pkg, updates); // Potentially declarative ops.
-		const pkgPrettierCfg = { ...(await $prettier.resolveConfig(pkgFile)), parser: 'json' };
-		await fsp.writeFile(pkgFile, await $prettier.format($json.stringify(pkg, { pretty: true }), pkgPrettierCfg));
+		const prettierConfig = { ...(await $prettier.resolveConfig(pkgFile)), parser: 'json' };
+		await fsp.writeFile(pkgFile, await $prettier.format($json.stringify(pkg, { pretty: true }), prettierConfig));
 	}
 
 	/*

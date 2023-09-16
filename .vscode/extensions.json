@@ -20,6 +20,8 @@
 		"stylelint.vscode-stylelint",
 		"tamasfe.even-better-toml",
 		"timonwong.shellcheck",
+		"unifiedjs.vscode-mdx",
+		"xyc.vscode-mdx-preview",
 		"webben.browserslist"
 	]
 

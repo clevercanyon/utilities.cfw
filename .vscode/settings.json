@@ -35,157 +35,163 @@
 	"files.associations": {
 		".inputrc": "text",
 		"CODEOWNERS": "ignore",
-		"**/src/_headers": "text",
-		"**/src/_redirects": "text",
+
 		".env{,.*}": "properties",
 		"**/*.exacolors": "properties",
-		"**/src/cargo/_routes.json": "jsonc",
-		"**/dev/.files/typescript/config.json": "jsonc"
+
+		"**/src/_headers": "text",
+		"**/src/_redirects": "text",
+		"**/src/cargo/_routes.json": "jsonc"
 	},
 	"files.exclude": {
-		// Locals.
+		// Locals
 
-		"**/.~*": true,
+		"**/._*/**": true,
+		"**/.~*/**": true,
 
-		// Logs.
+		// Logs
 
-		"**/*.log": true,
+		"**/*.log/**": true,
 
-		// Patches.
+		// Patches
 
-		"**/*.rej": true,
-		"**/*.orig": true,
-		"**/*.patch": true,
-		"**/*.diff": true,
+		"**/*.rej/**": true,
+		"**/*.orig/**": true,
+		"**/*.patch/**": true,
+		"**/*.diff/**": true,
 
-		// IntelliJ.
+		// Editors
 
-		"**/.idea": true,
+		// :: Vim
 
-		// Sublime.
+		"**/.*.swp/**": true,
 
-		"**/*.sublime-project": true,
-		"**/*.sublime-workspace": true,
+		// :: IntelliJ
 
-		// Netbeans.
+		"**/.idea/**": true,
 
-		"**/*.nbproject": true,
+		// :: Sublime
 
-		// VS Code.
+		"**/*.sublime-project/**": true,
+		"**/*.sublime-workspace/**": true,
 
-		"**/*.code-workspace": true,
+		// :: Netbeans
 
-		// TypeScript.
+		"**/*.nbproject/**": true,
 
-		"**/.tscache": true,
-		"**/*.tsbuildinfo": true,
+		// :: VS Code
 
-		// Vite.
+		"**/*.code-workspace/**": true,
 
-		"**/.vite": true,
-		"**/.vitest": true,
+		// :: CTAGs
 
-		// Wrangler.
+		"**/*.ctags/**": true,
 
-		"**/.wrangler": true,
+		// TypeScript
 
-		// Rollup.
+		"**/.tscache/**": true,
+		"**/*.tsbuildinfo/**": true,
 
-		"**/.rollup": true,
+		// Vite
 
-		// Webpack.
+		"**/.vite/**": true,
+		"**/.vitest/**": true,
 
-		"**/.webpack": true,
+		// Wrangler
 
-		// Linaria.
+		"**/.wrangler/**": true,
 
-		"**/.linaria-cache": true,
+		// Rollup
 
-		// SASS.
+		"**/.rollup/**": true,
 
-		"**/.sass-cache": true,
+		// Webpack
 
-		// Docker.
+		"**/.webpack/**": true,
 
-		"**/.docker": true,
+		// Linaria
 
-		// Vagrant.
+		"**/.linaria-cache/**": true,
 
-		"**/.vagrant": true,
+		// SASS
 
-		// Elastic Beanstalk.
+		"**/.sass-cache/**": true,
 
-		"**/.elasticbeanstalk": true,
+		// Docker
 
-		// CTAGs.
+		"**/.docker/**": true,
 
-		"**/*.ctags": true,
-		"**/*.tags": true,
+		// Vagrant
 
-		// VCS.
+		"**/.vagrant/**": true,
 
-		"**/.git": true,
+		// Elastic Beanstalk
 
-		"**/.svn": true,
-		"**/_svn": true,
-		"**/.svnignore": true,
+		"**/.elasticbeanstalk/**": true,
 
-		"**/CVS": true,
-		"**/.cvsignore": true,
+		// VCS
 
-		"**/.bzr": true,
-		"**/.bzrignore": true,
+		"**/.git/**": true,
 
-		"**/.hg": true,
-		"**/.hgignore": true,
+		"**/.svn/**": true,
+		"**/_svn/**": true,
+		"**/.svnignore/**": true,
 
-		"**/SCCS": true,
-		"**/RCS": true,
+		"**/CVS/**": true,
+		"**/.cvsignore/**": true,
 
-		// PC files.
+		"**/.bzr/**": true,
+		"**/.bzrignore/**": true,
 
-		"**/Thumbs.db": true,
-		"**/ehthumbs.db": true,
-		"**/Desktop.ini": true,
+		"**/.hg/**": true,
+		"**/.hgignore/**": true,
 
-		// PC directories.
+		"**/SCCS/**": true,
+		"**/RCS/**": true,
 
-		"**/$RECYCLE.BIN": true,
+		// OS Specials
 
-		// Mac files.
+		// :: PC Files
 
-		"**/._*": true,
-		"**/Icon?": true,
-		"!**/Icons": true,
-		"**/.DS_Store": true,
-		"**/.disk_label": true,
-		"**/.LSOverride": true,
-		"**/.VolumeIcon.icns": true,
-		"**/.com.apple.timemachine.*": true,
+		"**/Thumbs.db/**": true,
+		"**/ehthumbs.db/**": true,
+		"**/Desktop.ini/**": true,
 
-		// Mac directories.
+		// :: PC Directories
 
-		"**/.apdisk": true,
-		"**/*.icloud": true,
-		"**/.fseventsd": true,
-		"**/.AppleDB": true,
-		"**/.AppleDesktop": true,
-		"**/.AppleDouble": true,
-		"**/.Trashes": true,
-		"**/.TemporaryItems": true,
-		"**/.Spotlight-V100": true,
-		"**/.DocumentRevisions-V100": true,
-		"**/Network Trash Folder": true,
-		"**/Temporary Items": true
+		"**/$RECYCLE.BIN/**": true,
+
+		// :: Mac Files
+
+		// "**/._*/**": true, // Already listed above.
+		"**/Icon?/**": true,
+		"!**/Icons/**": true,
+		"**/.DS_Store/**": true,
+		"**/.disk_label/**": true,
+		"**/.LSOverride/**": true,
+		"**/.VolumeIcon.icns/**": true,
+		"**/.com.apple.timemachine.*/**": true,
+
+		// :: Mac Directories
+
+		"**/.apdisk/**": true,
+		"**/*.icloud/**": true,
+		"**/.fseventsd/**": true,
+		"**/.AppleDB/**": true,
+		"**/.AppleDesktop/**": true,
+		"**/.AppleDouble/**": true,
+		"**/.Trashes/**": true,
+		"**/.TemporaryItems/**": true,
+		"**/.Spotlight-V100/**": true,
+		"**/.DocumentRevisions-V100/**": true,
+		"**/Network Trash Folder/**": true,
+		"**/Temporary Items/**": true
 	},
 	"search.exclude": {
-		"**/.#*": true,
-		"**/*.logs": true,
-		"**/yarn.lock": true,
-		"**/composer.lock": true,
-		"**/package-lock.json": true,
-		"**/*.code-search": true,
-		"**/.vscode": true
+		"**/.vscode/**": true,
+		"**/yarn.lock/**": true,
+		"**/composer.lock/**": true,
+		"**/package-lock.json/**": true
 	},
 	"search.useIgnoreFiles": true,
 	"search.useGlobalIgnoreFiles": false,
@@ -213,6 +219,52 @@
 
 	"commentAnchors.workspace.matchFiles": "{**/.*/**/.*,**/.*/**/*,**/.*,**/*}.{md,xml,html,shtml,php,ejs,js,cjs,mjs,jsx,ts,tsx,json,bash}",
 	"commentAnchors.workspace.excludeFiles": "**/{.git,dist,.yarn,vendor,node_modules,jspm_packages,bower_components}/**",
+
+	/**
+	 * ESLint options.
+	 */
+
+	"eslint.enable": true,
+	"eslint.format.enable": true,
+	"eslint.lintTask.enable": false,
+
+	"eslint.run": "onType",
+	"eslint.runtime": "node",
+
+	"eslint.codeActionsOnSave.mode": "all",
+	"eslint.experimental.useFlatConfig": true,
+
+	"eslint.validate": [
+		"mdx", //
+		"markdown",
+		"javascript",
+		"javascriptreact",
+		"typescript",
+		"typescriptreact"
+	],
+	"eslint.options": {
+		"overrideConfigFile": "eslint.config.mjs"
+	},
+	"javascript.validate.enable": true,
+	"typescript.validate.enable": true,
+
+	/**
+	 * Stylelint options.
+	 */
+
+	"scss.validate": true,
+	"less.validate": true,
+	"css.validate": true,
+	"stylelint.validate": [
+		"scss", //
+		"css"
+	],
+
+	/**
+	 * MDX options.
+	 */
+
+	"mdx-preview.build.useSucraseTranspiler": true,
 
 	/**
 	 * Prettier options.
@@ -276,7 +328,7 @@
 	},
 
 	/**
-	 * XML/HTML/MD options.
+	 * XML/HTML options.
 	 */
 
 	"[xml]": {
@@ -293,22 +345,29 @@
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
 
+	/**
+	 * Markdown options.
+	 */
+
+	"[mdx]": {
+		"editor.wordWrap": "on",
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		},
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+	},
+
 	"[markdown]": {
 		"editor.wordWrap": "on",
 		"editor.codeActionsOnSave": {
 			"source.fixAll": true
 		},
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
 	},
 
 	/**
 	 * SCSS/LESS/CSS options.
 	 */
-
-	"scss.validate": false,
-	"less.validate": false,
-	"css.validate": false,
-	"stylelint.validate": ["scss", "css"],
 
 	"[scss]": {
 		"editor.codeActionsOnSave": {
@@ -334,18 +393,6 @@
 	/**
 	 * JS/TS/React options.
 	 */
-
-	"eslint.run": "onType",
-	"eslint.format.enable": true,
-	"eslint.lintTask.enable": false,
-	"eslint.codeActionsOnSave.mode": "all",
-	"eslint.experimental.useFlatConfig": true,
-	"eslint.workingDirectories": [{ "mode": "auto" }],
-	"eslint.options": {
-		"overrideConfigFile": "eslint.config.mjs"
-	},
-	"javascript.validate.enable": true,
-	"typescript.validate.enable": true,
 
 	"[javascript]": {
 		"editor.codeActionsOnSave": {

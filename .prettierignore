@@ -64,6 +64,10 @@ RCS
 
 ##
 # Customizations.
+#
+# Please do not attempt to inject exceptions by customizing your project’s `./.prettierignore` file
+# in ways that loosen our standard defaults. Other (untested) factors may conflict with your efforts.
+#
 # <custom:start>
 
 # </custom:end>
