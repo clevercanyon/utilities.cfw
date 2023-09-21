@@ -214,8 +214,8 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
         ...(targetEnvIsServer // Target environment is server-side?
             ? {
                   ssr: {
-                      noExternal: ['cfw'].includes(targetEnv),
                       target: ['cfw'].includes(targetEnv) ? 'webworker' : 'node',
+                      ...(['cfw'].includes(targetEnv) ? { noExternal: true } : {}),
                   },
               }
             : {}),

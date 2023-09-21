@@ -155,7 +155,7 @@ export default async ({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable
             ['**/*.{node,any}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'node'],
             ['**/{test,tests,spec,specs}/**/*.{node,any}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'node'],
         ],
-        server: { deps: { external: [...new Set([...exclusions.pkgIgnores].concat(rollupConfig.external))] } },
+        server: { deps: { inline: [], external: [...new Set([...exclusions.pkgIgnores].concat(rollupConfig.external))] } },
         cache: { dir: path.resolve(projDir, './node_modules/.vitest') },
 
         passWithNoTests: true, // Pass if there are no tests to run.
