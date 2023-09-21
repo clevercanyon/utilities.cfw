@@ -7,20 +7,30 @@
 # @note This entire file will be updated automatically.
 # @note Instead of editing here, please review `./wrangler.mjs`.
 #
-# Last generated using `./wrangler.mjs` Thu, Sep 21, 2023, 4:02:17 AM EDT.
+# Last generated using `./wrangler.mjs` Thu, Sep 21, 2023, 6:04:42 AM EDT.
 ##
 
 compatibility_date = "2023-08-15"
 send_metrics = false
 usage_model = "bundled"
-account_id = "f1176464a976947aa5665d989814a4b1"
 name = "utilities-cfw"
+account_id = "f1176464a976947aa5665d989814a4b1"
 workers_dev = false
 main = "./dist/index.js"
 
 [[rules]]
-type = "Data"
-globs = [ "**/*.bin" ]
+type = "Text"
+globs = [ ]
+fallthrough = false
+
+[[rules]]
+type = "ESModule"
+globs = [ "**/*.js", "**/*.mjs", "**/*.jsx", "**/*.mjsx" ]
+fallthrough = false
+
+[[rules]]
+type = "CommonJS"
+globs = [ "**/*.cjs", "**/*.cjsx" ]
 fallthrough = false
 
 [[rules]]
@@ -29,38 +39,14 @@ globs = [ "**/*.wasm" ]
 fallthrough = false
 
 [[rules]]
-type = "ESModule"
-globs = [ "**/*.js", "**/*.jsx", "**/*.mjs", "**/*.mjsx" ]
-fallthrough = false
-
-[[rules]]
-type = "CommonJS"
-globs = [ "**/*.cjs", "**/*.cjsx", "**/*.node" ]
-fallthrough = false
-
-[[rules]]
-type = "Text"
-globs = [
-  "**/*.md",
-  "**/*.txt",
-  "**/*.xml",
-  "**/*.html",
-  "**/*.shtml",
-  "**/*.ejs",
-  "**/*.json"
-]
+type = "Data"
+globs = [ ]
 fallthrough = false
 
 [build]
 cwd = "./"
 watch_dir = "./src"
 command = "npx @clevercanyon/madrun build --mode=prod"
-
-[env.dev]
-workers_dev = false
-
-  [env.dev.build]
-  command = "npx @clevercanyon/madrun build --mode=dev"
 
 [site]
 bucket = "./dist/assets"
@@ -181,3 +167,9 @@ exclude = [
 [route]
 zone_name = "hop.gdn"
 pattern = "workers.hop.gdn/utilities-cfw/*"
+
+[env.dev]
+workers_dev = false
+
+  [env.dev.build]
+  command = "npx @clevercanyon/madrun build --mode=dev"

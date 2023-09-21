@@ -41,6 +41,17 @@ const asBracedGlob = (exts) => {
 };
 
 /**
+ * Converts an array of extensions into no-brace globstars.
+ *
+ * @param   exts Array of extensions.
+ *
+ * @returns      Extensions as no-brace globstars.
+ */
+const asNoBraceGlobstars = (exts) => {
+    return noDot(exts).map((ext) => '**/*.' + ext);
+};
+
+/**
  * Converts an array of extensions into a regular expression fragment.
  *
  * @param   exts Array of extensions.
@@ -59,6 +70,7 @@ const extensions = {
     dot,
     noDot,
     asBracedGlob,
+    asNoBraceGlobstars,
     asRegExpFrag,
 
     /**
@@ -105,6 +117,10 @@ const extensions = {
 
     allJavaScript: ['.js', '.jsx', '.cjs', '.cjsx', '.mjs', '.mjsx'],
     allTypeScript: ['.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx'],
+
+    // Compiled WASM (WebAssembly).
+
+    wasm: ['.wasm'],
 };
 
 /**

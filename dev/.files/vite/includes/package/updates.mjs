@@ -22,7 +22,7 @@ import u from '../../../bin/includes/utilities.mjs';
  *
  * @returns       Build-related property updates.
  */
-export default async ({ command, isSSRBuild, projDir, pkg, appType, targetEnv, appEntriesAsProjRelPaths, appEntriesAsSrcSubpaths, appEntriesAsSrcSubpathsNoExt, useUMD }) => {
+export default async ({ command, isSSRBuild, projDir, pkg, appType, targetEnv, appEntriesAsProjRelPaths, appEntriesAsSrcSubpaths, appEntriesAsSrcSubpathsNoExt }) => {
     const updates = {}; // Initialize.
 
     if (isSSRBuild) {
@@ -45,7 +45,7 @@ export default async ({ command, isSSRBuild, projDir, pkg, appType, targetEnv, a
                     throw new Error('Multipage apps must have an `./index.' + extensions.asBracedGlob([...extensions.trueHTML]) + '` entry point.');
                 }
                 (updates.exports = null), (updates.typesVersions = {});
-                updates.module = updates.main = updates.browser = updates.unpkg = updates.types = '';
+                updates.main = updates.module = updates.unpkg = updates.browser = updates.types = '';
 
                 break; // Stop here.
             }
@@ -63,51 +63,33 @@ export default async ({ command, isSSRBuild, projDir, pkg, appType, targetEnv, a
                         'Library apps must have an `./index.' + extensions.asBracedGlob([...extensions.sTypeScript, ...extensions.sTypeScriptReact]) + '` entry point.',
                     );
                 }
-                if (useUMD) {
-                    updates.exports = {
-                        '.': {
-                            import: './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js',
-                            require: './dist/' + appEntryIndexAsSrcSubpathNoExt + '.umd.cjs',
-                            types: './dist/types/' + appEntryIndexAsSrcSubpathNoExt + '.d.ts',
-                        },
-                    };
-                    updates.module = './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js';
-                    updates.main = './dist/' + appEntryIndexAsSrcSubpathNoExt + '.umd.cjs';
+                updates.exports = {
+                    '.': {
+                        types: './dist/types/' + appEntryIndexAsSrcSubpathNoExt + '.d.ts', // First, always.
+                        import: './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js', // ESM module import path.
+                        default: './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js', // Last, always.
+                    },
+                };
+                updates.main = './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js';
+                updates.module = './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js';
 
-                    updates.browser = ['web', 'webw'].includes(targetEnv) ? updates.main : '';
-                    updates.unpkg = updates.main;
+                updates.unpkg = updates.module; // Same, same. ESM-only builds.
+                updates.browser = ['web'].includes(targetEnv) ? updates.module : '';
 
-                    updates.types = './dist/types/' + appEntryIndexAsSrcSubpathNoExt + '.d.ts';
-                    updates.typesVersions = { '>=3.1': { './*': ['./dist/types/*'] } };
-                } else {
-                    updates.exports = {
-                        '.': {
-                            import: './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js',
-                            require: './dist/' + appEntryIndexAsSrcSubpathNoExt + '.cjs',
-                            types: './dist/types/' + appEntryIndexAsSrcSubpathNoExt + '.d.ts',
-                        },
-                    };
-                    updates.module = './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js';
-                    updates.main = './dist/' + appEntryIndexAsSrcSubpathNoExt + '.cjs';
+                updates.typesVersions = { '>=3.1': { './*': ['./dist/types/*'] } };
+                updates.types = './dist/types/' + appEntryIndexAsSrcSubpathNoExt + '.d.ts';
 
-                    updates.browser = ['web', 'webw'].includes(targetEnv) ? updates.module : '';
-                    updates.unpkg = updates.module;
-
-                    updates.types = './dist/types/' + appEntryIndexAsSrcSubpathNoExt + '.d.ts';
-                    updates.typesVersions = { '>=3.1': { './*': ['./dist/types/*'] } };
-
-                    for (const appEntryAsSrcSubpathNoExt of appEntriesAsSrcSubpathsNoExt) {
-                        if (appEntryAsSrcSubpathNoExt === appEntryIndexAsSrcSubpathNoExt) {
-                            continue; // Don't remap the entry index.
-                        }
-                        $obj.patchDeep(updates.exports, {
-                            ['./' + appEntryAsSrcSubpathNoExt]: {
-                                import: './dist/' + appEntryAsSrcSubpathNoExt + '.js',
-                                require: './dist/' + appEntryAsSrcSubpathNoExt + '.cjs',
-                                types: './dist/types/' + appEntryAsSrcSubpathNoExt + '.d.ts',
-                            },
-                        });
+                for (const appEntryAsSrcSubpathNoExt of appEntriesAsSrcSubpathsNoExt) {
+                    if (appEntryAsSrcSubpathNoExt === appEntryIndexAsSrcSubpathNoExt) {
+                        continue; // Don't remap the entry index.
                     }
+                    $obj.patchDeep(updates.exports, {
+                        ['./' + appEntryAsSrcSubpathNoExt]: {
+                            types: './dist/types/' + appEntryAsSrcSubpathNoExt + '.d.ts', // First, always.
+                            import: './dist/' + appEntryAsSrcSubpathNoExt + '.js', // ESM module import path.
+                            default: './dist/' + appEntryAsSrcSubpathNoExt + '.js', // Last, always.
+                        },
+                    });
                 }
                 break; // Stop here.
             }

@@ -90,12 +90,6 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
     const appBaseURL = env.APP_BASE_URL || ''; // e.g., `https://example.com/base`.
     const appBasePath = env.APP_BASE_PATH || ''; // e.g., `/base`.
 
-    let appUMDName = (pkg.name || '').toLowerCase();
-    appUMDName = appUMDName.replace(/\bclevercanyon\b/gu, 'c10n');
-    appUMDName = appUMDName.replace(/@/gu, '').replace(/\./gu, '-').replace(/\/+/gu, '.');
-    appUMDName = appUMDName.replace(/[^a-z.0-9]([^.])/gu, (m0, m1) => m1.toUpperCase());
-    appUMDName = appUMDName.replace(/^\.|\.$/u, '');
-
     const appType = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.appType') || 'cma';
     const targetEnv = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.targetEnv') || 'any';
     const entryFiles = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.entryFiles') || [];
@@ -120,14 +114,13 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
     const targetEnvIsServer = ['cfw', 'node'].includes(targetEnv);
     const useMinifier = 'dev' !== mode && !['lib'].includes(appType);
     const preserveModules = ['lib'].includes(appType) && appEntries.length > 1;
-    const useUMD = !isSSRBuild && !targetEnvIsServer && !preserveModules && !peerDepKeys.length && useLibMode && 1 === appEntries.length;
-    const vitestSandboxEnable = $str.parseValue(String(process.env.VITEST_SANDBOX_ENABLE || '')); // We invented this environment variable.
-    const vitestExamplesEnable = $str.parseValue(String(process.env.VITEST_EXAMPLES_ENABLE || '')); // We invented this environment variable.
+    const vitestSandboxEnable = $str.parseValue(String(process.env.VITEST_SANDBOX_ENABLE || ''));
+    const vitestExamplesEnable = $str.parseValue(String(process.env.VITEST_EXAMPLES_ENABLE || ''));
 
     /**
      * Validates all of the above.
      */
-    if (!pkg.name || !appUMDName) {
+    if (!pkg.name) {
         throw new Error('Apps must have a name.');
     }
     if (!appEntryFiles.length || !appEntries.length) {
@@ -153,9 +146,9 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
      * Prepares `package.json` property updates.
      */
     const pkgUpdates = await vitePkgUpdates({
-		command, isSSRBuild, projDir, pkg, appType, targetEnv, useUMD,
-		appEntriesAsProjRelPaths, appEntriesAsSrcSubpaths, appEntriesAsSrcSubpathsNoExt
-	}); // prettier-ignore
+        command, isSSRBuild, projDir, pkg, appType, targetEnv,
+        appEntriesAsProjRelPaths, appEntriesAsSrcSubpaths, appEntriesAsSrcSubpathsNoExt
+    }); // prettier-ignore
 
     /**
      * Configures plugins for Vite.
@@ -166,9 +159,9 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
         await viteEJSConfig({ mode, projDir, srcDir, pkg, env }),
         await viteMinifyConfig({ mode }),
         await viteC10nConfig({
-			mode, command, isSSRBuild, projDir, distDir,
-			pkg, env, appType, targetEnv, staticDefs, pkgUpdates
-		}), // prettier-ignore
+            mode, command, isSSRBuild, projDir, distDir,
+            pkg, env, appType, targetEnv, staticDefs, pkgUpdates
+        }), // prettier-ignore
     ];
 
     /**
@@ -179,7 +172,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
     /**
      * Configures rollup for Vite.
      */
-    const rollupConfig = await viteRollupConfig({ srcDir, distDir, a16sDir, appEntries, peerDepKeys, preserveModules, useMinifier, useUMD });
+    const rollupConfig = await viteRollupConfig({ srcDir, distDir, a16sDir, appEntries, peerDepKeys, preserveModules, useMinifier });
 
     /**
      * Configures tests for Vite.
@@ -253,15 +246,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
             minify: useMinifier ? 'esbuild' : false, // Minify userland code?
             modulePreload: false, // Disable. DOM injections conflict with our SPAs.
 
-            ...(useLibMode // Use library mode in Vite, with specific formats?
-                ? {
-                      lib: {
-                          name: appUMDName, // Name of UMD window global var.
-                          entry: appEntries, // Should match up with `rollupOptions.input`.
-                          formats: isSSRBuild ? ['es'] : useUMD ? ['es', 'umd'] : ['es', 'cjs'],
-                      },
-                  }
-                : {}),
+            ...(useLibMode ? { lib: { entry: appEntries, formats: ['es'] } } : {}),
             rollupOptions: rollupConfig, // See: <https://o5p.me/5Vupql>.
         },
     };

@@ -23,6 +23,7 @@
 import path from 'node:path';
 import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 import { $path, $str, $url } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import extensions from '../bin/includes/extensions.mjs';
 import u from '../bin/includes/utilities.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
@@ -49,10 +50,10 @@ export default async () => {
         send_metrics: false, // Don't share usage.
         usage_model: 'bundled', // 10M/mo free + $0.50/M.
 
-        // Account ID and worker name.
+        // Worker name & account ID.
 
-        account_id: defaultAccountId,
         name: defaultWorkerName,
+        account_id: defaultAccountId,
 
         // Workers.dev configuration.
 
@@ -65,11 +66,31 @@ export default async () => {
         // Dynamic import configuration.
 
         rules: [
-            { type: 'Data', globs: ['**/*.bin'], fallthrough: false },
-            { type: 'CompiledWasm', globs: ['**/*.wasm'], fallthrough: false },
-            { type: 'ESModule', globs: ['**/*.js', '**/*.jsx', '**/*.mjs', '**/*.mjsx'], fallthrough: false },
-            { type: 'CommonJS', globs: ['**/*.cjs', '**/*.cjsx', '**/*.node'], fallthrough: false },
-            { type: 'Text', globs: ['**/*.md', '**/*.txt', '**/*.xml', '**/*.html', '**/*.shtml', '**/*.ejs', '**/*.json'], fallthrough: false },
+            {
+                type: 'Text',
+                globs: extensions.asNoBraceGlobstars([]),
+                fallthrough: false,
+            },
+            {
+                type: 'ESModule',
+                globs: extensions.asNoBraceGlobstars([
+                    ...extensions.sJavaScript, //
+                    ...extensions.mJavaScript,
+                    ...extensions.sJavaScriptReact,
+                    ...extensions.mJavaScriptReact,
+                ]),
+                fallthrough: false,
+            },
+            {
+                type: 'CommonJS',
+                globs: extensions.asNoBraceGlobstars([
+                    ...extensions.cJavaScript, //
+                    ...extensions.cJavaScriptReact,
+                ]),
+                fallthrough: false,
+            },
+            { type: 'CompiledWasm', globs: extensions.asNoBraceGlobstars([...extensions.wasm]), fallthrough: false },
+            { type: 'Data', globs: extensions.asNoBraceGlobstars([].filter((ext) => '.wasm' !== ext)), fallthrough: false },
         ],
         // Custom build configuration.
 
@@ -77,14 +98,6 @@ export default async () => {
             cwd: './' + path.relative(projDir, './'),
             watch_dir: './' + path.relative(projDir, './src'),
             command: 'npx @clevercanyon/madrun build --mode=prod',
-        },
-        // Other environments used by this worker.
-
-        env: {
-            dev: {
-                workers_dev: false,
-                build: { command: 'npx @clevercanyon/madrun build --mode=dev' },
-            },
         },
         // Worker sites; i.e., bucket configuration.
 
@@ -100,6 +113,14 @@ export default async () => {
         route: {
             zone_name: defaultZoneName,
             pattern: defaultZoneDomain + '/' + $url.encode(defaultWorkerName) + '/*',
+        },
+        // Other environments used by this worker.
+
+        env: {
+            dev: {
+                workers_dev: false,
+                build: { command: 'npx @clevercanyon/madrun build --mode=dev' },
+            },
         },
     };
 
