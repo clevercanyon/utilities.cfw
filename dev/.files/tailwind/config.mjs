@@ -39,94 +39,97 @@ const projDir = path.resolve(__dirname, '../../..');
  * functionality here. Consider `make-synchronous` (already in dev-deps) if necessary. {@see https://o5p.me/1odhxy}.
  */
 export default /* not async compatible */ () => {
-	/**
-	 * Composition.
-	 */
-	return {
-		plugins: [
-			pluginTypography({ className: 'prose' }),
-			pluginForms({ strategy: 'class' }), // e.g., `form-{x}`.
-		],
-		theme: {
-			fontFamily: {
-				sans: [
-					'Georama', //
-					'ui-sans-serif',
-					'sans-serif',
-				],
-				serif: [
-					'Palatino', //
-					'"Palatino Linotype"',
-					'ui-serif',
-					'serif',
-				],
-				mono: [
-					'"Operator Mono"', //
-					'ui-monospace',
-					'monospace',
-				],
-			},
-			screens: {
-				'sm': { min: '320px' },
-				'md': { min: '480px' },
-				'lg': { min: '960px' },
-				'xl': { min: '1280px' },
-				'2xl': { min: '1440px' },
-				'3xl': { min: '2560px' },
+    /**
+     * Composition.
+     */
+    return {
+        plugins: [
+            pluginTypography({ className: 'prose' }),
+            pluginForms({ strategy: 'class' }), // e.g., `form-{x}`.
+        ],
+        theme: {
+            fontFamily: {
+                sans: [
+                    'Georama', //
+                    'ui-sans-serif',
+                    'sans-serif',
+                ],
+                serif: [
+                    'Palatino', //
+                    '"Palatino Linotype"',
+                    'ui-serif',
+                    'serif',
+                ],
+                mono: [
+                    '"Operator Mono"', //
+                    'ui-monospace',
+                    'monospace',
+                ],
+            },
+            screens: {
+                'sm': { min: '320px' },
+                'md': { min: '480px' },
+                'lg': { min: '960px' },
+                'xl': { min: '1280px' },
+                '2xl': { min: '1440px' },
+                '3xl': { min: '2560px' },
 
-				'phone': { min: '320px' },
-				'tablet': { min: '480px' },
-				'notebook': { min: '960px' },
-				'laptop': { min: '1280px' },
-				'desktop': { min: '1440px' },
-				'widescreen': { min: '2560px' },
-			},
-		},
-		content: [
-			path.resolve(projDir, './src') + '/**/*.' + extensions.asGlob(extensions.content),
+                'phone': { min: '320px' },
+                'tablet': { min: '480px' },
+                'notebook': { min: '960px' },
+                'laptop': { min: '1280px' },
+                'desktop': { min: '1440px' },
+                'widescreen': { min: '2560px' },
+            },
+        },
+        content: [
+            path.resolve(projDir, './src') + '/**/*.' + extensions.asBracedGlob([...extensions.tailwindContent]),
 
-			// If this package is using `@clevercanyon/utilities` we can also scan preact files.
-			...(fs.existsSync(path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/preact'))
-				? [path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/preact') + '/**/*.' + extensions.asGlob(extensions.content)]
-				: []),
+            // If this package is using `@clevercanyon/utilities` we can also scan preact files.
+            ...(fs.existsSync(path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/preact'))
+                ? [path.resolve(projDir, './node_modules/@clevercanyon/utilities/dist/preact') + '/**/*.' + extensions.asBracedGlob([...extensions.tailwindContent])]
+                : []),
 
-			// Exclusions using negated glob patterns, which should simply be a reflection of `./.npmignore`.
-			// However, that’s tricky because Tailwind doesn't provide an explicit negation setting, so we have to use `!`.
-			// It’s also tricky because we *do* need to find content inside `node_modules/@clevercanyon/utilities/dist/preact`.
-			// Therefore, instead of using `./.npmignore`, we come as close as we can, with just a few exceptions.
+            // Exclusions using negated glob patterns, which should simply be a reflection of `./.npmignore`.
+            // However, that’s tricky because Tailwind doesn't provide an explicit negation setting, so we have to use `!`.
+            // It’s also tricky because we *do* need to find content inside `node_modules/@clevercanyon/utilities/dist/preact`.
+            // Therefore, instead of using `./.npmignore`, we come as close as we can, with just a few exceptions.
 
-			exclusions.asNegatedGlobs([
-				...new Set([
-					...exclusions.localIgnores,
-					...exclusions.logIgnores,
-					...exclusions.backupIgnores,
-					...exclusions.patchIgnores,
-					...exclusions.editorIgnores,
+            exclusions.asNegatedGlobs(
+                [
+                    ...new Set([
+                        ...exclusions.localIgnores,
+                        ...exclusions.logIgnores,
+                        ...exclusions.backupIgnores,
+                        ...exclusions.patchIgnores,
+                        ...exclusions.editorIgnores,
 
-					...exclusions.pkgIgnores //
-						.filter((e) => e !== '**/node_modules/**'),
-					'**/src/**/node_modules/**', // More specific.
+                        ...exclusions.pkgIgnores //
+                            .filter((ignore) => ignore !== '**/node_modules/**'),
+                        '**/src/**/node_modules/**', // More specific.
 
-					...exclusions.vcsIgnores,
-					...exclusions.osIgnores,
-					...exclusions.dotIgnores,
-					...exclusions.dtsIgnores,
-					...exclusions.configIgnores,
-					...exclusions.lockIgnores,
-					...exclusions.devIgnores,
+                        ...exclusions.vcsIgnores,
+                        ...exclusions.osIgnores,
+                        ...exclusions.dotIgnores,
+                        ...exclusions.dtsIgnores,
+                        ...exclusions.configIgnores,
+                        ...exclusions.lockIgnores,
+                        ...exclusions.devIgnores,
 
-					...exclusions.distIgnores //
-						.filter((e) => e !== '**/dist/**'),
-					'**/src/**/dist/**', // More specific.
+                        ...exclusions.distIgnores //
+                            .filter((ignore) => ignore !== '**/dist/**'),
+                        '**/src/**/dist/**', // More specific.
 
-					...exclusions.sandboxIgnores,
-					...exclusions.exampleIgnores,
-					...exclusions.docIgnores,
-					...exclusions.testIgnores,
-					...exclusions.specIgnores,
-					...exclusions.benchIgnores,
-				]),
-			]),
-		],
-	};
+                        ...exclusions.sandboxIgnores,
+                        ...exclusions.exampleIgnores,
+                        ...exclusions.docIgnores,
+                        ...exclusions.testIgnores,
+                        ...exclusions.specIgnores,
+                        ...exclusions.benchIgnores,
+                    ]),
+                ],
+                { dropExistingNegations: true },
+            ),
+        ],
+    };
 };

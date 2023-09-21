@@ -30,62 +30,141 @@ const asRegExps = (globs) => asRegExpStrings(globs).map((rxs) => new RegExp(rxs,
 /**
  * Converts an array of exclusions into relative globs.
  *
- * @param   from  From path.
- * @param   globs Array of exclusion globs.
+ * @param   from    From path.
+ * @param   globs   Array of exclusion globs.
+ * @param   options Default is `{ forceRelative: false }`.
  *
- * @returns       Exclusions as relative globs.
+ * @returns         Exclusions as relative globs.
  */
-const asRelativeGlobs = (from, globs) => {
-	return [...new Set(globs)].map((glob) => {
-		return /^\*\*/u.test(glob) ? glob : path.relative(from, glob);
-	});
+const asRelativeGlobs = (from, globs, { forceRelative = false } = {}) => {
+    return [...new Set(globs)].map((glob) => {
+        glob = forceRelative ? glob.replace(/^\*\*\//u, '') : glob;
+        return /^\*\*/u.test(glob) ? glob : path.relative(from, glob);
+    });
+};
+
+/**
+ * Converts an array of exclusions into rooted relative globs.
+ *
+ * @param   from    From path.
+ * @param   globs   Array of exclusion globs.
+ * @param   options Default is `{ forceRootedRelative: false }`.
+ *
+ * @returns         Exclusions as rooted relative globs.
+ */
+const asRootedRelativeGlobs = (from, globs, { forceRelative = false } = {}) => {
+    return [...new Set(globs)].map((glob) => {
+        glob = forceRelative ? glob.replace(/^\*\*\//u, '') : glob;
+        return /^\*\*/u.test(glob) ? glob : '/' + path.relative(from, glob);
+    });
 };
 
 /**
  * Converts an array of exclusions into negated globs.
  *
- * @param   globs Array of exclusion globs.
+ * @param   globs   Array of exclusion globs.
+ * @param   options Explicit options required for acknowledgment of concerns.
  *
- * @returns       Exclusions as negated globs.
+ * @returns         Exclusions as negated globs; potentially dropping existing negations.
+ *
+ * @note If existing negations are not dropped, they become inclusions, typically causing problems.
+ *       Normally, we don’t need to re-include the existing negations, as they are narrower in scope.
  */
-const asNegatedGlobs = (globs) => [...new Set(globs)].map((glob) => '!' + glob);
+const asNegatedGlobs = (globs, { dropExistingNegations }) => {
+    if (undefined === dropExistingNegations) {
+        throw new Error('Missing option: `dropExistingNegations`.');
+    }
+    if (dropExistingNegations) {
+        return [...new Set(globs)].filter((glob) => !/^!/u.test(glob)).map((glob) => '!' + glob);
+    }
+    return [...new Set(globs)].map((glob) => (/^!/u.test(glob) ? glob.replace(/^!/u, '') : '!' + glob));
+};
+
+/**
+ * Converts an array of exclusions into a braced glob.
+ *
+ * @param   globs   Array of exclusion globs.
+ * @param   options Explicit options required for acknowledgment of concerns.
+ *
+ * @returns         Exclusions as braced glob; potentially dropping negations.
+ *
+ * @note `dropExistingNegations` can *only* be set as true. There’s no other way to handle.
+ */
+const asBracedGlob = (globs, { dropExistingNegations, dotGlobstars = false }) => {
+    if (true !== dropExistingNegations) {
+        throw new Error('Missing option: `dropExistingNegations`; must be `true`.');
+    }
+    let oneGlobs = []; // Initialize.
+
+    [...new Set(globs)].forEach((glob) => {
+        if (/^!/u.test(glob)) return; // Dropping.
+        oneGlobs.push(glob.replace(/^\*\*\//u, '').replace(/\/\*\*$/u, ''));
+    });
+    oneGlobs = [...new Set(oneGlobs)]; // Unique; i.e., again, after processing.
+
+    return (
+        (dotGlobstars ? $path.dotGlobstarHead : '**/') +
+        (oneGlobs.length > 1 ? '{' : '') +
+        oneGlobs.join(',') +
+        (oneGlobs.length > 1 ? '}' : '') +
+        (dotGlobstars ? $path.dotGlobstarTail : '/**')
+    );
+};
+
+/**
+ * Converts an array of exclusions into boolean properties.
+ *
+ * @param   globs   Array of of exclusion globs.
+ * @param   options Default is `{ tailGreedy: true }`.
+ *
+ * @returns         Exclusions as boolean properties.
+ */
+const asBoolProps = (globs, { tailGreedy = true } = {}) => {
+    const props = {}; // Initialize.
+    for (let glob of globs) {
+        glob = !tailGreedy ? glob.replace(/\/\*\*$/u, '') : glob;
+        props[glob.replace(/^!/u, '')] = /^!/u.test(glob) ? false : true;
+    }
+    return props; // Plain object properties.
+};
 
 /**
  * Defines exclusions globs.
  *
- * - Don’t declare any negations here. Instead, use {@see asNegatedGlobs()}.
- * - Don’t use `{}` brace expansions here. Not compatible with TypeScript config.
+ * Note: `{}` brace expansions are not compatible with TypeScript’s config file. Everything listed here should follow
+ * `.gitignore|.npmignore` syntax first, then be converted from `.gitignore` into a fast-glob pattern.
  */
 export default {
-	/**
-	 * Default Git/NPM ignores, by category. Categories added to the default export here. Provided by
-	 * `@clevercanyon/utilities`. Includes everything we have in our default `./.gitignore`, `./.npmignore`.
-	 */
-	...$obj.map($path.defaultGitNPMIgnoresByCategory, (category) => {
-		return category.map((glob) => '**/' + glob + '/**');
-	}),
+    /**
+     * Default Git/NPM ignores, by category. Categories added to the default export here. Provided by
+     * `@clevercanyon/utilities`. Includes everything we have in our default `./.gitignore`, `./.npmignore`.
+     */
+    ...$obj.map($path.defaultGitNPMIgnoresByCategory, (category) => {
+        return category.map((gitIgnore) => $path.gitIgnoreToGlob(gitIgnore));
+    }),
 
-	/**
-	 * We intentionally use our 'default' NPM ignores when pruning; i.e., as opposed to using the current and
-	 * potentially customized `./.npmignore` file in the current project directory. The reason is because we intend to
-	 * enforce our standards. For further details {@see https://o5p.me/MuskgW}.
-	 */
-	defaultNPMIgnores: $path.defaultNPMIgnores.map((glob) => {
-		const isNegated = /^!/u.test(glob);
-		glob = isNegated ? glob.replace(/^!/u, '') : glob;
-		return (isNegated ? '!' : '') + '**/' + glob + '/**';
-	}),
+    /**
+     * We intentionally use our 'default' NPM ignores when pruning; i.e., as opposed to using the current and
+     * potentially customized `./.npmignore` file in the current project directory. The reason is because we intend to
+     * enforce our standards. For further details {@see https://o5p.me/MuskgW}.
+     */
+    defaultNPMIgnores: $path.defaultNPMIgnores.map((npmIgnore) => {
+        return $path.gitIgnoreToGlob(npmIgnore);
+    }),
 
-	/**
-	 * Specifically for use in our projects.
-	 */
-	adhocXIgnores: ['**/x-*/**'], // For special use cases.
+    /**
+     * Specifically for use in our projects.
+     */
+    adhocXIgnores: ['**/x-*/**'], // For special use cases.
 
-	/**
-	 * Utilities.
-	 */
-	asRegExps,
-	asRegExpStrings,
-	asRelativeGlobs,
-	asNegatedGlobs,
+    /**
+     * Utilities.
+     */
+    asRegExps,
+    asRegExpStrings,
+    asRelativeGlobs,
+    asRootedRelativeGlobs,
+    asNegatedGlobs,
+    asBracedGlob,
+    asBoolProps,
 };

@@ -21,28 +21,28 @@ import path from 'node:path';
  * @returns       EJS configuration.
  */
 export default async ({ mode, projDir, srcDir, pkg, env }) => {
-	const require = createRequire(import.meta.url);
+    const require = createRequire(import.meta.url);
 
-	return (await import('vite-plugin-ejs')).ViteEjsPlugin(
-		{ $: { require, pkg, mode, env, projDir } },
-		{
-			// EJS is enabled for `index.{html}` entry points.
+    return (await import('vite-plugin-ejs')).ViteEjsPlugin(
+        { $: { require, pkg, mode, env, projDir } },
+        {
+            // EJS is enabled for `index.{html}` entry points.
 
-			ejs: /* <https://o5p.me/wGv5nM> */ {
-				strict: true, // JS strict mode.
-				async: true, // Support await in EJS files.
+            ejs: /* <https://o5p.me/wGv5nM> */ {
+                strict: true, // JS strict mode.
+                async: true, // Support await in EJS files.
 
-				delimiter: '?', // <https://o5p.me/Qwu3af>.
-				localsName: '$', // Shorter name for `locals`.
-				outputFunctionName: 'echo', // For output in scriptlets.
+                delimiter: '?', // <https://o5p.me/Qwu3af>.
+                localsName: '$', // Shorter name for `locals`.
+                outputFunctionName: 'echo', // For output in scriptlets.
 
-				root: [srcDir], // For includes with an absolute path.
-				views: /* For includes with a relative path — includes utilities. */ [
-					//
-					path.resolve(srcDir, './resources/ejs-views'), // Our standard location for internal EJS views.
-					path.resolve(srcDir, './cargo/assets/ejs-views'), // Our standard location for distributed EJS views.
-				],
-			},
-		},
-	);
+                root: [srcDir], // For includes with an absolute path.
+                views: /* For includes with a relative path — includes utilities. */ [
+                    //
+                    path.resolve(srcDir, './resources/ejs-views'), // Our standard location for internal EJS views.
+                    path.resolve(srcDir, './cargo/assets/ejs-views'), // Our standard location for distributed EJS views.
+                ],
+            },
+        },
+    );
 };

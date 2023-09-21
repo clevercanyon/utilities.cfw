@@ -3,19 +3,21 @@
 #
 # Many packages are aware of this config file's location.
 #
+# The generated portion of this file can be updated using:
+#
+#     $ madrun update browserslist
+#     or: $ madrun update dotfiles
+#
 # @note CUSTOM EDITS ONLY PLEASE!
 # @note In the future this file will be updated automatically.
 # @note Only `<custom:start.../custom:end>` will be preserved below.
-#
-# Generated using <https://www.npmjs.com/package/browserslist-generator>.
-#
-#     const BLG = require("browserslist-generator")
-#     console.log(BLG.browsersWithSupportForEcmaVersion('es2022').join('\n'));
-#
-# - Review BLG source: <https://o5p.me/4DC1Vq>.
-# - Review browserlist report on production config: <https://o5p.me/Fvs3WP>.
-# - Review our transpiler: <https://esbuild.github.io/content-types/#javascript>.
 ##
+
+##
+# Generated data.
+# <generated:start>
+
+# Last generated Wed, Sep 20, 2023, 10:17:20 PM EDT.
 
 [production]
 last 1 chrome versions
@@ -23,13 +25,23 @@ node >= 20.5.1
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
-android >= 116
+android >= 117
 edge >= 92
 samsung >= 16.0
 safari >= 15.4
 ios_saf >= 15.4
 opera >= 78
 firefox >= 90
+unreleased and_chr versions
+unreleased chrome versions
+unreleased and_ff versions
+unreleased android versions
+unreleased edge versions
+unreleased samsung versions
+unreleased safari versions
+unreleased ios_saf versions
+unreleased opera versions
+unreleased firefox versions
 not dead
 
 [any]
@@ -38,52 +50,84 @@ node >= 20.5.1
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
-android >= 116
+android >= 117
 edge >= 92
 samsung >= 16.0
 safari >= 15.4
 ios_saf >= 15.4
 opera >= 78
 firefox >= 90
-not dead
-
-[cfp]
-last 1 chrome versions
-not dead
-
-[cfw]
-last 1 chrome versions
+unreleased and_chr versions
+unreleased chrome versions
+unreleased and_ff versions
+unreleased android versions
+unreleased edge versions
+unreleased samsung versions
+unreleased safari versions
+unreleased ios_saf versions
+unreleased opera versions
+unreleased firefox versions
 not dead
 
 [node]
 node >= 20.5.1
 not dead
 
+[cfw]
+last 1 chrome versions
+not dead
+
+[cfp]
+last 1 chrome versions
+not dead
+
 [web]
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
-android >= 116
+android >= 117
 edge >= 92
 samsung >= 16.0
 safari >= 15.4
 ios_saf >= 15.4
 opera >= 78
 firefox >= 90
+unreleased and_chr versions
+unreleased chrome versions
+unreleased and_ff versions
+unreleased android versions
+unreleased edge versions
+unreleased samsung versions
+unreleased safari versions
+unreleased ios_saf versions
+unreleased opera versions
+unreleased firefox versions
 not dead
 
 [webw]
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
-android >= 116
+android >= 117
 edge >= 92
 samsung >= 16.0
 safari >= 15.4
 ios_saf >= 15.4
 opera >= 78
 firefox >= 90
+unreleased and_chr versions
+unreleased chrome versions
+unreleased and_ff versions
+unreleased android versions
+unreleased edge versions
+unreleased samsung versions
+unreleased safari versions
+unreleased ios_saf versions
+unreleased opera versions
+unreleased firefox versions
 not dead
+
+# </generated:end>
 
 ##
 # Customizations.

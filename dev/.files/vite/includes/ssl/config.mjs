@@ -18,5 +18,5 @@
  * @returns       SSL configuration.
  */
 export default async (/* {} */) => {
-	return (await import('@vitejs/plugin-basic-ssl')).default();
+    return (await import('@vitejs/plugin-basic-ssl')).default();
 };

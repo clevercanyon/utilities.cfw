@@ -22,184 +22,184 @@ import extensions from '../../../bin/includes/extensions.mjs';
  * @returns       Vitest configuration.
  */
 export default async ({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig }) => {
-	const vitestExcludes = [
-		...new Set([
-			...exclusions.localIgnores,
-			...exclusions.logIgnores,
-			...exclusions.backupIgnores,
-			...exclusions.patchIgnores,
-			...exclusions.editorIgnores,
-			...exclusions.pkgIgnores,
-			...exclusions.vcsIgnores,
-			...exclusions.osIgnores,
-			...exclusions.dotIgnores,
-			...exclusions.dtsIgnores,
-			...exclusions.configIgnores,
-			...exclusions.lockIgnores,
-			...exclusions.devIgnores,
-			...exclusions.distIgnores,
-			...exclusions.docIgnores,
-			...(vitestSandboxEnable ? [] : [...exclusions.sandboxIgnores]),
-			...(vitestExamplesEnable ? [] : [...exclusions.exampleIgnores]),
-			...exclusions.adhocXIgnores, // Deliberate ad-hoc exclusions.
-		]),
-	];
-	const vitestWatchExcludes = [
-		...new Set([
-			...exclusions.localIgnores,
-			...exclusions.logIgnores,
-			...exclusions.backupIgnores,
-			...exclusions.patchIgnores,
-			...exclusions.editorIgnores,
-			...exclusions.pkgIgnores,
-			...exclusions.vcsIgnores,
-			...exclusions.osIgnores,
-			...exclusions.dotIgnores,
-			...exclusions.dtsIgnores,
-			...exclusions.configIgnores,
-			...exclusions.lockIgnores,
-			...exclusions.devIgnores,
-			...exclusions.distIgnores,
-			...exclusions.docIgnores,
-			...(vitestSandboxEnable ? [] : [...exclusions.sandboxIgnores]),
-			...(vitestExamplesEnable ? [] : [...exclusions.exampleIgnores]),
-			// ...exclusions.adhocXIgnores -- Excluded from tests, but still watch.
-		]),
-	];
-	const vitestIncludes =
-		vitestSandboxEnable || vitestExamplesEnable
-			? [
-					...(vitestSandboxEnable
-						? [
-								'**/sandbox/**/*.{test,tests,spec,specs}.' + extensions.asGlob(extensions.jts), //
-								'**/sandbox/**/{test,tests,spec,specs}/**/*.' + extensions.asGlob(extensions.jts),
-						  ]
-						: []),
-					...(vitestExamplesEnable
-						? [
-								'**/{example,examples}/**/*.{test,tests,spec,specs}.' + extensions.asGlob(extensions.jts), //
-								'**/{example,examples}/**/{test,tests,spec,specs}/**/*.' + extensions.asGlob(extensions.jts),
-						  ]
-						: []),
-			  ]
-			: [
-					'**/*.{test,tests,spec,specs}.' + extensions.asGlob(extensions.jts), //
-					'**/{test,tests,spec,specs}/**/*.' + extensions.asGlob(extensions.jts),
-			  ];
-	const vitestTypecheckIncludes =
-		vitestSandboxEnable || vitestExamplesEnable
-			? [
-					...(vitestSandboxEnable
-						? [
-								'**/sandbox/**/*.{test,tests,spec,specs}-d.' + extensions.asGlob(extensions.ts), //
-								'**/sandbox/**/{test,tests,spec,specs}/**/*-d.' + extensions.asGlob(extensions.ts),
-						  ]
-						: []),
-					...(vitestExamplesEnable
-						? [
-								'**/{example,examples}/**/*.{test,tests,spec,specs}-d.' + extensions.asGlob(extensions.ts), //
-								'**/{example,examples}/**/{test,tests,spec,specs}/**/*-d.' + extensions.asGlob(extensions.ts),
-						  ]
-						: []),
-			  ]
-			: [
-					'**/*.{test,tests,spec,specs}-d.' + extensions.asGlob(extensions.ts), //
-					'**/{test,tests,spec,specs}/**/*-d.' + extensions.asGlob(extensions.ts),
-			  ];
-	const vitestBenchIncludes =
-		vitestSandboxEnable || vitestExamplesEnable
-			? [
-					...(vitestSandboxEnable
-						? [
-								'**/sandbox/**/*.{bench,benchmark,benchmarks}.' + extensions.asGlob(extensions.jts), //
-								'**/sandbox/**/{bench,benchmark,benchmarks}/**/*.' + extensions.asGlob(extensions.jts),
-						  ]
-						: []),
-					...(vitestExamplesEnable
-						? [
-								'**/{example,examples}/**/*.{bench,benchmark,benchmarks}.' + extensions.asGlob(extensions.jts), //
-								'**/{example,examples}/**/{bench,benchmark,benchmarks}/**/*.' + extensions.asGlob(extensions.jts),
-						  ]
-						: []),
-			  ]
-			: [
-					'**/*.{bench,benchmark,benchmarks}.' + extensions.asGlob(extensions.jts), //
-					'**/{bench,benchmark,benchmarks}/**/*.' + extensions.asGlob(extensions.jts),
-			  ];
-	return {
-		root: srcDir,
+    const vitestExcludes = [
+        ...new Set([
+            ...exclusions.localIgnores,
+            ...exclusions.logIgnores,
+            ...exclusions.backupIgnores,
+            ...exclusions.patchIgnores,
+            ...exclusions.editorIgnores,
+            ...exclusions.pkgIgnores,
+            ...exclusions.vcsIgnores,
+            ...exclusions.osIgnores,
+            ...exclusions.dotIgnores,
+            ...exclusions.dtsIgnores,
+            ...exclusions.configIgnores,
+            ...exclusions.lockIgnores,
+            ...exclusions.devIgnores,
+            ...exclusions.distIgnores,
+            ...exclusions.docIgnores,
+            ...(vitestSandboxEnable ? [] : [...exclusions.sandboxIgnores]),
+            ...(vitestExamplesEnable ? [] : [...exclusions.exampleIgnores]),
+            ...exclusions.adhocXIgnores, // Deliberate ad-hoc exclusions.
+        ]),
+    ];
+    const vitestWatchExcludes = [
+        ...new Set([
+            ...exclusions.localIgnores,
+            ...exclusions.logIgnores,
+            ...exclusions.backupIgnores,
+            ...exclusions.patchIgnores,
+            ...exclusions.editorIgnores,
+            ...exclusions.pkgIgnores,
+            ...exclusions.vcsIgnores,
+            ...exclusions.osIgnores,
+            ...exclusions.dotIgnores,
+            ...exclusions.dtsIgnores,
+            ...exclusions.configIgnores,
+            ...exclusions.lockIgnores,
+            ...exclusions.devIgnores,
+            ...exclusions.distIgnores,
+            ...exclusions.docIgnores,
+            ...(vitestSandboxEnable ? [] : [...exclusions.sandboxIgnores]),
+            ...(vitestExamplesEnable ? [] : [...exclusions.exampleIgnores]),
+            // ...exclusions.adhocXIgnores -- Excluded from tests, but still watch.
+        ]),
+    ];
+    const vitestIncludes =
+        vitestSandboxEnable || vitestExamplesEnable
+            ? [
+                  ...(vitestSandboxEnable
+                      ? [
+                            '**/sandbox/**/*.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
+                            '**/sandbox/**/{test,tests,spec,specs}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+                        ]
+                      : []),
+                  ...(vitestExamplesEnable
+                      ? [
+                            '**/{example,examples}/**/*.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
+                            '**/{example,examples}/**/{test,tests,spec,specs}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+                        ]
+                      : []),
+              ]
+            : [
+                  '**/*.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
+                  '**/{test,tests,spec,specs}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+              ];
+    const vitestTypecheckIncludes =
+        vitestSandboxEnable || vitestExamplesEnable
+            ? [
+                  ...(vitestSandboxEnable
+                      ? [
+                            '**/sandbox/**/*.{test,tests,spec,specs}-d.' + extensions.asBracedGlob([...extensions.allTypeScript]), //
+                            '**/sandbox/**/{test,tests,spec,specs}/**/*-d.' + extensions.asBracedGlob([...extensions.allTypeScript]),
+                        ]
+                      : []),
+                  ...(vitestExamplesEnable
+                      ? [
+                            '**/{example,examples}/**/*.{test,tests,spec,specs}-d.' + extensions.asBracedGlob([...extensions.allTypeScript]), //
+                            '**/{example,examples}/**/{test,tests,spec,specs}/**/*-d.' + extensions.asBracedGlob([...extensions.allTypeScript]),
+                        ]
+                      : []),
+              ]
+            : [
+                  '**/*.{test,tests,spec,specs}-d.' + extensions.asBracedGlob([...extensions.allTypeScript]), //
+                  '**/{test,tests,spec,specs}/**/*-d.' + extensions.asBracedGlob([...extensions.allTypeScript]),
+              ];
+    const vitestBenchIncludes =
+        vitestSandboxEnable || vitestExamplesEnable
+            ? [
+                  ...(vitestSandboxEnable
+                      ? [
+                            '**/sandbox/**/*.{bench,benchmark,benchmarks}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
+                            '**/sandbox/**/{bench,benchmark,benchmarks}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+                        ]
+                      : []),
+                  ...(vitestExamplesEnable
+                      ? [
+                            '**/{example,examples}/**/*.{bench,benchmark,benchmarks}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
+                            '**/{example,examples}/**/{bench,benchmark,benchmarks}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+                        ]
+                      : []),
+              ]
+            : [
+                  '**/*.{bench,benchmark,benchmarks}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
+                  '**/{bench,benchmark,benchmarks}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+              ];
+    return {
+        root: srcDir,
 
-		include: vitestIncludes,
-		css: { include: /.+/u },
+        include: vitestIncludes,
+        css: { include: /.+/u },
 
-		exclude: vitestExcludes,
-		watchExclude: vitestWatchExcludes,
+        exclude: vitestExcludes,
+        watchExclude: vitestWatchExcludes,
 
-		restoreMocks: true, // Remove all mocks before a test begins.
-		unstubEnvs: true, // Remove all env stubs before a test begins.
-		unstubGlobals: true, // Remove all global stubs before a test begins.
+        restoreMocks: true, // Remove all mocks before a test begins.
+        unstubEnvs: true, // Remove all env stubs before a test begins.
+        unstubGlobals: true, // Remove all global stubs before a test begins.
 
-		environment: ['cfp', 'web'].includes(targetEnv) ? 'jsdom' // <https://o5p.me/Gf9Cy5>.
+        environment: ['cfp', 'web'].includes(targetEnv) ? 'jsdom' // <https://o5p.me/Gf9Cy5>.
 			: ['cfw', 'webw'].includes(targetEnv) ? 'miniflare' // <https://o5p.me/TyF9Ot>.
 			: ['node', 'any'].includes(targetEnv) ? 'node' // <https://o5p.me/Gf9Cy5>.
 			: /* fallback */ 'node', // prettier-ignore
 
-		// See: <https://o5p.me/8Pjw1d> for `environment`, `environmentMatchGlobs` precedence.
-		environmentMatchGlobs: [
-			['**/*.{cfp,web}.{test,tests,spec,specs}.' + extensions.asGlob(extensions.jts), 'jsdom'],
-			['**/{test,tests,spec,specs}/**/*.{cfp,web}.' + extensions.asGlob(extensions.jts), 'jsdom'],
+        // See: <https://o5p.me/8Pjw1d> for `environment`, `environmentMatchGlobs` precedence.
+        environmentMatchGlobs: [
+            ['**/*.{cfp,web}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'jsdom'],
+            ['**/{test,tests,spec,specs}/**/*.{cfp,web}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'jsdom'],
 
-			['**/*.{cfw,webw}.{test,tests,spec,specs}.' + extensions.asGlob(extensions.jts), 'miniflare'],
-			['**/{test,tests,spec,specs}/**/*.{cfw,webw}.' + extensions.asGlob(extensions.jts), 'miniflare'],
+            ['**/*.{cfw,webw}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'miniflare'],
+            ['**/{test,tests,spec,specs}/**/*.{cfw,webw}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'miniflare'],
 
-			['**/*.{node,any}.{test,tests,spec,specs}.' + extensions.asGlob(extensions.jts), 'node'],
-			['**/{test,tests,spec,specs}/**/*.{node,any}.' + extensions.asGlob(extensions.jts), 'node'],
-		],
-		server: { deps: { external: [...new Set([...exclusions.pkgIgnores].concat(rollupConfig.external))] } },
-		cache: { dir: path.resolve(projDir, './node_modules/.vitest') },
+            ['**/*.{node,any}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'node'],
+            ['**/{test,tests,spec,specs}/**/*.{node,any}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'node'],
+        ],
+        server: { deps: { external: [...new Set([...exclusions.pkgIgnores].concat(rollupConfig.external))] } },
+        cache: { dir: path.resolve(projDir, './node_modules/.vitest') },
 
-		passWithNoTests: true, // Pass if there are no tests to run.
-		allowOnly: true, // Allows `describe.only`, `test.only`, `bench.only`.
+        passWithNoTests: true, // Pass if there are no tests to run.
+        allowOnly: true, // Allows `describe.only`, `test.only`, `bench.only`.
 
-		watch: false, // Disable watching by default; instead use `--watch`.
-		forceRerunTriggers: [
-			...new Set([
-				...exclusions.dotIgnores, //
-				...exclusions.devIgnores,
-				...exclusions.configIgnores,
-			]),
-		],
-		reporters: ['verbose'], // Verbose reporting.
-		// {@see https://o5p.me/p0f9j5} for further details.
+        watch: false, // Disable watching by default; instead use `--watch`.
+        forceRerunTriggers: [
+            ...new Set([
+                ...exclusions.dotIgnores, //
+                ...exclusions.devIgnores,
+                ...exclusions.configIgnores,
+            ]),
+        ],
+        reporters: ['verbose'], // Verbose reporting.
+        // {@see https://o5p.me/p0f9j5} for further details.
 
-		outputFile: {
-			json: path.resolve(logsDir, './tests/vitest.json'),
-			junit: path.resolve(logsDir, './tests/vitest.junit'),
-			html: path.resolve(logsDir, './tests/vitest/index.html'),
-		},
-		typecheck: {
-			include: vitestTypecheckIncludes,
-			exclude: vitestExcludes,
-		},
-		coverage: {
-			all: true, // All of the below.
-			extension: extensions.jts, // All JTS files.
-			include: ['**/*.' + extensions.asGlob(extensions.jts)],
-			exclude: [...new Set([...vitestExcludes, ...vitestIncludes, ...vitestTypecheckIncludes, ...vitestBenchIncludes])],
+        outputFile: {
+            json: path.resolve(logsDir, './tests/vitest.json'),
+            junit: path.resolve(logsDir, './tests/vitest.junit'),
+            html: path.resolve(logsDir, './tests/vitest/index.html'),
+        },
+        typecheck: {
+            include: vitestTypecheckIncludes,
+            exclude: vitestExcludes,
+        },
+        coverage: {
+            all: true, // All of the below.
+            extension: [...extensions.allJavaScript, ...extensions.allTypeScript],
+            include: ['**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript])],
+            exclude: [...new Set([...vitestExcludes, ...vitestIncludes, ...vitestTypecheckIncludes, ...vitestBenchIncludes])],
 
-			reporter: ['text', 'html', 'clover', 'json'], // Produces all report formats.
-			reportsDirectory: path.resolve(logsDir, './coverage/vitest'),
-		},
-		benchmark: {
-			include: vitestBenchIncludes,
-			includeSource: vitestIncludes,
-			exclude: vitestExcludes,
+            reporter: ['text', 'html', 'clover', 'json'], // Produces all report formats.
+            reportsDirectory: path.resolve(logsDir, './coverage/vitest'),
+        },
+        benchmark: {
+            include: vitestBenchIncludes,
+            includeSource: vitestIncludes,
+            exclude: vitestExcludes,
 
-			outputFile: {
-				json: path.resolve(logsDir, './benchmarks/vitest.json'),
-				junit: path.resolve(logsDir, './benchmarks/vitest.junit'),
-				html: path.resolve(logsDir, './benchmarks/vitest.html'),
-			},
-		},
-	};
+            outputFile: {
+                json: path.resolve(logsDir, './benchmarks/vitest.json'),
+                junit: path.resolve(logsDir, './benchmarks/vitest.junit'),
+                html: path.resolve(logsDir, './benchmarks/vitest.html'),
+            },
+        },
+    };
 };

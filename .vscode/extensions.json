@@ -8,26 +8,32 @@
  * @note Only `<custom:start.../custom:end>` will be preserved below.
  */
 {
-	"recommendations": [
-		"dbaeumer.vscode-eslint",
-		"duniul.dircolors",
-		"esbenp.prettier-vscode",
-		"exiasr.hadolint",
-		"ExodiusStudios.comment-anchors",
-		"leonzalion.vscode-ejs",
-		"mrmlnc.vscode-apache",
-		"rohit-gohri.format-code-action",
-		"stylelint.vscode-stylelint",
-		"tamasfe.even-better-toml",
-		"timonwong.shellcheck",
-		"unifiedjs.vscode-mdx",
-		"xyc.vscode-mdx-preview",
-		"webben.browserslist"
-	]
+    "recommendations": [
+        "bierner.markdown-checkbox",
+        "bierner.markdown-footnotes",
+        "bierner.markdown-mermaid",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "exiasr.hadolint",
+        "ExodiusStudios.comment-anchors",
+        "idleberg.applescript",
+        "leonzalion.vscode-ejs",
+        "mrmlnc.vscode-apache",
+        "ms-python.black-formatter",
+        "ms-python.python",
+        "ms-vscode.hexeditor",
+        "rohit-gohri.format-code-action",
+        "sissel.shopify-liquid",
+        "stylelint.vscode-stylelint",
+        "tamasfe.even-better-toml",
+        "timonwong.shellcheck",
+        "unifiedjs.vscode-mdx",
+        "webben.browserslist"
+    ]
 
-	/*
-	 * Customizations.
-	 * <custom:start> */
+    /*
+     * Customizations.
+     * <custom:start> */
 
-	/* </custom:end> */
+ /* </custom:end> */
 }

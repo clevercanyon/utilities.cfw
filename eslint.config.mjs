@@ -1,7 +1,7 @@
 /**
  * ESLint config file.
  *
- * VSCode is aware of this config file's location.
+ * VS Code is aware of this config file's location.
  *
  * @note CUSTOM EDITS ONLY PLEASE!
  * @note In the future this file will be updated automatically.

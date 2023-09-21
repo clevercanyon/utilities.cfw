@@ -3,17 +3,36 @@
 #
 # Git is aware of this config file's location.
 #
+# The generated portion of this file can be updated using:
+#
+#     $ madrun update gitignore
+#     or: $ madrun update dotfiles
+#
 # @note CUSTOM EDITS ONLY PLEASE!
 # @note In the future this file will be updated automatically.
 # @note Only `<custom:start.../custom:end>` will be preserved below.
 ##
+
+##
+# Generated data.
+# <generated:start>
+
+# Last generated Wed, Sep 20, 2023, 10:17:19 PM EDT.
 
 # Locals
 
 ._*
 .~*
 .#*
-*.local
+
+# Envs
+
+.envs
+*.env
+.env*
+.flaskenv*
+!.env.project
+!.env.vault
 
 # Logs
 
@@ -34,149 +53,131 @@
 
 # Editors
 
-# :: Vim
+# » VS Code
 
-.*.swp
+*.code-*
 
-# :: IntelliJ
+# » IntelliJ
 
 .idea
 
-# :: Sublime
+# » Vim
 
-*.sublime-project
-*.sublime-workspace
+.*.swp
 
-# :: Netbeans
-
-*.nbproject
-
-# :: VS Code
-
-*.code-search
-*.code-workspace
-
-# :: CTAGs
+# » CTAGs
 
 *.ctags
 
-# Dist
+# Tooling
 
-dist
+# » Dotenv
 
-# Packages
+.env.me
 
-# :: Yarn
-
-.yarn
-
-# :: Vendor
-
-vendor
-
-# :: NodeJS
-
-node_modules
-
-# :: JSPM
-
-jspm_packages
-
-# :: Bower
-
-bower_components
-
-# Dotenv
-
-.env*
-.flaskenv*
-
-!.env.vault
-!.env.project
-
-# TypeScript
+# » TypeScript
 
 .tscache
 *.tsbuildinfo
 
-# Vite
+# » Vite
 
 .vite
 .vitest
 
-# Wrangler
+# » Wrangler
 
 .wrangler
 .dev.vars
 .dev.vars.*
 
-# Rollup
+# » Rollup
 
 .rollup
 
-# Webpack
+# » Webpack
 
 .webpack
 
-# Linaria
+# » Linaria
 
 .linaria-cache
 
-# SASS
+# » SASS
 
 .sass-cache
 
-# Docker
+# » Docker
 
 .docker
 
-# Vagrant
+# » Vagrant
 
 .vagrant
 
-# Elastic Beanstalk
+# » Elastic Beanstalk
 
 .elasticbeanstalk
 
+# Packages
+
+# » Yarn
+
+.yarn
+
+# » Vendor
+
+vendor
+
+# » NodeJS
+
+node_modules
+
+# » JSPM
+
+jspm_packages
+
+# » Bower
+
+bower_components
+
 # Version Control
 
-# :: Git
+# » Git
 
 .git
 
-# :: Subversion
+# » Subversion
 
 .svn
 _svn
 .svnignore
 
-# :: Bazaar
+# » Bazaar
 
 .bzr
 .bzrignore
 
-# :: Mercurial
+# » Mercurial
 
 .hg
 .hgignore
 
 # Operating Systems
 
-# :: Windows Files
+# » Windows Files
 
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# :: Windows Directories
+# » Windows Dirs
 
 $RECYCLE.BIN
 
-# :: MacOS Files
+# » MacOS Files
 
-# ._* Already listed above.
-Icon?
-!Icons
+Icon
 *.icloud
 .DS_Store
 .disk_label
@@ -184,7 +185,7 @@ Icon?
 .VolumeIcon.icns
 .com.apple.timemachine.*
 
-# :: MacOS Directories
+# » MacOS Dirs
 
 .apdisk
 *.icloud
@@ -199,12 +200,18 @@ Icon?
 Network Trash Folder
 Temporary Items
 
+# Dist
+
+dist
+
+# </generated:end>
+
 ##
 # Customizations.
 #
 # Please do not attempt to inject exceptions by customizing your project’s `./.gitignore` file
 # in ways that loosen our standard defaults. We have tooling in place that will conflict with your efforts.
-# For example, `vite-plugin-c10n-post-process` will automatically prune files from a resulting `./.dist`
+# For example, `vite-plugin-c10n-post-process` will automatically prune files from a resulting `./dist`
 # built with our tooling. The pruning that it does strictly adheres to our default `./.npmignore` rules,
 # which utilizes `./.gitignore`, and intentionally does not factor in your customizations.
 #

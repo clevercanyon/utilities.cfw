@@ -1,7 +1,7 @@
 /**
  * Remark config file.
  *
- * Remark is aware of this config file's location.
+ * Remark CLI is aware of this config file's location.
  *
  * @note CUSTOM EDITS ONLY PLEASE!
  * @note In the future this file will be updated automatically.

@@ -20,13 +20,13 @@ const projDir = path.resolve(__dirname, '../../..');
  * Defines PostCSS configuration.
  */
 export default async () => {
-	/**
-	 * Composition.
-	 */
-	return {
-		plugins: {
-			'tailwindcss': { config: path.resolve(projDir, './tailwind.config.mjs') },
-			'postcss-preset-env': { stage: 3 }, // Includes autoprefixer.
-		},
-	};
+    /**
+     * Composition.
+     */
+    return {
+        plugins: {
+            'tailwindcss': { config: path.resolve(projDir, './tailwind.config.mjs') },
+            'postcss-preset-env': { stage: 3 }, // Includes autoprefixer.
+        },
+    };
 };

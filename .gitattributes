@@ -3,259 +3,454 @@
 #
 # Git is aware of this config file's location.
 #
+# The generated portion of this file can be updated using:
+#
+#     $ madrun update gitattributes
+#     or: $ madrun update dotfiles
+#
 # @note CUSTOM EDITS ONLY PLEASE!
 # @note In the future this file will be updated automatically.
 # @note Only `<custom:start.../custom:end>` will be preserved below.
 ##
 
 ##
-# Text/binary.
-##
+# Generated data.
+# <generated:start>
 
-# Default.
+# Last generated Wed, Sep 20, 2023, 10:17:19 PM EDT.
+
+# Default
 
 * text=auto
 
-# Text.
+# Text
 
-*.md text
 *.txt text
 
-# Logs.
+# Markdown
 
-*.log text
+*.md text
+*.mdx text
 
-# YAML.
+# Rich Text
 
-*.yaml text
-*.yml text
+*.rtf binary
+*.rtx binary
 
-# TOML.
+# HTML
 
-*.toml text
+*.htm text
+*.html text
+*.shtm text
+*.shtml text
 
-# Properties.
+# PDF
 
-*.properties text
+*.pdf binary
 
-# Translations.
+# Other Text
 
-*.pot text
+*.vtt text
+*.asc text
+*.c text
+*.cc text
+*.h text
+*.srt text
 
-# SQL.
+# PHP
 
-*.sql text
-*.sqlite text
-
-# Templates.
-
-*.liq text
-*.liquid text
-*.tmpl text
-*.tpl text
-
-# Config.
-
-*.admins text
-*.cfg text
-*.cnf text
-*.conf text
-*.htaccess text
-*.htaccess-apache text
-*.htpasswd text
-*.ini text
-
-# CSS.
-
-*.css text
-*.css.map text
-
-*.less text
-*.less.map text
-
-*.sass text
-*.sass.map text
-
-*.scss text
-*.scss.map text
-
-# JavaScript.
-
-*.js text
-*.js.map text
-
-*.jsx text
-*.jsx.map text
-
-*.mjs text
-*.mjs.map text
-
-*.cjs text
-*.cjs.map text
-
-*.ts text
-*.ts.map text
-
-*.tsx text
-*.tsx.map text
-
-*.mts text
-*.mts.map text
-
-*.cts text
-*.cts.map text
-
-*.ejs text
-
-*.json text
-*.json5 text
-
-*.npmrc text
-*.yarnrc text
-*.babelrc text
-
-*.node binary
-
-.yarn/releases/** binary
-.yarn/plugins/** binary
-
-# Applescript.
-
-*.applescript text
-*.scpt binary
-
-# PHP.
-
-*.inc text
 *.php text
-*.php4 text
-*.php5 text
-*.php6 text
-*.phps text
-*.x-php text
+*.phtm text
+*.phtml text
 
-# ASP.
+# Ruby
+
+*.rb text
+
+# Python
+
+*.py text
+
+# ASP
 
 *.asp text
 *.aspx text
 
-# Perl.
+# Perl
 
 *.cgi text
 *.pl text
+*.plx text
+*.ppl text
+*.perl text
 
-# HTML/XML.
+# Shell
 
-*.dtd text
-*.hta text
-*.htc text
-*.htm text
-*.html text
-*.shtml text
-*.xhtml text
-*.xml text
+*.sh text
+*.zsh text
+*.bash text
+
+# Node Archive
+
+*.node binary
+
+# PHP Archive
+
+*.phar binary
+
+# PHP Source
+
+*.phps text
+
+# Docker
+
+*.dockerfile text
+
+# JS Automation
+
+*.jxa text
+
+# AppleScript
+
+*.applescript text
+*.scpt binary
+*.scptd binary
+
+# Batch
+
+*.bat text
+
+# JavaScript
+
+*.wasm binary
+*.js text
+*.cjs text
+*.mjs text
+*.jsx text
+*.cjsx text
+*.mjsx text
+
+# TypeScript
+
+*.ts text
+*.cts text
+*.mts text
+*.tsx text
+*.ctsx text
+*.mtsx text
+
+# Style
+
+*.css text
+*.scss text
+*.less text
 *.xsd text
 *.xsl text
 *.xslt text
 
-# Documents.
+# Other Code
+
+*.hta text
+*.htc text
+*.class binary
+
+# EJS
+
+*.ejs text
+
+# Liquid
+
+*.liquid text
+
+# Other Template
+
+*.tpl text
+
+# SQL
+
+*.sql text
+*.sqlite text
+
+# Delimited
 
 *.csv text
-*.doc binary
-*.docx binary
-*.odt binary
-*.pdf binary
-*.pptx binary
-*.rtf binary
 *.tsv text
-*.xls binary
-*.xlsx binary
 
-# Images.
+# JSON
+
+*.json text
+*.json5 text
+*.jsonld text
+
+# TOML
+
+*.toml text
+
+# YAML
+
+*.yaml text
+*.yml text
+
+# INI
+
+*.ini text
+
+# Properties
+
+*.env text
+*.props text
+*.properties text
+
+# Apache
+
+*.conf text
+*.htaccess text
+*.htpasswd text
+
+# I18n
+
+*.po text
+*.mo binary
+
+# XML
+
+*.dtd text
+*.xhtm text
+*.xhtml text
+*.xml text
+
+# Calendar
+
+*.ics text
+
+# Feed
+
+*.atom text
+*.rdf text
+*.rss-http text
+*.rss text
+*.rss2 text
+
+# Log
+
+*.log text
+
+# Other Data
+
+*.hex binary
+
+# Other Config
+
+*.babelrc text
+*.npmrc text
+*.yarnrc text
+*.inputrc text
+*.tsbuildinfo text
+*.editorconfig text
+*.shellcheckrc text
+*.browserslistrc text
+*.gitconfig text
+*.gitchange text
+*.gitattributes text
+*.gitignore text
+*.npmignore text
+*.dockerignore text
+*.vscodeignore text
+*.prettierignore text
+*.eslintignore text
+
+# Image
 
 *.ai binary
+*.apng binary
 *.bmp binary
 *.eps binary
 *.gif binary
+*.heic binary
 *.ico binary
-*.jpe binary
-*.jpeg binary
 *.jpg binary
+*.jpeg binary
+*.jpe binary
+*.pict binary
 *.png binary
 *.psd binary
 *.pspimage binary
 *.svg text
-*.tif binary
+*.svgz binary
 *.tiff binary
+*.tif binary
 *.webp binary
 
-# Audio.
+# Audio
 
+*.aac binary
+*.flac binary
 *.mid binary
 *.midi binary
+*.mka binary
 *.mp3 binary
+*.m4a binary
+*.m4b binary
 *.ogg binary
+*.oga binary
+*.pls binary
+*.ra binary
+*.ram binary
 *.wav binary
+*.wax binary
 *.wma binary
 
-# Video.
+# Video
 
+*.3g2 binary
+*.3gp2 binary
+*.3gp binary
+*.3gpp binary
+*.asf binary
+*.asx binary
 *.avi binary
-*.blend binary
-*.fla binary
+*.divx binary
 *.flv binary
+*.mkv binary
 *.mov binary
+*.qt binary
 *.mp4 binary
+*.m4v binary
 *.mpeg binary
 *.mpg binary
+*.mpe binary
 *.ogv binary
-*.qt binary
-*.swf binary
 *.webm binary
+*.wm binary
 *.wmv binary
+*.wmx binary
 
-# Fonts.
+# Font
 
-*.eot binary
 *.otf binary
 *.ttf binary
 *.woff binary
 *.woff2 binary
+*.eot binary
 
-# Archives.
+# Archive
 
 *.7z binary
 *.dmg binary
 *.gtar binary
 *.gz binary
+*.tgz binary
+*.gzip binary
 *.iso binary
 *.jar binary
-*.phar binary
 *.rar binary
 *.tar binary
-*.tgz binary
 *.zip binary
+*.sketch binary
 
-# Other.
+# Certificate
 
-*.bash text
-*.bat text
+*.csr text
+*.crt text
+*.pem text
+
+# Other Application
+
+*.app binary
+*.xcf binary
 *.bin binary
-*.class binary
+*.blend binary
 *.com binary
+*.dfxp binary
 *.dll binary
 *.exe binary
-*.pem text
-*.sh text
 *.so binary
-*.zsh text
+
+# Google
+
+*.kml text
+*.kmz binary
+
+# Adobe
+
+*.ps binary
+*.fla binary
+*.swf binary
+
+# MS Office
+
+*.doc binary
+*.docm binary
+*.docx binary
+*.dotm binary
+*.dotx binary
+*.mdb binary
+*.mpp binary
+*.onetoc binary
+*.onetoc2 binary
+*.onetmp binary
+*.onepkg binary
+*.oxps binary
+*.pot binary
+*.pps binary
+*.ppt binary
+*.potm binary
+*.potx binary
+*.ppam binary
+*.ppsm binary
+*.ppsx binary
+*.pptm binary
+*.pptx binary
+*.sldm binary
+*.sldx binary
+*.wri binary
+*.xla binary
+*.xls binary
+*.xlt binary
+*.xlw binary
+*.xlam binary
+*.xlsb binary
+*.xlsm binary
+*.xlsx binary
+*.xltm binary
+*.xltx binary
+*.xps binary
+
+# OpenOffice
+
+*.odb binary
+*.odc binary
+*.odf binary
+*.odg binary
+*.odp binary
+*.ods binary
+*.odt binary
+
+# WordPerfect
+
+*.wp binary
+*.wpd binary
+
+# iWork
+
+*.key binary
+*.numbers binary
+*.pages binary
+
+# Special Cases
+
+*.env.* text
+CODEOWNERS text
+/src/cargo/_headers text
+/src/cargo/_redirects text
 
 ##
-# LFS storage.
+# LFS storage rules.
 ##
 
 lfs/** filter=lfs diff=lfs merge=lfs -text
-lfs-*/** filter=lfs diff=lfs merge=lfs -text
+
+# </generated:end>
 
 ##
 # Customizations.

@@ -7,18 +7,18 @@
 # @note In the future this file will be updated automatically.
 # @note Only `<custom:start.../custom:end>` will be preserved below.
 ##
-#
+
 root=true
 
 [*]
 charset=utf-8
 end_of_line=lf
 indent_size=4
-indent_style=tab
-insert_final_newline=true
+indent_style=space
 max_line_length=180
+insert_final_newline=true
 trim_trailing_whitespace=true
-#
+
 ##
 # Customizations.
 # <custom:start>

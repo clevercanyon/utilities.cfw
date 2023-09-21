@@ -17,72 +17,72 @@ import extensions from '../bin/includes/extensions.mjs';
  * Defines Stylelint configuration.
  */
 export default async () => {
-	/**
-	 * Base config.
-	 */
-	const baseConfig = {
-		ignoreFiles: [
-			...new Set([
-				...exclusions.logIgnores, //
-				...exclusions.backupIgnores,
-				...exclusions.patchIgnores,
-				...exclusions.pkgIgnores,
-				...exclusions.vcsIgnores,
-				...exclusions.osIgnores,
-				...exclusions.lockIgnores,
-				...exclusions.distIgnores,
-				...exclusions.sandboxIgnores,
-				...exclusions.exampleIgnores,
-			]),
-		],
-		plugins: [
-			'stylelint-scss', //
-			'stylelint-order',
-		],
-		extends: [
-			'stylelint-config-standard-scss', //
-			'stylelint-config-recess-order',
-		],
-		rules: {
-			'no-duplicate-selectors': null,
-			'selector-type-no-unknown': null,
-			'no-descending-specificity': null,
-			'selector-class-pattern': '^[_-]?[a-z][a-z0-9]*(?:[_-]{1,2}[a-z0-9]+)*$',
-			'selector-id-pattern': '^[a-z][a-z0-9]*(?:[_-]{1,2}[a-z0-9]+)*$',
-			'at-rule-no-unknown': [true, { ignoreAtRules: ['tailwind', 'apply', 'variants', 'responsive', 'screen'] }],
-		},
-	};
+    /**
+     * Base config.
+     */
+    const baseConfig = {
+        ignoreFiles: [
+            ...new Set([
+                ...exclusions.logIgnores, //
+                ...exclusions.backupIgnores,
+                ...exclusions.patchIgnores,
+                ...exclusions.pkgIgnores,
+                ...exclusions.vcsIgnores,
+                ...exclusions.osIgnores,
+                ...exclusions.lockIgnores,
+                ...exclusions.distIgnores,
+                ...exclusions.sandboxIgnores,
+                ...exclusions.exampleIgnores,
+            ]),
+        ],
+        plugins: [
+            'stylelint-scss', //
+            'stylelint-order',
+        ],
+        extends: [
+            'stylelint-config-standard-scss', //
+            'stylelint-config-recess-order',
+        ],
+        rules: {
+            'no-duplicate-selectors': null,
+            'selector-type-no-unknown': null,
+            'no-descending-specificity': null,
+            'selector-class-pattern': '^[_-]?[a-z][a-z0-9]*(?:[_-]{1,2}[a-z0-9]+)*$',
+            'selector-id-pattern': '^[a-z][a-z0-9]*(?:[_-]{1,2}[a-z0-9]+)*$',
+            'at-rule-no-unknown': [true, { ignoreAtRules: ['tailwind', 'apply', 'variants', 'responsive', 'screen'] }],
+        },
+    };
 
-	/**
-	 * Composition.
-	 */
-	return {
-		...baseConfig,
+    /**
+     * Composition.
+     */
+    return {
+        ...baseConfig,
 
-		overrides: [
-			{
-				files: ['**/*.' + extensions.asGlob(extensions.css)],
+        overrides: [
+            {
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.css])],
 
-				plugins: [...baseConfig.plugins],
-				extends: [...baseConfig.extends],
-				ignoreFiles: [...baseConfig.ignoreFiles],
+                plugins: [...baseConfig.plugins],
+                extends: [...baseConfig.extends],
+                ignoreFiles: [...baseConfig.ignoreFiles],
 
-				customSyntax: 'postcss-safe-parser',
-				rules: { ...baseConfig.rules },
-			},
-			{
-				files: ['**/*.' + extensions.asGlob(extensions.scss)],
+                customSyntax: 'postcss-safe-parser',
+                rules: { ...baseConfig.rules },
+            },
+            {
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.scss])],
 
-				plugins: [...baseConfig.plugins],
-				extends: [...baseConfig.extends],
-				ignoreFiles: [...baseConfig.ignoreFiles],
+                plugins: [...baseConfig.plugins],
+                extends: [...baseConfig.extends],
+                ignoreFiles: [...baseConfig.ignoreFiles],
 
-				customSyntax: 'postcss-scss',
-				rules: {
-					...baseConfig.rules,
-					'scss/at-rule-no-unknown': baseConfig.rules['at-rule-no-unknown'],
-				},
-			},
-		],
-	};
+                customSyntax: 'postcss-scss',
+                rules: {
+                    ...baseConfig.rules,
+                    'scss/at-rule-no-unknown': baseConfig.rules['at-rule-no-unknown'],
+                },
+            },
+        ],
+    };
 };

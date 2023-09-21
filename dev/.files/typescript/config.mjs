@@ -37,76 +37,77 @@ const projDir = path.resolve(__dirname, '../../..');
  */
 const relativeImportAliases = {}; // Relative to `tsBaseDir`.
 for (const [aliasPath, realPath] of Object.entries(importAliases.asGlobs)) {
-	relativeImportAliases[aliasPath] = [path.relative(path.resolve(projDir, './src'), realPath)];
+    relativeImportAliases[aliasPath] = [path.relative(path.resolve(projDir, './src'), realPath)];
 }
 
 /**
  * Defines TypeScript configuration.
  */
 export default async () => {
-	/**
-	 * Base config.
-	 */
-	const baseConfig = {
-		include: [
-			'./' + path.relative(projDir, path.resolve(projDir, './*.d.ts')), //
-			'./' + path.relative(projDir, path.resolve(projDir, './src')) + '/**/*',
-		],
-		exclude: exclusions.asRelativeGlobs(projDir, [
-			...new Set([
-				...exclusions.localIgnores,
-				...exclusions.logIgnores,
-				...exclusions.backupIgnores,
-				...exclusions.patchIgnores,
-				...exclusions.editorIgnores,
-				...exclusions.pkgIgnores,
-				...exclusions.vcsIgnores,
-				...exclusions.osIgnores,
-				...exclusions.dotIgnores,
-				...exclusions.configIgnores,
-				...exclusions.lockIgnores,
-				...exclusions.devIgnores,
-				...exclusions.distIgnores,
-				...exclusions.docIgnores,
-			]),
-		]),
-		compilerOptions: {
-			baseUrl: './' + path.relative(projDir, path.resolve(projDir, './src')),
-			rootDir: './' + path.relative(projDir, path.resolve(projDir, './src')),
-			declarationDir: './' + path.relative(projDir, path.resolve(projDir, './dist/types')),
+    /**
+     * Base config.
+     */
+    const baseConfig = {
+        include: [
+            './' + path.relative(projDir, path.resolve(projDir, './*.d.ts')), //
+            './' + path.relative(projDir, path.resolve(projDir, './src')) + '/**/*',
+        ],
+        exclude: exclusions.asRelativeGlobs(projDir, [
+            ...new Set([
+                ...exclusions.localIgnores,
+                ...exclusions.logIgnores,
+                ...exclusions.backupIgnores,
+                ...exclusions.patchIgnores,
+                ...exclusions.editorIgnores,
+                ...exclusions.pkgIgnores,
+                ...exclusions.vcsIgnores,
+                ...exclusions.osIgnores,
+                ...exclusions.dotIgnores,
+                ...exclusions.configIgnores,
+                ...exclusions.lockIgnores,
+                ...exclusions.devIgnores,
+                ...exclusions.distIgnores,
+                ...exclusions.docIgnores,
+            ]),
+        ]),
+        compilerOptions: {
+            baseUrl: './' + path.relative(projDir, path.resolve(projDir, './src')),
+            rootDir: './' + path.relative(projDir, path.resolve(projDir, './src')),
+            declarationDir: './' + path.relative(projDir, path.resolve(projDir, './dist/types')),
 
-			declaration: true,
-			declarationMap: false,
-			emitDeclarationOnly: true,
+            declaration: true,
+            declarationMap: false,
+            emitDeclarationOnly: true,
 
-			strict: true,
-			skipLibCheck: true,
-			experimentalDecorators: true,
+            strict: true,
+            skipLibCheck: true,
+            experimentalDecorators: true,
 
-			target: esVersion.lcnYear,
-			lib: [esVersion.lcnYear],
-			types: ['vite/client', '@types/mdx'],
+            target: esVersion.lcnYear,
+            lib: [esVersion.lcnYear],
+            types: ['vite/client', '@types/mdx'],
 
-			jsx: 'react-jsx',
-			jsxImportSource: 'preact',
+            jsx: 'react-jsx',
+            jsxImportSource: 'preact',
 
-			module: 'node16',
-			moduleResolution: 'node16',
+            module: 'node16',
+            moduleResolution: 'node16',
 
-			esModuleInterop: true,
-			isolatedModules: true,
-			resolveJsonModule: true,
-			verbatimModuleSyntax: true,
-			allowImportingTsExtensions: true,
+            esModuleInterop: true,
+            isolatedModules: true,
+            resolveJsonModule: true,
+            verbatimModuleSyntax: true,
+            allowImportingTsExtensions: true,
 
-			paths: relativeImportAliases, // Relative to `baseUrl`.
-		},
-	};
+            paths: relativeImportAliases, // Relative to `baseUrl`.
+        },
+        mdx: (await import(path.resolve(projDir, './.remarkrc.mjs'))).default.tsconfigMDX,
+    };
 
-	/**
-	 * Composition.
-	 */
-	return {
-		...baseConfig,
-	};
+    /**
+     * Composition.
+     */
+    return {
+        ...baseConfig,
+    };
 };

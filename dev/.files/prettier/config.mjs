@@ -21,356 +21,385 @@ const projDir = path.resolve(__dirname, '../../..');
  * Defines Prettier configuration.
  */
 export default async () => {
-	/**
-	 * Base config.
-	 */
-	const baseConfig = {
-		/**
-		 * Plugins.
-		 */
-		plugins: [
-			// Misc. parsers.
-			'prettier-plugin-sh',
-			'prettier-plugin-ini',
-			'prettier-plugin-sql',
-			'@prettier/plugin-xml',
-			'@prettier/plugin-php',
-			'@prettier/plugin-ruby',
-			'prettier-plugin-properties',
+    /**
+     * Base config.
+     */
+    const baseConfig = {
+        /**
+         * Plugins.
+         */
+        plugins: [
+            // Misc. parsers.
+            'prettier-plugin-sh',
+            'prettier-plugin-ini',
+            'prettier-plugin-sql',
+            '@prettier/plugin-xml',
+            '@prettier/plugin-php',
+            '@prettier/plugin-ruby',
+            'prettier-plugin-properties',
 
-			// In this specific order...
-			// See: <https://o5p.me/87sPJC>.
-			'prettier-plugin-organize-imports',
-			'prettier-plugin-jsdoc', // After organize imports.
-			'prettier-plugin-tailwindcss', // Must come last, always.
-		],
+            // In this specific order...
+            // See: <https://o5p.me/87sPJC>.
+            'prettier-plugin-organize-imports',
+            'prettier-plugin-jsdoc', // After organize imports.
+            'prettier-plugin-tailwindcss', // Must come last, always.
+        ],
 
-		/**
-		 * Standard options.
-		 */
-		arrowParens: 'always',
-		bracketSameLine: false,
-		bracketSpacing: true,
-		embeddedLanguageFormatting: 'auto',
-		endOfLine: 'lf',
-		htmlWhitespaceSensitivity: 'css',
-		insertPragma: false,
-		jsxSingleQuote: true,
-		printWidth: 180,
-		proseWrap: 'preserve',
-		quoteProps: 'preserve',
-		requirePragma: false,
-		semi: true,
-		singleAttributePerLine: false,
-		singleQuote: true,
-		tabWidth: 4,
-		trailingComma: 'all',
-		useTabs: true,
-		vueIndentScriptAndStyle: true,
-	};
+        /**
+         * Standard options.
+         */
+        arrowParens: 'always',
+        bracketSameLine: false,
+        bracketSpacing: true,
+        embeddedLanguageFormatting: 'auto',
+        endOfLine: 'lf',
+        htmlWhitespaceSensitivity: 'css',
+        insertPragma: false,
+        jsxSingleQuote: true,
+        printWidth: 180,
+        proseWrap: 'preserve',
+        quoteProps: 'preserve',
+        requirePragma: false,
+        semi: true,
+        singleAttributePerLine: false,
+        singleQuote: true,
+        tabWidth: 4,
+        trailingComma: 'all',
+        useTabs: false,
+        vueIndentScriptAndStyle: true,
+    };
 
-	/**
-	 * Composition.
-	 */
-	return {
-		...baseConfig,
+    /**
+     * Composition.
+     */
+    return {
+        ...baseConfig,
 
-		overrides: [
-			{
-				/**
-				 * Enforce Babel parser.
-				 *
-				 * @see https://o5p.me/sj8jjz
-				 */
-				files: ['*.' + extensions.asGlob([...extensions.js])],
-				options: { parser: 'babel' },
-			},
+        overrides: [
+            /**
+             * Documents.
+             */
 
-			{
-				/**
-				 * Enforce TypeScript parser.
-				 *
-				 * @see https://o5p.me/sj8jjz
-				 */
-				files: ['*.' + extensions.asGlob([...extensions.ts])],
-				options: { parser: 'typescript' },
-			},
+            {
+                /**
+                 * MD parser.
+                 *
+                 * @see https://o5p.me/sj8jjz
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.markdown])],
+                options: { parser: 'markdown' },
+            },
+            {
+                /**
+                 * MDX parser.
+                 *
+                 * @see https://o5p.me/sj8jjz
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.mdx])],
+                options: { parser: 'mdx' },
+            },
+            {
+                /**
+                 * HTML parser.
+                 *
+                 * @see https://o5p.me/sj8jjz
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.trueHTML, ...extensions.trueSHTML])],
+                options: { parser: 'html' },
+            },
 
-			{
-				/**
-				 * Enforce HTML parser.
-				 *
-				 * @see https://o5p.me/sj8jjz
-				 */
-				files: ['*.' + extensions.asGlob([...extensions.html])],
-				options: { parser: 'html' },
-			},
+            /**
+             * Backend code.
+             */
 
-			{
-				/**
-				 * Enforce MD parser.
-				 *
-				 * @see https://o5p.me/sj8jjz
-				 */
-				files: ['*.' + extensions.asGlob([...extensions.md])],
-				options: { parser: 'markdown' },
-			},
+            {
+                /**
+                 * PHP plugin options.
+                 *
+                 * @see https://o5p.me/BHsZj8
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.php])],
+                options: {
+                    parser: 'php',
+                    braceStyle: '1tbs',
+                    phpVersion: '8.1',
+                    trailingCommaPHP: true,
+                },
+            },
+            {
+                /**
+                 * Ruby plugin options.
+                 *
+                 * @see https://o5p.me/tuKNvU
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.ruby])],
+                options: {
+                    parser: 'ruby',
+                    rubyPlugins: '',
+                    rubySingleQuote: true,
+                },
+            },
+            {
+                /**
+                 * Python plugin options.
+                 *
+                 * @see https://o5p.me/wWDiYK
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.python])],
+                options: { parser: '' }, // N/A ... instead, use <https://github.com/microsoft/vscode-black-formatter>.
+            },
+            {
+                /**
+                 * Sh plugin options.
+                 *
+                 * @see https://o5p.me/D0rlOV
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.shellscript.filter((ext) => /^sh/iu.test(ext))])],
+                options: {
+                    parser: 'sh', // Posix variant!
+                    variant: 1, // Posix variant only.
+                    binaryNextLine: false,
+                    experimentalWasm: false,
+                    functionNextLine: false,
+                    indent: baseConfig.tabWidth,
+                    keepComments: true,
+                    keepPadding: false,
+                    minify: false,
+                    spaceRedirects: true,
+                    stopAt: undefined,
+                    switchCaseIndent: true,
+                },
+            },
+            {
+                /**
+                 * Bash plugin options.
+                 *
+                 * @see https://o5p.me/D0rlOV
+                 */
+                files: [
+                    '*.' + extensions.asBracedGlob([...extensions.shellscript.filter((ext) => /^bash/iu.test(ext))]), //
+                    '{,*.}Dockerfile', // Safe to assume ours always uses bash.
+                ],
+                options: {
+                    parser: 'sh', // Bash variant!
+                    variant: 0, // Bash variant only.
+                    binaryNextLine: false,
+                    experimentalWasm: false,
+                    functionNextLine: false,
+                    indent: baseConfig.tabWidth,
+                    keepComments: true,
+                    keepPadding: false,
+                    minify: false,
+                    spaceRedirects: true,
+                    stopAt: undefined,
+                    switchCaseIndent: true,
+                },
+            },
 
-			{
-				/**
-				 * Enforce MDX parser.
-				 *
-				 * @see https://o5p.me/sj8jjz
-				 */
-				files: ['*.' + extensions.asGlob([...extensions.mdx])],
-				options: { parser: 'mdx' },
-			},
+            /**
+             * Frontend code (most of the time).
+             */
 
-			{
-				/**
-				 * Enforce CSS parser.
-				 *
-				 * @see https://o5p.me/sj8jjz
-				 */
-				files: ['*.' + extensions.asGlob([...extensions.css])],
-				options: { parser: 'css' },
-			},
+            {
+                /**
+                 * JavaScript parser.
+                 *
+                 * @see https://o5p.me/sj8jjz
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.allJavaScript])],
+                options: { parser: 'babel' },
+            },
+            {
+                /**
+                 * TypeScript parser.
+                 *
+                 * @see https://o5p.me/sj8jjz
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.allTypeScript])],
+                options: { parser: 'typescript' },
+            },
+            {
+                /**
+                 * JSDoc plugin options.
+                 *
+                 * @see https://o5p.me/dTTfse
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript])],
+                options: {
+                    jsdocAddDefaultToDescription: false,
+                    jsdocCapitalizeDescription: true,
+                    jsdocDescriptionTag: false,
+                    jsdocDescriptionWithDot: true,
+                    jsdocKeepUnParseAbleExampleIndent: false,
+                    jsdocLineWrappingStyle: 'greedy',
+                    jsdocPreferCodeFences: false,
+                    jsdocPrintWidth: baseConfig.printWidth - 60,
+                    jsdocSeparateReturnsFromParam: false,
+                    jsdocSeparateTagGroups: true,
+                    jsdocSingleLineComment: false,
+                    jsdocSpaces: 1,
+                    jsdocVerticalAlignment: true,
+                    tsdoc: false,
+                },
+            },
+            {
+                /**
+                 * Organize import plugin options.
+                 *
+                 * @see https://o5p.me/o7OmDG
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript])],
+                options: {
+                    organizeImportsSkipDestructiveCodeActions: true,
+                },
+            },
+            {
+                /**
+                 * Tailwind plugin options.
+                 *
+                 * @see https://o5p.me/RleCLk
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.tailwindPrettierContent])],
+                options: {
+                    tailwindConfig: path.resolve(projDir, './tailwind.config.mjs'),
+                    tailwindAttributes: ['class', 'classes', 'className', 'classNames'],
+                    tailwindFunctions: ['$preact.classes'], // See: <https://o5p.me/33VJpO>.
+                },
+            },
+            {
+                /**
+                 * CSS parser.
+                 *
+                 * @see https://o5p.me/sj8jjz
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.css])],
+                options: { parser: 'css' },
+            },
+            {
+                /**
+                 * SCSS parser.
+                 *
+                 * @see https://o5p.me/sj8jjz
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.scss])],
+                options: { parser: 'scss' },
+            },
+            {
+                /**
+                 * Less parser.
+                 *
+                 * @see https://o5p.me/sj8jjz
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.less])],
+                options: { parser: 'less' },
+            },
 
-			{
-				/**
-				 * Enforce SCSS parser.
-				 *
-				 * @see https://o5p.me/sj8jjz
-				 */
-				files: ['*.' + extensions.asGlob([...extensions.scss])],
-				options: { parser: 'scss' },
-			},
+            /**
+             * Data/config files.
+             */
 
-			{
-				/**
-				 * Enforce Less parser.
-				 *
-				 * @see https://o5p.me/sj8jjz
-				 */
-				files: ['*.' + extensions.asGlob([...extensions.less])],
-				options: { parser: 'less' },
-			},
-
-			{
-				/**
-				 * Enforce Yaml parser.
-				 *
-				 * @see https://o5p.me/sj8jjz
-				 */
-				files: ['*.' + extensions.asGlob([...extensions.yaml])],
-				options: { parser: 'yaml' },
-			},
-
-			{
-				/**
-				 * Enforce JSON parser.
-				 *
-				 * @see https://o5p.me/sj8jjz
-				 */
-				files: ['*.' + extensions.asGlob(extensions.json)],
-				options: { parser: 'json' },
-			},
-
-			{
-				/**
-				 * Enforce JSON5 parser.
-				 *
-				 * @see https://o5p.me/sj8jjz
-				 */
-				files: ['*.' + extensions.asGlob(extensions.json5)],
-				options: { parser: 'json5' },
-			},
-
-			{
-				/**
-				 * JSDoc plugin options.
-				 *
-				 * @see https://o5p.me/dTTfse
-				 */
-				files: ['*.' + extensions.asGlob(extensions.jts)],
-				options: {
-					jsdocAddDefaultToDescription: false,
-					jsdocCapitalizeDescription: true,
-					jsdocDescriptionTag: false,
-					jsdocDescriptionWithDot: true,
-					jsdocKeepUnParseAbleExampleIndent: false,
-					jsdocLineWrappingStyle: 'greedy',
-					jsdocPreferCodeFences: false,
-					jsdocPrintWidth: 120,
-					jsdocSeparateReturnsFromParam: false,
-					jsdocSeparateTagGroups: true,
-					jsdocSingleLineComment: false,
-					jsdocSpaces: 1,
-					jsdocVerticalAlignment: true,
-					tsdoc: false,
-				},
-			},
-
-			{
-				/**
-				 * Organize import plugin options.
-				 *
-				 * @see https://o5p.me/o7OmDG
-				 */
-				files: ['*.' + extensions.asGlob(extensions.jts)],
-				options: {
-					organizeImportsSkipDestructiveCodeActions: true,
-				},
-			},
-
-			{
-				/**
-				 * Tailwind CSS plugin options.
-				 *
-				 * @see https://o5p.me/RleCLk
-				 */
-				files: ['*.' + extensions.asGlob(extensions.content)],
-				options: {
-					tailwindConfig: path.resolve(projDir, './tailwind.config.mjs'),
-					tailwindAttributes: ['class', 'classes', 'className', 'classNames'],
-					tailwindFunctions: ['$preact.classes'], // See: <https://o5p.me/33VJpO>.
-				},
-			},
-
-			{
-				/**
-				 * PHP plugin options.
-				 *
-				 * @see https://o5p.me/BHsZj8
-				 */
-				files: ['*.' + extensions.asGlob(extensions.php)],
-				options: {
-					parser: 'php',
-					braceStyle: '1tbs',
-					phpVersion: '8.1',
-					trailingCommaPHP: true,
-				},
-			},
-
-			{
-				/**
-				 * Ruby plugin options.
-				 *
-				 * @see https://o5p.me/tuKNvU
-				 */
-				files: ['*.' + extensions.asGlob(extensions.ruby)],
-				options: {
-					parser: 'ruby',
-					rubyPlugins: '',
-					rubySingleQuote: true,
-				},
-			},
-
-			{
-				/**
-				 * SH plugin options.
-				 *
-				 * @see https://o5p.me/D0rlOV
-				 */
-				files: ['*.' + extensions.asGlob(extensions.bash), '{,*.}Dockerfile'],
-				options: {
-					parser: 'sh',
-					binaryNextLine: false,
-					experimentalWasm: false,
-					functionNextLine: false,
-					indent: 4,
-					keepComments: true,
-					keepPadding: false,
-					minify: false,
-					spaceRedirects: true,
-					stopAt: undefined,
-					switchCaseIndent: true,
-					variant: 0, // Bash.
-				},
-			},
-
-			{
-				/**
-				 * SQL plugin options.
-				 *
-				 * @see https://o5p.me/kYq5bx
-				 */
-				files: ['*.' + extensions.asGlob(extensions.sql)],
-				options: {
-					parser: 'sql',
-					commaPosition: 'after',
-					database: 'mysql',
-					denseOperators: false,
-					expressionWidth: 180,
-					formatter: 'sql-formatter',
-					indentStyle: 'standard',
-					keywordCase: 'upper',
-					language: 'sql',
-					linesBetweenQueries: 1,
-					logicalOperatorNewline: 'before',
-					newlineBeforeSemicolon: false,
-					params: Object,
-					paramTypes: Object,
-					tabulateAlias: false,
-					type: 'table',
-				},
-			},
-
-			{
-				/**
-				 * XML plugin options.
-				 *
-				 * @see https://o5p.me/OiLPzn
-				 */
-				files: ['*.' + extensions.asGlob(extensions.xml)],
-				options: {
-					parser: 'xml',
-					xmlSelfClosingSpace: true,
-					xmlSortAttributesByKey: false,
-					xmlQuoteAttributes: 'preserve',
-					xmlWhitespaceSensitivity: 'ignore',
-				},
-			},
-
-			{
-				/**
-				 * INI plugin options.
-				 *
-				 * @see https://o5p.me/1fqazf
-				 */
-				files: ['*.' + extensions.asGlob(extensions.ini)],
-				options: {
-					parser: 'ini',
-					iniSpaceAroundEquals: true,
-				},
-			},
-
-			{
-				/**
-				 * Properties plugin options.
-				 *
-				 * @see https://o5p.me/IyzRSp
-				 */
-				files: ['*.' + extensions.asGlob(extensions.properties), '*.env{,.*}'],
-				options: {
-					parser: 'dot-properties',
-					keySeparator: '=',
-					escapeNonLatin1: false,
-				},
-			},
-
-			{
-				/**
-				 * YAML spec options.
-				 *
-				 * @see https://o5p.me/jJH2xY
-				 */
-				files: ['*.' + extensions.asGlob(extensions.yaml)],
-				options: {
-					tabWidth: 2,
-					useTabs: false,
-				},
-			},
-		],
-	};
+            {
+                /**
+                 * SQL plugin options.
+                 *
+                 * @see https://o5p.me/kYq5bx
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.sql])],
+                options: {
+                    parser: 'sql',
+                    commaPosition: 'after',
+                    database: 'mysql',
+                    denseOperators: false,
+                    expressionWidth: baseConfig.printWidth,
+                    formatter: 'sql-formatter',
+                    indentStyle: 'standard',
+                    keywordCase: 'upper',
+                    language: 'sql',
+                    linesBetweenQueries: 1,
+                    logicalOperatorNewline: 'before',
+                    newlineBeforeSemicolon: false,
+                    params: Object,
+                    paramTypes: Object,
+                    tabulateAlias: false,
+                    type: 'table',
+                },
+            },
+            {
+                /**
+                 * JSON parser.
+                 *
+                 * @see https://o5p.me/sj8jjz
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.json])],
+                options: { parser: 'json' },
+            },
+            {
+                /**
+                 * JSON5 parser.
+                 *
+                 * @see https://o5p.me/sj8jjz
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.jsonc])],
+                options: { parser: 'json5' },
+            },
+            {
+                /**
+                 * TOML parser.
+                 *
+                 * @see https://o5p.me/GI5Eiw
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.toml])],
+                options: { parser: '' }, // Not ready for production yet, but coming soon.
+            },
+            {
+                /**
+                 * Yaml parser.
+                 *
+                 * @see https://o5p.me/sj8jjz
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.yaml])],
+                options: { parser: 'yaml' },
+            },
+            {
+                /**
+                 * INI plugin options.
+                 *
+                 * @see https://o5p.me/1fqazf
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.ini])],
+                options: {
+                    parser: 'ini',
+                    iniSpaceAroundEquals: true,
+                },
+            },
+            {
+                /**
+                 * Properties plugin options.
+                 *
+                 * @see https://o5p.me/IyzRSp
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.properties]), '*.env{,.*}'],
+                options: {
+                    parser: 'dot-properties',
+                    keySeparator: '=',
+                    escapeNonLatin1: false,
+                },
+            },
+            {
+                /**
+                 * XML plugin options.
+                 *
+                 * @see https://o5p.me/OiLPzn
+                 */
+                files: ['*.' + extensions.asBracedGlob([...extensions.xml])],
+                options: {
+                    parser: 'xml',
+                    xmlSelfClosingSpace: true,
+                    xmlSortAttributesByKey: false,
+                    xmlQuoteAttributes: 'preserve',
+                    xmlWhitespaceSensitivity: 'ignore',
+                },
+            },
+        ],
+    };
 };

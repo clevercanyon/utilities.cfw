@@ -18,10 +18,10 @@
  * @returns       ESBuild configuration.
  */
 export default async (/* {} */) => {
-	return {
-		// See <https://o5p.me/Wk8Fm9>.
-		jsx: 'automatic', // Matches TypeScript config.
-		jsxImportSource: 'preact', // Matches TypeScript config.
-		legalComments: 'none', // See <https://o5p.me/DZKXwX>.
-	};
+    return {
+        // See <https://o5p.me/Wk8Fm9>.
+        jsx: 'automatic', // Matches TypeScript config.
+        jsxImportSource: 'preact', // Matches TypeScript config.
+        legalComments: 'none', // See <https://o5p.me/DZKXwX>.
+    };
 };

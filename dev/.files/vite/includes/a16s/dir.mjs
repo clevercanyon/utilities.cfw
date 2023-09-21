@@ -20,8 +20,8 @@ import path from 'node:path';
  * @returns       A16s directory for Vite.
  */
 export default async ({ isSSRBuild, distDir }) => {
-	// In the case of doing a secondary SSR build, we need to separate the SSR assets from the client-side assets.
-	// The special folder `node_modules` was selected because it's ignored by Wrangler; see <https://o5p.me/EqPjmv>.
-	// Wrangler compiles all SSR assets (wherever they live) when it does it's own bundling of the `./dist` directory.
-	return path.resolve(distDir, '.' + (isSSRBuild ? '/node_modules' : '') + '/assets/a16s');
+    // In the case of doing a secondary SSR build, we need to separate the SSR assets from the client-side assets.
+    // The special folder `node_modules` was selected because it's ignored by Wrangler; see <https://o5p.me/EqPjmv>.
+    // Wrangler compiles all SSR assets (wherever they live) when it does it's own bundling of the `./dist` directory.
+    return path.resolve(distDir, '.' + (isSSRBuild ? '/node_modules' : '') + '/assets/a16s');
 };

@@ -23,139 +23,139 @@ const projDir = path.resolve(__dirname, '../../../..');
  * Defines event handlers.
  */
 export default {
-	/**
-	 * `$ madrun new` events.
-	 */
-	'on::madrun:default:new': [
-		/**
-		 * Installs new project.
-		 */
-		'npx @clevercanyon/madrun install project',
+    /**
+     * `$ madrun new` events.
+     */
+    'on::madrun:default:new': [
+        /**
+         * Installs new project.
+         */
+        'npx @clevercanyon/madrun install project',
 
-		/**
-		 * Configures new project.
-		 */
-		async (args) => {
-			/**
-			 * Propagates env vars.
-			 */
-			await u.propagateUserEnvVars();
+        /**
+         * Configures new project.
+         */
+        async (args) => {
+            /**
+             * Propagates env vars.
+             */
+            await u.propagateUserEnvVars();
 
-			/**
-			 * Deletes Dotenv Vault associated with template.
-			 */
-			await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
-			await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
+            /**
+             * Deletes Dotenv Vault associated with template.
+             */
+            await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
+            await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
 
-			/**
-			 * Initializes a few variables.
-			 */
-			const dirBasename = path.basename(projDir);
+            /**
+             * Initializes a few variables.
+             */
+            const dirBasename = path.basename(projDir);
 
-			const parentDir = path.dirname(projDir);
-			const parentDirBasename = path.basename(parentDir);
+            const parentDir = path.dirname(projDir);
+            const parentDirBasename = path.basename(parentDir);
 
-			const maybeParentDirBrand = $fn.try(() => $brand.get(parentDirBasename))(); // Maybe.
-			const parentDirOwner = $is.brand(maybeParentDirBrand) ? maybeParentDirBrand.org.slug : parentDirBasename;
+            const maybeParentDirBrand = $fn.try(() => $brand.get(parentDirBasename))(); // Maybe.
+            const parentDirOwner = $is.brand(maybeParentDirBrand) ? maybeParentDirBrand.org.slug : parentDirBasename;
 
-			/**
-			 * Updates `./package.json` in new project directory.
-			 */
-			await u.updatePkg({
-				name: args.pkgName || '@' + parentDirOwner + '/' + dirBasename,
-				repository: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename),
-				homepage: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '#readme',
-				bugs: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '/issues',
+            /**
+             * Updates `./package.json` in new project directory.
+             */
+            await u.updatePkg({
+                name: args.pkgName || '@' + parentDirOwner + '/' + dirBasename,
+                repository: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename),
+                homepage: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '#readme',
+                bugs: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '/issues',
 
-				$unset: /* Effectively resets these to default values. */ [
-					'private', //
-					'publishConfig.access',
+                $unset: /* Effectively resets these to default values. */ [
+                    'private', //
+                    'publishConfig.access',
 
-					'version',
-					'license',
-					'description',
-					'funding',
-					'keywords',
+                    'version',
+                    'license',
+                    'description',
+                    'funding',
+                    'keywords',
 
-					'author',
-					'contributors',
+                    'author',
+                    'contributors',
 
-					'config.c10n.&.github.teams',
-					'config.c10n.&.github.labels',
-					'config.c10n.&.github.configVersion',
-					'config.c10n.&.github.envsVersion',
+                    'config.c10n.&.github.teams',
+                    'config.c10n.&.github.labels',
+                    'config.c10n.&.github.configVersion',
+                    'config.c10n.&.github.envsVersion',
 
-					'config.c10n.&.npmjs.teams',
-					'config.c10n.&.npmjs.configVersions',
-				],
-				...(args.pkg ? { $set: { private: false } } : {}),
-				...(args.pkg && args.public ? { $set: { 'publishConfig.access': 'public' } } : {}),
-			});
+                    'config.c10n.&.npmjs.teams',
+                    'config.c10n.&.npmjs.configVersions',
+                ],
+                ...(args.pkg ? { $set: { private: false } } : {}),
+                ...(args.pkg && args.public ? { $set: { 'publishConfig.access': 'public' } } : {}),
+            });
 
-			/**
-			 * Updates `./.wrangler.toml` file in new project directory.
-			 */
-			const wranglerFile = path.resolve(projDir, './.wrangler.toml');
+            /**
+             * Updates `./.wrangler.toml` file in new project directory.
+             */
+            const wranglerFile = path.resolve(projDir, './.wrangler.toml');
 
-			if (fs.existsSync(wranglerFile)) {
-				let wrangler = fs.readFileSync(wranglerFile).toString(); // toML.
+            if (fs.existsSync(wranglerFile)) {
+                let wrangler = fs.readFileSync(wranglerFile).toString(); // toML.
 
-				wrangler = wrangler.replace(/^(name\s*=\s*")([^"]*)(")/gmu, '$1' + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + '$3');
-				wrangler = wrangler.replace(/^(route\.pattern\s*=\s*")([^"]+\/)([^/"]*)(")/gmu, '$1$2' + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + '/*$4');
+                wrangler = wrangler.replace(/^(name\s*=\s*")([^"]*)(")/gmu, '$1' + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + '$3');
+                wrangler = wrangler.replace(/^(route\.pattern\s*=\s*")([^"]+\/)([^/"]*)(")/gmu, '$1$2' + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + '/*$4');
 
-				await fsp.writeFile(wranglerFile, wrangler); // Updates `./.wrangler.toml` file.
-			}
+                await fsp.writeFile(wranglerFile, wrangler); // Updates `./.wrangler.toml` file.
+            }
 
-			/**
-			 * Updates `./README.md` file in new project directory.
-			 */
-			const readmeFile = path.resolve(projDir, './README.md');
+            /**
+             * Updates `./README.md` file in new project directory.
+             */
+            const readmeFile = path.resolve(projDir, './README.md');
 
-			if (fs.existsSync(readmeFile)) {
-				let readme = fs.readFileSync(readmeFile).toString(); // Markdown.
+            if (fs.existsSync(readmeFile)) {
+                let readme = fs.readFileSync(readmeFile).toString(); // Markdown.
 
-				readme = readme.replace(/^(#\s+)(@[^/?#\s]+\/[^/?#\s]+)/gmu, '$1' + (args.pkgName || '@' + parentDirOwner + '/' + dirBasename));
-				await fsp.writeFile(readmeFile, readme); // Updates `./README.md` file.
-			}
+                readme = readme.replace(/^(#\s+)(@[^/?#\s]+\/[^/?#\s]+)/gmu, '$1' + (args.pkgName || '@' + parentDirOwner + '/' + dirBasename));
+                await fsp.writeFile(readmeFile, readme); // Updates `./README.md` file.
+            }
 
-			/**
-			 * Initializes this as a new git repository.
-			 */
-			await u.spawn('git', ['init']);
+            /**
+             * Initializes this as a new git repository.
+             */
+            await u.spawn('git', ['init']);
 
-			/**
-			 * Updates Vite build after the above changes.
-			 */
-			if (await u.isViteBuild()) await u.viteBuild();
+            /**
+             * Updates Vite build after the above changes.
+             */
+            if (await u.isViteBuild()) await u.viteBuild();
 
-			/**
-			 * Saves changes made here as first initial commit.
-			 */
-			await u.gitAddCommit('Initializing project directory. [n]');
+            /**
+             * Saves changes made here as first initial commit.
+             */
+            await u.gitAddCommit('Initializing project directory. [n]');
 
-			/**
-			 * Attempts to create a remote repository origin at GitHub; if at all possible.
-			 */
-			if ('clevercanyon' === parentDirOwner) {
-				if (process.env.GH_TOKEN && 'owner' === (await u.gistGetC10NUser()).github?.role) {
-					await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private']);
-				} else {
-					const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
-					await u.spawn('git', ['remote', 'add', 'origin', origin]);
-				}
-			} else if (process.env.USER_GITHUB_USERNAME === parentDirOwner) {
-				if (process.env.GH_TOKEN) {
-					await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private']);
-				} else {
-					const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
-					await u.spawn('git', ['remote', 'add', 'origin', origin]);
-				}
-			}
+            /**
+             * Attempts to create a remote repository origin at GitHub; if at all possible.
+             */
+            if ('clevercanyon' === parentDirOwner) {
+                if (process.env.GH_TOKEN && 'owner' === (await u.gistGetC10NUser()).github?.role) {
+                    await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private']);
+                } else {
+                    const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
+                    await u.spawn('git', ['remote', 'add', 'origin', origin]);
+                }
+            } else if (process.env.USER_GITHUB_USERNAME === parentDirOwner) {
+                if (process.env.GH_TOKEN) {
+                    await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private']);
+                } else {
+                    const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
+                    await u.spawn('git', ['remote', 'add', 'origin', origin]);
+                }
+            }
 
-			/**
-			 * Signals completion with success.
-			 */
-			u.log(await u.finaleBox('Success', 'New project ready.'));
-		},
-	],
+            /**
+             * Signals completion with success.
+             */
+            u.log(await u.finaleBox('Success', 'New project ready.'));
+        },
+    ],
 };
