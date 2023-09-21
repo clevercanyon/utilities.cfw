@@ -11,35 +11,35 @@
 version: 2
 
 registries:
-  registry-npmjs-org:
-    type: npm-registry
-    url: https://registry.npmjs.org
-    token: ${{secrets.USER_NPM_TOKEN}}
+    registry-npmjs-org:
+        type: npm-registry
+        url: https://registry.npmjs.org
+        token: ${{secrets.USER_NPM_TOKEN || ''}}
 
 updates:
-  - package-ecosystem: npm
-    directory: /
-    registries:
-      - registry-npmjs-org
-    labels:
-      - suggestion
-      - robotic
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
-    allow:
-      - dependency-type: production
+    - package-ecosystem: npm
+      directory: /
+      registries:
+          - registry-npmjs-org
+      labels:
+          - suggestion
+          - robotic
+      schedule:
+          interval: weekly
+      open-pull-requests-limit: 5
+      allow:
+          - dependency-type: production
 
-  - package-ecosystem: github-actions
-    directory: /
-    labels:
-      - suggestion
-      - robotic
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
-    allow:
-      - dependency-type: all
+    - package-ecosystem: github-actions
+      directory: /
+      labels:
+          - suggestion
+          - robotic
+      schedule:
+          interval: weekly
+      open-pull-requests-limit: 5
+      allow:
+          - dependency-type: all
 #
 ##
 # Customizations

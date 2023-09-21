@@ -16,7 +16,7 @@ import { $obj } from './node_modules/@clevercanyon/utilities/dist/index.js';
  * <custom:start> */
 
 export default /* Note: Tailwind is not async compatible */ (() => {
-	return $obj.mergeDeep({}, baseConfig(), {});
+    return $obj.mergeDeep({}, baseConfig(), {});
 })();
 
 /* </custom:end> */

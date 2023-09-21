@@ -16,9 +16,9 @@ import { $obj } from './node_modules/@clevercanyon/utilities/dist/index.js';
  * <custom:start> */
 
 export default async (context) => {
-	return $obj.mergeDeep({}, await baseConfig(context), {
-		// 'project:[cmd]': '', // Always prefix project CMDs.
-	});
+    return $obj.mergeDeep({}, await baseConfig(context), {
+        // 'project:[cmd]': '', // Always prefix project CMDs.
+    });
 };
 
 /* </custom:end> */

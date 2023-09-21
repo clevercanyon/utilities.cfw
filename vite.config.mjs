@@ -16,7 +16,7 @@ import { $obj } from './node_modules/@clevercanyon/utilities/dist/index.js';
  * <custom:start> */
 
 export default async (context) => {
-	return $obj.mergeDeep({}, await baseConfig(context), {});
+    return $obj.mergeDeep({}, await baseConfig(context), {});
 };
 
 /* </custom:end> */

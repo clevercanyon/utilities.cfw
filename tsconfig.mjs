@@ -26,14 +26,14 @@ import { $obj } from './node_modules/@clevercanyon/utilities/dist/index.js';
  * <custom:start> */
 
 export default await (async () => {
-	return $obj.mergeDeep({}, await baseConfig(), {
-		compilerOptions: {
-			$concat: {
-				lib: ['webworker'],
-				types: [],
-			},
-		},
-	});
+    return $obj.mergeDeep({}, await baseConfig(), {
+        compilerOptions: {
+            $concat: {
+                lib: ['webworker'],
+                types: [],
+            },
+        },
+    });
 })();
 
 /* </custom:end> */

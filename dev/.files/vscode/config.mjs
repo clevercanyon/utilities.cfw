@@ -215,9 +215,9 @@ export default async () => {
          * Stylelint options.
          */
 
-        'css.validate': true,
-        'scss.validate': true,
-        'less.validate': true,
+        'css.validate': false,
+        'scss.validate': false,
+        'less.validate': false,
         'stylelint.validate': ['scss', 'css'],
 
         /**
@@ -248,20 +248,29 @@ export default async () => {
          */
 
         '[mdx]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
             'editor.wordWrap': 'on',
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'dbaeumer.vscode-eslint',
         },
         '[markdown]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
             'editor.wordWrap': 'on',
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'dbaeumer.vscode-eslint',
         },
         '[html]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
@@ -273,30 +282,45 @@ export default async () => {
          */
 
         '[php]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[ruby]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[python]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'ms-python.black-formatter',
         },
         '[shellscript]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[dockerfile]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
@@ -308,42 +332,63 @@ export default async () => {
          */
 
         '[javascript]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'dbaeumer.vscode-eslint',
         },
         '[javascriptreact]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'dbaeumer.vscode-eslint',
         },
         '[typescript]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'dbaeumer.vscode-eslint',
         },
         '[typescriptreact]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'dbaeumer.vscode-eslint',
         },
         '[css]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[scss]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[less]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
@@ -355,48 +400,72 @@ export default async () => {
          */
 
         '[sql]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[json]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[jsonc]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[toml]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'tamasfe.even-better-toml',
         },
         '[yaml]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[ini]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[properties]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
             'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[xml]': {
+            'editor.tabSize': prettierConfig.tabWidth,
+            'editor.insertSpaces': !prettierConfig.useTabs,
+
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },

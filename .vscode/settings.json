@@ -7,7 +7,7 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./settings.mjs`.
  *
- * Last generated using `./settings.mjs` Wed, Sep 20, 2023, 11:46:56 PM EDT.
+ * Last generated using `./settings.mjs` Thu, Sep 21, 2023, 3:27:49 AM EDT.
  */
 {
     "editor.autoIndent": "full",
@@ -173,9 +173,9 @@
     },
     "javascript.validate.enable": true,
     "typescript.validate.enable": true,
-    "css.validate": true,
-    "scss.validate": true,
-    "less.validate": true,
+    "css.validate": false,
+    "scss.validate": false,
+    "less.validate": false,
     "stylelint.validate": ["scss", "css"],
     "markdown.styles": [],
     "markdown.preview.fontSize": 16,
@@ -185,6 +185,8 @@
     "prettier.ignorePath": ".prettierignore",
     "evenBetterToml.formatter.indentString": "    ",
     "[mdx]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.wordWrap": "on",
         "editor.codeActionsOnSave": {
             "source.fixAll": true
@@ -192,6 +194,8 @@
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
     "[markdown]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.wordWrap": "on",
         "editor.codeActionsOnSave": {
             "source.fixAll": true
@@ -199,126 +203,168 @@
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
     "[html]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[php]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[ruby]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[python]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
     "[shellscript]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[dockerfile]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[javascript]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
     "[javascriptreact]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
     "[typescript]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
     "[typescriptreact]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
     "[css]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[scss]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[less]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[sql]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[json]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[jsonc]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[toml]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "tamasfe.even-better-toml"
     },
     "[yaml]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[ini]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[properties]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[xml]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll": true
         },

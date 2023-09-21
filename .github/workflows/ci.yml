@@ -12,75 +12,76 @@ name: 'CI' # <https://o5p.me/QsaIUU>
 run-name: 'CI by @${{github.actor}}'
 
 on:
-  push:
-    branches:
-      - 'main'
-  pull_request:
-    branches:
-      - 'main'
-  workflow_dispatch:
+    push:
+        branches:
+            - 'main'
+    pull_request:
+        branches:
+            - 'main'
+    workflow_dispatch:
 
 concurrency:
-  cancel-in-progress: true
-  group: ${{github.workflow}}-${{github.ref}}
+    cancel-in-progress: true
+    group: ${{github.workflow}}-${{github.ref}}
 
 jobs:
-  deployment:
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        node-version: [20.5.1]
+    deployment:
+        if: github.repository_owner == 'clevercanyon'
 
-    runs-on: ${{matrix.os}}
-    environment: ci # CI environment.
+        strategy:
+            matrix:
+                os: [ubuntu-latest]
+                node-version: [20.5.1]
 
-    permissions: # GitHub token permissions.
-      contents: read # Mininum requirements.
+        runs-on: ${{matrix.os}}
+        environment: ci # CI environment.
 
-    env: # Supplied by permissions above.
-      USER_GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        permissions: # GitHub token permissions.
+            contents: read # Mininum requirements.
 
-      # Supplied by org-wide action secrets.
-      USER_NPM_TOKEN: ${{secrets.USER_NPM_TOKEN}}
+        env: # Supplied by permissions above.
+            USER_GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-      # Supplied by repo environment secrets.
-      # Only available for repos using a Dotenv Vault.
-      USER_DOTENV_KEY_MAIN: ${{secrets.USER_DOTENV_KEY_MAIN || ''}}
-      USER_DOTENV_KEY_CI: ${{secrets.USER_DOTENV_KEY_CI || ''}}
+            # Supplied by org-wide action secrets.
+            USER_NPM_TOKEN: ${{secrets.USER_NPM_TOKEN}}
 
-    steps:
-      - name: Checkout Project Repo
-        uses: actions/checkout@v3
+            # Supplied by repo environment secrets.
+            # Only available for repos using a Dotenv Vault.
+            USER_DOTENV_KEY_MAIN: ${{secrets.USER_DOTENV_KEY_MAIN || ''}}
+            USER_DOTENV_KEY_CI: ${{secrets.USER_DOTENV_KEY_CI || ''}}
 
-      - name: Setup Node v${{matrix.node-version}}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{matrix.node-version}}
-          cache: npm # Caches NPM dependencies.
+        steps:
+            - name: Checkout Project Repo
+              uses: actions/checkout@v4
 
-      - name: Parse Project Package JSON
-        shell: bash
-        run: |
-          echo 'PKG_JSON='"$(jq -c . ./package.json)" >> $GITHUB_ENV;
-          echo 'PKG_JSON_C10N='"$(jq -c '.config | .c10n | .["&"]' ./package.json)" >> $GITHUB_ENV;
+            - name: Setup Node v${{matrix.node-version}}
+              uses: actions/setup-node@v3
+              with:
+                  node-version: ${{matrix.node-version}}
+                  cache: npm # Caches NPM dependencies.
 
-      - name: Install Madrun Dependency
-        shell: bash
-        run: |
-          npm install -g @clevercanyon/madrun;
+            - name: Parse Project Package JSON
+              shell: bash
+              run: |
+                  echo 'PKG_JSON='"$(jq -c . ./package.json)" >> $GITHUB_ENV;
+                  echo 'PKG_JSON_C10N='"$(jq -c '.config | .c10n | .["&"]' ./package.json)" >> $GITHUB_ENV;
 
-      - name: Install Project
-        shell: bash
-        run: |
-          madrun install project --mode=ci;
+            - name: Install Madrun Dependency
+              shell: bash
+              run: |
+                  npm install -g @clevercanyon/madrun;
 
-      - name: Run Project Tests
-        if: fromJson(env.PKG_JSON_C10N).build.appType
-        shell: bash
-        run: |
-          madrun tests --mode=ci;
+            - name: Install Project
+              shell: bash
+              run: |
+                  madrun install project --mode=ci;
 
-#
+            - name: Run Project Tests
+              if: fromJson(env.PKG_JSON_C10N).build.appType
+              shell: bash
+              run: |
+                  madrun tests --mode=ci;
+
 ##
 # Customizations
 # <custom:start>
