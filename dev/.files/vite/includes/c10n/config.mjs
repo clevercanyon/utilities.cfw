@@ -114,8 +114,12 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
 
             /**
              * Deletes a few things that are not needed by apps running on Cloudflare Pages.
+             *
+             * We only prune when building for production, as it’s possible there are files being compiled by TypeScript
+             * that are needed for development; i.e., they need to exist in dev mode in order to be capable of serving
+             * their intended purpose; e.g., dev-only utilities, runners, sandbox files, etc.
              */
-            if ('build' === command && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
+            if ('build' === command && 'prod' === mode && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
                 for (const fileOrDir of await $glob.promise(
                     [
                         'types', // Prunes TypeScript type declarations.

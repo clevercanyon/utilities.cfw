@@ -97,7 +97,7 @@ export default /* not async compatible */ () => {
             // It’s also tricky because we *do* need to find content inside `node_modules/@clevercanyon/utilities/dist/preact`.
             // Therefore, instead of using `./.npmignore`, we come as close as we can, with just a few exceptions.
 
-            exclusions.asNegatedGlobs(
+            ...exclusions.asNegatedGlobs(
                 [
                     ...new Set([
                         ...exclusions.localIgnores,

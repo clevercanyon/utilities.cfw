@@ -57,7 +57,7 @@ export default async ({
 
         switch (true /* Conditional case handlers. */) {
             case ['spa', 'mpa'].includes(appType): {
-                const trueHTMLExtRegExp = new RegExp('\\.' + extensions.asRegExpFrag([...extensions.byCanonical.html]) + '$', 'ui');
+                const canonicalHTMLExtRegExp = new RegExp('\\.' + extensions.asRegExpFrag([...extensions.byCanonical.html]) + '$', 'ui');
                 const appEntryIndexAsSrcSubpath = appEntriesAsSrcSubpaths.find((subpath) =>
                     $str.mm.isMatch(subpath, 'index.' + extensions.asBracedGlob([...extensions.byCanonical.html])),
                 );
@@ -73,11 +73,12 @@ export default async ({
                 updates.main = updates.module = updates.unpkg = updates.browser = updates.types = '';
 
                 for (const appEntryAsProjRelPath of appEntriesAsProjRelPaths) {
-                    if (trueHTMLExtRegExp.test(appEntryAsProjRelPath)) {
-                        updates.sideEffects.push(appEntryAsProjRelPath.replace(trueHTMLExtRegExp, '.tsx'));
+                    if (canonicalHTMLExtRegExp.test(appEntryAsProjRelPath)) {
+                        updates.sideEffects.push(appEntryAsProjRelPath); // The HTML file has side effects.
+                        updates.sideEffects.push(appEntryAsProjRelPath.replace(canonicalHTMLExtRegExp, '.tsx'));
 
-                        if (fs.existsSync(path.resolve(projDir, appEntryAsProjRelPath.replace(trueHTMLExtRegExp, '.scss')))) {
-                            updates.sideEffects.push(appEntryAsProjRelPath.replace(trueHTMLExtRegExp, '.scss'));
+                        if (fs.existsSync(path.resolve(projDir, appEntryAsProjRelPath.replace(canonicalHTMLExtRegExp, '.scss')))) {
+                            updates.sideEffects.push(appEntryAsProjRelPath.replace(canonicalHTMLExtRegExp, '.scss'));
                         }
                     }
                 }

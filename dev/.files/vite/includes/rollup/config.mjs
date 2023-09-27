@@ -22,14 +22,16 @@ import extensions from '../../../bin/includes/extensions.mjs';
  *
  * @returns       Rollup configuration.
  */
-export default async ({ srcDir, distDir, a16sDir, appType, appEntries, sideEffects, peerDepKeys, minifyEnable }) => {
+export default async ({ projDir, srcDir, distDir, a16sDir, appType, appEntries, peerDepKeys, minifyEnable, sideEffects }) => {
     return {
         input: appEntries, // App entry file paths.
         ...(['lib'].includes(appType) ? { preserveEntrySignatures: 'strict' } : {}),
 
         treeshake: {
-            moduleSideEffects: sideEffects,
-            manualPureFunctions: [], // None for now.
+            // {@see https://o5p.me/7YF2NU}.
+            moduleSideEffects: (id /*, external */) => {
+                return sideEffects.includes('./' + path.relative(projDir, id));
+            },
         },
         external: [
             ...(['lib'].includes(appType) ? [/^(?![./]|file:|data:).*$/iu] : []),
