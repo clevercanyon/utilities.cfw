@@ -64,7 +64,7 @@ export default async ({ projDir }) => {
         *.npmrc
 
         # EJS unsupported at this time.
-        # @todo Build or find an EJS plugin.
+        # @someday Build or find an EJS plugin.
 
         *.ejs
     `);

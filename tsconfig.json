@@ -7,10 +7,10 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./tsconfig.mjs`.
  *
- * Last generated using `./tsconfig.mjs` Thu, Sep 21, 2023, 6:04:41 AM EDT.
+ * Last generated using `./tsconfig.mjs` Wed, Sep 27, 2023, 4:09:09 PM EDT.
  */
 {
-    "include": ["./*.d.ts", "./src/**/*"],
+    "include": ["./src/**/*", "./dev-types.d.ts"],
     "exclude": [
         "**/._*/**",
         "**/.~*/**",
@@ -64,11 +64,11 @@
         "**/Temporary Items/**",
         "**/.*/**",
         "**/*.tsbuildinfo/**",
-        "**/tsconfig.*/**",
-        "**/wrangler.*/**",
         "**/*.config.*/**",
-        "**/config.gypi/**",
+        "**/wrangler.*/**",
+        "**/tsconfig.*/**",
         "**/package.json/**",
+        "**/config.gypi/**",
         "**/yarn.lock/**",
         "**/composer.lock/**",
         "**/package-lock.json/**",
@@ -90,7 +90,6 @@
         "emitDeclarationOnly": true,
         "strict": true,
         "skipLibCheck": true,
-        "experimentalDecorators": true,
         "target": "es2022",
         "lib": ["es2022", "webworker"],
         "types": ["vite/client", "@types/mdx"],

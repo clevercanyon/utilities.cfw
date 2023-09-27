@@ -17,11 +17,11 @@
 # Generated data.
 # <generated:start>
 
-# Last generated Thu, Sep 21, 2023, 6:04:41 AM EDT.
+# Last generated Wed, Sep 27, 2023, 4:09:09 PM EDT.
 
 [production]
 last 1 chrome versions
-node >= 20.5.1
+node >= 20.5.0
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
@@ -46,7 +46,7 @@ not dead
 
 [any]
 last 1 chrome versions
-node >= 20.5.1
+node >= 20.5.0
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
@@ -70,7 +70,7 @@ unreleased firefox versions
 not dead
 
 [node]
-node >= 20.5.1
+node >= 20.5.0
 not dead
 
 [cfw]

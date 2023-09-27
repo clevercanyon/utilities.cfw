@@ -99,7 +99,7 @@ export default async ({ projDir }) => {
     /**
      * Deletes outdated dotfiles no longer in use.
      */
-    for (const relPath of ['./.vscode/mdx-layout.mjsx', './.madrun.mjs', './tsconfig.d.ts']) {
+    for (const relPath of ['./.vscode/mdx-layout.mjsx', './.madrun.mjs', './ts-types.d.ts', './tsconfig.d.ts']) {
         if (await isLocked(relPath)) {
             continue; // Locked 🔒.
         }
@@ -142,7 +142,7 @@ export default async ({ projDir }) => {
         './.rehyperc.mjs',
         './mdx.config.mjs',
 
-        './ts-types.d.ts',
+        './dev-types.d.ts',
         './tsconfig.json',
         './tsconfig.mjs',
 
@@ -199,35 +199,45 @@ export default async ({ projDir }) => {
             await fsp.cp(path.resolve(skeletonDir, relPath), path.resolve(projDir, relPath));
         }
         let json = $json.parse((await fsp.readFile(path.resolve(projDir, relPath))).toString());
-        const jsonUpdatesRelPath = relPath.replace(/(^|\/)([^/]+\.[^.]+)$/u, '$1_$2'); // Leading underscore in basename.
-        const jsonUpdatesFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', jsonUpdatesRelPath, './updates.json');
+        const updatesRelPath = relPath.replace(/(^|\/)([^/]+\.[^.]+)$/u, '$1_$2'); // Leading underscore in basename.
+        const updatesFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', updatesRelPath, './updates.json');
 
         if (!$is.plainObject(json)) {
             throw new Error('updater: Unable to parse `' + relPath + '`.');
         }
-        if (fs.existsSync(jsonUpdatesFile)) {
-            const jsonUpdates = $json.parse((await fsp.readFile(jsonUpdatesFile)).toString());
+        if (fs.existsSync(updatesFile)) {
+            const updates = $json.parse((await fsp.readFile(updatesFile)).toString());
 
-            if (!$is.plainObject(jsonUpdates)) {
-                throw new Error('updater: Unable to parse `' + jsonUpdatesFile + '`.');
+            if (!$is.plainObject(updates)) {
+                throw new Error('updater: Unable to parse `' + updatesFile + '`.');
             }
-            if ($obj.hasOwn(jsonUpdates.$ꓺset?.engines, 'node')) {
-                jsonUpdates.$ꓺset.engines.node = '^' + nodeVersion.previous + ' || ^' + nodeVersion.current;
-            }
-            if ($obj.hasOwn(jsonUpdates.$ꓺset?.engines, 'npm')) {
-                jsonUpdates.$ꓺset.engines.npm = '^' + nodeVersion.npm.previous + ' || ^' + nodeVersion.npm.current;
+            if ('./package.json' === relPath) {
+                if (Object.hasOwn(updates.$ꓺset?.engines || {}, 'node')) {
+                    updates.$ꓺset.engines.node = []; // Initialize.
+                    if (nodeVersion.previous.length) updates.$ꓺset.engines.node.push(nodeVersion.previous);
+                    if (nodeVersion.current.length) updates.$ꓺset.engines.node.push(nodeVersion.current);
+                    if (nodeVersion.forwardCompat.length) updates.$ꓺset.engines.node = updates.$ꓺset.engines.node.concat(nodeVersion.forwardCompat);
+                    updates.$ꓺset.engines.node = (updates.$ꓺset.engines.node.length ? '^' : '') + updates.$ꓺset.engines.node.join(' || ^');
+                }
+                if (Object.hasOwn(updates.$ꓺset?.engines || {}, 'npm')) {
+                    updates.$ꓺset.engines.npm = []; // Initialize.
+                    if (nodeVersion.npm.previous.length) updates.$ꓺset.engines.npm.push(nodeVersion.npm.previous);
+                    if (nodeVersion.npm.current.length) updates.$ꓺset.engines.npm.push(nodeVersion.npm.current);
+                    if (nodeVersion.npm.forwardCompat.length) updates.$ꓺset.engines.npm = updates.$ꓺset.engines.npm.concat(nodeVersion.npm.forwardCompat);
+                    updates.$ꓺset.engines.npm = (updates.$ꓺset.engines.npm.length ? '^' : '') + updates.$ꓺset.engines.npm.join(' || ^');
+                }
             }
             if ('./package.json' === relPath && (await isPkgRepo('clevercanyon/dev-deps'))) {
-                if (jsonUpdates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/dev-deps']) {
-                    delete jsonUpdates.$ꓺdefaults['devDependenciesꓺ@clevercanyon/dev-deps'];
+                if (updates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/dev-deps']) {
+                    delete updates.$ꓺdefaults['devDependenciesꓺ@clevercanyon/dev-deps'];
                 }
-                if ($is.array(jsonUpdates.$ꓺunset)) {
-                    jsonUpdates.$ꓺunset.push('devDependenciesꓺ@clevercanyon/dev-deps');
+                if ($is.array(updates.$ꓺunset)) {
+                    updates.$ꓺunset.push('devDependenciesꓺ@clevercanyon/dev-deps');
                 } else {
-                    jsonUpdates.$ꓺunset = ['devDependenciesꓺ@clevercanyon/dev-deps'];
+                    updates.$ꓺunset = ['devDependenciesꓺ@clevercanyon/dev-deps'];
                 }
             }
-            $obj.patchDeep(json, jsonUpdates); // Potentially declarative ops.
+            $obj.patchDeep(json, updates); // Potentially declarative ops.
             const prettierConfig = { ...(await $prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
             await fsp.writeFile(path.resolve(projDir, relPath), await $prettier.format($json.stringify(json, { pretty: true }), prettierConfig));
         }

@@ -6,12 +6,7 @@ import './resources/init-env.ts';
 
 import type { $type } from '@clevercanyon/utilities';
 import { $env, $http, $json, $str, $url } from '@clevercanyon/utilities';
-import {
-    MethodNotAllowedError as cfKVAꓺMethodNotAllowedError,
-    NotFoundError as cfKVAꓺNotFoundError,
-    getAssetFromKV as cfKVAꓺgetAssetFromKV,
-    mapRequestToAsset as cfKVAꓺmapRequestToAsset,
-} from '@cloudflare/kv-asset-handler';
+import * as cfKVA from '@cloudflare/kv-asset-handler';
 
 const cache = (caches as unknown as $type.cf.CacheStorage).default;
 
@@ -61,7 +56,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
     const { env, ctx, routes } = ifeData;
 
     $env.capture('@global', env); // Captures environment vars.
-    const appBasePath = String($env.get('@top', 'APP_BASE_PATH', ''));
+    const appBasePath = $env.get('APP_BASE_PATH', { type: 'string', default: '' });
 
     try {
         request = $http.prepareRequest(request, {}) as $type.cf.Request;
@@ -69,7 +64,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         const feData = { request, env, ctx, routes, url };
         if (
             $http.requestPathIsStatic(request, url) && //
-            $env.get('@top', '__STATIC_CONTENT' /* Worker site? */) &&
+            $env.get('__STATIC_CONTENT' /* Worker site? */) &&
             $str.matches(url.pathname, appBasePath + '/assets/**')
         ) {
             return handleFetchCache(handleFetchStaticAssets, feData);
@@ -126,7 +121,7 @@ export const handleFetchCache = async (route: Route, feData: FetchEventData): Pr
  */
 export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cf.Response> => {
     const { request, routes, url } = feData;
-    const appBasePath = String($env.get('@top', 'APP_BASE_PATH', ''));
+    const appBasePath = $env.get('APP_BASE_PATH', { type: 'string', default: '' });
 
     for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
         if ($str.matches(url.pathname, appBasePath + '/' + routeSubpathGlob)) {
@@ -145,7 +140,7 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type
  */
 export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$type.cf.Response> => {
     const { request, ctx } = feData;
-    const appBasePath = String($env.get('@top', 'APP_BASE_PATH', ''));
+    const appBasePath = $env.get('APP_BASE_PATH', { type: 'string', default: '' });
 
     try {
         const kvAssetEventData = {
@@ -154,8 +149,8 @@ export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$
                 ctx.waitUntil(promise);
             },
         };
-        const response = await cfKVAꓺgetAssetFromKV(kvAssetEventData, {
-            ASSET_NAMESPACE: $env.get('@top', '__STATIC_CONTENT') as string,
+        const response = await cfKVA.getAssetFromKV(kvAssetEventData, {
+            ASSET_NAMESPACE: $env.get('__STATIC_CONTENT', { type: 'string', default: '' }),
             // @ts-ignore: This is dynamically resolved by Cloudflare.
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- manifest ok.
             ASSET_MANIFEST: $json.parse(await import('__STATIC_CONTENT_MANIFEST')) as { [x: string]: string },
@@ -170,16 +165,16 @@ export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$
                 const regExp = new RegExp('^' + $str.escRegExp(appBasePath + '/assets/'), 'u');
                 url.pathname = url.pathname.replace(regExp, '/'); // Removes `/assets` prefix.
 
-                return cfKVAꓺmapRequestToAsset(new Request(url, request));
+                return cfKVA.mapRequestToAsset(new Request(url, request));
             },
         });
         return $http.prepareResponse(request, { ...response }) as $type.cf.Response;
         //
     } catch (error) {
-        if (error instanceof cfKVAꓺNotFoundError) {
+        if (error instanceof cfKVA.NotFoundError) {
             return $http.prepareResponse(request, { status: 404 }) as $type.cf.Response;
         }
-        if (error instanceof cfKVAꓺMethodNotAllowedError) {
+        if (error instanceof cfKVA.MethodNotAllowedError) {
             return $http.prepareResponse(request, { status: 405 }) as $type.cf.Response;
         }
         return $http.prepareResponse(request, { status: 500 }) as $type.cf.Response;

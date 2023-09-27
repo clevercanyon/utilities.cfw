@@ -71,60 +71,67 @@ export default async ({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable
             ? [
                   ...(vitestSandboxEnable
                       ? [
-                            '**/sandbox/**/*.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
-                            '**/sandbox/**/{test,tests,spec,specs}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+                            '**/sandbox/**/*.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), //
+                            '**/sandbox/**/{test,tests,spec,specs}/**/*.' +
+                                extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]),
                         ]
                       : []),
                   ...(vitestExamplesEnable
                       ? [
-                            '**/{example,examples}/**/*.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
-                            '**/{example,examples}/**/{test,tests,spec,specs}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+                            '**/{example,examples}/**/*.{test,tests,spec,specs}.' +
+                                extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), //
+                            '**/{example,examples}/**/{test,tests,spec,specs}/**/*.' +
+                                extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]),
                         ]
                       : []),
               ]
             : [
-                  '**/*.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
-                  '**/{test,tests,spec,specs}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+                  '**/*.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), //
+                  '**/{test,tests,spec,specs}/**/*.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]),
               ];
     const vitestTypecheckIncludes =
         vitestSandboxEnable || vitestExamplesEnable
             ? [
                   ...(vitestSandboxEnable
                       ? [
-                            '**/sandbox/**/*.{test,tests,spec,specs}-d.' + extensions.asBracedGlob([...extensions.allTypeScript]), //
-                            '**/sandbox/**/{test,tests,spec,specs}/**/*-d.' + extensions.asBracedGlob([...extensions.allTypeScript]),
+                            '**/sandbox/**/*.{test,tests,spec,specs}-d.' + extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript]), //
+                            '**/sandbox/**/{test,tests,spec,specs}/**/*-d.' + extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript]),
                         ]
                       : []),
                   ...(vitestExamplesEnable
                       ? [
-                            '**/{example,examples}/**/*.{test,tests,spec,specs}-d.' + extensions.asBracedGlob([...extensions.allTypeScript]), //
-                            '**/{example,examples}/**/{test,tests,spec,specs}/**/*-d.' + extensions.asBracedGlob([...extensions.allTypeScript]),
+                            '**/{example,examples}/**/*.{test,tests,spec,specs}-d.' + extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript]), //
+                            '**/{example,examples}/**/{test,tests,spec,specs}/**/*-d.' + extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript]),
                         ]
                       : []),
               ]
             : [
-                  '**/*.{test,tests,spec,specs}-d.' + extensions.asBracedGlob([...extensions.allTypeScript]), //
-                  '**/{test,tests,spec,specs}/**/*-d.' + extensions.asBracedGlob([...extensions.allTypeScript]),
+                  '**/*.{test,tests,spec,specs}-d.' + extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript]), //
+                  '**/{test,tests,spec,specs}/**/*-d.' + extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript]),
               ];
     const vitestBenchIncludes =
         vitestSandboxEnable || vitestExamplesEnable
             ? [
                   ...(vitestSandboxEnable
                       ? [
-                            '**/sandbox/**/*.{bench,benchmark,benchmarks}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
-                            '**/sandbox/**/{bench,benchmark,benchmarks}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+                            '**/sandbox/**/*.{bench,benchmark,benchmarks}.' +
+                                extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), //
+                            '**/sandbox/**/{bench,benchmark,benchmarks}/**/*.' +
+                                extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]),
                         ]
                       : []),
                   ...(vitestExamplesEnable
                       ? [
-                            '**/{example,examples}/**/*.{bench,benchmark,benchmarks}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
-                            '**/{example,examples}/**/{bench,benchmark,benchmarks}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+                            '**/{example,examples}/**/*.{bench,benchmark,benchmarks}.' +
+                                extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), //
+                            '**/{example,examples}/**/{bench,benchmark,benchmarks}/**/*.' +
+                                extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]),
                         ]
                       : []),
               ]
             : [
-                  '**/*.{bench,benchmark,benchmarks}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
-                  '**/{bench,benchmark,benchmarks}/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+                  '**/*.{bench,benchmark,benchmarks}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), //
+                  '**/{bench,benchmark,benchmarks}/**/*.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]),
               ];
     return {
         root: srcDir,
@@ -146,14 +153,17 @@ export default async ({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable
 
         // See: <https://o5p.me/8Pjw1d> for `environment`, `environmentMatchGlobs` precedence.
         environmentMatchGlobs: [
-            ['**/*.{cfp,web}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'jsdom'],
-            ['**/{test,tests,spec,specs}/**/*.{cfp,web}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'jsdom'],
+            ['**/*.{cfp,web}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), 'jsdom'],
+            ['**/{test,tests,spec,specs}/**/*.{cfp,web}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), 'jsdom'],
 
-            ['**/*.{cfw,webw}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'miniflare'],
-            ['**/{test,tests,spec,specs}/**/*.{cfw,webw}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'miniflare'],
+            ['**/*.{cfw,webw}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), 'miniflare'],
+            [
+                '**/{test,tests,spec,specs}/**/*.{cfw,webw}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]),
+                'miniflare',
+            ],
 
-            ['**/*.{node,any}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'node'],
-            ['**/{test,tests,spec,specs}/**/*.{node,any}.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), 'node'],
+            ['**/*.{node,any}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), 'node'],
+            ['**/{test,tests,spec,specs}/**/*.{node,any}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), 'node'],
         ],
         server: { deps: { inline: [], external: [...new Set([...exclusions.pkgIgnores].concat(rollupConfig.external))] } },
         cache: { dir: path.resolve(projDir, './node_modules/.vitest') },
@@ -183,8 +193,8 @@ export default async ({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable
         },
         coverage: {
             all: true, // All of the below.
-            extension: [...extensions.allJavaScript, ...extensions.allTypeScript],
-            include: ['**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript])],
+            extension: [...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript],
+            include: ['**/*.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript])],
             exclude: [...new Set([...vitestExcludes, ...vitestIncludes, ...vitestTypecheckIncludes, ...vitestBenchIncludes])],
 
             reporter: ['text', 'html', 'clover', 'json'], // Produces all report formats.

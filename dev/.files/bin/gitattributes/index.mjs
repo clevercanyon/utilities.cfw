@@ -32,7 +32,7 @@ export default async ({ projDir }) => {
 
         for (const [subgroupExts, subgroup] of Object.entries(group)) {
             for (const subgroupExt of subgroupExts.split('|')) {
-                gitAttributesFileContentsTextBinary += '\n*.' + subgroupExt + ' ' + (subgroup.isTextual ? 'text' : 'binary');
+                gitAttributesFileContentsTextBinary += '\n*.' + subgroupExt + ' ' + (subgroup.binary ? 'binary' : 'text');
             }
         }
     }

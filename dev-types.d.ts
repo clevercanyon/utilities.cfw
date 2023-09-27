@@ -1,5 +1,5 @@
 /**
- * Typescript types config file.
+ * Typescript dev-only types config file.
  *
  * Typescript is aware of this config file's location.
  *
@@ -21,9 +21,15 @@ declare const $$__APP_BUILD_TIME_YMD__$$: string;
 /*
  * Customizations.
  *
- * Declare project-specific types in this file, or add types using `./tsconfig.mjs`.
- * This file is best suited for project-specific types, while `./tsconfig.mjs`
+ * Declare project-wide dev-only types in this file, or add types using `./tsconfig.mjs`.
+ * This file is best suited for project-wide dev-only types, while `./tsconfig.mjs`
  * is best when adding `@types/*` packages that your project depends on.
+ *
+ * WARNING: Please do not add types to this file arbitrarily. The types you add here will not be
+ * included in `./dist` when your project is built; i.e., special types in this file are explicitly dev-only.
+ *
+ * For example, globals that exist prior to building your app, but definitely do not exist in `./dist`,
+ * and therefore the types in this file are only relevant during development of *this* project.
  *
  * <custom:start> */
 

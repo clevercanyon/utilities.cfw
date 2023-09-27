@@ -49,10 +49,12 @@
         "configꓺc10nꓺ&ꓺbuildꓺappType": "cma",
         "configꓺc10nꓺ&ꓺbuildꓺtargetEnv": "any",
         "configꓺc10nꓺ&ꓺbuildꓺentryFiles": [],
+        "configꓺc10nꓺ&ꓺbuildꓺsideEffects": [],
 
         "configꓺc10nꓺ&ꓺssrBuildꓺappType": "",
         "configꓺc10nꓺ&ꓺssrBuildꓺtargetEnv": "",
         "configꓺc10nꓺ&ꓺssrBuildꓺentryFiles": [],
+        "configꓺc10nꓺ&ꓺssrBuildꓺsideEffects": [],
 
         "configꓺc10nꓺ&ꓺgithubꓺteams": {},
         "configꓺc10nꓺ&ꓺgithubꓺlabels": {},

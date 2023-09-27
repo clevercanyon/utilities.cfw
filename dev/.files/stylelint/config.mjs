@@ -7,6 +7,8 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  *
+ * @micromatch Stylelint uses micromatch under the hood, with `{ dot: true, matchBase: true }`.
+ *
  * @see https://stylelint.io/user-guide/configure
  */
 
@@ -61,7 +63,7 @@ export default async () => {
 
         overrides: [
             {
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.css])],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.css])],
 
                 plugins: [...baseConfig.plugins],
                 extends: [...baseConfig.extends],
@@ -71,7 +73,7 @@ export default async () => {
                 rules: { ...baseConfig.rules },
             },
             {
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.scss])],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.scss])],
 
                 plugins: [...baseConfig.plugins],
                 extends: [...baseConfig.extends],

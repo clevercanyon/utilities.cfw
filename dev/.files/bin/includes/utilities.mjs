@@ -126,6 +126,21 @@ export default class u {
         return pkg; // JSON object data.
     }
 
+    static async depPkg(dependency) {
+        // This is a dependency-specific package file.
+        const pkgFile = path.resolve(projDir, './node_modules', dependency, './package.json');
+
+        if (!fs.existsSync(pkgFile)) {
+            return undefined; // Not possible.
+        }
+        const pkg = $json.parse(fs.readFileSync(pkgFile).toString());
+
+        if (!$is.plainObject(pkg)) {
+            throw new Error('u.pkg: Unable to parse `' + pkgFile + '`.');
+        }
+        return pkg; // JSON object data.
+    }
+
     static async isPkgRepo(ownerRepo) {
         return new RegExp('[:/]' + $str.escRegExp(ownerRepo) + '(?:\\.git)?$', 'iu').test(pkgRepository);
     }
@@ -177,11 +192,19 @@ export default class u {
         if (!$is.plainObject(updates)) {
             throw new Error('u.updatePkg: Unable to parse `' + updatesFile + '`.');
         }
-        if ($obj.hasOwn(updates.$ꓺset?.engines, 'node')) {
-            updates.$ꓺset.engines.node = '^' + nodeVersion.previous + ' || ^' + nodeVersion.current;
+        if (Object.hasOwn(updates.$ꓺset?.engines || {}, 'node')) {
+            updates.$ꓺset.engines.node = []; // Initialize.
+            if (nodeVersion.previous.length) updates.$ꓺset.engines.node.push(nodeVersion.previous);
+            if (nodeVersion.current.length) updates.$ꓺset.engines.node.push(nodeVersion.current);
+            if (nodeVersion.forwardCompat.length) updates.$ꓺset.engines.node = updates.$ꓺset.engines.node.concat(nodeVersion.forwardCompat);
+            updates.$ꓺset.engines.node = (updates.$ꓺset.engines.node.length ? '^' : '') + updates.$ꓺset.engines.node.join(' || ^');
         }
-        if ($obj.hasOwn(updates.$ꓺset?.engines, 'npm')) {
-            updates.$ꓺset.engines.npm = '^' + nodeVersion.npm.previous + ' || ^' + nodeVersion.npm.current;
+        if (Object.hasOwn(updates.$ꓺset?.engines || {}, 'npm')) {
+            updates.$ꓺset.engines.npm = []; // Initialize.
+            if (nodeVersion.npm.previous.length) updates.$ꓺset.engines.npm.push(nodeVersion.npm.previous);
+            if (nodeVersion.npm.current.length) updates.$ꓺset.engines.npm.push(nodeVersion.npm.current);
+            if (nodeVersion.npm.forwardCompat.length) updates.$ꓺset.engines.npm = updates.$ꓺset.engines.npm.concat(nodeVersion.npm.forwardCompat);
+            updates.$ꓺset.engines.npm = (updates.$ꓺset.engines.npm.length ? '^' : '') + updates.$ꓺset.engines.npm.join(' || ^');
         }
         if (await u.isPkgRepo('clevercanyon/dev-deps')) {
             if (updates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/dev-deps']) {
@@ -1146,8 +1169,29 @@ export default class u {
         await u.spawn('npm', ['ci'], { stdio: 'inherit' });
     }
 
-    static async npmUpdate() {
-        await u.spawn('npm', ['update', '--save'], { stdio: 'inherit' });
+    static async npmUpdate(opts = { directive: 'default' }) {
+        if ('no' === opts.directive /* NPM update skipped entirely. */) {
+            u.log($chalk.gray('Skipping NPM update entirely.'));
+        } else {
+            if ('nimble' === opts.directive) {
+                const pkg = await u.pkg();
+                const dependenciesToUpdate = [];
+
+                for (const [dependency] of Object.entries(pkg.dependencies || {})) dependenciesToUpdate.push(dependency);
+                for (const [dependency] of Object.entries(pkg.peerDependencies || {})) dependenciesToUpdate.push(dependency);
+                for (const [dependency] of Object.entries((await u.depPkg('@clevercanyon/dev-deps'))?.dependencies || {})) {
+                    if (/^@clevercanyon\//iu.test(dependency)) dependenciesToUpdate.push(dependency);
+                }
+                if (dependenciesToUpdate.length) {
+                    u.log($chalk.gray('Updating these specific NPM dependencies:')), u.log($chalk.gray(dependenciesToUpdate.join(', ')));
+                    await u.spawn('npm', ['update', ...[...new Set(dependenciesToUpdate)], '--save'], { stdio: 'inherit' });
+                }
+                u.log($chalk.gray('Updating other NPM dependencies in `--prefer-offline` mode.'));
+                await u.spawn('npm', ['update', '--prefer-offline', '--save'], { stdio: 'inherit' });
+            } else {
+                await u.spawn('npm', ['update', '--save'], { stdio: 'inherit' }); // Normal (full) NPM update.
+            }
+        }
         await u.updatePkg(); // To our standards.
     }
 

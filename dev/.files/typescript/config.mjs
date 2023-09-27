@@ -49,26 +49,28 @@ export default async () => {
      */
     const baseConfig = {
         include: [
-            './' + path.relative(projDir, path.resolve(projDir, './*.d.ts')), //
-            './' + path.relative(projDir, path.resolve(projDir, './src')) + '/**/*',
+            './' + path.relative(projDir, path.resolve(projDir, './src')) + '/**/*', //
+            './' + path.relative(projDir, path.resolve(projDir, './dev-types.d.ts')),
         ],
         exclude: exclusions.asRelativeGlobs(projDir, [
-            ...new Set([
-                ...exclusions.localIgnores,
-                ...exclusions.logIgnores,
-                ...exclusions.backupIgnores,
-                ...exclusions.patchIgnores,
-                ...exclusions.editorIgnores,
-                ...exclusions.pkgIgnores,
-                ...exclusions.vcsIgnores,
-                ...exclusions.osIgnores,
-                ...exclusions.dotIgnores,
-                ...exclusions.configIgnores,
-                ...exclusions.lockIgnores,
-                ...exclusions.devIgnores,
-                ...exclusions.distIgnores,
-                ...exclusions.docIgnores,
-            ]),
+            ...new Set(
+                [
+                    ...exclusions.localIgnores,
+                    ...exclusions.logIgnores,
+                    ...exclusions.backupIgnores,
+                    ...exclusions.patchIgnores,
+                    ...exclusions.editorIgnores,
+                    ...exclusions.pkgIgnores,
+                    ...exclusions.vcsIgnores,
+                    ...exclusions.osIgnores,
+                    ...exclusions.dotIgnores,
+                    ...exclusions.configIgnores,
+                    ...exclusions.lockIgnores,
+                    ...exclusions.devIgnores,
+                    ...exclusions.distIgnores,
+                    ...exclusions.docIgnores,
+                ].filter((excl) => '**/dev-types.d.ts/**' !== excl),
+            ),
         ]),
         compilerOptions: {
             baseUrl: './' + path.relative(projDir, path.resolve(projDir, './src')),
@@ -81,7 +83,6 @@ export default async () => {
 
             strict: true,
             skipLibCheck: true,
-            experimentalDecorators: true,
 
             target: esVersion.lcnYear,
             lib: [esVersion.lcnYear],

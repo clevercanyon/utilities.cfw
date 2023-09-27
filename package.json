@@ -3,7 +3,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "1.0.103",
+    "version": "1.0.104",
     "license": "GPL-3.0-or-later",
     "name": "@clevercanyon/utilities.cfw",
     "description": "Utilities for JavaScript apps running in a Cloudflare Worker environment.",
@@ -37,7 +37,7 @@
             "default": "./dist/geo.js"
         }
     },
-    "sideEffects": ["./src/resources/init-env.ts", "./src/cfw.ts", "./src/geo.ts", "./src/index.ts"],
+    "sideEffects": ["**/*.{css,scss,less}", "./src/resources/init-env.ts"],
     "module": "./dist/index.js",
     "main": "./dist/index.js",
     "browser": "",
@@ -50,21 +50,21 @@
     },
     "dependencies": {},
     "peerDependencies": {
-        "@clevercanyon/utilities": "^1.0.266",
+        "@clevercanyon/utilities": "^1.0.277",
         "@cloudflare/kv-asset-handler": "^0.2.0"
     },
     "peerDependenciesMeta": {},
     "optionalDependencies": {},
     "bundleDependencies": [],
     "devDependencies": {
-        "@clevercanyon/dev-deps": "^1.0.230"
+        "@clevercanyon/dev-deps": "^1.0.231"
     },
     "overrides": {},
     "cpu": ["x64", "arm64"],
     "os": ["darwin", "linux"],
     "engines": {
-        "node": "^19.1.0 || ^20.5.1",
-        "npm": "^8.19.3 || ^9.2.0"
+        "node": "^19.1.0 || ^20.5.0",
+        "npm": "^8.19.3 || ^9.8.0 || ^10.0.0"
     },
     "config": {
         "c10n": {
@@ -75,12 +75,14 @@
                 "build": {
                     "appType": "lib",
                     "targetEnv": "cfw",
-                    "entryFiles": []
+                    "entryFiles": [],
+                    "sideEffects": []
                 },
                 "ssrBuild": {
                     "appType": "",
                     "targetEnv": "",
-                    "entryFiles": []
+                    "entryFiles": [],
+                    "sideEffects": []
                 },
                 "github": {
                     "teams": {

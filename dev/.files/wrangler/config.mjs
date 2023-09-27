@@ -63,34 +63,71 @@ export default async () => {
 
         main: './' + path.relative(projDir, './dist/index.js'),
 
-        // Dynamic import configuration.
+        // Bundling configuration; {@see <https://o5p.me/JRHxfC>}.
 
         rules: [
             {
-                type: 'Text',
-                globs: extensions.asNoBraceGlobstars([]),
-                fallthrough: false,
-            },
-            {
                 type: 'ESModule',
                 globs: extensions.asNoBraceGlobstars([
-                    ...extensions.sJavaScript, //
-                    ...extensions.mJavaScript,
-                    ...extensions.sJavaScriptReact,
-                    ...extensions.mJavaScriptReact,
+                    ...extensions.byDevGroup.sJavaScript, //
+                    ...extensions.byDevGroup.sJavaScriptReact,
+
+                    ...extensions.byDevGroup.mJavaScript,
+                    ...extensions.byDevGroup.mJavaScriptReact,
                 ]),
                 fallthrough: false,
             },
             {
                 type: 'CommonJS',
                 globs: extensions.asNoBraceGlobstars([
-                    ...extensions.cJavaScript, //
-                    ...extensions.cJavaScriptReact,
+                    ...extensions.byDevGroup.cJavaScript, //
+                    ...extensions.byDevGroup.cJavaScriptReact,
                 ]),
                 fallthrough: false,
             },
-            { type: 'CompiledWasm', globs: extensions.asNoBraceGlobstars([...extensions.wasm]), fallthrough: false },
-            { type: 'Data', globs: extensions.asNoBraceGlobstars([].filter((ext) => '.wasm' !== ext)), fallthrough: false },
+            {
+                type: 'Text',
+                globs: extensions.asNoBraceGlobstars(
+                    [...extensions.byVSCodeLang.codeTextual].filter(
+                        (ext) =>
+                            ![
+                                ...extensions.byDevGroup.sJavaScript, //
+                                ...extensions.byDevGroup.sJavaScriptReact,
+
+                                ...extensions.byDevGroup.mJavaScript,
+                                ...extensions.byDevGroup.mJavaScriptReact,
+
+                                ...extensions.byDevGroup.cJavaScript,
+                                ...extensions.byDevGroup.cJavaScriptReact,
+
+                                ...extensions.byCanonical.wasm,
+                            ].includes(ext),
+                    ),
+                ),
+                fallthrough: false,
+            },
+            {
+                type: 'Data',
+                globs: extensions.asNoBraceGlobstars(
+                    [...extensions.byVSCodeLang.codeTextBinary].filter(
+                        (ext) =>
+                            ![
+                                ...extensions.byDevGroup.sJavaScript, //
+                                ...extensions.byDevGroup.sJavaScriptReact,
+
+                                ...extensions.byDevGroup.mJavaScript,
+                                ...extensions.byDevGroup.mJavaScriptReact,
+
+                                ...extensions.byDevGroup.cJavaScript,
+                                ...extensions.byDevGroup.cJavaScriptReact,
+
+                                ...extensions.byCanonical.wasm,
+                            ].includes(ext),
+                    ),
+                ),
+                fallthrough: false,
+            },
+            { type: 'CompiledWasm', globs: extensions.asNoBraceGlobstars([...extensions.byCanonical.wasm]), fallthrough: false },
         ],
         // Custom build configuration.
 

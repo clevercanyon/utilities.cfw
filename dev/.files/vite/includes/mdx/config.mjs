@@ -45,8 +45,8 @@ export default async ({ projDir }) => {
         include: [
             '**/*.' +
                 extensions.asBracedGlob([
-                    ...extensions.markdown, // Single default export only.
-                    ...extensions.mdx, // Default + potentially other exports.
+                    ...extensions.byVSCodeLang.markdown, // Single default export only.
+                    ...extensions.byVSCodeLang.mdx, // Default + potentially other exports.
                 ]),
         ],
         ...(await (await import(path.resolve(projDir, './mdx.config.mjs'))).default()),

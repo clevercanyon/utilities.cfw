@@ -17,7 +17,7 @@
 # Generated data.
 # <generated:start>
 
-# Last generated Thu, Sep 21, 2023, 6:04:41 AM EDT.
+# Last generated Wed, Sep 27, 2023, 4:09:08 PM EDT.
 
 # Default
 
@@ -26,42 +26,51 @@
 # Text
 
 *.txt text
+*.text text
 
 # Markdown
 
-*.md text
 *.mdx text
+*.md text
+*.markdown text
+*.mdown text
+*.mdwn text
+*.mkd text
+*.mdtxt text
+*.mdtext text
 
 # Rich Text
 
-*.rtf binary
 *.rtx binary
+*.rtf binary
 
 # HTML
 
-*.htm text
 *.html text
-*.shtm text
+*.htm text
 *.shtml text
+*.shtm text
+*.xhtml text
+*.xhtm text
 
 # PDF
 
 *.pdf binary
 
-# Other Text
-
-*.vtt text
-*.asc text
-*.c text
-*.cc text
-*.h text
-*.srt text
-
 # PHP
 
 *.php text
-*.phtm text
 *.phtml text
+*.phtm text
+
+# PHP Source
+
+*.phps text
+
+# ASP
+
+*.asp text
+*.aspx text
 
 # Ruby
 
@@ -71,36 +80,30 @@
 
 *.py text
 
-# ASP
-
-*.asp text
-*.aspx text
-
 # Perl
 
-*.cgi text
+*.pl6 text
+*.perl6 text
 *.pl text
 *.plx text
+*.cgi text
 *.ppl text
 *.perl text
 
 # Shell
 
-*.sh text
-*.zsh text
 *.bash text
+*.zsh text
+*.sh text
 
-# Node Archive
+# C
 
-*.node binary
-
-# PHP Archive
-
-*.phar binary
-
-# PHP Source
-
-*.phps text
+*.c text
+*.cs text
+*.cpp text
+*.cc text
+*.o text
+*.h text
 
 # Docker
 
@@ -124,27 +127,26 @@
 
 *.wasm binary
 *.js text
-*.cjs text
 *.mjs text
+*.cjs text
 *.jsx text
-*.cjsx text
 *.mjsx text
+*.cjsx text
 
 # TypeScript
 
 *.ts text
-*.cts text
 *.mts text
+*.cts text
 *.tsx text
-*.ctsx text
 *.mtsx text
+*.ctsx text
 
 # Style
 
 *.css text
 *.scss text
 *.less text
-*.xsd text
 *.xsl text
 *.xslt text
 
@@ -210,14 +212,14 @@
 # I18n
 
 *.po text
+*.pot text
 *.mo binary
 
 # XML
 
-*.dtd text
-*.xhtm text
-*.xhtml text
 *.xml text
+*.xsd text
+*.dtd text
 
 # Calendar
 
@@ -227,9 +229,9 @@
 
 *.atom text
 *.rdf text
-*.rss-http text
 *.rss text
 *.rss2 text
+*.rss-http text
 
 # Log
 
@@ -237,6 +239,10 @@
 
 # Other Data
 
+*.asx binary
+*.vtt text
+*.srt text
+*.dfxp text
 *.hex binary
 
 # Other Config
@@ -249,8 +255,8 @@
 *.editorconfig text
 *.shellcheckrc text
 *.browserslistrc text
-*.gitconfig text
 *.gitchange text
+*.gitconfig text
 *.gitattributes text
 *.gitignore text
 *.npmignore text
@@ -262,7 +268,6 @@
 # Image
 
 *.ai binary
-*.apng binary
 *.bmp binary
 *.eps binary
 *.gif binary
@@ -273,6 +278,8 @@
 *.jpe binary
 *.pict binary
 *.png binary
+*.apng binary
+*.xcf binary
 *.psd binary
 *.pspimage binary
 *.svg text
@@ -302,12 +309,7 @@
 
 # Video
 
-*.3g2 binary
-*.3gp2 binary
-*.3gp binary
-*.3gpp binary
 *.asf binary
-*.asx binary
 *.avi binary
 *.divx binary
 *.flv binary
@@ -335,36 +337,37 @@
 
 # Archive
 
-*.7z binary
+*.iso binary
 *.dmg binary
+*.tar binary
 *.gtar binary
 *.gz binary
 *.tgz binary
 *.gzip binary
-*.iso binary
-*.jar binary
 *.rar binary
-*.tar binary
 *.zip binary
-*.sketch binary
+*.7z binary
+*.jar binary
+*.node binary
+*.phar binary
 
 # Certificate
 
 *.csr text
 *.crt text
 *.pem text
+*.asc text
 
 # Other Application
 
+*.so binary
 *.app binary
-*.xcf binary
 *.bin binary
-*.blend binary
 *.com binary
-*.dfxp binary
 *.dll binary
 *.exe binary
-*.so binary
+*.blend binary
+*.sketch binary
 
 # Google
 
@@ -377,6 +380,12 @@
 *.fla binary
 *.swf binary
 
+# Apple
+
+*.key binary
+*.numbers binary
+*.pages binary
+
 # MS Office
 
 *.doc binary
@@ -386,14 +395,13 @@
 *.dotx binary
 *.mdb binary
 *.mpp binary
+*.one binary
 *.onetoc binary
 *.onetoc2 binary
-*.onetmp binary
 *.onepkg binary
 *.oxps binary
-*.pot binary
-*.pps binary
 *.ppt binary
+*.pps binary
 *.potm binary
 *.potx binary
 *.ppam binary
@@ -428,14 +436,8 @@
 
 # WordPerfect
 
-*.wp binary
 *.wpd binary
-
-# iWork
-
-*.key binary
-*.numbers binary
-*.pages binary
+*.wp binary
 
 # Special Cases
 

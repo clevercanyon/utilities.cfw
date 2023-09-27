@@ -22,8 +22,8 @@ export default async () => {
     return {
         jsxImportSource: 'preact',
 
-        mdExtensions: [...extensions.markdown],
-        mdxExtensions: [...extensions.mdx],
+        mdExtensions: [...extensions.byVSCodeLang.markdown],
+        mdxExtensions: [...extensions.byVSCodeLang.mdx],
 
         remarkPlugins: [
             (await import('remark-frontmatter')).default, // YAML properties.
@@ -33,6 +33,6 @@ export default async () => {
             (await import('remark-mermaidjs')).default, // Charting and diagramming; {@see https://o5p.me/5z7Yrt}.
             (await import('remark-directive')).default, // Custom directives; {@see https://o5p.me/0fakce}.
         ],
-        rehypePlugins: [await import('@microflash/rehype-starry-night').default], // Syntax highlighting.
+        rehypePlugins: [(await import('@microflash/rehype-starry-night')).default], // Syntax highlighting.
     };
 };

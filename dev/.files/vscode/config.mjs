@@ -120,10 +120,16 @@ export default async () => {
             // Plus everything in `../../../.gitignore`.
             // ... plus these additional search ignores.
 
-            ...((await u.isPkgRepo('clevercanyon/skeleton'))
-                ? {} // Search in `clevercanyon/skeleton`.
-                : {
-                      '/dev/.files': true,
+            ...(!(await u.isPkgRepo('clevercanyon/skeleton'))
+                ? {
+                      ...exclusions.asBoolProps(
+                          exclusions.asRootedRelativeGlobs(
+                              projDir, // Skeleton `/dev/.files`.
+                              [...exclusions.devDotFileIgnores],
+                              { forceRelative: true },
+                          ),
+                          { tailGreedy: false },
+                      ),
                       ...exclusions.asBoolProps(
                           exclusions.asRootedRelativeGlobs(
                               projDir,
@@ -136,7 +142,8 @@ export default async () => {
                           { tailGreedy: false },
                       ),
                       '/LICENSE.txt': true,
-                  }),
+                  }
+                : {}),
             ...exclusions.asBoolProps([...exclusions.lockIgnores], { tailGreedy: false }),
         },
 
@@ -158,16 +165,18 @@ export default async () => {
             },
             '@someday': {
                 'scope': 'workspace',
-                'iconColor': '#ead1dc',
-                'highlightColor': '#ead1dc',
+                'iconColor': '#6d718a',
+                'highlightColor': '#6d718a',
                 'styleMode': 'tag',
             },
         },
         'commentAnchors.tags.matchCase': true,
         'commentAnchors.tags.separators': [' ', ': '],
 
+        // Comment Anchors uses minimatch, with `{ dot: false }`.
         'commentAnchors.workspace.excludeFiles': exclusions.asBracedGlob(
             [
+                ...(!(await u.isPkgRepo('clevercanyon/skeleton')) ? [...exclusions.devDotFileIgnores] : []),
                 ...exclusions.logIgnores, //
                 ...exclusions.backupIgnores,
                 ...exclusions.patchIgnores,
@@ -179,9 +188,23 @@ export default async () => {
                 ...exclusions.lockIgnores,
                 ...exclusions.distIgnores,
             ],
-            { dropExistingNegations: true, dotGlobstars: true },
+            { dropExistingNegations: true, dropExistingRelatives: true },
         ),
-        'commentAnchors.workspace.matchFiles': $path.dotGlobstarHead + '*.' + extensions.asBracedGlob([...extensions.commentAnchorsContent]),
+        /**
+         * Comment Anchors uses two things under the hood:
+         *
+         * 1. `workspace.findFiles()` from VS Code API; {@see https://o5p.me/wTHsX1}.
+         * 2. Minimatch with default `{ dot: false }` option; {@see https://o5p.me/l6XWRg}.
+         *
+         * VS Code doesn’t support extglob patterns, unfortunately, so we can’t use dotGlobstars. For that reason, an
+         * adhoc and highly imperfect solution is used to get Comment Anchors at least working well inside of
+         * `clevercanyon/skeleton/dev/.files`. Outside of `.` dirs/files, Comment Anchors work fine.
+         *
+         * @see https://github.com/StarlaneStudios/vscode-comment-anchors/issues/209
+         */
+        'commentAnchors.workspace.matchFiles': (await u.isPkgRepo('clevercanyon/skeleton'))
+            ? '{**/,**/dev/.files/,**/dev/.files/**/}*.' + extensions.asBracedGlob([...extensions.commentAnchorsContent])
+            : '**/*.' + extensions.asBracedGlob([...extensions.commentAnchorsContent]),
 
         /**
          * ESLint options.
@@ -196,6 +219,7 @@ export default async () => {
 
         'eslint.codeActionsOnSave.mode': 'all',
         'eslint.experimental.useFlatConfig': true,
+        'eslint.workingDirectories': [{ 'mode': 'auto' }],
 
         'eslint.validate': [
             'mdx', //

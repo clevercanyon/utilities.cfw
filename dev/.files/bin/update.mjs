@@ -576,14 +576,11 @@ class Project {
     async update() {
         /**
          * Updates NPM packages.
-         *
-         * @todo Add option to bypass this? It takes a long time and it is potentially damaging upon doing a release,
-         *   where the updates will be untested. Need to think this through a bit further.
          */
 
         u.log($chalk.green('Updating NPM packages.'));
         if (!this.args.dryRun) {
-            await u.npmUpdate();
+            await u.npmUpdate({ directive: this.args.npm });
         }
 
         /**
@@ -1180,6 +1177,19 @@ await (async () => {
                             implies: ['repos'],
                             description: 'Publish updated project package(s)?',
                             alias: ['pkg'],
+                        },
+                        npm: {
+                            type: 'string',
+                            requiresArg: true,
+                            demandOption: false,
+                            default: 'default',
+                            choices: ['nimble', 'no', 'default'],
+                            description: // prettier-ignore
+                                'When set as `nimble`, the updater first does a normal NPM update of your project’s own `dependencies` and `peerDependencies`.' +
+                                ' Also, it updates all `@clevercanyon/*` dependencies used by `@clevercanyon/dev-deps` for local project development.' +
+                                ' Then it does a full update in `--prefer-offline` mode, which is quite effective at optimizing for speedy updates.' +
+                                ' Or, when set as `no`, NPM updates are skipped entirely, which is strongly recommended when updating `--repos --pkgs`.' +
+                                ' Or, when set as `default`, the updater simply does a normal NPM update with no speed optimizations.',
                         },
                         mode: {
                             type: 'string',

@@ -22,72 +22,112 @@ import u from '../../../bin/includes/utilities.mjs';
  *
  * @returns       Build-related property updates.
  */
-export default async ({ command, isSSRBuild, projDir, pkg, appType, targetEnv, appEntriesAsProjRelPaths, appEntriesAsSrcSubpaths, appEntriesAsSrcSubpathsNoExt }) => {
+export default async ({
+    command,
+    isSSRBuild,
+    projDir,
+    srcDir,
+    distDir,
+    pkg,
+    appType,
+    targetEnv,
+    sideEffects,
+    appEntriesAsProjRelPaths,
+    appEntriesAsSrcSubpaths,
+    appEntriesAsSrcSubpathsNoExt,
+}) => {
     const updates = {}; // Initialize.
 
     if (isSSRBuild) {
         updates.type = 'module'; // ESM; always.
-        updates.sideEffects = pkg.sideEffects || []; // <https://o5p.me/xVY39g>.
+        // Regarding `sideEffects`, {@see https://o5p.me/xVY39g}.
+        updates.sideEffects = (pkg.sideEffects || []).concat(sideEffects);
     } else {
         updates.type = 'module'; // ESM; always.
         updates.exports = {}; // Exports object initialization.
-        updates.sideEffects = []; // <https://o5p.me/xVY39g>.
+
+        // Regarding `sideEffects`, {@see https://o5p.me/xVY39g}.
+        updates.sideEffects = ['**/*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.css, ...extensions.byVSCodeLang.scss, ...extensions.byVSCodeLang.less])];
+        updates.sideEffects = updates.sideEffects.concat(sideEffects);
+
+        if (fs.existsSync(path.resolve(srcDir, './resources/init-env.ts'))) {
+            updates.sideEffects.push('./' + path.relative(projDir, path.resolve(srcDir, './resources/init-env.ts')));
+        }
+        const distDirAsProjRelPath = './' + path.relative(projDir, distDir); // Relative dist directory path.
 
         switch (true /* Conditional case handlers. */) {
             case ['spa', 'mpa'].includes(appType): {
-                const appEntryIndexAsSrcSubpath = appEntriesAsSrcSubpaths.find((subpath) => $str.mm.isMatch(subpath, 'index.' + extensions.asBracedGlob([...extensions.trueHTML])));
+                const trueHTMLExtRegExp = new RegExp('\\.' + extensions.asRegExpFrag([...extensions.byCanonical.html]) + '$', 'ui');
+                const appEntryIndexAsSrcSubpath = appEntriesAsSrcSubpaths.find((subpath) =>
+                    $str.mm.isMatch(subpath, 'index.' + extensions.asBracedGlob([...extensions.byCanonical.html])),
+                );
                 const appEntryIndexAsSrcSubpathNoExt = appEntryIndexAsSrcSubpath.replace(/\.[^.]+$/u, '');
 
                 if (['spa'].includes(appType) && (!appEntryIndexAsSrcSubpath || !appEntryIndexAsSrcSubpathNoExt)) {
-                    throw new Error('Single-page apps must have an `./index.' + extensions.asBracedGlob([...extensions.trueHTML]) + '` entry point.');
+                    throw new Error('Single-page apps must have an `./index.' + extensions.asBracedGlob([...extensions.byCanonical.html]) + '` entry point.');
                     //
                 } else if (['mpa'].includes(appType) && (!appEntryIndexAsSrcSubpath || !appEntryIndexAsSrcSubpathNoExt)) {
-                    throw new Error('Multipage apps must have an `./index.' + extensions.asBracedGlob([...extensions.trueHTML]) + '` entry point.');
+                    throw new Error('Multipage apps must have an `./index.' + extensions.asBracedGlob([...extensions.byCanonical.html]) + '` entry point.');
                 }
                 (updates.exports = null), (updates.typesVersions = {});
                 updates.main = updates.module = updates.unpkg = updates.browser = updates.types = '';
 
+                for (const appEntryAsProjRelPath of appEntriesAsProjRelPaths) {
+                    if (trueHTMLExtRegExp.test(appEntryAsProjRelPath)) {
+                        updates.sideEffects.push(appEntryAsProjRelPath.replace(trueHTMLExtRegExp, '.tsx'));
+
+                        if (fs.existsSync(path.resolve(projDir, appEntryAsProjRelPath.replace(trueHTMLExtRegExp, '.scss')))) {
+                            updates.sideEffects.push(appEntryAsProjRelPath.replace(trueHTMLExtRegExp, '.scss'));
+                        }
+                    }
+                }
                 break; // Stop here.
             }
             case ['cma', 'lib'].includes(appType): {
                 const appEntryIndexAsSrcSubpath = appEntriesAsSrcSubpaths.find((subpath) =>
-                    $str.mm.isMatch(subpath, 'index.' + extensions.asBracedGlob([...extensions.sTypeScript, ...extensions.sTypeScriptReact])),
+                    $str.mm.isMatch(subpath, 'index.' + extensions.asBracedGlob([...extensions.byDevGroup.sTypeScript, ...extensions.byDevGroup.sTypeScriptReact])),
                 );
                 const appEntryIndexAsSrcSubpathNoExt = appEntryIndexAsSrcSubpath.replace(/\.[^.]+$/u, '');
 
                 if (['cma'].includes(appType) && (!appEntryIndexAsSrcSubpath || !appEntryIndexAsSrcSubpathNoExt)) {
-                    throw new Error('Custom apps must have an `./index.' + extensions.asBracedGlob([...extensions.sTypeScript, ...extensions.sTypeScriptReact]) + '` entry point.');
+                    throw new Error(
+                        'Custom apps must have an `./index.' +
+                            extensions.asBracedGlob([...extensions.byDevGroup.sTypeScript, ...extensions.byDevGroup.sTypeScriptReact]) +
+                            '` entry point.',
+                    );
                     //
                 } else if (['lib'].includes(appType) && (!appEntryIndexAsSrcSubpath || !appEntryIndexAsSrcSubpathNoExt)) {
                     throw new Error(
-                        'Library apps must have an `./index.' + extensions.asBracedGlob([...extensions.sTypeScript, ...extensions.sTypeScriptReact]) + '` entry point.',
+                        'Library apps must have an `./index.' +
+                            extensions.asBracedGlob([...extensions.byDevGroup.sTypeScript, ...extensions.byDevGroup.sTypeScriptReact]) +
+                            '` entry point.',
                     );
                 }
                 updates.exports = {
                     '.': {
-                        types: './dist/types/' + appEntryIndexAsSrcSubpathNoExt + '.d.ts', // First, always.
-                        import: './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js', // ESM module import path.
-                        default: './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js', // Last, always.
+                        types: distDirAsProjRelPath + '/types/' + appEntryIndexAsSrcSubpathNoExt + '.d.ts', // First, always.
+                        import: distDirAsProjRelPath + '/' + appEntryIndexAsSrcSubpathNoExt + '.js', // ESM module import path.
+                        default: distDirAsProjRelPath + '/' + appEntryIndexAsSrcSubpathNoExt + '.js', // Last, always.
                     },
                 };
-                updates.main = './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js';
-                updates.module = './dist/' + appEntryIndexAsSrcSubpathNoExt + '.js';
+                updates.main = distDirAsProjRelPath + '/' + appEntryIndexAsSrcSubpathNoExt + '.js';
+                updates.module = distDirAsProjRelPath + '/' + appEntryIndexAsSrcSubpathNoExt + '.js';
 
                 updates.unpkg = updates.module; // Same, same. ESM-only builds.
                 updates.browser = ['web'].includes(targetEnv) ? updates.module : '';
 
-                updates.typesVersions = { '>=3.1': { './*': ['./dist/types/*'] } };
-                updates.types = './dist/types/' + appEntryIndexAsSrcSubpathNoExt + '.d.ts';
+                updates.typesVersions = { '>=3.1': { './*': [distDirAsProjRelPath + '/types/*'] } };
+                updates.types = distDirAsProjRelPath + '/types/' + appEntryIndexAsSrcSubpathNoExt + '.d.ts';
 
-                for (const appEntryAsSrcSubpathNoExt of appEntriesAsSrcSubpathsNoExt) {
+                for (const appEntryAsSrcSubpathNoExt of [...appEntriesAsSrcSubpathsNoExt].sort()) {
                     if (appEntryAsSrcSubpathNoExt === appEntryIndexAsSrcSubpathNoExt) {
-                        continue; // Don't remap the entry index.
+                        continue; // i.e., It’s already been defined as `.` above.
                     }
                     $obj.patchDeep(updates.exports, {
                         ['./' + appEntryAsSrcSubpathNoExt]: {
-                            types: './dist/types/' + appEntryAsSrcSubpathNoExt + '.d.ts', // First, always.
-                            import: './dist/' + appEntryAsSrcSubpathNoExt + '.js', // ESM module import path.
-                            default: './dist/' + appEntryAsSrcSubpathNoExt + '.js', // Last, always.
+                            types: distDirAsProjRelPath + '/types/' + appEntryAsSrcSubpathNoExt + '.d.ts', // First, always.
+                            import: distDirAsProjRelPath + '/' + appEntryAsSrcSubpathNoExt + '.js', // ESM module import path.
+                            default: distDirAsProjRelPath + '/' + appEntryAsSrcSubpathNoExt + '.js', // Last, always.
                         },
                     });
                 }
@@ -97,18 +137,11 @@ export default async ({ command, isSSRBuild, projDir, pkg, appType, targetEnv, a
                 throw new Error('Unexpected `appType`. Failed to update `./package.json` properties.');
             }
         }
-        if (fs.existsSync(path.resolve(projDir, './src/resources/init-env.ts'))) {
-            updates.sideEffects.push('./src/resources/init-env.ts');
-        }
     }
-    for (const appEntryAsProjRelPath of appEntriesAsProjRelPaths) {
-        const regExp = new RegExp('\\.' + extensions.asRegExpFrag([...extensions.trueHTML]) + '$', 'ug');
-        updates.sideEffects.push(appEntryAsProjRelPath.replace(regExp, '.tsx'));
-    }
-    updates.sideEffects = [...new Set(updates.sideEffects)]; // Unique array values.
+    updates.sideEffects = [...new Set(updates.sideEffects)].sort(); // Sorted unique values.
 
     if ('build' === command /* Only when building the app. */) {
-        u.log($chalk.gray('Updating `type,sideEffects` in `./package.json`.'));
+        u.log($chalk.gray('Updating `type` and `sideEffects` in `./package.json`.'));
         await u.updatePkg({ $set: { type: updates.type, sideEffects: updates.sideEffects } });
     }
     return updates;

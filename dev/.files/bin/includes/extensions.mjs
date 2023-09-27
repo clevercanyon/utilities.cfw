@@ -67,6 +67,9 @@ const asRegExpFrag = (exts) => {
  * Defines extensions.
  */
 const extensions = {
+    /**
+     * Utilities.
+     */
     dot,
     noDot,
     asBracedGlob,
@@ -74,53 +77,19 @@ const extensions = {
     asRegExpFrag,
 
     /**
-     * MIME type extensions by VS Code language. VS Code languages added to the default export here. Provided by
-     * `@clevercanyon/utilities`. This includes everything we have in our MIME types library.
+     * By canonical.
      */
-    ...$obj.map($path.extsByVSCodeLang(), (exts) => dot(exts)),
+    byCanonical: $obj.map($path.extsByCanonical(), (exts) => dot(exts)),
 
-    // True HTML/SHTML.
+    /**
+     * By VS Code lang (camelCase, includes `codeTextual`).
+     */
+    byVSCodeLang: $obj.map($path.extsByVSCodeLang({ camelCase: true, enableCodeTextual: true }), (exts) => dot(exts)),
 
-    trueHTML: ['.htm', '.html'],
-    trueSHTML: ['.shtm', '.shtml'],
-
-    // Standard JS/TS.
-
-    sJavaScript: ['.js'],
-    sJavaScriptReact: ['.jsx'],
-
-    sTypeScript: ['.ts'],
-    sTypeScriptReact: ['.tsx'],
-
-    // Common JS/TS.
-
-    cJavaScript: ['.cjs'],
-    cJavaScriptReact: ['.cjsx'],
-
-    cTypeScript: ['.cts'],
-    cTypeScriptReact: ['.ctsx'],
-
-    // Module JS/TS.
-
-    mJavaScript: ['.mjs'],
-    mJavaScriptReact: ['.mjsx'],
-
-    mTypeScript: ['.mts'],
-    mTypeScriptReact: ['.mtsx'],
-
-    // All flavors of JSX/TSX.
-
-    allJavaScriptReact: ['.jsx', '.cjsx', '.mjsx'],
-    allTypeScriptReact: ['.tsx', '.ctsx', '.mtsx'],
-
-    // All flavors of JS/TS.
-
-    allJavaScript: ['.js', '.jsx', '.cjs', '.cjsx', '.mjs', '.mjsx'],
-    allTypeScript: ['.ts', '.tsx', '.cts', '.ctsx', '.mts', '.mtsx'],
-
-    // Compiled WASM (WebAssembly).
-
-    wasm: ['.wasm'],
+    /**
+     * By dev group.
+     */
+    byDevGroup: $obj.map($path.jsTSExtsByDevGroup(), (exts) => dot(exts)),
 };
 
 /**
@@ -128,22 +97,21 @@ const extensions = {
  */
 extensions.tailwindContent = [
     ...new Set([
-        ...extensions.mdx,
-        ...extensions.markdown,
+        ...extensions.byVSCodeLang.mdx,
+        ...extensions.byVSCodeLang.markdown,
+        ...extensions.byVSCodeLang.html,
 
-        ...extensions.xml,
-        ...extensions.html,
-        ...extensions.trueHTML,
-        ...extensions.trueSHTML,
+        ...extensions.byVSCodeLang.php,
+        ...extensions.byVSCodeLang.asp,
+        ...extensions.byVSCodeLang.ruby,
+        ...extensions.byVSCodeLang.python,
+        ...extensions.byVSCodeLang.perl,
+        ...extensions.byVSCodeLang.shellscript,
 
-        ...extensions.php,
-        ...extensions.ruby,
-        ...extensions.perl,
-        ...extensions.python,
-        ...extensions.shellscript,
+        ...extensions.byDevGroup.allJavaScript,
+        ...extensions.byDevGroup.allTypeScript,
 
-        ...extensions.allJavaScript,
-        ...extensions.allTypeScript,
+        ...extensions.byVSCodeLang.xml, // e.g., SVGs.
     ]),
 ];
 extensions.tailwindPrettierContent = [...extensions.tailwindContent];
@@ -156,7 +124,7 @@ extensions.commentAnchorsContent = [...extensions.tailwindContent];
 /**
  * Extensions to try on import w/o extension.
  */
-extensions.onImportWithNoExtensionTry = [...extensions.allTypeScript, ...extensions.allJavaScript];
+extensions.onImportWithNoExtensionTry = [...extensions.byDevGroup.allTypeScript, ...extensions.byDevGroup.allJavaScript];
 
 /**
  * Default export.

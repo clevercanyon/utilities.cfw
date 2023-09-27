@@ -7,6 +7,8 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  *
+ * @micromatch Tailwind uses micromatch with default options; i.e., `{ dot: false }`.
+ *
  * @see https://tailwindcss.com/docs/configuration
  */
 /*

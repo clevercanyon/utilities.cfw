@@ -11,6 +11,8 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  *
+ * @minimatch ES Lint uses minimatch under the hood, with `{ dot: true, matchBase: true }`.
+ *
  * @see https://eslint.org/docs/latest/user-guide/command-line-interface
  * @see https://eslint.org/docs/latest/use/configure/configuration-files-new
  */
@@ -119,35 +121,70 @@ export default async () => {
 
             // Source configurations.
             {
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.sJavaScript, ...extensions.sJavaScriptReact, ...extensions.sTypeScript, ...extensions.sTypeScriptReact])],
+                files: [
+                    '**/*.' +
+                        extensions.asBracedGlob([
+                            ...extensions.byDevGroup.sJavaScript,
+                            ...extensions.byDevGroup.sJavaScriptReact,
+                            ...extensions.byDevGroup.sTypeScript,
+                            ...extensions.byDevGroup.sTypeScriptReact,
+                        ]),
+                ],
                 languageOptions: { sourceType: pkg.type || 'script' },
             },
             {
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.mJavaScript, ...extensions.mJavaScriptReact, ...extensions.mTypeScript, ...extensions.mTypeScriptReact])],
+                files: [
+                    '**/*.' +
+                        extensions.asBracedGlob([
+                            ...extensions.byDevGroup.mJavaScript,
+                            ...extensions.byDevGroup.mJavaScriptReact,
+                            ...extensions.byDevGroup.mTypeScript,
+                            ...extensions.byDevGroup.mTypeScriptReact,
+                        ]),
+                ],
                 languageOptions: { sourceType: 'module' },
             },
             {
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.cJavaScript, ...extensions.cJavaScriptReact, ...extensions.cTypeScript, ...extensions.cTypeScriptReact])],
+                files: [
+                    '**/*.' +
+                        extensions.asBracedGlob([
+                            ...extensions.byDevGroup.cJavaScript,
+                            ...extensions.byDevGroup.cJavaScriptReact,
+                            ...extensions.byDevGroup.cTypeScript,
+                            ...extensions.byDevGroup.cTypeScriptReact,
+                        ]),
+                ],
                 languageOptions: { sourceType: 'commonjs' },
             },
             {
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.markdown, ...extensions.mdx])],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.markdown, ...extensions.byVSCodeLang.mdx])],
                 languageOptions: { sourceType: 'module' }, // MDX only supports modules.
             },
 
             // Adds Node globals for `dev/.files`, as these always run in Node.
             {
                 files: [
-                    '*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]), //
-                    'dev/.files/**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript]),
+                    '*.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), //
+                    'dev/.files/**/*.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]),
                 ],
                 languageOptions: { globals: { ...globals.nodeBuiltin } },
             },
             {
                 files: [
-                    '*.' + extensions.asBracedGlob([...extensions.cJavaScript, ...extensions.cJavaScriptReact, ...extensions.cTypeScript, ...extensions.cTypeScriptReact]), //
+                    '*.' +
+                        extensions.asBracedGlob([
+                            ...extensions.byDevGroup.cJavaScript,
+                            ...extensions.byDevGroup.cJavaScriptReact,
+                            ...extensions.byDevGroup.cTypeScript,
+                            ...extensions.byDevGroup.cTypeScriptReact,
+                        ]), //
                     'dev/.files/**/*.' +
-                        extensions.asBracedGlob([...extensions.cJavaScript, ...extensions.cJavaScriptReact, ...extensions.cTypeScript, ...extensions.cTypeScriptReact]),
+                        extensions.asBracedGlob([
+                            ...extensions.byDevGroup.cJavaScript,
+                            ...extensions.byDevGroup.cJavaScriptReact,
+                            ...extensions.byDevGroup.cTypeScript,
+                            ...extensions.byDevGroup.cTypeScriptReact,
+                        ]),
                 ], // Includes CJS globals like `__dirname`.
                 languageOptions: { globals: { ...globals.node } },
             },
@@ -155,14 +192,14 @@ export default async () => {
             // Baseline JS/TS/JSX/TSX recommended rule configurations.
             {
                 // Rules not applied to sandbox|examples.
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript])],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript])],
                 ignores: [...exclusions.sandboxIgnores, ...exclusions.exampleIgnores],
                 rules: { ...eslintJS.configs.recommended.rules },
             },
 
             // JSX/TSX accessbility plugin configurations.
             {
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.allJavaScriptReact, ...extensions.allTypeScriptReact])],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScriptReact, ...extensions.byDevGroup.allTypeScriptReact])],
                 plugins: { 'jsx-a11y': pluginJSXA11y },
 
                 languageOptions: {
@@ -173,7 +210,7 @@ export default async () => {
             },
             {
                 // Rules not applied to sandbox|examples.
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.allJavaScriptReact, ...extensions.allTypeScriptReact])],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScriptReact, ...extensions.byDevGroup.allTypeScriptReact])],
                 ignores: [...exclusions.sandboxIgnores, ...exclusions.exampleIgnores],
                 rules: { ...pluginJSXA11y.configs.recommended.rules },
             },
@@ -182,9 +219,13 @@ export default async () => {
             {
                 // Config not applied to MD/MDX fenced code-blocks.
                 // MD/MDX fenced code-blocks are handled separately, below.
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.allTypeScript])],
-                ignores: ['**/*.' + extensions.asBracedGlob([...extensions.markdown, ...extensions.mdx]) + '/*.' + extensions.asBracedGlob([...extensions.allTypeScript])],
-
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript])],
+                ignores: [
+                    '**/*.' +
+                        extensions.asBracedGlob([...extensions.byVSCodeLang.markdown, ...extensions.byVSCodeLang.mdx]) +
+                        '/*.' +
+                        extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript]),
+                ],
                 plugins: { '@typescript-eslint': pluginTypeScript },
 
                 languageOptions: {
@@ -201,7 +242,12 @@ export default async () => {
             {
                 // Specifically for MD/MDX fenced code-blocks.
                 // Config not applied to any other TypeScript files.
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.markdown, ...extensions.mdx]) + '/*.' + extensions.asBracedGlob([...extensions.allTypeScript])],
+                files: [
+                    '**/*.' +
+                        extensions.asBracedGlob([...extensions.byVSCodeLang.markdown, ...extensions.byVSCodeLang.mdx]) +
+                        '/*.' +
+                        extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript]),
+                ],
                 plugins: { '@typescript-eslint': pluginTypeScript },
 
                 languageOptions: {
@@ -216,11 +262,15 @@ export default async () => {
             {
                 // Rules not applied to sandbox|examples.
                 // Rules not applied to MD/MDX fenced code-blocks.
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.allTypeScript])],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript])],
                 ignores: [
-					...exclusions.sandboxIgnores, ...exclusions.exampleIgnores,
-					'**/*.' + extensions.asBracedGlob([...extensions.markdown, ...extensions.mdx]) + '/*.' + extensions.asBracedGlob([...extensions.allTypeScript]),
-				], // prettier-ignore
+                    ...exclusions.sandboxIgnores,
+                    ...exclusions.exampleIgnores,
+                    '**/*.' +
+                        extensions.asBracedGlob([...extensions.byVSCodeLang.markdown, ...extensions.byVSCodeLang.mdx]) +
+                        '/*.' +
+                        extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript]),
+                ],
                 rules: {
                     ...pluginTypeScript.configs.recommended.rules,
                     ...pluginTypeScript.configs['recommended-requiring-type-checking'].rules,
@@ -231,15 +281,15 @@ export default async () => {
             {
                 // Config not applied to MD/MDX fenced code-blocks.
                 // i.e., This is the processor for those fenced code-blocks.
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.markdown, ...extensions.mdx])],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.markdown, ...extensions.byVSCodeLang.mdx])],
                 plugins: { mdx: pluginMDX },
 
                 languageOptions: {
                     parser: parserMDX,
                     parserOptions: {
                         ignoreRemarkConfig: false,
-                        extensions: [...extensions.mdx],
-                        markdownExtensions: [...extensions.markdown],
+                        extensions: [...extensions.byVSCodeLang.mdx],
+                        markdownExtensions: [...extensions.byVSCodeLang.markdown],
                     },
                 },
                 processor: pluginMDX.createRemarkProcessor({
@@ -261,14 +311,14 @@ export default async () => {
             {
                 // Rules not applied to sandbox|examples.
                 // Rules not applied to MD/MDX fenced code-blocks.
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.markdown, ...extensions.mdx])],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.markdown, ...extensions.byVSCodeLang.mdx])],
                 ignores: [...exclusions.sandboxIgnores, ...exclusions.exampleIgnores],
                 rules: { ...pluginMDX.flat.rules },
             },
             {
                 // MD/MDX fenced code-block rules.
                 // Rules not applied to sandbox|examples.
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.markdown, ...extensions.mdx]) + '/*'],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.markdown, ...extensions.byVSCodeLang.mdx]) + '/*'],
                 ignores: [...exclusions.sandboxIgnores, ...exclusions.exampleIgnores],
                 rules: { ...pluginMDX.flatCodeBlocks.rules },
             },
@@ -279,7 +329,15 @@ export default async () => {
                 // Applies to all ESLint-able file extensions.
                 // Such that formatting can occur even if no ESLint rules apply.
                 // Note that we do *not* exclude MDX fenced code-blocks or sandbox|examples.
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript, ...extensions.markdown, ...extensions.mdx])],
+                files: [
+                    '**/*.' +
+                        extensions.asBracedGlob([
+                            ...extensions.byDevGroup.allJavaScript,
+                            ...extensions.byDevGroup.allTypeScript,
+                            ...extensions.byVSCodeLang.markdown,
+                            ...extensions.byVSCodeLang.mdx,
+                        ]),
+                ],
                 plugins: { prettier: pluginPrettier },
 
                 rules: {
@@ -292,7 +350,7 @@ export default async () => {
             // These are our own overrides against all of the above.
             {
                 // Rules not applied to sandbox|examples.
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.allJavaScript, ...extensions.allTypeScript])],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript])],
                 ignores: [...exclusions.sandboxIgnores, ...exclusions.exampleIgnores],
                 rules: {
                     'no-empty': ['warn', { allowEmptyCatch: true }],
@@ -316,7 +374,7 @@ export default async () => {
             // These are our own overrides against all of the above.
             {
                 // Rules not applied to sandbox|examples.
-                files: ['**/*.' + extensions.asBracedGlob([...extensions.allTypeScript])],
+                files: ['**/*.' + extensions.asBracedGlob([...extensions.byDevGroup.allTypeScript])],
                 ignores: [...exclusions.sandboxIgnores, ...exclusions.exampleIgnores],
                 rules: {
                     'no-redeclare': 'off', // Disable in favor of TypeScript rule below.
