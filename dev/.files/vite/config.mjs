@@ -10,6 +10,7 @@
  * @see https://vitejs.dev/config/
  */
 
+import fs from 'node:fs';
 import path from 'node:path';
 import { loadEnv } from 'vite';
 import { $fs, $glob } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
@@ -26,7 +27,6 @@ import viteMDXConfig from './includes/mdx/config.mjs';
 import viteMinifyConfig from './includes/minify/config.mjs';
 import vitePkgUpdates from './includes/package/updates.mjs';
 import viteRollupConfig from './includes/rollup/config.mjs';
-import viteSSLConfig from './includes/ssl/config.mjs';
 import viteVitestConfig from './includes/vitest/config.mjs';
 
 /**
@@ -108,6 +108,12 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
     const appEntriesAsSrcSubpathsNoExt = appEntriesAsSrcSubpaths.map((subpath) => subpath.replace(/\.[^.]+$/u, ''));
 
     /**
+     * SSL certificates.
+     */
+    const sslKey = fs.readFileSync(path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-key.pem')).toString();
+    const sslCrt = fs.readFileSync(path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-crt.pem')).toString();
+
+    /**
      * Other misc. configuration properties.
      */
     const peerDepKeys = Object.keys(pkg.peerDependencies || {});
@@ -153,7 +159,6 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
      * Configures plugins for Vite.
      */
     const plugins = [
-        await viteSSLConfig(),
         await viteMDXConfig({ projDir }),
         await viteEJSConfig({ mode, projDir, srcDir, pkg, env }),
         await viteMinifyConfig({ mode }),
@@ -212,8 +217,16 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
               }
             : {}),
         server: {
-            open: false, // Do not open dev server.
-            https: true, // Enable basic https in dev server.
+            host: '0.0.0.0', // All.
+            port: 443, // Default https.
+            open: false, // Not automatically.
+            https: { key: sslKey, cert: sslCrt },
+        },
+        preview: {
+            host: '0.0.0.0', // All.
+            port: 443, // Default https.
+            open: false, // Not automatically.
+            https: { key: sslKey, cert: sslCrt },
         },
         resolve: {
             alias: importAliases.asFindReplaceRegExps,

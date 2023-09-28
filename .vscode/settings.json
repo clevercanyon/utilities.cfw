@@ -7,9 +7,12 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./settings.mjs`.
  *
- * Last generated using `./settings.mjs` Wed, Sep 27, 2023, 8:21:04 PM EDT.
+ * Last generated using `./settings.mjs` Thu, Sep 28, 2023, 3:33:39 PM EDT.
  */
 {
+    "editor.formatOnType": false,
+    "editor.formatOnPaste": false,
+    "editor.formatOnSave": false,
     "editor.autoIndent": "full",
     "editor.detectIndentation": false,
     "editor.tabSize": 4,
@@ -17,6 +20,8 @@
     "editor.wordWrap": "off",
     "editor.wrappingIndent": "indent",
     "editor.wordWrapColumn": 180,
+    "editor.wordSeparators": "`~!@#%^&*()-=+[{]}\\|;:'\",.<>/? ─‘’“”",
+    "terminal.integrated.wordSeparators": "`~!@#%^&*()-=+[{]}\\|;:'\",.<>/? ─‘’“”",
     "files.eol": "\n",
     "files.encoding": "utf8",
     "files.trimFinalNewlines": true,
@@ -166,6 +171,7 @@
     "commentAnchors.tags.separators": [" ", ": "],
     "commentAnchors.workspace.excludeFiles": "**/{*.log,*.logs,*~,*.bak,*.rej,*.orig,*.patch,*.diff,*.code-*,.idea,.*.swp,*.ctags,.env.me,.tscache,*.tsbuildinfo,.vite,.vitest,.wrangler,.dev.vars,.dev.vars.*,.rollup,.webpack,.linaria-cache,.sass-cache,.docker,.vagrant,.elasticbeanstalk,.yarn,vendor,node_modules,jspm_packages,bower_components,.git,.svn,_svn,.svnignore,.bzr,.bzrignore,.hg,.hgignore,Thumbs.db,ehthumbs.db,Desktop.ini,$RECYCLE.BIN,._*,Icon,*.icloud,.DS_Store,.disk_label,.LSOverride,.VolumeIcon.icns,.com.apple.timemachine.*,.apdisk,.fseventsd,.AppleDB,.AppleDesktop,.AppleDouble,.Trashes,.TemporaryItems,.Spotlight-V100,.DocumentRevisions-V100,Network Trash Folder,Temporary Items,yarn.lock,composer.lock,package-lock.json,dist}/**",
     "commentAnchors.workspace.matchFiles": "**/*.{mdx,md,markdown,mdown,mdwn,mkd,mdtxt,mdtext,html,htm,shtml,shtm,xhtml,xhtm,ejs,liquid,php,phtml,phtm,phps,asp,aspx,rb,py,pl,plx,cgi,ppl,perl,bash,zsh,sh,js,jsx,mjs,mjsx,cjs,cjsx,ts,tsx,mts,mtsx,cts,ctsx,xsl,xslt,xml,xsd,dtd,atom,rdf,rss,rss2,rss-http,asx,dfxp,svg,kml}",
+    "extensions.ignoreRecommendations": false,
     "eslint.enable": true,
     "eslint.format.enable": true,
     "eslint.lintTask.enable": false,
@@ -184,6 +190,7 @@
     },
     "javascript.validate.enable": true,
     "typescript.validate.enable": true,
+    "javascript.suggestionActions.enabled": false,
     "css.validate": false,
     "scss.validate": false,
     "less.validate": false,

@@ -93,17 +93,14 @@ export default {
             });
 
             /**
-             * Updates `./.wrangler.toml` file in new project directory.
+             * Updates `./dev/.envs/.env.prod` file, if exists.
              */
-            const wranglerFile = path.resolve(projDir, './.wrangler.toml');
+            const envProdFile = path.resolve(projDir, './dev/.envs/.env.prod');
 
-            if (fs.existsSync(wranglerFile)) {
-                let wrangler = fs.readFileSync(wranglerFile).toString(); // toML.
-
-                wrangler = wrangler.replace(/^(name\s*=\s*")([^"]*)(")/gmu, '$1' + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + '$3');
-                wrangler = wrangler.replace(/^(route\.pattern\s*=\s*")([^"]+\/)([^/"]*)(")/gmu, '$1$2' + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + '/*$4');
-
-                await fsp.writeFile(wranglerFile, wrangler); // Updates `./.wrangler.toml` file.
+            if (fs.existsSync(envProdFile)) {
+                let envProd = fs.readFileSync(envProdFile).toString(); // Properties.
+                envProd = envProd.replace(/^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu, "$1='https://" + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + ".hop.gdn'");
+                await fsp.writeFile(envProdFile, envProd); // Updates `./dev/.envs/.env.prod` file.
             }
 
             /**

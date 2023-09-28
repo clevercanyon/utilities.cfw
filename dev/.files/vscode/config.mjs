@@ -74,6 +74,10 @@ export default async () => {
          * Editor options.
          */
 
+        'editor.formatOnType': false,
+        'editor.formatOnPaste': false,
+        'editor.formatOnSave': false,
+
         'editor.autoIndent': 'full',
         'editor.detectIndentation': false,
         'editor.tabSize': prettierConfig.tabWidth,
@@ -82,6 +86,11 @@ export default async () => {
         'editor.wordWrap': 'off',
         'editor.wrappingIndent': 'indent',
         'editor.wordWrapColumn': prettierConfig.printWidth,
+
+        // Customizations: removed `$` (we use it a lot), added ` ─‘’“”`.
+        'editor.wordSeparators': '`~!@#%^&*()-=+[{]}\\|;:\'",.<>/? ─‘’“”',
+        // Ensure terminal configuration matches that of `editor.wordSeparators`.
+        'terminal.integrated.wordSeparators': '`~!@#%^&*()-=+[{]}\\|;:\'",.<>/? ─‘’“”',
 
         /**
          * File and search options.
@@ -207,6 +216,12 @@ export default async () => {
             : '**/*.' + extensions.asBracedGlob([...extensions.commentAnchorsContent]),
 
         /**
+         * Extension options.
+         */
+
+        'extensions.ignoreRecommendations': false,
+
+        /**
          * ESLint options.
          */
 
@@ -234,6 +249,8 @@ export default async () => {
         },
         'javascript.validate.enable': true,
         'typescript.validate.enable': true,
+        // <https://stackoverflow.com/a/52397123>.
+        'javascript.suggestionActions.enabled': false,
 
         /**
          * Stylelint options.
