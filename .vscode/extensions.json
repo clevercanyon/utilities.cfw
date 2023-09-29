@@ -9,26 +9,50 @@
  */
 {
     "recommendations": [
+        /*
+         * Linting.
+         */
+        "dbaeumer.vscode-eslint",
+        "stylelint.vscode-stylelint",
+        "bradlc.vscode-tailwindcss",
+        "timonwong.shellcheck",
+        "exiasr.hadolint",
+
+        /*
+         * Formatting.
+         */
+        "esbenp.prettier-vscode",
+        "tamasfe.even-better-toml",
+
+        /*
+         * Markdown.
+         */
         "bierner.markdown-checkbox",
         "bierner.markdown-footnotes",
         "bierner.markdown-mermaid",
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "exiasr.hadolint",
-        "ExodiusStudios.comment-anchors",
-        "idleberg.applescript",
-        "leonzalion.vscode-ejs",
-        "mrmlnc.vscode-apache",
-        "ms-python.black-formatter",
-        "ms-python.python",
-        "ms-vscode.hexeditor",
-        "rohit-gohri.format-code-action",
-        "sissel.shopify-liquid",
-        "stylelint.vscode-stylelint",
-        "tamasfe.even-better-toml",
-        "timonwong.shellcheck",
         "unifiedjs.vscode-mdx",
-        "webben.browserslist"
+
+        /*
+         * EJS templates.
+         */
+        "leonzalion.vscode-ejs",
+
+        /*
+         * Misc languages.
+         */
+        "webben.browserslist",
+        "idleberg.applescript",
+        "mrmlnc.vscode-apache",
+        "ms-vscode.hexeditor",
+
+        "ms-python.python", // Optional, used rarely.
+        "ms-python.black-formatter", // Optional, used rarely.
+
+        /*
+         * Misc features.
+         */
+        "ExodiusStudios.comment-anchors",
+        "rohit-gohri.format-code-action"
     ]
 
     /*

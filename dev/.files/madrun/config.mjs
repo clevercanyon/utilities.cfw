@@ -13,42 +13,160 @@
 
 import path from 'node:path';
 import url from 'node:url';
+import { $cmd } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import wranglerSettings from '../wrangler/settings.mjs';
 import events from './includes/events.mjs';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const nodeIncludeFile = path.resolve(__dirname, './includes/node.cjs');
+const distDir = path.resolve(__dirname, '../../../dist');
+
+const nodeEnvVars = { NODE_OPTIONS: $cmd.quote([`--require ${$cmd.esc(nodeIncludeFile)}`].join(' ')) };
+const cloudflareEnvVars = { CLOUDFLARE_API_TOKEN: process.env.USER_CLOUDFLARE_TOKEN || '' };
 
 /**
  * Defines madrun configuration.
  */
-export default async (/* { cmd, args, ctx } */) => {
-    /**
-     * Node options.
-     */
-    const n = 'NODE_OPTIONS=' + // See: <https://o5p.me/Z4rfwi>.
-        [ `--require='${nodeIncludeFile}'` ].join(' ') + ' '; // prettier-ignore
-
+export default async () => {
     /**
      * Composition.
      */
     return {
-        'envs': n + './dev/.files/bin/envs.mjs {{@}}',
-        'install': n + './dev/.files/bin/install.mjs {{@}}',
-        'update': n + './dev/.files/bin/update.mjs {{@}}',
+        /**
+         * Our own commands.
+         */
+        'envs': async () => {
+            return {
+                env: { ...nodeEnvVars },
+                cmds: [['./dev/.files/bin/envs.mjs', '{{@}}']],
+            };
+        },
+        'install': async () => {
+            return {
+                env: { ...nodeEnvVars },
+                cmds: [['./dev/.files/bin/install.mjs', '{{@}}']],
+            };
+        },
+        'update': async () => {
+            return {
+                env: { ...nodeEnvVars },
+                cmds: [['./dev/.files/bin/update.mjs', '{{@}}']],
+            };
+        },
 
-        'dev': async ({ args }) => n + 'npx vite dev' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
-        'preview': async ({ args }) => n + 'npx vite preview' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
-        'build': async ({ args }) => n + 'npx vite build' + (args.mode ? '' : ' --mode=prod') + ' {{@}}',
+        /**
+         * Vite-powered commands.
+         */
+        'dev': async ({ args }) => {
+            return {
+                env: { ...nodeEnvVars },
+                cmds: [['npx', 'vite', 'dev', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+            };
+        },
+        'preview': async ({ args }) => {
+            return {
+                env: { ...nodeEnvVars },
+                cmds: [['npx', 'vite', 'preview', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+            };
+        },
+        'build': async ({ args }) => {
+            return {
+                env: { ...nodeEnvVars },
+                cmds: [['npx', 'vite', 'build', ...(args.mode ? [] : ['--mode', 'prod']), '{{@}}']],
+            };
+        },
 
-        'tests': async ({ args }) => n + 'npx vitest' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
-        'tests:bench': async ({ args }) => n + 'npx vitest bench' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
-        'tests:sandbox': async ({ args }) => n + 'VITEST_SANDBOX_ENABLE=true npx vitest' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
-        'tests:examples': async ({ args }) => n + 'VITEST_EXAMPLES_ENABLE=true npx vitest' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
+        /**
+         * Test-related commands.
+         */
+        'jest': async () => {
+            return {
+                env: { ...nodeEnvVars },
+                cmds: [['npx', 'jest', '{{@}}']],
+            };
+        },
+        'vitest': async ({ args }) => {
+            return {
+                env: { ...nodeEnvVars },
+                cmds: [['npx', 'vitest', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+            };
+        },
+        'tests': async ({ args }) => {
+            return {
+                env: { ...nodeEnvVars },
+                cmds: [['npx', 'vitest', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+            };
+        },
+        'tests:bench': async ({ args }) => {
+            return {
+                env: { ...nodeEnvVars },
+                cmds: [['npx', 'vitest', 'bench', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+            };
+        },
+        'tests:sandbox': async ({ args }) => {
+            return {
+                env: { ...nodeEnvVars, VITEST_SANDBOX_ENABLE: 'true' },
+                cmds: [['npx', 'vitest', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+            };
+        },
+        'tests:examples': async ({ args }) => {
+            return {
+                env: { ...nodeEnvVars, VITEST_EXAMPLES_ENABLE: 'true' },
+                cmds: [['npx', 'vitest', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+            };
+        },
 
-        'jest': n + 'npx jest {{@}}', // Runs project Jest tests.
-        'vitest': async ({ args }) => n + 'npx vitest' + (args.mode ? '' : ' --mode=dev') + ' {{@}}',
-        'wrangler': n + 'CLOUDFLARE_API_TOKEN="${USER_CLOUDFLARE_TOKEN:-}" npx wrangler {{@}}',
+        /**
+         * Wrangler commands.
+         */
+        'wrangler': async () => {
+            return {
+                env: { ...nodeEnvVars, ...cloudflareEnvVars },
+                cmds: [['npx', 'wrangler', '{{@}}']],
+            };
+        },
+        'pages': async ({ args }) => {
+            return {
+                env: { ...nodeEnvVars, ...cloudflareEnvVars },
+                cmds: [
+                    [
+                        'npx',
+                        'wrangler',
+                        'pages',
 
+                        // Default `project` command args.
+                        ...('project' === args._?.[1] && 'create' === args._?.[2] ? (args._?.[3] ? [] : [wranglerSettings.defaultProjectName]) : []),
+                        ...('project' === args._?.[1] && 'create' === args._?.[2] ? (args.productionBranch ? [] : ['--production-branch', 'production']) : []),
+
+                        // Default `dev` command args.
+                        ...('dev' === args._?.[1] ? (args._?.[2] ? [] : [distDir]) : []),
+                        ...('dev' === args._?.[1] ? (args.liveReload ? [] : ['--live-reload']) : []),
+                        ...('dev' === args._?.[1] ? (args.compatibilityDate ? [] : ['--compatibility-date', wranglerSettings.compatibilityDate]) : []),
+                        ...('dev' === args._?.[1]
+                            ? args.compatibilityFlag || args.compatibilityFlags
+                                ? [] // `--compatibility-flag` is an alias of `--compatibility-flags`.
+                                : wranglerSettings.compatibilityFlags.map((f) => ['--compatibility-flag', f]).flat()
+                            : []),
+
+                        // Default `deploy` command args.
+                        ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
+                        ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.branch ? [] : ['--branch', 'production']) : []),
+
+                        // Default `deployment` command args.
+                        ...('deployment' === args._?.[1] && 'list' === args._?.[2] ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
+                        ...('deployment' === args._?.[1] && 'tail' === args._?.[2] ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
+                        ...('deployment' === args._?.[1] && 'tail' === args._?.[2] ? (args.environment ? [] : ['--environment', 'production']) : []),
+
+                        // User-provided args.
+                        '{{@}}',
+                    ],
+                ],
+            };
+        },
+
+        /**
+         * Event-driven commands.
+         */
         ...events, // e.g., `on::madrun:default:new`.
     };
 };

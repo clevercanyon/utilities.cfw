@@ -7,12 +7,13 @@
 # @note This entire file will be updated automatically.
 # @note Instead of editing here, please review `./wrangler.mjs`.
 #
-# Last generated using `./wrangler.mjs` Thu, Sep 28, 2023, 3:33:40 PM EDT.
+# Last generated using `./wrangler.mjs` Fri, Sep 29, 2023, 7:06:39 PM EDT.
 ##
 
-compatibility_date = "2023-08-15"
 send_metrics = false
 usage_model = "bundled"
+compatibility_date = "2023-08-15"
+compatibility_flags = [ ]
 name = "utilities-cfw"
 account_id = "f1176464a976947aa5665d989814a4b1"
 workers_dev = false

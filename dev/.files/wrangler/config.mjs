@@ -22,19 +22,12 @@
 
 import path from 'node:path';
 import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $path, $str, $url } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $path, $url } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import extensions from '../bin/includes/extensions.mjs';
-import u from '../bin/includes/utilities.mjs';
+import wranglerSettings from './settings.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
-
-const pkg = await u.pkg(); // From utilities.
-
-const defaultZoneName = 'hop.gdn';
-const defaultZoneDomain = 'workers.hop.gdn';
-const defaultAccountId = 'f1176464a976947aa5665d989814a4b1';
-const defaultWorkerName = $str.kebabCase(path.basename(pkg.name || ''), { asciiOnly: true });
 
 /**
  * Defines Wrangler configuration.
@@ -46,14 +39,18 @@ export default async () => {
     const baseConfig = {
         // Platform settings.
 
-        compatibility_date: '2023-08-15',
         send_metrics: false, // Don't share usage.
         usage_model: 'bundled', // 10M/mo free + $0.50/M.
 
+        // Compatibility settings.
+
+        compatibility_date: wranglerSettings.compatibilityDate,
+        compatibility_flags: wranglerSettings.compatibilityFlags,
+
         // Worker name & account ID.
 
-        name: defaultWorkerName,
-        account_id: defaultAccountId,
+        name: wranglerSettings.defaultWorkerName,
+        account_id: wranglerSettings.defaultAccountId,
 
         // Workers.dev configuration.
 
@@ -148,8 +145,8 @@ export default async () => {
         // Worker route configuration.
 
         route: {
-            zone_name: defaultZoneName,
-            pattern: defaultZoneDomain + '/' + $url.encode(defaultWorkerName) + '/*',
+            zone_name: wranglerSettings.defaultZoneName,
+            pattern: wranglerSettings.defaultZoneDomain + '/' + $url.encode(wranglerSettings.defaultWorkerName) + '/*',
         },
         // Other environments used by this worker.
 

@@ -1,5 +1,5 @@
 /**
- * SSL config file.
+ * Icons config file.
  *
  * Vite is not aware of this config file's location.
  *
@@ -7,16 +7,22 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  *
- * @see https://github.com/vitejs/vite-plugin-basic-ssl
+ * @see https://www.npmjs.com/package/unplugin-icons
  */
 
 /**
- * Configures SSL for Vite.
+ * Configures icons for Vite.
  *
  * @param   props Props from vite config file driver.
  *
- * @returns       SSL configuration.
+ * @returns       Icon configuration.
  */
 export default async (/* {} */) => {
-    return (await import('@vitejs/plugin-basic-ssl')).default();
+    return (await import('unplugin-icons/vite')).default({
+        compiler: 'jsx',
+        jsx: 'preact',
+        scale: 1.2,
+        defaultStyle: '',
+        defaultClass: '',
+    });
 };

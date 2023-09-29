@@ -30,6 +30,7 @@ export default async ({ projDir }) => {
                 ...exclusions.backupIgnores,
                 ...exclusions.patchIgnores,
                 ...exclusions.editorIgnores,
+                ...exclusions.toolingIgnores,
                 ...exclusions.pkgIgnores,
                 ...exclusions.vcsIgnores,
                 ...exclusions.osIgnores,

@@ -60,6 +60,7 @@ export default async () => {
                     ...exclusions.backupIgnores,
                     ...exclusions.patchIgnores,
                     ...exclusions.editorIgnores,
+                    ...exclusions.toolingIgnores,
                     ...exclusions.pkgIgnores,
                     ...exclusions.vcsIgnores,
                     ...exclusions.osIgnores,
@@ -86,7 +87,7 @@ export default async () => {
 
             target: esVersion.lcnYear,
             lib: [esVersion.lcnYear],
-            types: ['vite/client', '@types/mdx'],
+            types: ['vite/client', '@types/mdx', 'unplugin-icons/types/preact'],
 
             jsx: 'react-jsx',
             jsxImportSource: 'preact',

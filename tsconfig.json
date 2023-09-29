@@ -7,7 +7,7 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./tsconfig.mjs`.
  *
- * Last generated using `./tsconfig.mjs` Thu, Sep 28, 2023, 3:33:39 PM EDT.
+ * Last generated using `./tsconfig.mjs` Fri, Sep 29, 2023, 7:06:39 PM EDT.
  */
 {
     "include": ["./src/**/*", "./dev-types.d.ts"],
@@ -27,6 +27,21 @@
         "**/.idea/**",
         "**/.*.swp/**",
         "**/*.ctags/**",
+        "**/.env.me/**",
+        "**/.tscache/**",
+        "**/*.tsbuildinfo/**",
+        "**/.vite/**",
+        "**/.vitest/**",
+        "**/.wrangler/**",
+        "**/.dev.vars/**",
+        "**/.dev.vars.*/**",
+        "**/.rollup/**",
+        "**/.webpack/**",
+        "**/.linaria-cache/**",
+        "**/.sass-cache/**",
+        "**/.docker/**",
+        "**/.vagrant/**",
+        "**/.elasticbeanstalk/**",
         "**/.yarn/**",
         "**/vendor/**",
         "**/node_modules/**",
@@ -63,7 +78,6 @@
         "**/Network Trash Folder/**",
         "**/Temporary Items/**",
         "**/.*/**",
-        "**/*.tsbuildinfo/**",
         "**/*.config.*/**",
         "**/wrangler.*/**",
         "**/tsconfig.*/**",
@@ -92,7 +106,7 @@
         "skipLibCheck": true,
         "target": "es2022",
         "lib": ["es2022", "webworker"],
-        "types": ["vite/client", "@types/mdx"],
+        "types": ["vite/client", "@types/mdx", "unplugin-icons/types/preact"],
         "jsx": "react-jsx",
         "jsxImportSource": "preact",
         "module": "node16",

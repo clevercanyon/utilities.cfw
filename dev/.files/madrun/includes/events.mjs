@@ -26,133 +26,135 @@ export default {
     /**
      * `$ madrun new` events.
      */
-    'on::madrun:default:new': [
-        /**
-         * Installs new project.
-         */
-        'npx @clevercanyon/madrun install project',
-
-        /**
-         * Configures new project.
-         */
-        async (args) => {
+    'on::madrun:default:new': {
+        cmds: [
             /**
-             * Propagates env vars.
+             * Installs new project.
              */
-            await u.propagateUserEnvVars();
+            ['npx', '@clevercanyon/madrun', 'install', 'project'],
 
             /**
-             * Deletes Dotenv Vault associated with template.
+             * Configures new project.
              */
-            await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
-            await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
+            async ({ args }) => {
+                /**
+                 * Propagates env vars.
+                 */
+                await u.propagateUserEnvVars();
 
-            /**
-             * Initializes a few variables.
-             */
-            const dirBasename = path.basename(projDir);
+                /**
+                 * Deletes Dotenv Vault associated with template.
+                 */
+                await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
+                await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
 
-            const parentDir = path.dirname(projDir);
-            const parentDirBasename = path.basename(parentDir);
+                /**
+                 * Initializes a few variables.
+                 */
+                const dirBasename = path.basename(projDir);
 
-            const maybeParentDirBrand = $fn.try(() => $brand.get(parentDirBasename))(); // Maybe.
-            const parentDirOwner = $is.brand(maybeParentDirBrand) ? maybeParentDirBrand.org.slug : parentDirBasename;
+                const parentDir = path.dirname(projDir);
+                const parentDirBasename = path.basename(parentDir);
 
-            /**
-             * Updates `./package.json` in new project directory.
-             */
-            await u.updatePkg({
-                name: args.pkgName || '@' + parentDirOwner + '/' + dirBasename,
-                repository: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename),
-                homepage: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '#readme',
-                bugs: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '/issues',
+                const maybeParentDirBrand = $fn.try(() => $brand.get(parentDirBasename))(); // Maybe.
+                const parentDirOwner = $is.brand(maybeParentDirBrand) ? maybeParentDirBrand.org.slug : parentDirBasename;
 
-                $unset: /* Effectively resets these to default values. */ [
-                    'private', //
-                    'publishConfig.access',
+                /**
+                 * Updates `./package.json` in new project directory.
+                 */
+                await u.updatePkg({
+                    name: args.pkgName || '@' + parentDirOwner + '/' + dirBasename,
+                    repository: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename),
+                    homepage: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '#readme',
+                    bugs: 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '/issues',
 
-                    'version',
-                    'license',
-                    'description',
-                    'funding',
-                    'keywords',
+                    $unset: /* Effectively resets these to default values. */ [
+                        'private', //
+                        'publishConfig.access',
 
-                    'author',
-                    'contributors',
+                        'version',
+                        'license',
+                        'description',
+                        'funding',
+                        'keywords',
 
-                    'config.c10n.&.github.teams',
-                    'config.c10n.&.github.labels',
-                    'config.c10n.&.github.configVersion',
-                    'config.c10n.&.github.envsVersion',
+                        'author',
+                        'contributors',
 
-                    'config.c10n.&.npmjs.teams',
-                    'config.c10n.&.npmjs.configVersions',
-                ],
-                ...(args.pkg ? { $set: { private: false } } : {}),
-                ...(args.pkg && args.public ? { $set: { 'publishConfig.access': 'public' } } : {}),
-            });
+                        'config.c10n.&.github.teams',
+                        'config.c10n.&.github.labels',
+                        'config.c10n.&.github.configVersion',
+                        'config.c10n.&.github.envsVersion',
 
-            /**
-             * Updates `./dev/.envs/.env.prod` file, if exists.
-             */
-            const envProdFile = path.resolve(projDir, './dev/.envs/.env.prod');
+                        'config.c10n.&.npmjs.teams',
+                        'config.c10n.&.npmjs.configVersions',
+                    ],
+                    ...(args.pkg ? { $set: { private: false } } : {}),
+                    ...(args.pkg && args.public ? { $set: { 'publishConfig.access': 'public' } } : {}),
+                });
 
-            if (fs.existsSync(envProdFile)) {
-                let envProd = fs.readFileSync(envProdFile).toString(); // Properties.
-                envProd = envProd.replace(/^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu, "$1='https://" + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + ".hop.gdn'");
-                await fsp.writeFile(envProdFile, envProd); // Updates `./dev/.envs/.env.prod` file.
-            }
+                /**
+                 * Updates `./dev/.envs/.env.prod` file, if exists.
+                 */
+                const envProdFile = path.resolve(projDir, './dev/.envs/.env.prod');
 
-            /**
-             * Updates `./README.md` file in new project directory.
-             */
-            const readmeFile = path.resolve(projDir, './README.md');
-
-            if (fs.existsSync(readmeFile)) {
-                let readme = fs.readFileSync(readmeFile).toString(); // Markdown.
-
-                readme = readme.replace(/^(#\s+)(@[^/?#\s]+\/[^/?#\s]+)/gmu, '$1' + (args.pkgName || '@' + parentDirOwner + '/' + dirBasename));
-                await fsp.writeFile(readmeFile, readme); // Updates `./README.md` file.
-            }
-
-            /**
-             * Initializes this as a new git repository.
-             */
-            await u.spawn('git', ['init']);
-
-            /**
-             * Updates Vite build after the above changes.
-             */
-            if (await u.isViteBuild()) await u.viteBuild();
-
-            /**
-             * Saves changes made here as first initial commit.
-             */
-            await u.gitAddCommit('Initializing project directory. [n]');
-
-            /**
-             * Attempts to create a remote repository origin at GitHub; if at all possible.
-             */
-            if ('clevercanyon' === parentDirOwner) {
-                if (process.env.GH_TOKEN && 'owner' === (await u.gistGetC10NUser()).github?.role) {
-                    await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private']);
-                } else {
-                    const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
-                    await u.spawn('git', ['remote', 'add', 'origin', origin]);
+                if (fs.existsSync(envProdFile)) {
+                    let envProd = fs.readFileSync(envProdFile).toString(); // Properties.
+                    envProd = envProd.replace(/^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu, "$1='https://" + $str.kebabCase(path.basename(args.pkgName || dirBasename)) + ".hop.gdn'");
+                    await fsp.writeFile(envProdFile, envProd); // Updates `./dev/.envs/.env.prod` file.
                 }
-            } else if (process.env.USER_GITHUB_USERNAME === parentDirOwner) {
-                if (process.env.GH_TOKEN) {
-                    await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private']);
-                } else {
-                    const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
-                    await u.spawn('git', ['remote', 'add', 'origin', origin]);
-                }
-            }
 
-            /**
-             * Signals completion with success.
-             */
-            u.log(await u.finaleBox('Success', 'New project ready.'));
-        },
-    ],
+                /**
+                 * Updates `./README.md` file in new project directory.
+                 */
+                const readmeFile = path.resolve(projDir, './README.md');
+
+                if (fs.existsSync(readmeFile)) {
+                    let readme = fs.readFileSync(readmeFile).toString(); // Markdown.
+
+                    readme = readme.replace(/^(#\s+)(@[^/?#\s]+\/[^/?#\s]+)/gmu, '$1' + (args.pkgName || '@' + parentDirOwner + '/' + dirBasename));
+                    await fsp.writeFile(readmeFile, readme); // Updates `./README.md` file.
+                }
+
+                /**
+                 * Initializes this as a new git repository.
+                 */
+                await u.spawn('git', ['init']);
+
+                /**
+                 * Updates Vite build after the above changes.
+                 */
+                if (await u.isViteBuild()) await u.viteBuild();
+
+                /**
+                 * Saves changes made here as first initial commit.
+                 */
+                await u.gitAddCommit('Initializing project directory. [n]');
+
+                /**
+                 * Attempts to create a remote repository origin at GitHub; if at all possible.
+                 */
+                if ('clevercanyon' === parentDirOwner) {
+                    if (process.env.GH_TOKEN && 'owner' === (await u.gistGetC10NUser()).github?.role) {
+                        await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private']);
+                    } else {
+                        const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
+                        await u.spawn('git', ['remote', 'add', 'origin', origin]);
+                    }
+                } else if (process.env.USER_GITHUB_USERNAME === parentDirOwner) {
+                    if (process.env.GH_TOKEN) {
+                        await u.spawn('gh', ['repo', 'create', parentDirOwner + '/' + dirBasename, '--source=.', args.public ? '--public' : '--private']);
+                    } else {
+                        const origin = 'https://github.com/' + $url.encode(parentDirOwner) + '/' + $url.encode(dirBasename) + '.git';
+                        await u.spawn('git', ['remote', 'add', 'origin', origin]);
+                    }
+                }
+
+                /**
+                 * Signals completion with success.
+                 */
+                u.log(await u.finaleBox('Success', 'New project ready.'));
+            },
+        ],
+    },
 };
