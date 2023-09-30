@@ -12,26 +12,17 @@
  */
 
 import fs from 'node:fs';
-import os from 'node:os';
+import fsp from 'node:fs/promises';
 import path from 'node:path';
 import url from 'node:url';
-import { $cmd } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $chalk, $cmd } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import u from '../bin/includes/utilities.mjs';
 import wranglerSettings from '../wrangler/settings.mjs';
 import events from './includes/events.mjs';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-const nodeIncludeFile = path.resolve(__dirname, './includes/node.cjs');
-
-const projDir = path.resolve(__dirname, '../../..');
 const distDir = path.resolve(__dirname, '../../../dist');
-
-const osWranglerDir = path.resolve(os.homedir(), './.wrangler');
-const osWranglerSSLCertDir = path.resolve(osWranglerDir, './local-cert');
-const osWranglerSSLKeyFile = path.resolve(osWranglerSSLCertDir, './key.pem');
-const osWranglerSSLCertFile = path.resolve(osWranglerSSLCertDir, './cert.pem');
-
-const sslKeyFile = path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-key.pem');
-const sslCertFile = path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-crt.pem');
+const nodeIncludeFile = path.resolve(__dirname, './includes/node.cjs');
 
 const nodeEnvVars = { NODE_OPTIONS: $cmd.quote([`--require ${$cmd.esc(nodeIncludeFile)}`].join(' ')) };
 const cloudflareEnvVars = { CLOUDFLARE_API_TOKEN: process.env.USER_CLOUDFLARE_TOKEN || '' };
@@ -138,22 +129,24 @@ export default async () => {
             };
         },
         'pages': async ({ args }) => {
-            if (fs.existsSync(osWranglerDir)) {
-                // Ensure `~/.wrangler/local-cert` directory exists.
-                fs.mkdirSync(osWranglerSSLCertDir, { recursive: true, mode: 0o700 });
-
-                // Link our custom SSL key to that used by Wrangler.
-                fs.rmSync(osWranglerSSLKeyFile, { recursive: true, force: true });
-                fs.symlinkSync(sslKeyFile, osWranglerSSLKeyFile);
-
-                // Link our custom SSL certificate to that used by Wrangler.
-                fs.rmSync(osWranglerSSLCertFile, { recursive: true, force: true });
-                fs.symlinkSync(sslCertFile, osWranglerSSLCertFile);
-            }
             return {
                 opts: { cwd: distDir }, // See: <https://o5p.me/k9Fqml>.
                 env: { ...nodeEnvVars, ...cloudflareEnvVars },
                 cmds: [
+                    async () => {
+                        if (!(await fs.existsSync(wranglerSettings.osDir))) return;
+
+                        // Ensure `~/.wrangler/local-cert` directory exists.
+                        await fsp.mkdir(wranglerSettings.osSSLCertDir, { recursive: true, mode: 0o700 });
+
+                        // Link our custom SSL key to that used by Wrangler.
+                        await fsp.rm(wranglerSettings.osSSLKeyFile, { recursive: true, force: true });
+                        await fsp.symlink(wranglerSettings.customSSLKeyFile, wranglerSettings.osSSLKeyFile);
+
+                        // Link our custom SSL certificate to that used by Wrangler.
+                        await fsp.rm(wranglerSettings.osSSLCertFile, { recursive: true, force: true });
+                        await fsp.symlink(wranglerSettings.customSSLCertFile, wranglerSettings.osSSLCertFile);
+                    },
                     [
                         'npx',
                         'wrangler',
@@ -169,7 +162,6 @@ export default async () => {
                         ...('dev' === args._?.[0] ? (args.ip ? [] : ['--ip', '0.0.0.0']) : []),
                         ...('dev' === args._?.[0] ? (args.port ? [] : ['--port', '443']) : []),
                         ...('dev' === args._?.[0] ? (args.localProtocol ? [] : ['--local-protocol', 'https']) : []),
-                        ...('dev' === args._?.[0] ? (args.liveReload ? [] : ['--live-reload']) : []),
                         ...('dev' === args._?.[0] ? (args.compatibilityDate ? [] : ['--compatibility-date', wranglerSettings.compatibilityDate]) : []),
                         ...('dev' === args._?.[0]
                             ? args.compatibilityFlag || args.compatibilityFlags
@@ -186,6 +178,17 @@ export default async () => {
                         ...('deployment' === args._?.[0] && 'tail' === args._?.[1] ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
                         ...('deployment' === args._?.[0] && 'tail' === args._?.[1] ? (args.environment ? [] : ['--environment', 'production']) : []),
                     ],
+                ],
+            };
+        },
+        'pages:flush': async () => {
+            return {
+                env: { ...nodeEnvVars, ...cloudflareEnvVars },
+                cmds: [
+                    async () => {
+                        u.log($chalk.green('Flushing Wrangler state for local dev testing.'));
+                        await fsp.rm(wranglerSettings.projStateDir, { recursive: true, force: true });
+                    },
                 ],
             };
         },
