@@ -51,6 +51,7 @@
         /*
          * Misc features.
          */
+        "PeterSchmalfeldt.explorer-exclude",
         "ExodiusStudios.comment-anchors",
         "rohit-gohri.format-code-action"
     ]

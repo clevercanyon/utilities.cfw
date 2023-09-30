@@ -28,38 +28,6 @@ const asRegExpStrings = (globs) => [...new Set(globs)].map((glob) => $path.globT
 const asRegExps = (globs) => asRegExpStrings(globs).map((rxs) => new RegExp(rxs, 'ui'));
 
 /**
- * Converts an array of exclusions into relative globs.
- *
- * @param   from    From path.
- * @param   globs   Array of exclusion globs.
- * @param   options Default is `{ forceRelative: false }`.
- *
- * @returns         Exclusions as relative globs.
- */
-const asRelativeGlobs = (from, globs, { forceRelative = false } = {}) => {
-    return [...new Set(globs)].map((glob) => {
-        glob = forceRelative ? glob.replace(/^(?:\*\*\/)+/u, '') : glob;
-        return /^(?:\/|\*\*\/)/u.test(glob) ? glob : path.relative(from, glob);
-    });
-};
-
-/**
- * Converts an array of exclusions into rooted relative globs.
- *
- * @param   from    From path.
- * @param   globs   Array of exclusion globs.
- * @param   options Default is `{ forceRootedRelative: false }`.
- *
- * @returns         Exclusions as rooted relative globs.
- */
-const asRootedRelativeGlobs = (from, globs, { forceRelative = false } = {}) => {
-    return [...new Set(globs)].map((glob) => {
-        glob = forceRelative ? glob.replace(/^(?:\*\*\/)+/u, '') : glob;
-        return /^(?:\/|\*\*\/)/u.test(glob) ? glob : '/' + $str.lTrim(path.relative(from, glob), '/');
-    });
-};
-
-/**
  * Converts an array of exclusions into negated globs.
  *
  * WARNING: This typically drops existing negations, based on options.
@@ -83,6 +51,46 @@ const asNegatedGlobs = (globs, { dropExistingNegations }) => {
 };
 
 /**
+ * Converts an array of exclusions into relative globs.
+ *
+ * @param   from    From path.
+ * @param   globs   Array of exclusion globs.
+ * @param   options Options related to relative globs.
+ *
+ * @returns         Exclusions as relative globs.
+ */
+const asRelativeGlobs = (from, globs, { forceRelative = false, forceNoLeadingSlash = false, headGreedy = true, tailGreedy = true } = {}) => {
+    return [...new Set(globs)].map((glob) => {
+        glob = glob.replace(/^(?:\*\*\/)+|(?:\/\*\*)+$/gu, '');
+        glob = headGreedy && !/\//u.test(glob) ? '**/' + glob : glob;
+        glob = tailGreedy ? glob + '/**' : glob;
+        glob = forceRelative ? glob.replace(/^(?:\*\*\/)+/u, '') : glob;
+        glob = forceNoLeadingSlash ? glob.replace(/^\/+/u, '') : glob;
+        return /^(?:\/|\*\*\/)/u.test(glob) ? glob : path.relative(from, glob);
+    });
+};
+
+/**
+ * Converts an array of exclusions into rooted relative globs.
+ *
+ * @param   from    From path.
+ * @param   globs   Array of exclusion globs.
+ * @param   options Options related to relative globs.
+ *
+ * @returns         Exclusions as rooted relative globs.
+ */
+const asRootedRelativeGlobs = (from, globs, { forceRelative = false, forceNoLeadingSlash = false, headGreedy = true, tailGreedy = true } = {}) => {
+    return [...new Set(globs)].map((glob) => {
+        glob = glob.replace(/^(?:\*\*\/)+|(?:\/\*\*)+$/gu, '');
+        glob = headGreedy && !/\//u.test(glob) ? '**/' + glob : glob;
+        glob = tailGreedy ? glob + '/**' : glob;
+        glob = forceRelative ? glob.replace(/^(?:\*\*\/)+/u, '') : glob;
+        glob = forceNoLeadingSlash ? glob.replace(/^\/+/u, '') : glob;
+        return /^(?:\/|\*\*\/)/u.test(glob) ? glob : '/' + $str.lTrim(path.relative(from, glob), '/');
+    });
+};
+
+/**
  * Converts an array of exclusions into a braced glob.
  *
  * WARNING: This always drops existing negations & relative exclusions.
@@ -93,14 +101,14 @@ const asNegatedGlobs = (globs, { dropExistingNegations }) => {
  * @returns         Exclusions as braced glob; potentially dropping negations & relative exclusions.
  *
  * @note `dropExistingNegations` can *only* be set as true. There’s no other way to handle.
- * @note `dropExistingRelatives` can *only* be set as true. There’s no other way to handle.
+ * @note `maybeDropExistingRelatives` can *only* be set as true. There’s no other way to handle.
  */
-const asBracedGlob = (globs, { dropExistingNegations, dropExistingRelatives, headGreedy = true, tailGreedy = true }) => {
+const asBracedGlob = (globs, { dropExistingNegations, maybeDropExistingRelatives, headGreedy = true, tailGreedy = true }) => {
     if (true !== dropExistingNegations) {
         throw new Error('Missing option: `dropExistingNegations`; must be `true`.');
     }
-    if (true !== dropExistingRelatives) {
-        throw new Error('Missing option: `dropExistingRelatives`; must be `true`.');
+    if (true !== maybeDropExistingRelatives) {
+        throw new Error('Missing option: `maybeDropExistingRelatives`; must be `true`.');
     }
     let bracedGlobs = []; // Initialize.
 
@@ -108,7 +116,7 @@ const asBracedGlob = (globs, { dropExistingNegations, dropExistingRelatives, hea
         if (dropExistingNegations && /^!/u.test(glob)) return;
 
         glob = glob.replace(/^(?:\*\*\/)+|(?:\/\*\*)+$/gu, '');
-        if (dropExistingRelatives && /\//u.test(glob)) return;
+        if (maybeDropExistingRelatives && headGreedy && /^\//u.test(glob)) return;
 
         bracedGlobs.push(glob); // OK, we can add to braces below.
     });
@@ -183,9 +191,9 @@ export default {
      */
     asRegExps,
     asRegExpStrings,
+    asNegatedGlobs,
     asRelativeGlobs,
     asRootedRelativeGlobs,
-    asNegatedGlobs,
     asBracedGlob,
     asBoolProps,
 };

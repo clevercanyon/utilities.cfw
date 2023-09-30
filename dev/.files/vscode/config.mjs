@@ -119,8 +119,33 @@ export default async () => {
             ...exclusions.asBoolProps([...exclusions.toolingIgnores], { tailGreedy: false }),
             ...exclusions.asBoolProps([...exclusions.vcsIgnores], { tailGreedy: false }),
             ...exclusions.asBoolProps([...exclusions.osIgnores], { tailGreedy: false }),
+
+            // Plus these additional hidden files we control using ext: `PeterSchmalfeldt.explorer-exclude`.
+            // These work together with the additional setting below for the extension: `explorerExclude.backup`.
+
+            ...(!(await u.isPkgRepo('clevercanyon/skeleton'))
+                ? {
+                      ...exclusions.asBoolProps(
+                          exclusions.asRelativeGlobs(
+                              projDir,
+                              [
+                                  ...exclusions.dotIgnores, //
+                                  ...exclusions.configIgnores //
+                                      .filter((ignore) => !['**/package.json/**'].includes(ignore)),
+                                  ...exclusions.devDotFileIgnores,
+                                  ...exclusions.pkgIgnores,
+                                  ...exclusions.lockIgnores,
+                              ],
+                              { forceRelative: true, forceNoLeadingSlash: true },
+                          ),
+                          { headGreedy: false, tailGreedy: false },
+                      ),
+                      'LICENSE.txt': true,
+                  }
+                : {}),
         },
         'explorer.excludeGitIgnore': false, // No, only `files.exclude`.
+        'explorerExclude.backup': {}, // Reset each time we regenerate settings.
 
         'search.useIgnoreFiles': true,
         'search.useGlobalIgnoreFiles': false,
@@ -134,18 +159,11 @@ export default async () => {
                 ? {
                       ...exclusions.asBoolProps(
                           exclusions.asRootedRelativeGlobs(
-                              projDir, // Skeleton `/dev/.files`.
-                              [...exclusions.devDotFileIgnores],
-                              { forceRelative: true },
-                          ),
-                          { tailGreedy: false },
-                      ),
-                      ...exclusions.asBoolProps(
-                          exclusions.asRootedRelativeGlobs(
                               projDir,
                               [
                                   ...exclusions.dotIgnores, //
                                   ...exclusions.configIgnores,
+                                  ...exclusions.devDotFileIgnores,
                               ],
                               { forceRelative: true },
                           ),
@@ -186,8 +204,10 @@ export default async () => {
         // Comment Anchors uses minimatch, with `{ dot: false }`.
         'commentAnchors.workspace.excludeFiles': exclusions.asBracedGlob(
             [
-                ...(!(await u.isPkgRepo('clevercanyon/skeleton')) ? [...exclusions.devDotFileIgnores] : []),
-                ...exclusions.logIgnores, //
+                ...(!(await u.isPkgRepo('clevercanyon/skeleton')) //
+                    ? [...exclusions.devDotFileIgnores]
+                    : []),
+                ...exclusions.logIgnores,
                 ...exclusions.backupIgnores,
                 ...exclusions.patchIgnores,
                 ...exclusions.editorIgnores,
@@ -198,7 +218,7 @@ export default async () => {
                 ...exclusions.lockIgnores,
                 ...exclusions.distIgnores,
             ],
-            { dropExistingNegations: true, dropExistingRelatives: true },
+            { dropExistingNegations: true, maybeDropExistingRelatives: true },
         ),
         /**
          * Comment Anchors uses two things under the hood:

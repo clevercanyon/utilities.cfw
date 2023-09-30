@@ -11,6 +11,8 @@
  * @see https://github.com/clevercanyon/madrun
  */
 
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import url from 'node:url';
 import { $cmd } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
@@ -19,7 +21,17 @@ import events from './includes/events.mjs';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const nodeIncludeFile = path.resolve(__dirname, './includes/node.cjs');
+
+const projDir = path.resolve(__dirname, '../../..');
 const distDir = path.resolve(__dirname, '../../../dist');
+
+const osWranglerDir = path.resolve(os.homedir(), './.wrangler');
+const osWranglerSSLCertDir = path.resolve(osWranglerDir, './local-cert');
+const osWranglerSSLKeyFile = path.resolve(osWranglerSSLCertDir, './key.pem');
+const osWranglerSSLCertFile = path.resolve(osWranglerSSLCertDir, './cert.pem');
+
+const sslKeyFile = path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-key.pem');
+const sslCertFile = path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-crt.pem');
 
 const nodeEnvVars = { NODE_OPTIONS: $cmd.quote([`--require ${$cmd.esc(nodeIncludeFile)}`].join(' ')) };
 const cloudflareEnvVars = { CLOUDFLARE_API_TOKEN: process.env.USER_CLOUDFLARE_TOKEN || '' };
@@ -60,19 +72,19 @@ export default async () => {
         'dev': async ({ args }) => {
             return {
                 env: { ...nodeEnvVars },
-                cmds: [['npx', 'vite', 'dev', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+                cmds: [['npx', 'vite', 'dev', '{{@}}', ...(args.mode ? [] : ['--mode', 'dev'])]],
             };
         },
         'preview': async ({ args }) => {
             return {
                 env: { ...nodeEnvVars },
-                cmds: [['npx', 'vite', 'preview', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+                cmds: [['npx', 'vite', 'preview', '{{@}}', ...(args.mode ? [] : ['--mode', 'dev'])]],
             };
         },
         'build': async ({ args }) => {
             return {
                 env: { ...nodeEnvVars },
-                cmds: [['npx', 'vite', 'build', ...(args.mode ? [] : ['--mode', 'prod']), '{{@}}']],
+                cmds: [['npx', 'vite', 'build', '{{@}}', ...(args.mode ? [] : ['--mode', 'prod'])]],
             };
         },
 
@@ -88,31 +100,31 @@ export default async () => {
         'vitest': async ({ args }) => {
             return {
                 env: { ...nodeEnvVars },
-                cmds: [['npx', 'vitest', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+                cmds: [['npx', 'vitest', '{{@}}', ...(args.mode ? [] : ['--mode', 'dev'])]],
             };
         },
         'tests': async ({ args }) => {
             return {
                 env: { ...nodeEnvVars },
-                cmds: [['npx', 'vitest', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+                cmds: [['npx', 'vitest', '{{@}}', ...(args.mode ? [] : ['--mode', 'dev'])]],
             };
         },
         'tests:bench': async ({ args }) => {
             return {
                 env: { ...nodeEnvVars },
-                cmds: [['npx', 'vitest', 'bench', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+                cmds: [['npx', 'vitest', 'bench', '{{@}}', ...(args.mode ? [] : ['--mode', 'dev'])]],
             };
         },
         'tests:sandbox': async ({ args }) => {
             return {
                 env: { ...nodeEnvVars, VITEST_SANDBOX_ENABLE: 'true' },
-                cmds: [['npx', 'vitest', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+                cmds: [['npx', 'vitest', '{{@}}', ...(args.mode ? [] : ['--mode', 'dev'])]],
             };
         },
         'tests:examples': async ({ args }) => {
             return {
                 env: { ...nodeEnvVars, VITEST_EXAMPLES_ENABLE: 'true' },
-                cmds: [['npx', 'vitest', ...(args.mode ? [] : ['--mode', 'dev']), '{{@}}']],
+                cmds: [['npx', 'vitest', '{{@}}', ...(args.mode ? [] : ['--mode', 'dev'])]],
             };
         },
 
@@ -126,39 +138,53 @@ export default async () => {
             };
         },
         'pages': async ({ args }) => {
+            if (fs.existsSync(osWranglerDir)) {
+                // Ensure `~/.wrangler/local-cert` directory exists.
+                fs.mkdirSync(osWranglerSSLCertDir, { recursive: true, mode: 0o700 });
+
+                // Link our custom SSL key to that used by Wrangler.
+                fs.rmSync(osWranglerSSLKeyFile, { recursive: true, force: true });
+                fs.symlinkSync(sslKeyFile, osWranglerSSLKeyFile);
+
+                // Link our custom SSL certificate to that used by Wrangler.
+                fs.rmSync(osWranglerSSLCertFile, { recursive: true, force: true });
+                fs.symlinkSync(sslCertFile, osWranglerSSLCertFile);
+            }
             return {
+                opts: { cwd: distDir }, // See: <https://o5p.me/k9Fqml>.
                 env: { ...nodeEnvVars, ...cloudflareEnvVars },
                 cmds: [
                     [
                         'npx',
                         'wrangler',
                         'pages',
+                        '{{@}}',
 
                         // Default `project` command args.
-                        ...('project' === args._?.[1] && 'create' === args._?.[2] ? (args._?.[3] ? [] : [wranglerSettings.defaultProjectName]) : []),
-                        ...('project' === args._?.[1] && 'create' === args._?.[2] ? (args.productionBranch ? [] : ['--production-branch', 'production']) : []),
+                        ...('project' === args._?.[0] && 'create' === args._?.[1] ? (args._?.[2] ? [] : [wranglerSettings.defaultProjectName]) : []),
+                        ...('project' === args._?.[0] && 'create' === args._?.[1] ? (args.productionBranch ? [] : ['--production-branch', 'production']) : []),
 
                         // Default `dev` command args.
-                        ...('dev' === args._?.[1] ? (args._?.[2] ? [] : [distDir]) : []),
-                        ...('dev' === args._?.[1] ? (args.liveReload ? [] : ['--live-reload']) : []),
-                        ...('dev' === args._?.[1] ? (args.compatibilityDate ? [] : ['--compatibility-date', wranglerSettings.compatibilityDate]) : []),
-                        ...('dev' === args._?.[1]
+                        ...('dev' === args._?.[0] ? (args._?.[1] ? [] : [distDir]) : []),
+                        ...('dev' === args._?.[0] ? (args.ip ? [] : ['--ip', '0.0.0.0']) : []),
+                        ...('dev' === args._?.[0] ? (args.port ? [] : ['--port', '443']) : []),
+                        ...('dev' === args._?.[0] ? (args.localProtocol ? [] : ['--local-protocol', 'https']) : []),
+                        ...('dev' === args._?.[0] ? (args.liveReload ? [] : ['--live-reload']) : []),
+                        ...('dev' === args._?.[0] ? (args.compatibilityDate ? [] : ['--compatibility-date', wranglerSettings.compatibilityDate]) : []),
+                        ...('dev' === args._?.[0]
                             ? args.compatibilityFlag || args.compatibilityFlags
                                 ? [] // `--compatibility-flag` is an alias of `--compatibility-flags`.
                                 : wranglerSettings.compatibilityFlags.map((f) => ['--compatibility-flag', f]).flat()
                             : []),
 
                         // Default `deploy` command args.
-                        ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
-                        ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.branch ? [] : ['--branch', 'production']) : []),
+                        ...(['deploy', 'publish'].includes(args._?.[0]) ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
+                        ...(['deploy', 'publish'].includes(args._?.[0]) ? (args.branch ? [] : ['--branch', 'production']) : []),
 
                         // Default `deployment` command args.
-                        ...('deployment' === args._?.[1] && 'list' === args._?.[2] ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
-                        ...('deployment' === args._?.[1] && 'tail' === args._?.[2] ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
-                        ...('deployment' === args._?.[1] && 'tail' === args._?.[2] ? (args.environment ? [] : ['--environment', 'production']) : []),
-
-                        // User-provided args.
-                        '{{@}}',
+                        ...('deployment' === args._?.[0] && 'list' === args._?.[1] ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
+                        ...('deployment' === args._?.[0] && 'tail' === args._?.[1] ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
+                        ...('deployment' === args._?.[0] && 'tail' === args._?.[1] ? (args.environment ? [] : ['--environment', 'production']) : []),
                     ],
                 ],
             };

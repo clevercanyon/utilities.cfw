@@ -7,7 +7,7 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./settings.mjs`.
  *
- * Last generated using `./settings.mjs` Fri, Sep 29, 2023, 7:06:38 PM EDT.
+ * Last generated using `./settings.mjs` Sat, Sep 30, 2023, 9:22:13 AM EDT.
  */
 {
     "editor.formatOnType": false,
@@ -126,14 +126,31 @@
         "**/.Spotlight-V100": true,
         "**/.DocumentRevisions-V100": true,
         "**/Network Trash Folder": true,
-        "**/Temporary Items": true
+        "**/Temporary Items": true,
+        ".*": true,
+        "*.tsbuildinfo": true,
+        "*.config.*": true,
+        "wrangler.*": true,
+        "tsconfig.*": true,
+        "dev-types.d.ts": true,
+        "config.gypi": true,
+        "dev/.files": true,
+        ".yarn": true,
+        "vendor": true,
+        "node_modules": true,
+        "jspm_packages": true,
+        "bower_components": true,
+        "yarn.lock": true,
+        "composer.lock": true,
+        "package-lock.json": true,
+        "LICENSE.txt": true
     },
     "explorer.excludeGitIgnore": false,
+    "explorerExclude.backup": {},
     "search.useIgnoreFiles": true,
     "search.useGlobalIgnoreFiles": false,
     "search.useParentIgnoreFiles": false,
     "search.exclude": {
-        "/dev/.files": true,
         "/.*": true,
         "/*.tsbuildinfo": true,
         "/*.config.*": true,
@@ -142,6 +159,7 @@
         "/dev-types.d.ts": true,
         "/package.json": true,
         "/config.gypi": true,
+        "/dev/.files": true,
         "/LICENSE.txt": true,
         "**/yarn.lock": true,
         "**/composer.lock": true,

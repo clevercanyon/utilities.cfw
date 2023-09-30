@@ -22,12 +22,16 @@
 
 import path from 'node:path';
 import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $path, $url } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $obp, $path, $url } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import extensions from '../bin/includes/extensions.mjs';
+import u from '../bin/includes/utilities.mjs';
 import wranglerSettings from './settings.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
+
+const pkg = await u.pkg(); // `./package.json`.
+const appType = $obp.get(pkg, 'config.c10n.&.build.appType');
 
 /**
  * Defines Wrangler configuration.
@@ -47,115 +51,127 @@ export default async () => {
         compatibility_date: wranglerSettings.compatibilityDate,
         compatibility_flags: wranglerSettings.compatibilityFlags,
 
-        // Worker name & account ID.
+        // Worker account ID.
 
-        name: wranglerSettings.defaultWorkerName,
         account_id: wranglerSettings.defaultAccountId,
 
-        // Workers.dev configuration.
+        // The rest of these settings are applied conditionally.
 
-        workers_dev: false,
+        ...(['spa', 'mpa'].includes(appType)
+            ? {
+                  // N/A to Cloudflare Pages.
+                  // Cloudflare Pages does not use.
+              }
+            : {
+                  // Worker name.
 
-        // App main entry configuration.
+                  name: wranglerSettings.defaultWorkerName,
 
-        main: './' + path.relative(projDir, './dist/index.js'),
+                  // Workers.dev configuration.
 
-        // Bundling configuration; {@see <https://o5p.me/JRHxfC>}.
+                  workers_dev: false,
 
-        rules: [
-            {
-                type: 'ESModule',
-                globs: extensions.asNoBraceGlobstars([
-                    ...extensions.byDevGroup.sJavaScript, //
-                    ...extensions.byDevGroup.sJavaScriptReact,
+                  // App main entry configuration.
 
-                    ...extensions.byDevGroup.mJavaScript,
-                    ...extensions.byDevGroup.mJavaScriptReact,
-                ]),
-                fallthrough: false,
-            },
-            {
-                type: 'CommonJS',
-                globs: extensions.asNoBraceGlobstars([
-                    ...extensions.byDevGroup.cJavaScript, //
-                    ...extensions.byDevGroup.cJavaScriptReact,
-                ]),
-                fallthrough: false,
-            },
-            {
-                type: 'Text',
-                globs: extensions.asNoBraceGlobstars(
-                    [...extensions.byVSCodeLang.codeTextual].filter(
-                        (ext) =>
-                            ![
-                                ...extensions.byDevGroup.sJavaScript, //
-                                ...extensions.byDevGroup.sJavaScriptReact,
+                  main: './' + path.relative(projDir, './dist/index.js'),
 
-                                ...extensions.byDevGroup.mJavaScript,
-                                ...extensions.byDevGroup.mJavaScriptReact,
+                  // Bundling configuration; {@see <https://o5p.me/JRHxfC>}.
 
-                                ...extensions.byDevGroup.cJavaScript,
-                                ...extensions.byDevGroup.cJavaScriptReact,
+                  rules: [
+                      {
+                          type: 'ESModule',
+                          globs: extensions.asNoBraceGlobstars([
+                              ...extensions.byDevGroup.sJavaScript, //
+                              ...extensions.byDevGroup.sJavaScriptReact,
 
-                                ...extensions.byCanonical.wasm,
-                            ].includes(ext),
-                    ),
-                ),
-                fallthrough: false,
-            },
-            {
-                type: 'Data',
-                globs: extensions.asNoBraceGlobstars(
-                    [...extensions.byVSCodeLang.codeTextBinary].filter(
-                        (ext) =>
-                            ![
-                                ...extensions.byDevGroup.sJavaScript, //
-                                ...extensions.byDevGroup.sJavaScriptReact,
+                              ...extensions.byDevGroup.mJavaScript,
+                              ...extensions.byDevGroup.mJavaScriptReact,
+                          ]),
+                          fallthrough: false,
+                      },
+                      {
+                          type: 'CommonJS',
+                          globs: extensions.asNoBraceGlobstars([
+                              ...extensions.byDevGroup.cJavaScript, //
+                              ...extensions.byDevGroup.cJavaScriptReact,
+                          ]),
+                          fallthrough: false,
+                      },
+                      {
+                          type: 'Text',
+                          globs: extensions.asNoBraceGlobstars(
+                              [...extensions.byVSCodeLang.codeTextual].filter(
+                                  (ext) =>
+                                      ![
+                                          ...extensions.byDevGroup.sJavaScript, //
+                                          ...extensions.byDevGroup.sJavaScriptReact,
 
-                                ...extensions.byDevGroup.mJavaScript,
-                                ...extensions.byDevGroup.mJavaScriptReact,
+                                          ...extensions.byDevGroup.mJavaScript,
+                                          ...extensions.byDevGroup.mJavaScriptReact,
 
-                                ...extensions.byDevGroup.cJavaScript,
-                                ...extensions.byDevGroup.cJavaScriptReact,
+                                          ...extensions.byDevGroup.cJavaScript,
+                                          ...extensions.byDevGroup.cJavaScriptReact,
 
-                                ...extensions.byCanonical.wasm,
-                            ].includes(ext),
-                    ),
-                ),
-                fallthrough: false,
-            },
-            { type: 'CompiledWasm', globs: extensions.asNoBraceGlobstars([...extensions.byCanonical.wasm]), fallthrough: false },
-        ],
-        // Custom build configuration.
+                                          ...extensions.byCanonical.wasm,
+                                      ].includes(ext),
+                              ),
+                          ),
+                          fallthrough: false,
+                      },
+                      {
+                          type: 'Data',
+                          globs: extensions.asNoBraceGlobstars(
+                              [...extensions.byVSCodeLang.codeTextBinary].filter(
+                                  (ext) =>
+                                      ![
+                                          ...extensions.byDevGroup.sJavaScript, //
+                                          ...extensions.byDevGroup.sJavaScriptReact,
 
-        build: {
-            cwd: './' + path.relative(projDir, './'),
-            watch_dir: './' + path.relative(projDir, './src'),
-            command: 'npx @clevercanyon/madrun build --mode=prod',
-        },
-        // Worker sites; i.e., bucket configuration.
+                                          ...extensions.byDevGroup.mJavaScript,
+                                          ...extensions.byDevGroup.mJavaScriptReact,
 
-        site: {
-            bucket: './' + path.relative(projDir, './dist/assets'),
-            exclude: [
-                ...$path.defaultNPMIgnores,
-                '/a16s', // A16s (top-level only).
-            ],
-        },
-        // Worker route configuration.
+                                          ...extensions.byDevGroup.cJavaScript,
+                                          ...extensions.byDevGroup.cJavaScriptReact,
 
-        route: {
-            zone_name: wranglerSettings.defaultZoneName,
-            pattern: wranglerSettings.defaultZoneDomain + '/' + $url.encode(wranglerSettings.defaultWorkerName) + '/*',
-        },
-        // Other environments used by this worker.
+                                          ...extensions.byCanonical.wasm,
+                                      ].includes(ext),
+                              ),
+                          ),
+                          fallthrough: false,
+                      },
+                      { type: 'CompiledWasm', globs: extensions.asNoBraceGlobstars([...extensions.byCanonical.wasm]), fallthrough: false },
+                  ],
+                  // Custom build configuration.
 
-        env: {
-            dev: {
-                workers_dev: false,
-                build: { command: 'npx @clevercanyon/madrun build --mode=dev' },
-            },
-        },
+                  build: {
+                      cwd: './' + path.relative(projDir, './'),
+                      watch_dir: './' + path.relative(projDir, './src'),
+                      command: 'npx @clevercanyon/madrun build --mode=prod',
+                  },
+                  // Worker sites; i.e., bucket configuration.
+
+                  site: {
+                      bucket: './' + path.relative(projDir, './dist/assets'),
+                      exclude: [
+                          ...$path.defaultNPMIgnores,
+                          '/a16s', // A16s (top-level only).
+                      ],
+                  },
+                  // Worker route configuration.
+
+                  route: {
+                      zone_name: wranglerSettings.defaultZoneName,
+                      pattern: wranglerSettings.defaultZoneDomain + '/' + $url.encode(wranglerSettings.defaultWorkerName) + '/*',
+                  },
+                  // Other environments used by this worker.
+
+                  env: {
+                      dev: {
+                          workers_dev: false,
+                          build: { command: 'npx @clevercanyon/madrun build --mode=dev' },
+                      },
+                  },
+              }),
     };
 
     /**
