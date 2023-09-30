@@ -27,7 +27,7 @@ export default async ({ projDir }) => {
 
         * text=auto
     `);
-    for (const [groupName, group] of Object.entries($mime.types)) {
+    for (const [groupName, group] of Object.entries($mime.types())) {
         gitAttributesFileContentsTextBinary += '\n\n# ' + groupName + '\n';
 
         for (const [subgroupExts, subgroup] of Object.entries(group)) {

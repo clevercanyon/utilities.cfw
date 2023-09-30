@@ -23,7 +23,7 @@ export default async ({ projDir }) => {
     let gitIgnoreFileContentsIgnores = $str.dedent(`
         # Last generated ${$time.i18n()}.
 	`);
-    for (const [groupName, group] of Object.entries($path.defaultGitIgnoresByGroup)) {
+    for (const [groupName, group] of Object.entries($path.defaultGitIgnoresByGroup())) {
         gitIgnoreFileContentsIgnores += '\n\n# ' + groupName;
 
         if (!$is.array(group)) {

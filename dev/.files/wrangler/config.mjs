@@ -153,7 +153,7 @@ export default async () => {
                   site: {
                       bucket: './' + path.relative(projDir, './dist/assets'),
                       exclude: [
-                          ...$path.defaultNPMIgnores,
+                          ...$path.defaultNPMIgnores(),
                           '/a16s', // A16s (top-level only).
                       ],
                   },

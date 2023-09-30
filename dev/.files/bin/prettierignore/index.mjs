@@ -23,7 +23,7 @@ export default async ({ projDir }) => {
     let prettierIgnoreFileContentsIgnores = $str.dedent(`
         # Last generated ${$time.i18n()}.
     `);
-    for (const [groupName, group] of Object.entries($path.defaultGitIgnoresByGroup)) {
+    for (const [groupName, group] of Object.entries($path.defaultGitIgnoresByGroup())) {
         if (!['Dist', 'Packages', 'Version Control', 'Operating Systems'].includes(groupName)) {
             continue; // Not applicable; we only include select groups.
         }
