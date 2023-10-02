@@ -56,7 +56,6 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
     const { env, ctx, routes } = ifeData;
 
     $env.capture('@global', env); // Captures environment vars.
-    const appBasePath = $env.get('APP_BASE_PATH', { type: 'string', default: '' });
 
     try {
         request = $http.prepareRequest(request, {}) as $type.cf.Request;
@@ -65,7 +64,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         if (
             $http.requestPathIsStatic(request, url) && //
             $env.get('__STATIC_CONTENT' /* Worker site? */) &&
-            $str.matches(url.pathname, appBasePath + '/assets/**')
+            $str.matches(url.pathname, $url.pathFromAppBase('/assets/**'))
         ) {
             return handleFetchCache(handleFetchStaticAssets, feData);
         }
@@ -121,10 +120,9 @@ export const handleFetchCache = async (route: Route, feData: FetchEventData): Pr
  */
 export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cf.Response> => {
     const { request, routes, url } = feData;
-    const appBasePath = $env.get('APP_BASE_PATH', { type: 'string', default: '' });
 
     for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
-        if ($str.matches(url.pathname, appBasePath + '/' + routeSubpathGlob)) {
+        if ($str.matches(url.pathname, $url.pathFromAppBase('/' + routeSubpathGlob))) {
             return routeSubpathHandler(feData);
         }
     }
@@ -140,7 +138,6 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type
  */
 export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$type.cf.Response> => {
     const { request, ctx } = feData;
-    const appBasePath = $env.get('APP_BASE_PATH', { type: 'string', default: '' });
 
     try {
         const kvAssetEventData = {
@@ -162,7 +159,7 @@ export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$
             mapRequestToAsset: (request: Request): Request => {
                 const url = new URL(request.url); // URL is rewritten below.
 
-                const regExp = new RegExp('^' + $str.escRegExp(appBasePath + '/assets/'), 'u');
+                const regExp = new RegExp('^' + $str.escRegExp($url.pathFromAppBase('/assets/')), 'u');
                 url.pathname = url.pathname.replace(regExp, '/'); // Removes `/assets` prefix.
 
                 return cfKVA.mapRequestToAsset(new Request(url, request));
