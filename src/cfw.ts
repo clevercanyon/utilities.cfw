@@ -2,7 +2,7 @@
  * Utility class.
  */
 
-import './resources/init-env.ts';
+import './resources/init.ts';
 
 import type { $type } from '@clevercanyon/utilities';
 import { $env, $http, $json, $str, $url } from '@clevercanyon/utilities';

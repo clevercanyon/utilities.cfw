@@ -55,7 +55,7 @@ class Install {
          * Deletes old files so a new install can begin.
          */
 
-        u.log($chalk.gray('Deleting any existing `.env.me`, `.env.vault` files.'));
+        u.log($chalk.gray('Deleting any existing `./.env.me`, `./.env.vault` files.'));
         if (!this.args.dryRun) {
             await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
             await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
@@ -252,60 +252,6 @@ class Pull {
 }
 
 /**
- * Compile command.
- */
-class Compile {
-    /**
-     * Constructor.
-     */
-    constructor(args) {
-        this.args = args;
-    }
-
-    /**
-     * Runs CMD.
-     */
-    async run() {
-        await this.compile();
-
-        if (this.args.dryRun) {
-            u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
-        }
-    }
-
-    /**
-     * Runs compile.
-     */
-    async compile() {
-        /**
-         * Displays preamble.
-         */
-
-        u.log($chalk.green('Compiling all Dotenv Vault envs.'));
-
-        /**
-         * Checks if project has a Dotenv Vault.
-         */
-
-        if (!(await u.isEnvsVault())) {
-            throw new Error('There are no Dotenv Vault envs to compile.');
-        }
-
-        /**
-         * Compiles all Dotenv Vault envs.
-         */
-
-        await u.envsCompile({ dryRun: this.args.dryRun });
-
-        /**
-         * Signals completion with success.
-         */
-
-        u.log(await u.finaleBox('Success', 'Dotenv Vault compilation complete.'));
-    }
-}
-
-/**
  * Keys command.
  */
 class Keys {
@@ -489,7 +435,7 @@ await (async () => {
                             requiresArg: false,
                             demandOption: false,
                             default: false,
-                            description: 'Perform a new (fresh) install?',
+                            description: 'Perform a new install?',
                         },
                         open: {
                             type: 'boolean',
@@ -497,7 +443,7 @@ await (async () => {
                             demandOption: false,
                             default: false,
                             description: // prettier-ignore
-								'When not `--new`, open the Dotenv Vault in a browser tab upon logging in?' +
+								'When not `--new`, open Dotenv Vault in a browser tab upon logging in?' +
 								' If not set explicitly, only opens Dotenv Vault for login, not for editing.' +
 								' Note: This option has no effect when `--new` is given.',
                         },
@@ -581,31 +527,6 @@ await (async () => {
             },
         })
         .command({
-            command: 'compile',
-            describe: 'Compiles all envs into `./dev/.envs/comp/.env.[env].json` JSON files.',
-            builder: (yargs) => {
-                return yargs
-                    .options({
-                        dryRun: {
-                            type: 'boolean',
-                            requiresArg: false,
-                            demandOption: false,
-                            default: false,
-                            description: 'Dry run?',
-                        },
-                    })
-                    .check(async (/* args */) => {
-                        if (!(await u.isInteractive())) {
-                            throw new Error('This *must* be performed interactively.');
-                        }
-                        return true;
-                    });
-            },
-            handler: async (args) => {
-                await new Compile(args).run();
-            },
-        })
-        .command({
             command: 'keys',
             describe: 'Retrieves Dotenv Vault decryption keys for all envs.',
             builder: (yargs) => {
@@ -632,7 +553,7 @@ await (async () => {
         })
         .command({
             command: 'encrypt',
-            describe: 'Encrypts all envs into `.env.vault`; powered by Dotenv Vault.',
+            describe: 'Encrypts all envs into `./.env.vault`, powered by Dotenv Vault.',
             builder: (yargs) => {
                 return yargs
                     .options({
@@ -657,7 +578,7 @@ await (async () => {
         })
         .command({
             command: 'decrypt',
-            describe: 'Decrypts `.env.vault` env(s) for the given key(s); powered by Dotenv Vault.',
+            describe: 'Decrypts `./.env.vault` envs for the given key(s), powered by Dotenv Vault.',
             builder: (yargs) => {
                 return yargs
                     .options({

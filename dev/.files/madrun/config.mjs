@@ -155,13 +155,17 @@ export default async () => {
 
                         // Default `project` command args.
                         ...('project' === args._?.[0] && 'create' === args._?.[1] ? (args._?.[2] ? [] : [wranglerSettings.defaultProjectName]) : []),
-                        ...('project' === args._?.[0] && 'create' === args._?.[1] ? (args.productionBranch ? [] : ['--production-branch', 'production']) : []),
+                        ...('project' === args._?.[0] && 'create' === args._?.[1]
+                            ? args.productionBranch
+                                ? [] // This is the production branch on the Cloudflare side.
+                                : ['--production-branch', wranglerSettings.defaultProductionBranch]
+                            : []),
 
                         // Default `dev` command args.
                         ...('dev' === args._?.[0] ? (args._?.[1] ? [] : [distDir]) : []),
-                        ...('dev' === args._?.[0] ? (args.ip ? [] : ['--ip', '0.0.0.0']) : []),
-                        ...('dev' === args._?.[0] ? (args.port ? [] : ['--port', '443']) : []),
-                        ...('dev' === args._?.[0] ? (args.localProtocol ? [] : ['--local-protocol', 'https']) : []),
+                        ...('dev' === args._?.[0] ? (args.ip ? [] : ['--ip', wranglerSettings.defaultLocalIP]) : []),
+                        ...('dev' === args._?.[0] ? (args.port ? [] : ['--port', wranglerSettings.defaultLocalPort]) : []),
+                        ...('dev' === args._?.[0] ? (args.localProtocol ? [] : ['--local-protocol', wranglerSettings.defaultLocalProtocol]) : []),
                         ...('dev' === args._?.[0] ? (args.compatibilityDate ? [] : ['--compatibility-date', wranglerSettings.compatibilityDate]) : []),
                         ...('dev' === args._?.[0]
                             ? args.compatibilityFlag || args.compatibilityFlags
@@ -171,12 +175,12 @@ export default async () => {
 
                         // Default `deploy` command args.
                         ...(['deploy', 'publish'].includes(args._?.[0]) ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
-                        ...(['deploy', 'publish'].includes(args._?.[0]) ? (args.branch ? [] : ['--branch', 'production']) : []),
+                        ...(['deploy', 'publish'].includes(args._?.[0]) ? (args.branch ? [] : ['--branch', wranglerSettings.defaultProductionBranch]) : []),
 
                         // Default `deployment` command args.
                         ...('deployment' === args._?.[0] && 'list' === args._?.[1] ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
                         ...('deployment' === args._?.[0] && 'tail' === args._?.[1] ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
-                        ...('deployment' === args._?.[0] && 'tail' === args._?.[1] ? (args.environment ? [] : ['--environment', 'production']) : []),
+                        ...('deployment' === args._?.[0] && 'tail' === args._?.[1] ? (args.environment ? [] : ['--environment', wranglerSettings.defaultEnvironment]) : []),
                     ],
                 ],
             };

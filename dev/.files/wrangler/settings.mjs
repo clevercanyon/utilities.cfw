@@ -12,26 +12,38 @@
 import os from 'node:os';
 import path from 'node:path';
 import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $str } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $app, $brand } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import u from '../bin/includes/utilities.mjs';
 
-const pkg = await u.pkg(); // From utilities.
 const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
+
+const pkg = await u.pkg();
+const pkgSlug = $app.pkgSlug(pkg.name);
+const hop = $brand.get('@clevercanyon/hop.gdn');
 
 /**
  * Defines Wrangler settings.
  */
 export default {
-    compatibilityDate: '2023-08-15',
-    compatibilityFlags: [], // None at this time.
-
-    defaultZoneName: 'hop.gdn',
-    defaultZoneDomain: 'workers.hop.gdn',
+    // This is Clever Canyon’s account ID. ↓
     defaultAccountId: 'f1176464a976947aa5665d989814a4b1',
 
-    defaultWorkerName: $str.kebabCase(path.basename(pkg.name || ''), { asciiOnly: true }),
-    defaultProjectName: $str.kebabCase(path.basename(pkg.name || ''), { asciiOnly: true }),
+    compatibilityDate: '2023-08-15',
+    compatibilityFlags: [], // None, for now.
+
+    defaultLocalIP: '0.0.0.0',
+    defaultLocalProtocol: 'https',
+    defaultLocalPort: '443',
+
+    defaultZoneName: hop.hostname,
+    defaultZoneDomain: 'workers.' + hop.hostname,
+
+    defaultEnvironment: 'production',
+    defaultProductionBranch: 'production',
+
+    defaultWorkerName: pkgSlug,
+    defaultProjectName: pkgSlug,
 
     osDir: path.resolve(os.homedir(), './.wrangler'),
     projDir: path.resolve(projDir, './.wrangler'),

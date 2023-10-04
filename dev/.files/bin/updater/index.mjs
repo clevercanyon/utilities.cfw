@@ -70,7 +70,7 @@ export default async ({ projDir }) => {
      *
      * @param   {string}  relPath Relative dotfile path.
      *
-     * @returns {boolean}         True if relative path is locked by `package.json`.
+     * @returns {boolean}         True if relative path is locked by `./package.json`.
      */
     const isLocked = async (relPath) => {
         // Compares absolute paths to each other.
@@ -85,6 +85,22 @@ export default async ({ projDir }) => {
     };
 
     /**
+     * Deletes outdated dotfiles no longer in use.
+     */
+    for (const relPath of [
+        './dev/.envs/.~comp', //
+        './.vscode/mdx-layout.mjsx',
+        './.madrun.mjs',
+        './ts-types.d.ts',
+        './tsconfig.d.ts',
+    ]) {
+        if (await isLocked(relPath)) {
+            continue; // Locked 🔒.
+        }
+        await fsp.rm(path.resolve(projDir, relPath), { recursive: true, force: true });
+    }
+
+    /**
      * Updates immutable directories.
      */
     for (const relPath of ['./dev/.files']) {
@@ -95,16 +111,6 @@ export default async ({ projDir }) => {
     await fsp.chmod(path.resolve(projDir, './dev/.files/bin/envs.mjs'), 0o700);
     await fsp.chmod(path.resolve(projDir, './dev/.files/bin/install.mjs'), 0o700);
     await fsp.chmod(path.resolve(projDir, './dev/.files/bin/update.mjs'), 0o700);
-
-    /**
-     * Deletes outdated dotfiles no longer in use.
-     */
-    for (const relPath of ['./.vscode/mdx-layout.mjsx', './.madrun.mjs', './ts-types.d.ts', './tsconfig.d.ts']) {
-        if (await isLocked(relPath)) {
-            continue; // Locked 🔒.
-        }
-        await fsp.rm(path.resolve(projDir, relPath), { recursive: true, force: true });
-    }
 
     /**
      * Updates semi-immutable dotfiles.

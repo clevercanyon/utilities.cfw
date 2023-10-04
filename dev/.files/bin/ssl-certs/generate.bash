@@ -47,35 +47,39 @@ subject=$(
 	/emailAddress=admin@clevercanyon.com
 	ooo
 )
-# Browsers don’t acknowledge `*.tld`, because that would effectively
-# cover everything on an entire TLD. That’s why we also have `*.x.[tld]`.
-# See: <https://o5p.me/YPcyex> for further details.
+# Aside from `*.local`, `*.localhost`, browsers don’t acknowledge `*.tld`, because that would effectively cover
+# everything on an entire TLD. That’s why we also have `*.x.[tld]`. See: <https://o5p.me/YPcyex> for further details.
 subject_alt_names=$(
     tr -d '\n' <<- 'ooo'
 	IP:::,
 	IP:0.0.0.0,
+
 	IP:::1,
 	IP:127.0.0.1,
-	DNS:mac,
+
 	DNS:*.mac,
 	DNS:*.x.mac,
-	DNS:loc,
+
 	DNS:*.loc,
 	DNS:*.x.loc,
-	DNS:dkr,
+
 	DNS:*.dkr,
 	DNS:*.x.dkr,
-	DNS:vm,
+
 	DNS:*.vm,
 	DNS:*.x.vm,
+
 	DNS:local,
 	DNS:*.local,
 	DNS:*.x.local,
+
 	DNS:localhost,
 	DNS:*.localhost,
 	DNS:*.x.localhost,
+
 	DNS:clevercanyon.com,
 	DNS:*.clevercanyon.com,
+
 	DNS:hop.gdn,
 	DNS:*.hop.gdn
 	ooo

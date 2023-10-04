@@ -9,12 +9,14 @@
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  */
 
+import { $preact } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+
 /**
  * Defines Tailwind settings.
  */
 export default {
-    classFunctions: ['$preact.classes', 'classnames'],
+    classFunctions: ['$preact.classes'],
+    classAttributes: $preact.classPropVariants,
     classAttributesRegExpStr: '^class(?:es|Names?)?$',
     classAttributesRegExp: new RegExp('^class(?:es|Names?)?$', 'u'),
-    classAttributes: ['class', 'classes', 'className', 'classNames'],
 };

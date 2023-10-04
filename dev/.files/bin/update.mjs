@@ -593,17 +593,13 @@ class Project {
         }
 
         /**
-         * Pushes Dotenv Vault envs; else recompiles only.
+         * Pushes Dotenv Vault envs and syncs repo environments.
          */
 
         if (this.args.repos && (await u.isEnvsVault())) {
             u.log($chalk.green('Repos will update, so pushing all Dotenv Vault envs.'));
             // Also syncs GitHub repo environments using org-wide standards.
             await u.envsPush({ dryRun: this.args.dryRun });
-            //
-        } else if (await u.isEnvsVault()) {
-            u.log($chalk.green('Recompiling all Dotenv Vault `.env*` files.'));
-            await u.envsCompile({ dryRun: this.args.dryRun });
         }
 
         /**

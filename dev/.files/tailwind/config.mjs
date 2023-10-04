@@ -45,10 +45,6 @@ export default /* not async compatible */ () => {
      * Composition.
      */
     return {
-        plugins: [
-            pluginTypography({ className: 'prose' }),
-            pluginForms({ strategy: 'class' }), // e.g., `form-{x}`.
-        ],
         theme: {
             fontFamily: {
                 sans: [
@@ -69,28 +65,26 @@ export default /* not async compatible */ () => {
                 ],
             },
             screens: {
-                'sm': { min: '1px' },
-                'md': { min: '480px' },
-                'lg': { min: '960px' },
-                'xl': { min: '1280px' },
-                '2xl': { min: '1440px' },
-                '3xl': { min: '2560px' },
-
                 'phone': { min: '1px' },
                 'tablet': { min: '480px' },
                 'notebook': { min: '960px' },
                 'laptop': { min: '1280px' },
                 'desktop': { min: '1440px' },
-                'widescreen': { min: '2560px' },
+                'widescreen': { 'raw': '(min-width: 2560px)' },
 
                 'phone-only': { min: '1px', max: '479px' },
                 'tablet-only': { min: '480px', max: '959px' },
                 'notebook-only': { min: '960px', max: '1279px' },
                 'laptop-only': { min: '1280px', max: '1439px' },
                 'desktop-only': { min: '1440px', max: '2559px' },
-                'widescreen-only': { min: '2560px' /* ... infinity */ },
+                'widescreen-only': { 'raw': '(min-width: 2560px)' },
             },
         },
+        darkMode: 'class', // {@see https://tailwindcss.com/docs/dark-mode}.
+        plugins: [
+            pluginTypography({ className: 'prose' }),
+            pluginForms({ strategy: 'class' }), // e.g., `form-{x}`.
+        ],
         content: [
             path.resolve(projDir, './src') + '/**/*.' + extensions.asBracedGlob([...extensions.tailwindContent]),
 

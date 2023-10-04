@@ -114,31 +114,20 @@ export default class u {
      * Pkg utilities.
      */
 
-    static async pkg() {
-        if (!fs.existsSync(pkgFile)) {
-            throw new Error('u.pkg: Missing `./package.json`.');
+    static async pkg(file = pkgFile) {
+        if (!fs.existsSync(file)) {
+            throw new Error('u.pkg: Missing `' + file + '`.');
         }
-        const pkg = $json.parse(fs.readFileSync(pkgFile).toString());
+        const pkg = $json.parse(fs.readFileSync(file).toString());
 
         if (!$is.plainObject(pkg)) {
-            throw new Error('u.pkg: Unable to parse `./package.json`.');
+            throw new Error('u.pkg: Unable to parse `' + file + '`.');
         }
         return pkg; // JSON object data.
     }
 
     static async depPkg(dependency) {
-        // This is a dependency-specific package file.
-        const pkgFile = path.resolve(projDir, './node_modules', dependency, './package.json');
-
-        if (!fs.existsSync(pkgFile)) {
-            return undefined; // Not possible.
-        }
-        const pkg = $json.parse(fs.readFileSync(pkgFile).toString());
-
-        if (!$is.plainObject(pkg)) {
-            throw new Error('u.pkg: Unable to parse `' + pkgFile + '`.');
-        }
-        return pkg; // JSON object data.
+        return u.pkg(path.resolve(projDir, './node_modules', dependency, './package.json'));
     }
 
     static async isPkgRepo(ownerRepo) {
@@ -958,8 +947,6 @@ export default class u {
                 await u.spawn('npx', ['dotenv-vault', 'push', envName, envFile, '--yes']);
             }
         }
-        await u.envsCompile({ dryRun: opts.dryRun });
-
         u.log($chalk.gray('Encrypting all envs using latest Dotenv Vault data.'));
         if (!opts.dryRun) {
             await u.spawn('npx', ['dotenv-vault', 'build', '--yes']);
@@ -977,30 +964,7 @@ export default class u {
             if (!opts.dryRun) {
                 await fsp.mkdir(path.dirname(envFile), { recursive: true });
                 await u.spawn('npx', ['dotenv-vault', 'pull', envName, envFile, '--yes']);
-            }
-            // log($chalk.gray('Deleting previous file for `' + envName + '` env.'));
-            if (!opts.dryRun) {
                 await fsp.rm(envFile + '.previous', { force: true });
-            }
-        }
-        await u.envsCompile({ dryRun: opts.dryRun });
-    }
-
-    static async envsCompile(opts = { dryRun: false }) {
-        const envFiles = await u.envFiles();
-        const mainEnv = $dotenv.parse(envFiles.main);
-
-        u.log($chalk.gray('Compiling all Dotenv Vault envs; i.e., generating JSON files.'));
-        if (!opts.dryRun) {
-            for (const [envName, envFile] of Object.entries($obj.omit(envFiles, ['main']))) {
-                const thisEnv = $dotenv.parse(envFile);
-                const env = $obj.mergeDeep({}, mainEnv, thisEnv);
-
-                const compDir = path.resolve(path.dirname(envFile), './.~comp');
-                const envJSONFile = path.resolve(compDir, path.basename(envFile) + '.json');
-
-                await fsp.mkdir(compDir, { recursive: true });
-                await fsp.writeFile(envJSONFile, await u._envToJSON(envName, env));
             }
         }
     }
@@ -1031,15 +995,15 @@ export default class u {
             }
             u.log($chalk.gray('Decrypting `' + envName + '` env using Dotenv Vault key.'));
             if (!opts.dryRun) {
-                const origDotenvKey = process.env.DOTENV_KEY || '';
-                process.env.DOTENV_KEY = key; // For `dotEnvVaultCore`.
-
-                // Note: `path` leads to `.env.vault`. See: <https://o5p.me/MqXJaf>.
-                const { parsed: env } = $dotenv.vault.config({ path: path.resolve(projDir, './.env' /* .vault */) });
-
+                // Note: this doesn’t leak our environment variables, but it does leak all of the
+                // variables in `./.env.vault`, because of the way it is processed internally by dotenv.
+                // Issue opened at dotenv regarding the problem; {@see https://o5p.me/DBbi7j}.
+                const env = $dotenv.$._parseVault({
+                    DOTENV_KEY: key, // Pass explicitly.
+                    path: path.resolve(projDir, './.env.vault'),
+                });
                 await fsp.mkdir(path.dirname(envFile), { recursive: true });
-                await fsp.writeFile(envFile, await u._envToText(envName, env));
-                process.env.DOTENV_KEY = origDotenvKey;
+                await fsp.writeFile(envFile, await u._envToProps(envName, env));
             }
         }
     }
@@ -1083,6 +1047,15 @@ export default class u {
         }
     }
 
+    static async loadEnv({ mode }) {
+        const envFiles = await u.envFiles();
+
+        if (!mode || 'main' === mode || !envFiles[mode]) {
+            throw new Error('u.loadEnv: Invalid mode: `' + mode + '`.');
+        }
+        return $dotenv.parseExpand([envFiles.main, envFiles[mode]]);
+    }
+
     static async _envsExtractKeys() {
         const keys = {}; // Initialize.
         const envFiles = await u.envFiles();
@@ -1091,9 +1064,9 @@ export default class u {
         const output = await u.spawn('npx', ['dotenv-vault', 'keys', '--yes'], { quiet: true });
 
         let _m = null; // Initialize.
-        const regexp = /\bdotenv:\/\/:key_.+?\?environment=([^\s]+)/giu;
+        const regExp = /\bdotenv:\/\/:key_.+?\?environment=([^\s]+)/giu;
 
-        while ((_m = regexp.exec(output)) !== null) {
+        while ((_m = regExp.exec(output)) !== null) {
             keys[_m[1]] = _m[0];
         }
         if (Object.keys(keys).length !== Object.keys(envFiles).length) {
@@ -1111,16 +1084,22 @@ export default class u {
         return $json.stringify(json, { pretty: true });
     }
 
-    static async _envToText(envName, env) {
-        let text = '# ' + envName + '\n';
+    static async _envToProps(envName, env) {
+        let props = '# ' + envName + '\n';
 
         for (let [name, value] of Object.entries(env)) {
             value = String(value);
             value = value.replace(/\r\n?/gu, '\n');
             value = value.replace(/\n/gu, '\\n');
-            text += name + '="' + value.replace(/"/gu, '\\"') + '"\n';
+
+            if (value.includes('\\n')) {
+                // Dotenv evaulates newlines only if using double quotes.
+                props += name + '=' + $str.quote(value, { type: 'double' }) + '\n';
+            } else {
+                props += name + '=' + $str.quote(value) + '\n'; // Single quotes.
+            }
         }
-        return text;
+        return props;
     }
 
     /*

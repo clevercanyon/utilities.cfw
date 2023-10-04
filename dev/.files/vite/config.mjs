@@ -67,9 +67,8 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
     /**
      * Environment-related vars.
      */
-    let appEnvPrefixes = ['APP_']; // Part of app.
-    if (isSSRBuild) appEnvPrefixes.push('SSR_APP_');
-
+    let appEnvPrefixes = ['APP_']; // Added to all builds.
+    if (isSSRBuild) appEnvPrefixes.push('SSR_APP_'); // Added to SSR builds.
     const env = loadEnv(mode, envsDir, appEnvPrefixes);
 
     const staticDefs = {
