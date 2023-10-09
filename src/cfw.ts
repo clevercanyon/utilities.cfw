@@ -64,7 +64,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         if (
             $http.requestPathIsStatic(request, url) && //
             $env.get('__STATIC_CONTENT' /* Worker site? */) &&
-            $str.matches(url.pathname, $url.pathFromAppBase('/assets/**'))
+            $str.matches(url.pathname, $url.pathFromAppBase('./') + 'assets/**')
         ) {
             return handleFetchCache(handleFetchStaticAssets, feData);
         }
@@ -122,7 +122,7 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type
     const { request, routes, url } = feData;
 
     for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
-        if ($str.matches(url.pathname, $url.pathFromAppBase('/' + routeSubpathGlob))) {
+        if ($str.matches(url.pathname, $url.pathFromAppBase('./') + routeSubpathGlob)) {
             return routeSubpathHandler(feData);
         }
     }
@@ -159,7 +159,7 @@ export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$
             mapRequestToAsset: (request: Request): Request => {
                 const url = new URL(request.url); // URL is rewritten below.
 
-                const regExp = new RegExp('^' + $str.escRegExp($url.pathFromAppBase('/assets/')), 'u');
+                const regExp = new RegExp('^' + $str.escRegExp($url.pathFromAppBase('./assets/')), 'u');
                 url.pathname = url.pathname.replace(regExp, '/'); // Removes `/assets` prefix.
 
                 return cfKVA.mapRequestToAsset(new Request(url, request));

@@ -65,22 +65,30 @@ export default /* not async compatible */ () => {
                 ],
             },
             screens: {
-                'phone': { min: '1px' },
-                'tablet': { min: '480px' },
-                'notebook': { min: '960px' },
-                'laptop': { min: '1280px' },
-                'desktop': { min: '1440px' },
-                'widescreen': { 'raw': '(min-width: 2560px)' },
+                // Greater than or equal to.
+                'gte-phone': { min: '1px' },
+                'gte-tablet': { min: '480px' },
+                'gte-notebook': { min: '960px' },
+                'gte-laptop': { min: '1280px' },
+                'gte-desktop': { min: '1440px' },
 
-                'phone-only': { min: '1px', max: '479px' },
-                'tablet-only': { min: '480px', max: '959px' },
-                'notebook-only': { min: '960px', max: '1279px' },
-                'laptop-only': { min: '1280px', max: '1439px' },
-                'desktop-only': { min: '1440px', max: '2559px' },
-                'widescreen-only': { 'raw': '(min-width: 2560px)' },
+                // Device-only specific breakpoints.
+                'phone': { min: '1px', max: '479px' },
+                'tablet': { min: '480px', max: '959px' },
+                'notebook': { min: '960px', max: '1279px' },
+                'laptop': { min: '1280px', max: '1439px' },
+                'desktop': { min: '1440px', max: '2559px' },
+
+                // `raw` to avoid these being a max-width for containers.
+                // If something should adapt to widescreen, don’t put in a container.
+                'gte-widescreen': { 'raw': '(min-width: 2560px)' },
+                'widescreen': { 'raw': '(min-width: 2560px)' },
             },
+            container: { center: true }, // No need for `mx-auto` on each container.
         },
+        // We want to apply a `dark` class to enable dark mode.
         darkMode: 'class', // {@see https://tailwindcss.com/docs/dark-mode}.
+
         plugins: [
             pluginTypography({ className: 'prose' }),
             pluginForms({ strategy: 'class' }), // e.g., `form-{x}`.

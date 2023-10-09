@@ -220,15 +220,15 @@ export default async ({ projDir }) => {
             if ('./package.json' === relPath) {
                 if (Object.hasOwn(updates.$ꓺset?.engines || {}, 'node')) {
                     updates.$ꓺset.engines.node = []; // Initialize.
-                    if (nodeVersion.previous.length) updates.$ꓺset.engines.node.push(nodeVersion.previous);
-                    if (nodeVersion.current.length) updates.$ꓺset.engines.node.push(nodeVersion.current);
+                    if (nodeVersion.previous) updates.$ꓺset.engines.node.push(nodeVersion.previous);
+                    if (nodeVersion.current) updates.$ꓺset.engines.node.push(nodeVersion.current);
                     if (nodeVersion.forwardCompat.length) updates.$ꓺset.engines.node = updates.$ꓺset.engines.node.concat(nodeVersion.forwardCompat);
                     updates.$ꓺset.engines.node = (updates.$ꓺset.engines.node.length ? '^' : '') + updates.$ꓺset.engines.node.join(' || ^');
                 }
                 if (Object.hasOwn(updates.$ꓺset?.engines || {}, 'npm')) {
                     updates.$ꓺset.engines.npm = []; // Initialize.
-                    if (nodeVersion.npm.previous.length) updates.$ꓺset.engines.npm.push(nodeVersion.npm.previous);
-                    if (nodeVersion.npm.current.length) updates.$ꓺset.engines.npm.push(nodeVersion.npm.current);
+                    if (nodeVersion.npm.previous) updates.$ꓺset.engines.npm.push(nodeVersion.npm.previous);
+                    if (nodeVersion.npm.current) updates.$ꓺset.engines.npm.push(nodeVersion.npm.current);
                     if (nodeVersion.npm.forwardCompat.length) updates.$ꓺset.engines.npm = updates.$ꓺset.engines.npm.concat(nodeVersion.npm.forwardCompat);
                     updates.$ꓺset.engines.npm = (updates.$ꓺset.engines.npm.length ? '^' : '') + updates.$ꓺset.engines.npm.join(' || ^');
                 }

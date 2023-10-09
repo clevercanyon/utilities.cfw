@@ -1,11 +1,11 @@
 /**
- * Environment vars.
+ * Initialization.
  */
 
 import { $env } from '@clevercanyon/utilities';
 
 /**
- * Acquires app package name.
+ * Acquires app static defines.
  */
 const appPkgName = $$__APP_PKG_NAME__$$;
 

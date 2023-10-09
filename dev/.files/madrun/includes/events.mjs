@@ -9,10 +9,11 @@
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  */
 
+import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
-import { $fs } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $app, $brand, $fn, $is, $url } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $chalk, $fs } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $app, $brand, $fn, $is, $json, $url } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import u from '../../bin/includes/utilities.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
@@ -45,29 +46,37 @@ export default {
                 /**
                  * Deletes Dotenv Vault associated with template.
                  */
+                u.log($chalk.green('Removing `./env.{me,vault}` files.'));
                 await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
                 await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
 
                 /**
                  * Initializes a few variables.
                  */
-                const _ = {}; // Initialize temp vars.
+                u.log($chalk.green('Configuring project variables.'));
 
-                _.parentDirBasename = path.basename(path.dirname(projDir));
-                _.dirBasename = path.basename(projDir);
+                const _parentDirBasename = path.basename(path.dirname(projDir));
+                const _dirBasename = path.basename(projDir);
 
-                _.maybeParentDirBrand = $fn.try(() => $brand.get('@' + _.parentDirBasename + '/' + _.dirBasename))();
-                _.parentDirOwner = $is.brand(_.maybeParentDirBrand) ? _.maybeParentDirBrand.org.slug : _.parentDirBasename;
+                const _maybeParentDirBrand = $fn.try(() => $brand.get('@' + _parentDirBasename + '/' + _dirBasename))();
+                const _parentDirOwner = $is.brand(_maybeParentDirBrand) ? _maybeParentDirBrand.org.slug : _parentDirBasename;
 
-                const pkgName = args.pkgName || '@' + _.parentDirOwner + '/' + _.dirBasename;
+                const pkgName = args.pkgName || '@' + _parentDirOwner + '/' + _dirBasename;
                 const pkgSlug = $app.pkgSlug(pkgName); // Slug from `@org/[slug]` in a scoped package, or `slug` from an unscoped package.
 
-                const repoOwner = (/^@/u.test(pkgName) && /[^@/]\/[^@/]/u.test(pkgName) ? pkgName.replace(/^@/u, '').split('/')[0] : '') || _.parentDirOwner;
-                const repoName = (/^@/u.test(pkgName) && /[^@/]\/[^@/]/u.test(pkgName) ? pkgName.replace(/^@/u, '').split('/')[1] : '') || _.dirBasename;
+                const repoOwner = (/^@/u.test(pkgName) && /[^@/]\/[^@/]/u.test(pkgName) ? pkgName.replace(/^@/u, '').split('/')[0] : '') || _parentDirOwner;
+                const repoName = (/^@/u.test(pkgName) && /[^@/]\/[^@/]/u.test(pkgName) ? pkgName.replace(/^@/u, '').split('/')[1] : '') || _dirBasename;
+
+                const envsDir = path.resolve(projDir, './dev/.envs');
+                const envProdFile = path.resolve(envsDir, './.env.prod');
+                const readmeFile = path.resolve(projDir, './README.md');
+
+                u.log($chalk.gray($json.stringify({ pkgName, pkgSlug, repoOwner, repoName }, { pretty: true })));
 
                 /**
                  * Updates `./package.json` file.
                  */
+                u.log($chalk.green('Updating `./package.json` properties.'));
                 await u.updatePkg({
                     name: pkgName, // e.g., `@org/[slug]` forms a package name.
                     repository: 'https://github.com/' + $url.encode(repoOwner) + '/' + $url.encode(repoName),
@@ -98,30 +107,35 @@ export default {
                     ...(args.pkg ? { $set: { private: false } } : {}),
                     ...(args.pkg && args.public ? { $set: { 'publishConfig.access': 'public' } } : {}),
                 });
+                u.log($chalk.gray($json.stringify(await u.pkg(), { pretty: true })));
 
                 /**
-                 * Updates `./dev/.envs/.env.prod` file, if exists.
+                 * Updates `./dev/.envs`, if applicable.
                  */
-                await fsp
-                    .readFile((_.envProdFile = path.resolve(projDir, './dev/.envs/.env.prod')))
-                    .then(async (envProd) => {
-                        envProd = envProd.toString();
-                        envProd = envProd.replace(/^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu, "$1='https://" + pkgSlug + '.' + hop.hostname + "'");
-                        await fsp.writeFile(_.envProdFile, envProd);
-                    })
-                    .catch((error) => {
-                        if ('ENOENT' !== error.code) throw error;
-                    });
+                if (fs.existsSync(envsDir)) {
+                    u.log($chalk.green('Updating `./dev/.envs`.'));
+                    await fsp
+                        .readFile(envProdFile)
+                        .then(async (envProd) => {
+                            envProd = envProd.toString();
+                            envProd = envProd.replace(/^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu, "$1='https://" + pkgSlug + '.' + hop.hostname + "'");
+                            await fsp.writeFile(envProdFile, envProd);
+                        })
+                        .catch((error) => {
+                            if ('ENOENT' !== error.code) throw error;
+                        });
+                }
 
                 /**
                  * Updates `./README.md` file in new project directory.
                  */
+                u.log($chalk.green('Updating `./README.md`.'));
                 await fsp
-                    .readFile((_.readmeFile = path.resolve(projDir, './README.md')))
+                    .readFile(readmeFile)
                     .then(async (readme) => {
                         readme = readme.toString();
                         readme = readme.replace(/^(#\s+)(@[^/?#\s]+\/[^/?#\s]+)/gmu, '$1' + pkgName);
-                        await fsp.writeFile(_.readmeFile, readme);
+                        await fsp.writeFile(readmeFile, readme);
                     })
                     .catch((error) => {
                         if ('ENOENT' !== error.code) throw error;
@@ -130,16 +144,25 @@ export default {
                 /**
                  * Initializes this as a new git repository.
                  */
+                u.log($chalk.green('Initializing git repository.'));
                 await u.spawn('git', ['init']);
+
+                /**
+                 * Updates dotfiles after the above changes.
+                 */
+                u.log($chalk.green('Updating project dotfiles.'));
+                await u.updateDotfiles(/* Recompiles statics. */);
 
                 /**
                  * Updates Vite build after the above changes.
                  */
+                u.log($chalk.green('Updating project build directory.'));
                 if (await u.isViteBuild()) await u.viteBuild();
 
                 /**
                  * Saves changes made here as first initial commit.
                  */
+                u.log($chalk.green('Adding first git commit with project files.'));
                 await u.gitAddCommit('Initializing project directory. [n]');
 
                 /**
@@ -147,15 +170,19 @@ export default {
                  */
                 if ('clevercanyon' === repoOwner) {
                     if (process.env.GH_TOKEN && 'owner' === (await u.gistGetC10NUser()).github?.role) {
+                        u.log($chalk.green('Creating remote project repo at GitHub [' + (args.public ? 'public' : 'private') + '].'));
                         await u.spawn('gh', ['repo', 'create', repoOwner + '/' + repoName, '--source', projDir, args.public ? '--public' : '--private']);
                     } else {
+                        u.log($chalk.green('Configuring a remote repo origin.'));
                         const origin = 'https://github.com/' + $url.encode(repoOwner) + '/' + $url.encode(repoName) + '.git';
                         await u.spawn('git', ['remote', 'add', 'origin', origin]);
                     }
                 } else if (process.env.USER_GITHUB_USERNAME === repoOwner) {
                     if (process.env.GH_TOKEN) {
+                        u.log($chalk.green('Creating remote project repo at GitHub [' + (args.public ? 'public' : 'private') + '].'));
                         await u.spawn('gh', ['repo', 'create', repoOwner + '/' + repoName, '--source', projDir, args.public ? '--public' : '--private']);
                     } else {
+                        u.log($chalk.green('Configuring a remote repo origin.'));
                         const origin = 'https://github.com/' + $url.encode(repoOwner) + '/' + $url.encode(repoName) + '.git';
                         await u.spawn('git', ['remote', 'add', 'origin', origin]);
                     }

@@ -35,8 +35,8 @@ export default {
             'utilities.cfp',
             'utilities.web',
             'utilities.webw',
-            'utilities.php',
             'utilities.bash',
+            'utilities.php',
 
             'utilities.*',
             'skeleton.*',

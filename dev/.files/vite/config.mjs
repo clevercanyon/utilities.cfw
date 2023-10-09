@@ -14,7 +14,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { loadEnv } from 'vite';
 import { $fs, $glob } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $is, $json, $obj, $obp, $str, $time } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $is, $json, $obj, $obp, $str, $time, $url } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import esVersion from '../bin/includes/es-version.mjs';
 import extensions from '../bin/includes/extensions.mjs';
 import importAliases from '../bin/includes/import-aliases.mjs';
@@ -87,8 +87,8 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
     /**
      * App type, target, path, and related vars.
      */
-    const appBaseURL = env.APP_BASE_URL || ''; // e.g., `https://example.com/base`.
-    const appBasePath = env.APP_BASE_PATH || ''; // e.g., `/base`.
+    const appBaseURL = env.APP_BASE_URL || ''; // e.g., `https://example.com/`, `https://example.com/base`.
+    // A base URL is only required for some app types; e.g., `spa|mpa`. See validation below for details.
 
     const appType = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.appType') || 'cma';
     const targetEnv = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.targetEnv') || 'any';
@@ -200,8 +200,8 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
         define: $obj.map(staticDefs, (v) => $json.stringify(v)),
 
         root: srcDir, // Absolute path where entry indexes live.
-        publicDir: isSSRBuild ? false : path.relative(srcDir, cargoDir), // Relative to `root`.
-        base: appBasePath + '/', // Analagous to `<base href="/">`; i.e., leading & trailing slash.
+        publicDir: isSSRBuild ? false : path.relative(srcDir, cargoDir),
+        base: (appBaseURL ? $url.parse(appBaseURL).pathname : '') || '/', // @todo Update to `$url.toPath()`.
 
         envDir: path.relative(srcDir, envsDir), // Relative to `root` directory.
         envPrefix: appEnvPrefixes, // Env vars w/ these prefixes become part of the app.
