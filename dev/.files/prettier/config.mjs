@@ -123,8 +123,8 @@ export default async () => {
                  */
                 files: ['*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.php])],
                 options: {
-                    parser: 'php',
                     braceStyle: '1tbs',
+                    parser: 'php',
                     phpVersion: '8.1',
                     trailingCommaPHP: true,
                 },
@@ -159,8 +159,6 @@ export default async () => {
                  */
                 files: ['*.' + extensions.asBracedGlob([...extensions.byCanonical.sh])],
                 options: {
-                    parser: 'sh', // Posix variant!
-                    variant: 1, // Posix variant only.
                     binaryNextLine: false,
                     experimentalWasm: false,
                     functionNextLine: false,
@@ -168,9 +166,11 @@ export default async () => {
                     keepComments: true,
                     keepPadding: false,
                     minify: false,
+                    parser: 'sh',
                     spaceRedirects: true,
                     stopAt: undefined,
                     switchCaseIndent: true,
+                    variant: 1, // Posix variant.
                 },
             },
             {
@@ -184,8 +184,6 @@ export default async () => {
                     '{,*.}Dockerfile', // Safe to assume ours always uses bash.
                 ],
                 options: {
-                    parser: 'sh', // Bash variant!
-                    variant: 0, // Bash variant only.
                     binaryNextLine: false,
                     experimentalWasm: false,
                     functionNextLine: false,
@@ -193,9 +191,11 @@ export default async () => {
                     keepComments: true,
                     keepPadding: false,
                     minify: false,
+                    parser: 'sh',
                     spaceRedirects: true,
                     stopAt: undefined,
                     switchCaseIndent: true,
+                    variant: 0, // Bash variant.
                 },
             },
 
@@ -231,6 +231,7 @@ export default async () => {
                 options: {
                     jsdocAddDefaultToDescription: false,
                     jsdocCapitalizeDescription: true,
+                    jsdocCommentLineStrategy: 'keep',
                     jsdocDescriptionTag: false,
                     jsdocDescriptionWithDot: true,
                     jsdocKeepUnParseAbleExampleIndent: false,
@@ -309,7 +310,6 @@ export default async () => {
                  */
                 files: ['*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.sql])],
                 options: {
-                    parser: 'sql',
                     commaPosition: 'after',
                     database: 'mysql',
                     denseOperators: false,
@@ -323,6 +323,7 @@ export default async () => {
                     newlineBeforeSemicolon: false,
                     params: Object,
                     paramTypes: Object,
+                    parser: 'sql',
                     tabulateAlias: false,
                     type: 'table',
                 },
@@ -397,9 +398,9 @@ export default async () => {
                 files: ['*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.xml])],
                 options: {
                     parser: 'xml',
+                    xmlQuoteAttributes: 'preserve',
                     xmlSelfClosingSpace: true,
                     xmlSortAttributesByKey: false,
-                    xmlQuoteAttributes: 'preserve',
                     xmlWhitespaceSensitivity: 'ignore',
                 },
             },
