@@ -240,7 +240,6 @@ export default async () => {
                     jsdocPrintWidth: baseConfig.printWidth - 60,
                     jsdocSeparateReturnsFromParam: false,
                     jsdocSeparateTagGroups: true,
-                    jsdocSingleLineComment: false,
                     jsdocSpaces: 1,
                     jsdocVerticalAlignment: true,
                     tsdoc: false,

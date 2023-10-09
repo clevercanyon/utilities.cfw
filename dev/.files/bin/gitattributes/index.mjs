@@ -25,14 +25,14 @@ export default async ({ projDir }) => {
 
         # Default
 
-        * text=auto
+        * text=auto eol=lf
     `);
     for (const [groupName, group] of Object.entries($mime.types())) {
         gitAttributesFileContentsTextBinary += '\n\n# ' + groupName + '\n';
 
         for (const [subgroupExts, subgroup] of Object.entries(group)) {
             for (const subgroupExt of subgroupExts.split('|')) {
-                gitAttributesFileContentsTextBinary += '\n*.' + subgroupExt + ' ' + (subgroup.binary ? 'binary' : 'text');
+                gitAttributesFileContentsTextBinary += '\n*.' + subgroupExt + ' ' + (subgroup.binary ? 'binary' : 'text eol=lf');
             }
         }
     }
@@ -41,10 +41,10 @@ export default async ({ projDir }) => {
         $str.dedent(`
         # Special Cases
 
-        *.env.* text
-        CODEOWNERS text
-        /src/cargo/_headers text
-        /src/cargo/_redirects text
+        *.env.* text eol=lf
+        CODEOWNERS text eol=lf
+        /src/cargo/_headers text eol=lf
+        /src/cargo/_redirects text eol=lf
     `);
 
     /**

@@ -17,27 +17,27 @@
 # Generated data.
 # <generated:start>
 
-# Last generated Mon, Oct 9, 2023, 9:00:24 AM EDT.
+# Last generated Mon, Oct 9, 2023, 5:45:45 PM EDT.
 
 # Default
 
-* text=auto
+* text=auto eol=lf
 
 # Text
 
-*.txt text
-*.text text
+*.txt text eol=lf
+*.text text eol=lf
 
 # Markdown
 
-*.mdx text
-*.md text
-*.markdown text
-*.mdown text
-*.mdwn text
-*.mkd text
-*.mdtxt text
-*.mdtext text
+*.mdx text eol=lf
+*.md text eol=lf
+*.markdown text eol=lf
+*.mdown text eol=lf
+*.mdwn text eol=lf
+*.mkd text eol=lf
+*.mdtxt text eol=lf
+*.mdtext text eol=lf
 
 # Rich Text
 
@@ -46,12 +46,12 @@
 
 # HTML
 
-*.html text
-*.htm text
-*.shtml text
-*.shtm text
-*.xhtml text
-*.xhtm text
+*.html text eol=lf
+*.htm text eol=lf
+*.shtml text eol=lf
+*.shtm text eol=lf
+*.xhtml text eol=lf
+*.xhtm text eol=lf
 
 # PDF
 
@@ -59,208 +59,208 @@
 
 # PHP
 
-*.php text
-*.phtml text
-*.phtm text
-*.phps text
+*.php text eol=lf
+*.phtml text eol=lf
+*.phtm text eol=lf
+*.phps text eol=lf
 
 # ASP
 
-*.asp text
-*.aspx text
+*.asp text eol=lf
+*.aspx text eol=lf
 
 # Ruby
 
-*.rb text
+*.rb text eol=lf
 
 # Python
 
-*.py text
+*.py text eol=lf
 
 # Perl
 
-*.pl6 text
-*.perl6 text
-*.pl text
-*.plx text
-*.cgi text
-*.ppl text
-*.perl text
+*.pl6 text eol=lf
+*.perl6 text eol=lf
+*.pl text eol=lf
+*.plx text eol=lf
+*.cgi text eol=lf
+*.ppl text eol=lf
+*.perl text eol=lf
 
 # Shell
 
-*.bash text
-*.zsh text
-*.sh text
+*.bash text eol=lf
+*.zsh text eol=lf
+*.sh text eol=lf
 
 # C
 
-*.c text
-*.cs text
-*.cpp text
-*.cc text
-*.o text
-*.h text
+*.c text eol=lf
+*.cs text eol=lf
+*.cpp text eol=lf
+*.cc text eol=lf
+*.o text eol=lf
+*.h text eol=lf
 
 # Docker
 
-*.dockerfile text
+*.dockerfile text eol=lf
 
 # JS Automation
 
-*.jxa text
+*.jxa text eol=lf
 
 # AppleScript
 
-*.applescript text
+*.applescript text eol=lf
 *.scpt binary
 *.scptd binary
 
 # Batch
 
-*.bat text
+*.bat text eol=lf
 
 # JavaScript
 
 *.wasm binary
-*.js text
-*.mjs text
-*.cjs text
-*.jsx text
-*.mjsx text
-*.cjsx text
+*.js text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.jsx text eol=lf
+*.mjsx text eol=lf
+*.cjsx text eol=lf
 
 # TypeScript
 
-*.ts text
-*.mts text
-*.cts text
-*.tsx text
-*.mtsx text
-*.ctsx text
+*.ts text eol=lf
+*.mts text eol=lf
+*.cts text eol=lf
+*.tsx text eol=lf
+*.mtsx text eol=lf
+*.ctsx text eol=lf
 
 # Style
 
-*.css text
-*.scss text
-*.less text
-*.xsl text
-*.xslt text
+*.css text eol=lf
+*.scss text eol=lf
+*.less text eol=lf
+*.xsl text eol=lf
+*.xslt text eol=lf
 
 # Other Code
 
-*.hta text
-*.htc text
+*.hta text eol=lf
+*.htc text eol=lf
 *.class binary
 
 # EJS
 
-*.ejs text
+*.ejs text eol=lf
 
 # Liquid
 
-*.liquid text
+*.liquid text eol=lf
 
 # Other Template
 
-*.tpl text
+*.tpl text eol=lf
 
 # SQL
 
-*.sql text
-*.sqlite text
+*.sql text eol=lf
+*.sqlite text eol=lf
 
 # Delimited
 
-*.csv text
-*.tsv text
+*.csv text eol=lf
+*.tsv text eol=lf
 
 # JSON
 
-*.json text
-*.json5 text
-*.jsonld text
+*.json text eol=lf
+*.json5 text eol=lf
+*.jsonld text eol=lf
 
 # TOML
 
-*.toml text
+*.toml text eol=lf
 
 # YAML
 
-*.yaml text
-*.yml text
+*.yaml text eol=lf
+*.yml text eol=lf
 
 # INI
 
-*.ini text
+*.ini text eol=lf
 
 # Properties
 
-*.env text
-*.props text
-*.properties text
+*.env text eol=lf
+*.props text eol=lf
+*.properties text eol=lf
 
 # Apache
 
-*.conf text
-*.htaccess text
-*.htpasswd text
+*.conf text eol=lf
+*.htaccess text eol=lf
+*.htpasswd text eol=lf
 
 # I18n
 
-*.po text
-*.pot text
+*.po text eol=lf
+*.pot text eol=lf
 *.mo binary
 
 # XML
 
-*.xml text
-*.xsd text
-*.dtd text
+*.xml text eol=lf
+*.xsd text eol=lf
+*.dtd text eol=lf
 
 # Calendar
 
-*.ics text
+*.ics text eol=lf
 
 # Feed
 
-*.atom text
-*.rdf text
-*.rss text
-*.rss2 text
-*.rss-http text
+*.atom text eol=lf
+*.rdf text eol=lf
+*.rss text eol=lf
+*.rss2 text eol=lf
+*.rss-http text eol=lf
 
 # Log
 
-*.log text
+*.log text eol=lf
 
 # Other Data
 
 *.asx binary
-*.vtt text
-*.srt text
-*.dfxp text
+*.vtt text eol=lf
+*.srt text eol=lf
+*.dfxp text eol=lf
 *.hex binary
 
 # Other Config
 
-*.babelrc text
-*.npmrc text
-*.yarnrc text
-*.inputrc text
-*.tsbuildinfo text
-*.editorconfig text
-*.shellcheckrc text
-*.browserslistrc text
-*.gitchange text
-*.gitconfig text
-*.gitattributes text
-*.gitignore text
-*.npmignore text
-*.dockerignore text
-*.vscodeignore text
-*.prettierignore text
-*.eslintignore text
+*.babelrc text eol=lf
+*.npmrc text eol=lf
+*.yarnrc text eol=lf
+*.inputrc text eol=lf
+*.tsbuildinfo text eol=lf
+*.editorconfig text eol=lf
+*.shellcheckrc text eol=lf
+*.browserslistrc text eol=lf
+*.gitchange text eol=lf
+*.gitconfig text eol=lf
+*.gitattributes text eol=lf
+*.gitignore text eol=lf
+*.npmignore text eol=lf
+*.dockerignore text eol=lf
+*.vscodeignore text eol=lf
+*.prettierignore text eol=lf
+*.eslintignore text eol=lf
 
 # Image
 
@@ -279,7 +279,7 @@
 *.xcf binary
 *.psd binary
 *.pspimage binary
-*.svg text
+*.svg text eol=lf
 *.svgz binary
 *.tiff binary
 *.tif binary
@@ -350,10 +350,10 @@
 
 # Certificate
 
-*.csr text
-*.crt text
-*.pem text
-*.asc text
+*.csr text eol=lf
+*.crt text eol=lf
+*.pem text eol=lf
+*.asc text eol=lf
 
 # Other Application
 
@@ -368,7 +368,7 @@
 
 # Google
 
-*.kml text
+*.kml text eol=lf
 *.kmz binary
 
 # Adobe
@@ -438,10 +438,10 @@
 
 # Special Cases
 
-*.env.* text
-CODEOWNERS text
-/src/cargo/_headers text
-/src/cargo/_redirects text
+*.env.* text eol=lf
+CODEOWNERS text eol=lf
+/src/cargo/_headers text eol=lf
+/src/cargo/_redirects text eol=lf
 
 ##
 # LFS storage rules.
