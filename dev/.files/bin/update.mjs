@@ -482,7 +482,7 @@ class Dotfiles {
 
         let skeletonBranch = 'main';
 
-        if (await u.isPkgRepo('clevercanyon/skeleton')) {
+        if (await u.isPkgName('@clevercanyon/skeleton')) {
             if (!(await u.isGitRepo())) {
                 throw new Error('`clevercanyon/skeleton` is not a git repo.');
             }
@@ -498,14 +498,14 @@ class Dotfiles {
          * Saves any pending skeleton changes; else checks state.
          */
 
-        if ((await u.isPkgRepo('clevercanyon/skeleton')) && (await u.isGitRepoDirty())) {
+        if ((await u.isPkgName('@clevercanyon/skeleton')) && (await u.isGitRepoDirty())) {
             u.log($chalk.green('Updating `clevercanyon/skeleton` git repo; `' + skeletonBranch + '` branch.'));
             u.log('    ' + $chalk.green('i.e., saving latest skeleton changes before self-update.'));
 
             if (!this.args.dryRun) {
                 await u.gitAddCommitPush((this.args.message + ' [d]').trim());
             }
-        } else if (await u.isPkgRepo('clevercanyon/skeleton')) {
+        } else if (await u.isPkgName('@clevercanyon/skeleton')) {
             // Don't perform a self-update if the remote isn't in sync with our local copy.
             if ((await u.gitLocalRepoSHA(projDir, skeletonBranch)) !== (await u.gitRemoteRepoSHA(skeletonRepoURL, skeletonBranch))) {
                 throw new Error('`clevercanyon/skeleton` is out of sync with git remote origin; `' + skeletonBranch + '` branch.');

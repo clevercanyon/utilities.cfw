@@ -123,7 +123,7 @@ export default async () => {
             // Plus these additional hidden files we control using ext: `PeterSchmalfeldt.explorer-exclude`.
             // These work together with the additional setting below for the extension: `explorerExclude.backup`.
 
-            ...(!(await u.isPkgRepo('clevercanyon/skeleton'))
+            ...(!(await u.isPkgName('@clevercanyon/skeleton'))
                 ? {
                       ...exclusions.asBoolProps(
                           exclusions.asRelativeGlobs(
@@ -155,7 +155,7 @@ export default async () => {
             // Plus everything in `../../../.gitignore`.
             // ... plus these additional search ignores.
 
-            ...(!(await u.isPkgRepo('clevercanyon/skeleton'))
+            ...(!(await u.isPkgName('@clevercanyon/skeleton'))
                 ? {
                       ...exclusions.asBoolProps(
                           exclusions.asRootedRelativeGlobs(
@@ -204,7 +204,7 @@ export default async () => {
         // Comment Anchors uses minimatch, with `{ dot: false }`.
         'commentAnchors.workspace.excludeFiles': exclusions.asBracedGlob(
             [
-                ...(!(await u.isPkgRepo('clevercanyon/skeleton')) //
+                ...(!(await u.isPkgName('@clevercanyon/skeleton')) //
                     ? [...exclusions.devDotFileIgnores]
                     : []),
                 ...exclusions.logIgnores,
@@ -232,7 +232,7 @@ export default async () => {
          *
          * @see https://github.com/StarlaneStudios/vscode-comment-anchors/issues/209
          */
-        'commentAnchors.workspace.matchFiles': (await u.isPkgRepo('clevercanyon/skeleton'))
+        'commentAnchors.workspace.matchFiles': (await u.isPkgName('@clevercanyon/skeleton'))
             ? '{**/,**/dev/.files/,**/dev/.files/**/}*.' + extensions.asBracedGlob([...extensions.commentAnchorsContent])
             : '**/*.' + extensions.asBracedGlob([...extensions.commentAnchorsContent]),
 
@@ -301,7 +301,7 @@ export default async () => {
         'tailwindCSS.classAttributes': tailwindSettings.classAttributes,
         'tailwindCSS.includeLanguages': {}, // Defaults ok; {@see https://o5p.me/kaPo3F}.
         'tailwindCSS.files.exclude': [
-            ...(!(await u.isPkgRepo('clevercanyon/skeleton')) ? [...exclusions.devDotFileIgnores] : []),
+            ...(!(await u.isPkgName('@clevercanyon/skeleton')) ? [...exclusions.devDotFileIgnores] : []),
             ...exclusions.logIgnores, //
             ...exclusions.backupIgnores,
             ...exclusions.patchIgnores,

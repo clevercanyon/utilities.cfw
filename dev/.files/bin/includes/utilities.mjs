@@ -21,7 +21,7 @@ const __dirname = $fs.imuDirname(import.meta.url);
 const binDir = path.resolve(__dirname, '..');
 const projDir = path.resolve(__dirname, '../../../..');
 
-const { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType } = (() => {
+const { pkgFile, pkgName, pkgPrivate, pkgBuildAppType } = (() => {
     const pkgFile = path.resolve(projDir, './package.json');
 
     if (!fs.existsSync(pkgFile)) {
@@ -34,10 +34,9 @@ const { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType } = (() => 
     }
     const pkgName = $obp.get(pkg, 'name', '');
     const pkgPrivate = $obp.get(pkg, 'private');
-    const pkgRepository = $obp.get(pkg, 'repository', '');
     const pkgBuildAppType = $obp.get(pkg, 'config.c10n.&.build.appType', '');
 
-    return { pkgFile, pkgName, pkgPrivate, pkgRepository, pkgBuildAppType };
+    return { pkgFile, pkgName, pkgPrivate, pkgBuildAppType };
 })();
 const Octokit = OctokitCore.plugin(OctokitPluginPaginateRest);
 const octokit = new Octokit({ auth: process.env.USER_GITHUB_TOKEN || '' });
@@ -131,20 +130,15 @@ export default class u {
     }
 
     static async isPkgName(name) {
-        return name === pkgName; // Package with this specific name?
+        return name === pkgName; // True if is current package name.
     }
 
-    // @todo Deprecate this in favor of `isPkgName()`.
-    static async isPkgRepo(ownerRepo) {
-        return new RegExp('[:/]' + $str.escRegExp(ownerRepo) + '(?:\\.git)?$', 'iu').test(pkgRepository);
+    static async isPkgFork() {
+        return pkgName.endsWith('.fork'); // True if current package is a fork.
     }
 
-    static async isPkgRepoFork() {
-        return /[:/][^/]+\/[^/]+\.fork(?:\.git)?$/iu.test(pkgRepository);
-    }
-
-    static async isPkgRepoTemplate() {
-        return /[:/][^/]+\/skeleton(?:\.[^/]+)?(?:\.git)?$/iu.test(pkgRepository);
+    static async isPkgSkeleton() {
+        return 'skeleton' === pkgName || pkgName.startsWith('skeleton.');
     }
 
     static async pkgIncrementVersion(opts = { dryRun: false }) {
@@ -200,7 +194,7 @@ export default class u {
             if (nodeVersion.npm.forwardCompat.length) updates.$ꓺset.engines.npm = updates.$ꓺset.engines.npm.concat(nodeVersion.npm.forwardCompat);
             updates.$ꓺset.engines.npm = (updates.$ꓺset.engines.npm.length ? '^' : '') + updates.$ꓺset.engines.npm.join(' || ^');
         }
-        if (await u.isPkgRepo('clevercanyon/dev-deps')) {
+        if (await u.isPkgName('@clevercanyon/dev-deps')) {
             if (updates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/dev-deps']) {
                 delete updates.$ꓺdefaults['devDependenciesꓺ@clevercanyon/dev-deps'];
             }
@@ -550,7 +544,7 @@ export default class u {
                 homepage: pkg.homepage || defaultHomepage,
                 description: pkg.description || defaultDescription,
 
-                is_template: await u.isPkgRepoTemplate(),
+                is_template: await u.isPkgSkeleton(),
             });
             await octokit.request('PUT /repos/{owner}/{repo}/vulnerability-alerts', { owner, repo });
             await octokit.request('PUT /repos/{owner}/{repo}/automated-security-fixes', { owner, repo });
@@ -1163,7 +1157,7 @@ export default class u {
 
                 for (const [dependency] of Object.entries(pkg.dependencies || {})) dependenciesToUpdate.push(dependency);
                 for (const [dependency] of Object.entries(pkg.peerDependencies || {})) dependenciesToUpdate.push(dependency);
-                if (!(await u.isPkgRepo('clevercanyon/dev-deps')))
+                if (!(await u.isPkgName('@clevercanyon/dev-deps')))
                     for (const [dependency] of Object.entries((await u.depPkg('@clevercanyon/dev-deps'))?.dependencies || {})) {
                         if (/^@clevercanyon\//iu.test(dependency)) dependenciesToUpdate.push(dependency);
                     }

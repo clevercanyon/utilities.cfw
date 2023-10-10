@@ -201,7 +201,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 
         root: srcDir, // Absolute path where entry indexes live.
         publicDir: isSSRBuild ? false : path.relative(srcDir, cargoDir),
-        base: (appBaseURL ? $url.parse(appBaseURL).pathname : '') || '/', // @todo Update to `$url.toPath()`.
+        base: (appBaseURL ? $url.toPath(appBaseURL) : '') || '/',
 
         envDir: path.relative(srcDir, envsDir), // Relative to `root` directory.
         envPrefix: appEnvPrefixes, // Env vars w/ these prefixes become part of the app.

@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { $chalk, $fs, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $is, $json, $obj, $obp, $str } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $is, $json, $obj, $obp } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import nodeVersion from '../includes/node-version.mjs';
 import customRegExp from './data/custom-regexp.mjs';
 
@@ -44,26 +44,24 @@ export default async ({ projDir }) => {
     /**
      * Gets properties from `./package.json` file.
      */
-    const { pkgRepository, pkgDotfileLocks } = await (async () => {
+    const { pkgName, pkgDotfileLocks } = await (async () => {
         const pkg = await getPkg();
-        const pkgRepository = pkg.repository || '';
+        const pkgName = pkg.name || '';
 
         let pkgDotfileLocks = $obp.get(pkg, 'config.c10n.&.dotfiles.lock', []);
         pkgDotfileLocks = pkgDotfileLocks.map((relPath) => path.resolve(projDir, relPath));
 
-        return { pkgRepository, pkgDotfileLocks };
+        return { pkgName, pkgDotfileLocks };
     })();
 
     /**
-     * Tests `pkgRepository` against an `owner/repo` string.
+     * Tests `pkgName` against current package.
      *
-     * @param   {string}  ownerRepo An `owner/repo` string.
+     * @param   {string}  name A fully qualified package name.
      *
-     * @returns {boolean}           True if current package repo is `ownerRepo`.
+     * @returns {boolean}      True if is current package name.
      */
-    const isPkgRepo = async (ownerRepo) => {
-        return new RegExp('[:/]' + $str.escRegExp(ownerRepo) + '(?:\\.git)?$', 'iu').test(pkgRepository);
-    };
+    const isPkgName = async (name) => name === pkgName; // True if is current package name.
 
     /**
      * Checks dotfile locks.
@@ -233,7 +231,7 @@ export default async ({ projDir }) => {
                     updates.$ꓺset.engines.npm = (updates.$ꓺset.engines.npm.length ? '^' : '') + updates.$ꓺset.engines.npm.join(' || ^');
                 }
             }
-            if ('./package.json' === relPath && (await isPkgRepo('clevercanyon/dev-deps'))) {
+            if ('./package.json' === relPath && (await isPkgName('@clevercanyon/dev-deps'))) {
                 if (updates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/dev-deps']) {
                     delete updates.$ꓺdefaults['devDependenciesꓺ@clevercanyon/dev-deps'];
                 }
