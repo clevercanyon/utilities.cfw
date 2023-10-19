@@ -8,6 +8,12 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  */
+/*
+-----------------------------------------------------------------------------------------------------------------------
+Example `index.scss` starter file contents:
+-----------------------------------------------------------------------------------------------------------------------
+@use '../dev/.files/tailwind/layers';
+-------------------------------------------------------------------------------------------------------------------- */
 
 import { $preact } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 
@@ -16,7 +22,7 @@ import { $preact } from '../../../node_modules/@clevercanyon/utilities/dist/inde
  */
 export default {
     classFunctions: ['$preact.classes'],
-    classAttributes: $preact.classPropVariants,
-    classAttributesRegExpStr: '^class(?:es|Names?)?$',
-    classAttributesRegExp: new RegExp('^class(?:es|Names?)?$', 'u'),
+    classAttributes: $preact.classPropVariants(),
+    classAttributesRegExpStr: $preact.classPropVariantsRegExpStr(),
+    classAttributesRegExp: $preact.classPropVariantsRegExp(),
 };

@@ -15,20 +15,18 @@
 -----------------------------------------------------------------------------------------------------------------------
 Example `index.scss` starter file contents:
 -----------------------------------------------------------------------------------------------------------------------
-@import 'https://fonts.googleapis.com/css2?family=Georama:ital,wght@0,100..900;1,100..900&display=swap';
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-@tailwind variants;
+@use '../dev/.files/tailwind/layers';
 -------------------------------------------------------------------------------------------------------------------- */
 
 import pluginForms from '@tailwindcss/forms';
 import pluginTypography from '@tailwindcss/typography';
+import pluginTypographyStyles from '@tailwindcss/typography/src/styles.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import pluginThemer from 'tailwindcss-themer';
 import exclusions from '../bin/includes/exclusions.mjs';
 import extensions from '../bin/includes/extensions.mjs';
+import mergeThemesConfig from './themes.mjs';
 
 // `__dirname` already exists when loaded by Tailwind via Jiti / commonjs.
 // eslint-disable-next-line no-undef -- `__dirname` is not actually missing.
@@ -40,58 +38,86 @@ const projDir = path.resolve(__dirname, '../../..');
  * Jiti, which is used by Tailwind to load ESM config files, doesn’t support top-level await. Thus, we cannot use async
  * functionality here. Consider `make-synchronous` (already in dev-deps) if necessary. {@see https://o5p.me/1odhxy}.
  */
-export default /* not async compatible */ () => {
+export default /* not async compatible */ ({ themesConfig } = {}) => {
     /**
      * Composition.
      */
     return {
+        // We favor Tailwind themes, so we don’t typically use dark mode.
+        // By setting this to `class` it can only be enabled using the `dark` class.
+        darkMode: 'class', // {@see https://tailwindcss.com/docs/dark-mode}.
+        // Use of Tailwind’s baked-in `dark` mode is not supported by our implementation.
+        // Instead, configure a `defaultTheme` as dark, or add a `dark-theme` to `themes: []`.
+
         theme: {
-            fontFamily: {
-                sans: [
-                    'Georama', //
-                    'ui-sans-serif',
-                    'sans-serif',
-                ],
-                serif: [
-                    'Palatino', //
-                    '"Palatino Linotype"',
-                    'ui-serif',
-                    'serif',
-                ],
-                mono: [
-                    '"Operator Mono"', //
-                    'ui-monospace',
-                    'monospace',
-                ],
-            },
             screens: {
-                // Greater than or equal to.
-                'gte-phone': { min: '1px' },
+                // Less than or equal to, in descending specificity order.
+                // The order matters, because it affects specificity.
+                'lte-widescreen': { raw: '(max-width: none)' },
+                'lte-desktop': { max: '2559px' },
+                'lte-laptop': { max: '1439px' },
+                'lte-notebook': { max: '1279px' },
+                'lte-tablet': { max: '959px' },
+                'lte-phone': { max: '479px' },
+
+                // Greater than or equal to, in ascending specificity order.
+                // The order matters, because it affects specificity.
+                'gte-phone': { min: '320px' },
                 'gte-tablet': { min: '480px' },
                 'gte-notebook': { min: '960px' },
                 'gte-laptop': { min: '1280px' },
                 'gte-desktop': { min: '1440px' },
+                'gte-widescreen': { raw: '(min-width: 2560px)' },
 
-                // Device-only specific breakpoints.
-                'phone': { min: '1px', max: '479px' },
+                // Device-specific min/max breakpoints, in any order.
+                // Order doesn’t really matter due to min/max specificity.
+                'phone': { min: '320px', max: '479px' },
                 'tablet': { min: '480px', max: '959px' },
                 'notebook': { min: '960px', max: '1279px' },
                 'laptop': { min: '1280px', max: '1439px' },
                 'desktop': { min: '1440px', max: '2559px' },
+                'widescreen': { raw: '(min-width: 2560px)' },
 
-                // `raw` to avoid these being a max-width for containers.
-                // If something should adapt to widescreen, don’t put in a container.
-                'gte-widescreen': { 'raw': '(min-width: 2560px)' },
-                'widescreen': { 'raw': '(min-width: 2560px)' },
+                // Note: We use `raw` to avoid widescreen inadvertently becoming a max-width for containers.
+                // If something should adapt to widescreen, the best practice is to simply not use a container.
             },
             container: { center: true }, // No need for `mx-auto` on each container.
-        },
-        // We want to apply a `dark` class to enable dark mode.
-        darkMode: 'class', // {@see https://tailwindcss.com/docs/dark-mode}.
 
+            extend: {
+                typography: {
+                    // This makes `<code>` appear almost the same as `<kbd>`.
+                    sm: { css: { 'code': { ...pluginTypographyStyles.sm.css[0]['kbd'] } } },
+                    base: { css: { 'code': { ...pluginTypographyStyles.base.css[0]['kbd'] } } },
+                    lg: { css: { 'code': { ...pluginTypographyStyles.lg.css[0]['kbd'] } } },
+                    xl: { css: { 'code': { ...pluginTypographyStyles.xl.css[0]['kbd'] } } },
+                    '2xl': { css: { 'code': { ...pluginTypographyStyles['2xl'].css[0]['kbd'] } } },
+
+                    DEFAULT: {
+                        css: {
+                            // Prose link underline on hover only.
+                            'a': {
+                                textDecoration: 'none',
+                            },
+                            'a:hover': {
+                                textDecoration: 'underline',
+                            },
+                            // This makes `<code>` appear almost the same as `<kbd>`.
+                            'code::before': null, // Gets rid of '`' backtick.
+                            'code::after': null, // Gets rid of '`' backtick.
+                            'code': {
+                                ...pluginTypographyStyles.base.css[0]['kbd'],
+                                borderRadius: '0.188rem', // Equivalent to 3px.
+                                boxShadow: '0 0 0 1px rgb(var(--tw-prose-code-shadows) / 10%)',
+                            },
+                        },
+                    },
+                },
+            },
+        },
         plugins: [
-            pluginTypography({ className: 'prose' }),
-            pluginForms({ strategy: 'class' }), // e.g., `form-{x}`.
+            pluginTypography({ className: 'prose' }), // Implements `prose` class.
+            pluginForms({ strategy: 'class' }), // Implements form classes; e.g., `form-{class}`.
+            pluginThemer(mergeThemesConfig({ themesConfig })), // Implements themes configuration.
         ],
         content: [
             path.resolve(projDir, './src') + '/**/*.' + extensions.asBracedGlob([...extensions.tailwindContent]),

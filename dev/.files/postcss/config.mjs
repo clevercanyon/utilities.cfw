@@ -25,6 +25,12 @@ export default async () => {
      */
     return {
         plugins: {
+            // SCSS is not configured here, as it’s already backed into Vite; {@see https://o5p.me/CAJNAF}.
+            // To use `*.scss` files, just make sure the `sass` package is installed as a dev dependency.
+
+            // Note: Sass runs before postCSS, and therefore cannot interpolate Tailwind `theme()` function calls.
+            // i.e., Tailwind’s `theme()` function works, but don’t try to feed a response into an SCSS variable|fn.
+
             'tailwindcss': { config: path.resolve(projDir, './tailwind.config.mjs') },
             'postcss-preset-env': { stage: 3 }, // Includes autoprefixer.
         },

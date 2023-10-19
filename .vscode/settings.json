@@ -7,7 +7,7 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./settings.mjs`.
  *
- * Last generated using `./settings.mjs` Mon, Oct 9, 2023, 9:57:10 PM EDT.
+ * Last generated using `./settings.mjs` Thu, Oct 19, 2023, 10:37:06 AM EDT.
  */
 {
     "editor.formatOnType": false,
@@ -170,18 +170,35 @@
             "scope": "workspace",
             "iconColor": "#fff0b5",
             "highlightColor": "#fff0b5",
+            "behavior": "anchor",
             "styleMode": "tag"
         },
         "@review": {
             "scope": "workspace",
             "iconColor": "#8a826d",
             "highlightColor": "#8a826d",
+            "behavior": "anchor",
             "styleMode": "tag"
         },
         "@someday": {
             "scope": "workspace",
             "iconColor": "#6d718a",
             "highlightColor": "#6d718a",
+            "behavior": "anchor",
+            "styleMode": "tag"
+        },
+        "@anchor": {
+            "scope": "hidden",
+            "iconColor": "#696969",
+            "highlightColor": "#696969",
+            "behavior": "anchor",
+            "styleMode": "tag"
+        },
+        "@see-anchor": {
+            "scope": "hidden",
+            "iconColor": "#696969",
+            "highlightColor": "#696969",
+            "behavior": "link",
             "styleMode": "tag"
         }
     },

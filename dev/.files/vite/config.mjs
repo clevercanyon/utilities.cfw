@@ -27,6 +27,7 @@ import viteIconsConfig from './includes/icons/config.mjs';
 import viteMDXConfig from './includes/mdx/config.mjs';
 import viteMinifyConfig from './includes/minify/config.mjs';
 import vitePkgUpdates from './includes/package/updates.mjs';
+import vitePrefreshConfig from './includes/prefresh/config.mjs';
 import viteRollupConfig from './includes/rollup/config.mjs';
 import viteVitestConfig from './includes/vitest/config.mjs';
 
@@ -36,8 +37,6 @@ import viteVitestConfig from './includes/vitest/config.mjs';
  * @param   vite Data passed in by Vite.
  *
  * @returns      Vite configuration object properties.
- *
- * @todo Implement Vite prefresh.
  */
 export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
     /**
@@ -46,6 +45,15 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
     process.env.NODE_ENV = // As detailed by Vite <https://o5p.me/DscTVM>.
 		'dev' === mode ? 'development' // Enforce development mode.
 		: 'production'; // prettier-ignore
+
+    /**
+     * Configures `APP_IS_VITE` environment variable.
+     *
+     * @note The `APP_` prefix ensures Vite picks this up and adds it to app builds.
+     *       This can be useful, as it allows us to detect, within our app,
+     *       whether the Vite dev server is running our app.
+     */
+    process.env.APP_IS_VITE = command + '=' + mode;
 
     /**
      * Directory vars.
@@ -69,7 +77,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
      */
     let appEnvPrefixes = ['APP_']; // Added to all builds.
     if (isSSRBuild) appEnvPrefixes.push('SSR_APP_'); // Added to SSR builds.
-    const env = loadEnv(mode, envsDir, appEnvPrefixes);
+    const env = loadEnv(mode, envsDir, appEnvPrefixes); // Includes `APP_IS_VITE`.
 
     const staticDefs = {
         ['$$__' + appEnvPrefixes[0] + 'PKG_NAME__$$']: pkg.name || '',
@@ -119,8 +127,9 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
     const peerDepKeys = Object.keys(pkg.peerDependencies || {});
     const targetEnvIsServer = ['cfw', 'node'].includes(targetEnv);
     const minifyEnable = 'dev' !== mode && !['lib'].includes(appType);
-    const vitestSandboxEnable = $str.parseValue(String(process.env.VITEST_SANDBOX_ENABLE || ''));
-    const vitestExamplesEnable = $str.parseValue(String(process.env.VITEST_EXAMPLES_ENABLE || ''));
+    const vitestSandboxEnable = process.env.VITEST && $str.parseValue(String(process.env.VITEST_SANDBOX_ENABLE || ''));
+    const vitestExamplesEnable = process.env.VITEST && $str.parseValue(String(process.env.VITEST_EXAMPLES_ENABLE || ''));
+    const prefreshEnable = 'serve' === command && 'dev' === mode && ['spa', 'mpa'].includes(appType) && !process.env.VITEST;
 
     /**
      * Validates all of the above.
@@ -167,6 +176,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
             mode, command, isSSRBuild, projDir, distDir,
             pkg, env, appType, targetEnv, staticDefs, pkgUpdates
         }), // prettier-ignore
+        ...(prefreshEnable ? [await vitePrefreshConfig({})] : []),
     ];
 
     /**
@@ -201,7 +211,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
 
         root: srcDir, // Absolute path where entry indexes live.
         publicDir: isSSRBuild ? false : path.relative(srcDir, cargoDir),
-        base: (appBaseURL ? $url.toPath(appBaseURL) : '') || '/',
+        base: appBaseURL ? $url.toPath(appBaseURL) : '/',
 
         envDir: path.relative(srcDir, envsDir), // Relative to `root` directory.
         envPrefix: appEnvPrefixes, // Env vars w/ these prefixes become part of the app.
@@ -209,14 +219,6 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
         appType: ['spa', 'mpa'].includes(appType) ? appType : 'custom',
         plugins, // Additional Vite plugins; i.e., already configured above.
 
-        ...(targetEnvIsServer // Target environment is server-side?
-            ? {
-                  ssr: {
-                      target: ['cfw'].includes(targetEnv) ? 'webworker' : 'node',
-                      ...(['cfw'].includes(targetEnv) ? { noExternal: true } : {}),
-                  },
-              }
-            : {}),
         server: {
             host: '0.0.0.0', // All.
             port: 443, // Default https.
@@ -238,11 +240,20 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
             plugins: importedWorkerPlugins,
             rollupOptions: importedWorkerRollupConfig,
         },
-        test: vitestConfig, // Vitest configuration.
-
+        ssr: {
+            target: targetEnvIsServer && ['cfw'].includes(targetEnv) ? 'webworker' : 'node',
+            ...(targetEnvIsServer && ['cfw'].includes(targetEnv) ? { noExternal: true } : {}),
+        },
+        optimizeDeps: {
+            force: true, // Don’t use cache for optimized deps; recreate.
+            // Preact is required by prefresh plugin; {@see https://o5p.me/WmuefH}.
+            ...(prefreshEnable ? { include: ['preact', 'preact/hooks', 'preact/compat'] } : {}),
+        },
         esbuild: esbuildConfig, // esBuild config options.
+
         build: /* <https://vitejs.dev/config/build-options.html> */ {
             target: esVersion.lcnYear, // Matches TypeScript config.
+            ssr: targetEnvIsServer, // Target environment is server-side?
 
             emptyOutDir: isSSRBuild ? false : true, // Not during SSR builds.
             outDir: path.relative(srcDir, distDir), // Relative to `root` directory.
@@ -250,8 +261,6 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
             assetsInlineLimit: 0, // Disable entirely. Use import `?raw`, `?url`, etc.
             assetsDir: path.relative(distDir, a16sDir), // Relative to `outDir` directory.
             // Note: `a16s` is a numeronym for 'acquired resources'; i.e. via imports.
-
-            ssr: targetEnvIsServer, // Target environment is server-side?
 
             manifest: !isSSRBuild, // Enables creation of manifest (for assets).
             sourcemap: 'dev' === mode, // Enables creation of sourcemaps (for debugging).
@@ -262,6 +271,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
             ...(['cma', 'lib'].includes(appType) ? { lib: { entry: appEntries, formats: ['es'] } } : {}),
             rollupOptions: rollupConfig, // See: <https://o5p.me/5Vupql>.
         },
+        test: vitestConfig, // Vitest configuration.
     };
 
     /**

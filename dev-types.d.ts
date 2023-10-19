@@ -18,6 +18,11 @@ declare const $$__APP_PKG_HOMEPAGE__$$: string;
 declare const $$__APP_PKG_BUGS__$$: string;
 declare const $$__APP_BUILD_TIME_YMD__$$: string;
 
+/**
+ * Declares prefresh API in Vite plugin.
+ */
+declare var __PREFRESH__: object;
+
 /*
  * Customizations.
  *

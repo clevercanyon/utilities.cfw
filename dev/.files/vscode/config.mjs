@@ -177,25 +177,44 @@ export default async () => {
 
         /**
          * Comment anchor options.
+         *
+         * @see https://coolors.co/fff0b5-8a826d-6d718a-696969
          */
         'commentAnchors.tags.anchors': {
             '@todo': {
-                'scope': 'workspace',
-                'iconColor': '#fff0b5',
-                'highlightColor': '#fff0b5',
-                'styleMode': 'tag',
+                scope: 'workspace',
+                iconColor: '#fff0b5',
+                highlightColor: '#fff0b5',
+                behavior: 'anchor',
+                styleMode: 'tag',
             },
             '@review': {
-                'scope': 'workspace',
-                'iconColor': '#8a826d',
-                'highlightColor': '#8a826d',
-                'styleMode': 'tag',
+                scope: 'workspace',
+                iconColor: '#8a826d',
+                highlightColor: '#8a826d',
+                behavior: 'anchor',
+                styleMode: 'tag',
             },
             '@someday': {
-                'scope': 'workspace',
-                'iconColor': '#6d718a',
-                'highlightColor': '#6d718a',
-                'styleMode': 'tag',
+                scope: 'workspace',
+                iconColor: '#6d718a',
+                highlightColor: '#6d718a',
+                behavior: 'anchor',
+                styleMode: 'tag',
+            },
+            '@anchor': {
+                scope: 'hidden',
+                iconColor: '#696969',
+                highlightColor: '#696969',
+                behavior: 'anchor',
+                styleMode: 'tag',
+            },
+            '@see-anchor': {
+                scope: 'hidden',
+                iconColor: '#696969',
+                highlightColor: '#696969',
+                behavior: 'link',
+                styleMode: 'tag',
             },
         },
         'commentAnchors.tags.matchCase': true,
@@ -280,7 +299,7 @@ export default async () => {
             'typescriptreact',
         ],
         'eslint.options': {
-            'overrideConfigFile': './eslint.config.mjs',
+            overrideConfigFile: './eslint.config.mjs',
         },
 
         /**

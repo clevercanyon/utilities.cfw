@@ -39,14 +39,8 @@ export default async () => {
                 ...exclusions.exampleIgnores,
             ]),
         ],
-        plugins: [
-            'stylelint-scss', //
-            'stylelint-order',
-        ],
-        extends: [
-            'stylelint-config-standard-scss', //
-            'stylelint-config-recess-order',
-        ],
+        plugins: ['stylelint-order'],
+        extends: ['stylelint-config-recess-order'],
         rules: {
             'no-duplicate-selectors': null,
             'selector-type-no-unknown': null,
@@ -66,24 +60,16 @@ export default async () => {
         overrides: [
             {
                 files: ['**/*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.css])],
-
-                plugins: [...baseConfig.plugins],
-                extends: [...baseConfig.extends],
-                ignoreFiles: [...baseConfig.ignoreFiles],
-
                 customSyntax: 'postcss-safe-parser',
-                rules: { ...baseConfig.rules },
             },
             {
                 files: ['**/*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.scss])],
-
-                plugins: [...baseConfig.plugins],
-                extends: [...baseConfig.extends],
-                ignoreFiles: [...baseConfig.ignoreFiles],
-
                 customSyntax: 'postcss-scss',
+
+                plugins: ['stylelint-scss'],
+                extends: ['stylelint-config-standard-scss'],
                 rules: {
-                    ...baseConfig.rules,
+                    'at-rule-no-unknown': null,
                     'scss/at-rule-no-unknown': baseConfig.rules['at-rule-no-unknown'],
                 },
             },

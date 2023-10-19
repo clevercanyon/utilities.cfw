@@ -1,0 +1,86 @@
+/**
+ * Charset.
+ */
+@charset "UTF-8"; // Must use double quotes.
+
+/**
+ * Default settings.
+ */
+$google-fonts: (
+    'Georama': 'ital,wght@0,100..900;1,100..900',
+) !default;
+
+/**
+ * Google fonts.
+ */
+@each $family, $weights in $google-fonts {
+    // This import is ok. It must use `url()` for variable interpolation to work properly.
+    /* stylelint-disable-next-line no-invalid-position-at-import-rule, import-notation -- ok. */
+    @import url('https://fonts.googleapis.com/css2?family=#{$family}:#{$weights}&display=swap');
+}
+
+/**
+ * Tailwind layers.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind variants;
+
+/**
+ * Our base layer.
+ */
+@layer base {
+    html {
+        @apply text-base;
+        @apply bg-color text-color-fg;
+
+        :where(a, .link):not(:where(.prose, .not-basic, .prose *, .not-basic *)) {
+            @apply text-color-link/80 no-underline hover:text-color-link;
+
+            &:hover {
+                @apply underline;
+            }
+        }
+
+        :where(h1, h2, h3, h4, h5, h6):not(:where(.prose, .not-basic, .prose *, .not-basic *)) {
+            @apply text-color-heading;
+        }
+    }
+
+    #header {
+        @apply bg-color-header text-color-header-fg;
+
+        :where(a, .link):not(:where(.prose, .not-basic, .prose *, .not-basic *)) {
+            @apply text-color-header-link/80 hover:text-color-header-link;
+        }
+
+        :where(h1, h2, h3, h4, h5, h6):not(:where(.prose, .not-basic, .prose *, .not-basic *)) {
+            @apply text-color-header-heading;
+        }
+    }
+
+    #sidebar {
+        @apply bg-color-sidebar text-color-sidebar-fg;
+
+        :where(a, .link):not(:where(.prose, .not-basic, .prose *, .not-basic *)) {
+            @apply text-color-sidebar-link/80 hover:text-color-sidebar-link;
+        }
+
+        :where(h1, h2, h3, h4, h5, h6):not(:where(.prose, .not-basic, .prose *, .not-basic *)) {
+            @apply text-color-sidebar-heading;
+        }
+    }
+
+    #footer {
+        @apply bg-color-footer text-color-footer-fg;
+
+        :where(a, .link):not(:where(.prose, .not-basic, .prose *, .not-basic *)) {
+            @apply text-color-footer-link/80 hover:text-color-footer-link;
+        }
+
+        :where(h1, h2, h3, h4, h5, h6):not(:where(.prose, .not-basic, .prose *, .not-basic *)) {
+            @apply text-color-footer-heading;
+        }
+    }
+}
