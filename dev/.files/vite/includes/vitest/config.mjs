@@ -41,7 +41,7 @@ export default async ({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable
             ...exclusions.docIgnores,
             ...(vitestSandboxEnable ? [] : [...exclusions.sandboxIgnores]),
             ...(vitestExamplesEnable ? [] : [...exclusions.exampleIgnores]),
-            ...exclusions.adhocXIgnores, // Deliberate ad-hoc exclusions.
+            ...exclusions.adhocExIgnores, // Deliberate ad-hoc exclusions.
         ]),
     ];
     const vitestWatchExcludes = [
@@ -64,7 +64,7 @@ export default async ({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable
             ...exclusions.docIgnores,
             ...(vitestSandboxEnable ? [] : [...exclusions.sandboxIgnores]),
             ...(vitestExamplesEnable ? [] : [...exclusions.exampleIgnores]),
-            // ...exclusions.adhocXIgnores -- Excluded from tests, but still watch.
+            // ...exclusions.adhocExIgnores -- Excluded from tests, but still watch.
         ]),
     ];
     const vitestIncludes =

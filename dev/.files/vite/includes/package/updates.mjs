@@ -11,7 +11,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { $chalk } from '../../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $obj, $str } from '../../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $mm, $obj } from '../../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import extensions from '../../../bin/includes/extensions.mjs';
 import u from '../../../bin/includes/utilities.mjs';
 
@@ -59,7 +59,7 @@ export default async ({
             case ['spa', 'mpa'].includes(appType): {
                 const canonicalHTMLExtRegExp = new RegExp('\\.' + extensions.asRegExpFrag([...extensions.byCanonical.html]) + '$', 'ui');
                 const appEntryIndexAsSrcSubpath = appEntriesAsSrcSubpaths.find((subpath) =>
-                    $str.mm.isMatch(subpath, 'index.' + extensions.asBracedGlob([...extensions.byCanonical.html])),
+                    $mm.isMatch(subpath, 'index.' + extensions.asBracedGlob([...extensions.byCanonical.html])),
                 );
                 const appEntryIndexAsSrcSubpathNoExt = appEntryIndexAsSrcSubpath.replace(/\.[^.]+$/u, '');
 
@@ -86,7 +86,7 @@ export default async ({
             }
             case ['cma', 'lib'].includes(appType): {
                 const appEntryIndexAsSrcSubpath = appEntriesAsSrcSubpaths.find((subpath) =>
-                    $str.mm.isMatch(subpath, 'index.' + extensions.asBracedGlob([...extensions.byDevGroup.sTypeScript, ...extensions.byDevGroup.sTypeScriptReact])),
+                    $mm.isMatch(subpath, 'index.' + extensions.asBracedGlob([...extensions.byDevGroup.sTypeScript, ...extensions.byDevGroup.sTypeScriptReact])),
                 );
                 const appEntryIndexAsSrcSubpathNoExt = appEntryIndexAsSrcSubpath.replace(/\.[^.]+$/u, '');
 

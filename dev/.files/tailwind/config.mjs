@@ -57,13 +57,13 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
                 'lte-desktop': { max: '2559px' },
                 'lte-laptop': { max: '1439px' },
                 'lte-notebook': { max: '1279px' },
-                'lte-tablet': { max: '959px' },
-                'lte-phone': { max: '479px' },
+                'lte-tablet': { raw: '(max-width: 959px)' },
+                'lte-phone': { raw: '(max-width: 479px)' },
 
                 // Greater than or equal to, in ascending specificity order.
                 // The order matters, because it affects specificity.
-                'gte-phone': { min: '320px' },
-                'gte-tablet': { min: '480px' },
+                'gte-phone': { raw: '(min-width: 320px)' },
+                'gte-tablet': { raw: '(min-width: 480px)' },
                 'gte-notebook': { min: '960px' },
                 'gte-laptop': { min: '1280px' },
                 'gte-desktop': { min: '1440px' },
@@ -71,14 +71,15 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
 
                 // Device-specific min/max breakpoints, in any order.
                 // Order doesn’t really matter due to min/max specificity.
-                'phone': { min: '320px', max: '479px' },
-                'tablet': { min: '480px', max: '959px' },
+                'phone': { raw: '(min-width: 320px) and (max-width: 479px)' },
+                'tablet': { raw: '(min-width: 480px) and (max-width: 959px)' },
                 'notebook': { min: '960px', max: '1279px' },
                 'laptop': { min: '1280px', max: '1439px' },
                 'desktop': { min: '1440px', max: '2559px' },
                 'widescreen': { raw: '(min-width: 2560px)' },
 
-                // Note: We use `raw` to avoid widescreen inadvertently becoming a max-width for containers.
+                // Note: We use `raw` to avoid smaller breakpoints becoming a max-width for containers.
+                // We also use `raw` to avoid widescreen inadvertently becoming a max-width for containers.
                 // If something should adapt to widescreen, the best practice is to simply not use a container.
             },
             container: { center: true }, // No need for `mx-auto` on each container.
@@ -111,6 +112,20 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
                             },
                         },
                     },
+                },
+                keyframes: {
+                    'fade-in': {
+                        from: { opacity: 0 },
+                        to: { opacity: 1 },
+                    },
+                    'fade-out': {
+                        from: { opacity: 1 },
+                        to: { opacity: 0 },
+                    },
+                },
+                animation: {
+                    'fade-in': 'fade-in 150ms linear',
+                    'fade-out': 'fade-out 150ms linear',
                 },
             },
         },

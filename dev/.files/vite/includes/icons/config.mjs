@@ -21,7 +21,7 @@ export default async (/* {} */) => {
     return (await import('unplugin-icons/vite')).default({
         compiler: 'jsx',
         jsx: 'preact',
-        scale: 1.2,
+        scale: 1, // em.
         defaultStyle: '',
         defaultClass: '',
     });

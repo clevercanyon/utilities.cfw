@@ -98,6 +98,7 @@ export default async () => {
             esModuleInterop: true,
             isolatedModules: true,
             resolveJsonModule: true,
+            noErrorTruncation: true,
             verbatimModuleSyntax: true,
             allowImportingTsExtensions: true,
 

@@ -23,6 +23,7 @@
          */
         "esbenp.prettier-vscode",
         "tamasfe.even-better-toml",
+        "ms-python.black-formatter",
 
         /*
          * Markdown.
@@ -40,13 +41,11 @@
         /*
          * Misc languages.
          */
+        "ms-python.python",
         "webben.browserslist",
         "idleberg.applescript",
         "mrmlnc.vscode-apache",
         "ms-vscode.hexeditor",
-
-        "ms-python.python", // Optional, used rarely.
-        "ms-python.black-formatter", // Optional, used rarely.
 
         /*
          * Misc features.

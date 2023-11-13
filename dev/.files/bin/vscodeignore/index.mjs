@@ -21,7 +21,7 @@ export default async ({ projDir }) => {
      * Defines ignore contents.
      */
     let vscodeIgnoreFileContentsIgnores = $str.dedent(`
-		# Last generated ${$time.i18n()}.
+		# Last generated ${$time.now().toProse()}.
 	`);
     for (const [groupName, group] of Object.entries($path.defaultNPMIgnoresByGroup())) {
         vscodeIgnoreFileContentsIgnores += '\n\n# ' + groupName;

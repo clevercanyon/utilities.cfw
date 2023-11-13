@@ -1,5 +1,5 @@
 /**
- * C10n config file.
+ * C10n post-processing plugin.
  *
  * Vite is not aware of this config file's location.
  *
@@ -11,26 +11,25 @@
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
-import * as preact from 'preact';
 import { $http as $cfpꓺhttp } from '../../../../../node_modules/@clevercanyon/utilities.cfp/dist/index.js';
 import { $chalk, $fs, $glob } from '../../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $obp, $preact, $str } from '../../../../../node_modules/@clevercanyon/utilities/dist/index.js';
-import { StandAlone as $preactꓺcomponentsꓺError404ꓺStandAlone } from '../../../../../node_modules/@clevercanyon/utilities/dist/preact/components/error-404.js';
+import { $mm, $obp, $preact, $str } from '../../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { StandAlone as StandAlone404 } from '../../../../../node_modules/@clevercanyon/utilities/dist/preact/components/404.js';
 import exclusions from '../../../bin/includes/exclusions.mjs';
 import extensions from '../../../bin/includes/extensions.mjs';
 import u from '../../../bin/includes/utilities.mjs';
 
 /**
- * Configures c10n for Vite.
+ * Configures Vite/Rollup post-processing.
  *
  * @param   props Props from vite config file driver.
  *
- * @returns       C10n configuration.
+ * @returns       Plugin configuration.
  */
 export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, appType, targetEnv, staticDefs, pkgUpdates }) => {
     let postProcessed = false; // Initialize.
     return {
-        name: 'vite-plugin-c10n-post-process',
+        name: 'vite-plugin-c10n-post-processing',
         enforce: 'post', // After others on this hook.
 
         async closeBundle(/* Rollup hook. */) {
@@ -87,7 +86,7 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
                         if (
                             // These things we expect to prune regularly.
                             // Anything else warrants more attention (see below).
-                            $str.matches(
+                            $mm.test(
                                 projRelPath,
                                 [
                                     ...exclusions.devIgnores, //
@@ -134,6 +133,11 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
 
             /**
              * Updates a few files that configure apps running on Cloudflare Pages.
+             *
+             * None of these file must exist, and none of these must contain replacement codes. We leave it up to the
+             * implementation to decide. If they do not exist, or do not contain replacement codes, we assume that
+             * nothing should occur. For example, it might be desirable in some cases for `./robots.txt`, `sitemap.xml`,
+             * or others to be served dynamically. In which case they may not exist in these locations statically.
              */
             if ('build' === command && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
                 for (const file of await $glob.promise(
@@ -161,7 +165,7 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
                         fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_HEADERS__$$', cfpDefaultHeaders);
                     }
                     if (['404.html'].includes(fileRelPath)) {
-                        const cfpDefault404 = '<!DOCTYPE html>' + $preact.ssr.renderToString(preact.h($preactꓺcomponentsꓺError404ꓺStandAlone));
+                        const cfpDefault404 = '<!doctype html>' + $preact.ssr.renderToString($preact.create(StandAlone404));
                         fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_404_HTML__$$', cfpDefault404);
                     }
                     if (['_headers', '_redirects', 'robots.txt'].includes(fileRelPath)) {

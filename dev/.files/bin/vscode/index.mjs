@@ -32,7 +32,7 @@ export default async ({ projDir }) => {
          * @note This entire file will be updated automatically.
          * @note Instead of editing here, please review \`./settings.mjs\`.
          *
-         * Last generated using \`./settings.mjs\` ${$time.i18n()}.
+         * Last generated using \`./settings.mjs\` ${$time.now().toProse()}.
          */
     `);
 

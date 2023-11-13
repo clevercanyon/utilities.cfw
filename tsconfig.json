@@ -7,7 +7,7 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./tsconfig.mjs`.
  *
- * Last generated using `./tsconfig.mjs` Thu, Oct 19, 2023, 10:37:06 AM EDT.
+ * Last generated using `./tsconfig.mjs` Nov 13, 2023 10:04 PM UTC.
  */
 {
     "include": ["./src/**/*", "./dev-types.d.ts"],
@@ -114,6 +114,7 @@
         "esModuleInterop": true,
         "isolatedModules": true,
         "resolveJsonModule": true,
+        "noErrorTruncation": true,
         "verbatimModuleSyntax": true,
         "allowImportingTsExtensions": true,
         "paths": {

@@ -12,7 +12,7 @@ import fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { $chalk, $cmd, $fs, $glob, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $str } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $mm } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import coreProjects from './includes/core-projects.mjs';
 import u from './includes/utilities.mjs';
 
@@ -748,7 +748,7 @@ class Projects {
          */
 
         for (const projDirSubpathGlob of coreProjects.updates.order.concat(this.args.order)) {
-            for (const projDirSubpath of $str.mm.match(unorderedResults, projDirSubpathGlob)) {
+            for (const projDirSubpath of $mm.match(unorderedResults, projDirSubpathGlob)) {
                 if (-1 === (i = unorderedResults.indexOf(projDirSubpath))) {
                     continue; // Not applicable.
                 }
@@ -1288,7 +1288,7 @@ await (async () => {
                         if (!args.globs.length) {
                             throw new Error('Empty `glob` option.');
                         }
-                        if (args.globs.includes('**') || $str.mm.match(args.globs, ['\\*\\*'], { contains: true }).length) {
+                        if (args.globs.includes('**') || $mm.match(args.globs, ['\\*\\*'], { contains: true }).length) {
                             throw new Error('Globstars `**` are prohitibed in `glob` option.');
                         }
                         if (!args.cmds.length && !args.runs.length) {

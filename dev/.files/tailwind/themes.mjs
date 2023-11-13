@@ -57,17 +57,17 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
          * prefixed as `color-prose-*`, `color-header-*`, `color-sidebar-*`, `color-footer-*`. If you'd like to override
          * any basic color derivations, explicitly define the colors you wish to override.
          *
-         * 💡 Tip: Fast track. Just change `color-link` to match your brand colors. The other colors use common defaults
-         * that typically work well for most brands. Tune the rest in later.
+         * 💡 Tip: Fast track. Just change `color-basic-link` to match your brand colors. The other colors use common
+         * defaults that typically work well for most brands. Tune the rest in later.
          */
         const defaultBasicColors = {
-            'color': '#09090b', // Background color.
-            'color-fg': '#f0f0f0', // Foreground color.
-            'color-link': '#80aff9', // Link/anchor color.
-            'color-heading': '#ffffff', // Heading color.
+            'color-basic': '#09090b', // Background color.
+            'color-basic-fg': '#f0f0f0', // Foreground color.
+            'color-basic-link': '#80aff9', // Link/anchor color.
+            'color-basic-heading': '#ffffff', // Heading color.
         };
         const basicColors = $obj.defaults({}, $obj.pick(theme.extend.colors, Object.keys(defaultBasicColors)), defaultBasicColors);
-        const basicBGIsDark = $color.isDark(basicColors['color']); // Detects basic background color being dark.
+        const basicBGIsDark = $color.isDark(basicColors['color-basic']); // Detects basic background color being dark.
 
         /**
          * Defines basic prose colors.
@@ -77,35 +77,35 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
          * variables at these prose-specific color classes; {@see baseConfigThemes()}.
          */
         const defaultBasicProseColors = {
-            'color-prose-body': basicColors['color-fg'],
-            'color-prose-links': basicColors['color-link'],
+            'color-prose-body': basicColors['color-basic-fg'],
+            'color-prose-links': basicColors['color-basic-link'],
 
-            'color-prose-headings': basicColors['color-heading'],
-            'color-prose-lead': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-fg'], 0.1),
-            'color-prose-bold': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-fg'], 0.1),
+            'color-prose-headings': basicColors['color-basic-heading'],
+            'color-prose-lead': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.1),
+            'color-prose-bold': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.1),
 
-            'color-prose-counters': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-fg'], 0.35),
-            'color-prose-bullets': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-fg'], 0.35),
+            'color-prose-counters': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.35),
+            'color-prose-bullets': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.35),
 
-            'color-prose-quotes': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-fg'], 0.25),
-            'color-prose-quote-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-fg'], 0.85),
+            'color-prose-quotes': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.25),
+            'color-prose-quote-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.85),
 
-            'color-prose-kbd': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-fg'], 0.1),
+            'color-prose-kbd': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.1),
             // This is incorporated into an `rgb(x x x / x)` final color.
-            'color-prose-kbd-shadows': $color.toRGBListNoAlpha(basicColors['color-fg']),
+            'color-prose-kbd-shadows': $color.toRGBListNoAlpha(basicColors['color-basic-fg']),
 
-            'color-prose-code': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-fg'], 0.1),
+            'color-prose-code': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.1),
             // This is incorporated into an `rgb(x x x / x)` final color.
-            'color-prose-code-shadows': $color.toRGBListNoAlpha(basicColors['color-fg']),
+            'color-prose-code-shadows': $color.toRGBListNoAlpha(basicColors['color-basic-fg']),
 
-            'color-prose-pre': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color'], 0.05),
-            'color-prose-pre-code': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-fg'], 0.25),
+            'color-prose-pre': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.05),
+            'color-prose-pre-code': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.25),
 
-            'color-prose-th-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-fg'], 0.75),
-            'color-prose-td-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-fg'], 0.85),
+            'color-prose-th-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.75),
+            'color-prose-td-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.85),
 
-            'color-prose-hr': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-fg'], 0.85),
-            'color-prose-captions': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-fg'], 0.25),
+            'color-prose-hr': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.85),
+            'color-prose-captions': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.25),
         };
 
         /**
@@ -124,20 +124,20 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
          * section-specific. We want the ability to change the basic appearance of these sections later.
          */
         const defaultBasicSectionColors = {
-            'color-header': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color'], 0.015),
-            'color-header-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-fg'], 0.015),
-            'color-header-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-link'], 0.015),
-            'color-header-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-heading'], 0.015),
+            'color-header': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic'], 0.015),
+            'color-header-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.015),
+            'color-header-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-link'], 0.015),
+            'color-header-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-heading'], 0.015),
 
-            'color-sidebar': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color'], 0.05),
-            'color-sidebar-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-fg'], 0.225),
-            'color-sidebar-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-link'], 0.05),
-            'color-sidebar-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-heading'], 0.225),
+            'color-sidebar': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.05),
+            'color-sidebar-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.225),
+            'color-sidebar-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-link'], 0.05),
+            'color-sidebar-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-heading'], 0.225),
 
-            'color-footer': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color'], 0.015),
-            'color-footer-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-fg'], 0.015),
-            'color-footer-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-link'], 0.015),
-            'color-footer-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-heading'], 0.015),
+            'color-footer': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic'], 0.015),
+            'color-footer-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.015),
+            'color-footer-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-link'], 0.015),
+            'color-footer-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-heading'], 0.015),
         };
 
         /**
@@ -146,14 +146,14 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
          * - Abstract palette: {@see https://coolors.co/595959-2e489e-3e4660-615c49-745a2f-0f58b8-80aff9-ffe0b8}.
          * - Semantic palette: {@see https://coolors.co/1c5f35-8a2828-865027-2e489e-e4e4e7-3f3f46-18181b-fef9c3}.
          *
-         * These colors should all consider the basic background `color`, because all of these colors should work well
-         * for objects that lay on top of the background color. In some cases, you may need to stray from exact colors
-         * used in a brand’s logo, as these are not for the brand’s logo, they are for the site. That said, `color-true`
-         * is an exception. It should always be a true exact-match to a brand’s primary logo color.
+         * These colors should all consider the `color-basic` background color, because all of these colors should work
+         * well for objects that lay on top of the background color. In some cases, you may need to stray from exact
+         * colors used in a brand’s logo, as these are not for the brand’s logo, they are for the site. That said,
+         * `color-true` is an exception. It should always be a true exact-match to a brand’s primary logo color.
          *
          * From these brand colors we automatically work out an appropriate readable foreground text color; i.e., black
-         * or white, based on the color’s luminance. Or, if you prefer, you can choose to define any of the `*-fg`
-         * suffixed variants explicitly, effectively overriding luminance-based defaults.
+         * or white, based on the color’s RGB weights and/or luminance. Or, if you prefer, you can choose to define any
+         * of the `*-fg` suffixed variants explicitly, effectively overriding autogenerated defaults.
          *
          * The easiest way to define brand colors is to test them being used to create a prominent component, such as a
          * button; e.g., `<Button color="primary|secondary|accent|feature|dazzle|success|info|...">`.
@@ -323,11 +323,10 @@ const baseConfigThemes = /* not async compatible */ () => {
     /**
      * Configures other named themes.
      *
-     * Named themes extend the default theme, so anything configured here only needs to override defaults. Then, to
-     * enable a named theme, simply add `<html class="{named-theme}">` to your HTML markup.
-     *
-     * The best practice is to end each theme’s name with a `-theme` suffix. If a named theme class is not present in
-     * the HTML markup, then the default theme will be applied automatically.
+     * Named themes extend the default theme, so anything configured here only needs to override defaults. To enable a
+     * named theme, add `<html class="{named-theme}">`, which is handled automatically by `<LayoutContext>`, `<HTML>`.
+     * Each theme’s name must end with a `-theme` suffix. If a named theme class is not present in the HTML markup, then
+     * the default theme will be applied automatically.
      *
      * Don’t add named themes unnecessarily. A default theme will typically do fine. The more themes you add, the larger
      * your bundle size becomes. Also, don’t name a theme `dark`; {@see https://o5p.me/jLROv0}.

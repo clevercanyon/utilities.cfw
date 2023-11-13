@@ -33,6 +33,7 @@ export default {
     asFindReplaceRegExps: [
         { find: /^react$/u, replacement: path.resolve(projDir, './node_modules/preact/compat') },
         { find: /^react\/jsx-runtime$/u, replacement: path.resolve(projDir, './node_modules/preact/jsx-runtime') },
+
         { find: /^react-dom$/u, replacement: path.resolve(projDir, './node_modules/preact/compat') },
         { find: /^react-dom\/test-utils$/u, replacement: path.resolve(projDir, './node_modules/preact/test-utils') },
     ],

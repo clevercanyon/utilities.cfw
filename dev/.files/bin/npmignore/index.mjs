@@ -21,7 +21,7 @@ export default async ({ projDir }) => {
      * Defines ignore contents.
      */
     let npmIgnoreFileContentsIgnores = $str.dedent(`
-        # Last generated ${$time.i18n()}.
+        # Last generated ${$time.now().toProse()}.
 	`);
     for (const [groupName, group] of Object.entries($path.defaultNPMIgnoresByGroup())) {
         npmIgnoreFileContentsIgnores += '\n\n# ' + groupName;

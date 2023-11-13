@@ -5,7 +5,7 @@
 import './resources/init.ts';
 
 import type { $type } from '@clevercanyon/utilities';
-import { $env, $http, $json, $str, $url } from '@clevercanyon/utilities';
+import { $env, $http, $json, $mm, $str, $url } from '@clevercanyon/utilities';
 import * as cfKVA from '@cloudflare/kv-asset-handler';
 
 const cache = (caches as unknown as $type.cf.CacheStorage).default;
@@ -47,7 +47,7 @@ export type InitialFetchEventData = {
 /**
  * Handles fetch events.
  *
- * @param   feData Initial fetch event data.
+ * @param   ifeData Initial fetch event data.
  *
  * @returns        Response promise.
  */
@@ -64,7 +64,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         if (
             $http.requestPathIsStatic(request, url) && //
             $env.get('__STATIC_CONTENT' /* Worker site? */) &&
-            $str.matches(url.pathname, $url.pathFromAppBase('./') + 'assets/**')
+            $mm.test(url.pathname, $url.pathFromAppBase('./') + 'assets/**')
         ) {
             return handleFetchCache(handleFetchStaticAssets, feData);
         }
@@ -106,6 +106,8 @@ export const handleFetchCache = async (route: Route, feData: FetchEventData): Pr
     const response = await route(feData);
 
     if ('GET' === request.method && 206 !== response.status && '*' !== response.headers.get('vary')) {
+        // Cloudflare will not actually cache if response headers say not to cache.
+        // For further details regarding `cache.put()`; {@see https://o5p.me/gMv7W2}.
         ctx.waitUntil(cache.put(request, response.clone()));
     }
     return response;
@@ -122,7 +124,7 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type
     const { request, routes, url } = feData;
 
     for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
-        if ($str.matches(url.pathname, $url.pathFromAppBase('./') + routeSubpathGlob)) {
+        if ($mm.test(url.pathname, $url.pathFromAppBase('./') + routeSubpathGlob)) {
             return routeSubpathHandler(feData);
         }
     }

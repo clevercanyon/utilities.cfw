@@ -66,6 +66,12 @@ export default async () => {
                 cmds: [['npx', 'vite', 'dev', '{{@}}', ...(args.mode ? [] : ['--mode', 'dev'])]],
             };
         },
+        'dev:prefresh': async ({ args }) => {
+            return {
+                env: { ...nodeEnvVars, VITE_PREFRESH_ENABLE: 'true' },
+                cmds: [['npx', 'vite', 'dev', '{{@}}', ...(args.mode ? [] : ['--mode', 'dev'])]],
+            };
+        },
         'preview': async ({ args }) => {
             return {
                 env: { ...nodeEnvVars },

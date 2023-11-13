@@ -33,6 +33,7 @@ export default async () => {
 
             'tailwindcss': { config: path.resolve(projDir, './tailwind.config.mjs') },
             'postcss-preset-env': { stage: 3 }, // Includes autoprefixer.
+            'postcss-variable-compress': {}, // Compresses variables.
         },
     };
 };

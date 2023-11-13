@@ -28,7 +28,7 @@ export default async ({ projDir }) => {
      * Defines environment contents.
      */
     let browserslistrcFileContentsEnvs = $str.dedent(`
-        # Last generated ${$time.i18n()}.
+        # Last generated ${$time.now().toProse()}.
     `);
     for (const targetEnv of ['production', 'any', 'node', 'cfw', 'cfp', 'web', 'webw']) {
         switch (targetEnv) {

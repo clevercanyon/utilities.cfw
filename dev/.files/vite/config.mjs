@@ -20,7 +20,8 @@ import extensions from '../bin/includes/extensions.mjs';
 import importAliases from '../bin/includes/import-aliases.mjs';
 import u from '../bin/includes/utilities.mjs';
 import viteA16sDir from './includes/a16s/dir.mjs';
-import viteC10nConfig from './includes/c10n/config.mjs';
+import viteC10nPostProcessingConfig from './includes/c10n/post-processing.mjs';
+import viteC10nTransformsConfig from './includes/c10n/transforms.mjs';
 import viteEJSConfig from './includes/ejs/config.mjs';
 import viteESBuildConfig from './includes/esbuild/config.mjs';
 import viteIconsConfig from './includes/icons/config.mjs';
@@ -85,7 +86,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
         ['$$__' + appEnvPrefixes[0] + 'PKG_REPOSITORY__$$']: pkg.repository || '',
         ['$$__' + appEnvPrefixes[0] + 'PKG_HOMEPAGE__$$']: pkg.homepage || '',
         ['$$__' + appEnvPrefixes[0] + 'PKG_BUGS__$$']: pkg.bugs || '',
-        ['$$__' + appEnvPrefixes[0] + 'BUILD_TIME_YMD__$$']: $time.parse('now').toSQLDate() || '',
+        ['$$__' + appEnvPrefixes[0] + 'BUILD_TIME_YMD__$$']: $time.now().toYMD() || '',
     };
     Object.keys(env) // Add string env vars to static defines.
         .filter((key) => new RegExp('^(?:' + appEnvPrefixes.map((v) => $str.escRegExp(v)).join('|') + ')', 'u').test(key))
@@ -129,7 +130,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
     const minifyEnable = 'dev' !== mode && !['lib'].includes(appType);
     const vitestSandboxEnable = process.env.VITEST && $str.parseValue(String(process.env.VITEST_SANDBOX_ENABLE || ''));
     const vitestExamplesEnable = process.env.VITEST && $str.parseValue(String(process.env.VITEST_EXAMPLES_ENABLE || ''));
-    const prefreshEnable = 'serve' === command && 'dev' === mode && ['spa', 'mpa'].includes(appType) && !process.env.VITEST;
+    const prefreshEnable = process.env.VITE_PREFRESH_ENABLE && !process.env.VITEST && 'serve' === command && 'dev' === mode && ['spa', 'mpa'].includes(appType);
 
     /**
      * Validates all of the above.
@@ -168,11 +169,12 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
      * Configures plugins for Vite.
      */
     const plugins = [
+        await viteC10nTransformsConfig({}),
         await viteIconsConfig({}),
         await viteMDXConfig({ projDir }),
         await viteEJSConfig({ mode, projDir, srcDir, pkg, env }),
         await viteMinifyConfig({ mode }),
-        await viteC10nConfig({
+        await viteC10nPostProcessingConfig({
             mode, command, isSSRBuild, projDir, distDir,
             pkg, env, appType, targetEnv, staticDefs, pkgUpdates
         }), // prettier-ignore
@@ -247,7 +249,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
         optimizeDeps: {
             force: true, // Don’t use cache for optimized deps; recreate.
             // Preact is required by prefresh plugin; {@see https://o5p.me/WmuefH}.
-            ...(prefreshEnable ? { include: ['preact', 'preact/hooks', 'preact/compat'] } : {}),
+            ...(prefreshEnable ? { include: ['preact', 'preact/hooks', 'preact/compat', '@preact/signals'] } : {}),
         },
         esbuild: esbuildConfig, // esBuild config options.
 
@@ -265,7 +267,10 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
             manifest: !isSSRBuild, // Enables creation of manifest (for assets).
             sourcemap: 'dev' === mode, // Enables creation of sourcemaps (for debugging).
 
-            minify: minifyEnable ? 'esbuild' : false, // Minify userland code?
+            minify: minifyEnable ? 'esbuild' : false, // {@see https://o5p.me/pkJ5Xz}.
+            cssMinify: minifyEnable ? 'lightningcss' : false, // {@see https://o5p.me/h0Hgj3}.
+            // We ran several tests between `esbuild`, `cssnano`, and `lightningcss` wins.
+
             modulePreload: false, // Disable. DOM injections conflict with our SPAs.
 
             ...(['cma', 'lib'].includes(appType) ? { lib: { entry: appEntries, formats: ['es'] } } : {}),

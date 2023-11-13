@@ -64,7 +64,7 @@ export default async () => {
                 ...exclusions.exampleIgnores,
                 ...exclusions.docIgnores,
                 ...exclusions.benchIgnores,
-                ...exclusions.adhocXIgnores,
+                ...exclusions.adhocExIgnores,
             ]),
         ]),
         // Configured to run JS tests only; not TypeScript tests.

@@ -22,6 +22,9 @@ const pkg = await u.pkg();
 const pkgSlug = $app.pkgSlug(pkg.name);
 const hop = $brand.get('@clevercanyon/hop.gdn');
 
+// Removes `-(?:workers?|hop)`, and anything hyphenated after, yielding a cleaner slug.
+const cleanWorkerPkgSlug = pkgSlug.replace(/^(.+?)(?:-+(?:workers?|hop)\b(?:-.*)?)/iu, '$1');
+
 /**
  * Defines Wrangler settings.
  */
@@ -42,8 +45,8 @@ export default {
     defaultEnvironment: 'production',
     defaultProductionBranch: 'production',
 
-    defaultWorkerName: pkgSlug,
-    defaultProjectName: pkgSlug,
+    defaultWorkerName: cleanWorkerPkgSlug,
+    defaultProjectName: cleanWorkerPkgSlug,
 
     osDir: path.resolve(os.homedir(), './.wrangler'),
     projDir: path.resolve(projDir, './.wrangler'),

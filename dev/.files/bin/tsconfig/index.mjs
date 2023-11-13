@@ -32,7 +32,7 @@ export default async ({ projDir }) => {
          * @note This entire file will be updated automatically.
          * @note Instead of editing here, please review \`./tsconfig.mjs\`.
          *
-         * Last generated using \`./tsconfig.mjs\` ${$time.i18n()}.
+         * Last generated using \`./tsconfig.mjs\` ${$time.now().toProse()}.
          */
     `);
 

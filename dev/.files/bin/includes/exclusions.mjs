@@ -184,7 +184,7 @@ export default {
     /**
      * Specifically for use in our projects.
      */
-    adhocXIgnores: ['**/x-*/**'], // For special use cases.
+    adhocExIgnores: ['**/ex-*/**'], // For special use cases.
 
     /**
      * Utilities.

@@ -30,7 +30,7 @@ export default async ({ projDir }) => {
         # @note This entire file will be updated automatically.
         # @note Instead of editing here, please review \`./wrangler.mjs\`.
         #
-        # Last generated using \`./wrangler.mjs\` ${$time.i18n()}.
+        # Last generated using \`./wrangler.mjs\` ${$time.now().toProse()}.
         ##
     `);
 

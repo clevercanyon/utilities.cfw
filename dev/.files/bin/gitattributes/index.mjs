@@ -21,7 +21,7 @@ export default async ({ projDir }) => {
      * Defines text|binary contents.
      */
     let gitAttributesFileContentsTextBinary = $str.dedent(`
-        # Last generated ${$time.i18n()}.
+        # Last generated ${$time.now().toProse()}.
 
         # Default
 
