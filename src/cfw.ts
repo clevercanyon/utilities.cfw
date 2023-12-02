@@ -64,7 +64,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         if (
             $http.requestPathIsStatic(request, url) && //
             $env.get('__STATIC_CONTENT' /* Worker site? */) &&
-            $mm.test(url.pathname, $url.pathFromAppBase('./') + 'assets/**')
+            $mm.test(url.pathname, $url.pathFromAppBase('./assets/') + '**')
         ) {
             return handleFetchCache(handleFetchStaticAssets, feData);
         }
