@@ -26,11 +26,15 @@ export default async ({ projDir }) => {
 
     /**
      * Defines environment contents.
+     *
+     * - `production` is an established default that many tools use when `NODE_ENV=production`.
+     * - `development` is an established default that many tools use when `NODE_ENV=development`.
+     * - The other environments correlate with our target build environments.
      */
     let browserslistrcFileContentsEnvs = $str.dedent(`
         # Last generated ${$time.now().toProse()}.
     `);
-    for (const targetEnv of ['production', 'any', 'node', 'cfw', 'cfp', 'web', 'webw']) {
+    for (const targetEnv of ['production', 'development', 'any', 'node', 'cfw', 'cfp', 'web', 'webw']) {
         switch (targetEnv) {
             default: {
                 browserslistrcFileContentsEnvs += '\n\n[' + targetEnv + ']';
@@ -38,15 +42,7 @@ export default async ({ projDir }) => {
         }
         switch (targetEnv) {
             case 'production':
-            case 'any':
-            case 'cfw':
-            case 'cfp': {
-                browserslistrcFileContentsEnvs += '\n' + 'last 1 chrome versions';
-                break;
-            }
-        }
-        switch (targetEnv) {
-            case 'production':
+            case 'development':
             case 'any':
             case 'node': {
                 browserslistrcFileContentsEnvs += '\n' + 'node >= ' + nodeVersion.current;
@@ -55,10 +51,18 @@ export default async ({ projDir }) => {
         }
         switch (targetEnv) {
             case 'production':
+            case 'development':
             case 'any':
             case 'web':
             case 'webw': {
                 browserslistrcFileContentsEnvs += '\n' + browsersWithSupportForEcmaVersion(esVersion.lcnYear).join('\n');
+                break;
+            }
+        }
+        switch (targetEnv) {
+            case 'cfw':
+            case 'cfp': {
+                browserslistrcFileContentsEnvs += '\n' + 'last 1 chrome versions';
                 break;
             }
         }

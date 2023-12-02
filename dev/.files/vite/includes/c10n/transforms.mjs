@@ -23,6 +23,10 @@ export default async (/* {} */) => {
             /**
              * If `moduleSideEffects` is set to `false` and no other module imports anything from the module, then the
              * module will not be included even if the module would have side effects; {@see https://o5p.me/EcB2d6}.
+             *
+             * We explicitly flag `@preact/signals`, `@preact/signals-core` as not having side-effects, such that they
+             * won’t be added to our bundle simply because our `$preact` utilities export them. In truth, these do have
+             * side-effects, but we don’t care about the side-effects unless we are actually using `@preact/signals`.
              */
             if (/@preact\/signals(?:-core)?\b/iu.test(id)) {
                 return { moduleSideEffects: false };

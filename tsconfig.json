@@ -7,7 +7,7 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./tsconfig.mjs`.
  *
- * Last generated using `./tsconfig.mjs` Nov 13, 2023 10:04 PM UTC.
+ * Last generated using `./tsconfig.mjs` Dec 2, 2023 5:21 PM UTC.
  */
 {
     "include": ["./src/**/*", "./dev-types.d.ts"],
@@ -118,6 +118,9 @@
         "verbatimModuleSyntax": true,
         "allowImportingTsExtensions": true,
         "paths": {
+            "#^*": ["../*"],
+            "#@*": ["./resources/*"],
+            "#*": ["./*"],
             "react": ["../node_modules/preact/compat"],
             "react/jsx-runtime": ["../node_modules/preact/jsx-runtime"],
             "react-dom": ["../node_modules/preact/compat"],
@@ -126,17 +129,29 @@
     },
     "mdx": {
         "plugins": [
-            "remark-frontmatter",
-            "remark-gfm",
-            "remark-smartypants",
+            ["remark-frontmatter"],
             [
-                "remark-oembed",
+                "remark-mdx-frontmatter",
                 {
-                    "syncWidget": true
+                    "name": "frontMatter"
                 }
             ],
-            "remark-mermaidjs",
-            "remark-directive"
+            [
+                "remark-gfm",
+                {
+                    "singleTilde": false
+                }
+            ],
+            ["remark-gemoji"],
+            ["remark-smartypants"],
+            ["remark-directive"],
+            [
+                "remark-toc",
+                {
+                    "heading": "Table of Contents",
+                    "prefix": "~"
+                }
+            ]
         ]
     }
 }

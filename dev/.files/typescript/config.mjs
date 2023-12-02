@@ -31,13 +31,15 @@ import importAliases from '../bin/includes/import-aliases.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
+const srcDir = path.resolve(projDir, './src');
 
 /**
  * Prepares relative import aliases.
  */
-const relativeImportAliases = {}; // Relative to `tsBaseDir`.
+const relativeImportAliases = {}; // Initializes relative aliases.
 for (const [aliasPath, realPath] of Object.entries(importAliases.asGlobs)) {
-    relativeImportAliases[aliasPath] = [path.relative(path.resolve(projDir, './src'), realPath)];
+    let realRelativePath = path.relative(srcDir, realPath); // i.e., Relative to `compilerOptions.baseUrl`.
+    relativeImportAliases[aliasPath] = [realRelativePath.startsWith('.') ? realRelativePath : './' + realRelativePath];
 }
 
 /**
@@ -49,7 +51,7 @@ export default async () => {
      */
     const baseConfig = {
         include: [
-            './' + path.relative(projDir, path.resolve(projDir, './src')) + '/**/*', //
+            './' + path.relative(projDir, srcDir) + '/**/*', //
             './' + path.relative(projDir, path.resolve(projDir, './dev-types.d.ts')),
         ],
         exclude: exclusions.asRelativeGlobs(projDir, [
@@ -74,8 +76,8 @@ export default async () => {
             ),
         ]),
         compilerOptions: {
-            baseUrl: './' + path.relative(projDir, path.resolve(projDir, './src')),
-            rootDir: './' + path.relative(projDir, path.resolve(projDir, './src')),
+            baseUrl: './' + path.relative(projDir, srcDir),
+            rootDir: './' + path.relative(projDir, srcDir),
             declarationDir: './' + path.relative(projDir, path.resolve(projDir, './dist/types')),
 
             declaration: true,
@@ -87,8 +89,11 @@ export default async () => {
 
             target: esVersion.lcnYear,
             lib: [esVersion.lcnYear],
-            types: ['vite/client', '@types/mdx', 'unplugin-icons/types/preact'],
-
+            types: [
+                'vite/client', //
+                '@types/mdx',
+                'unplugin-icons/types/preact',
+            ],
             jsx: 'react-jsx',
             jsxImportSource: 'preact',
 
@@ -104,13 +109,12 @@ export default async () => {
 
             paths: relativeImportAliases, // Relative to `baseUrl`.
         },
-        mdx: (await import(path.resolve(projDir, './.remarkrc.mjs'))).default.tsconfigMDX,
+        // This is needed by the VSCode extension for MDX.
+        mdx: (await (await import(path.resolve(projDir, './mdx.config.mjs'))).default()).vsCodeTSConfig,
     };
 
     /**
      * Composition.
      */
-    return {
-        ...baseConfig,
-    };
+    return { ...baseConfig };
 };

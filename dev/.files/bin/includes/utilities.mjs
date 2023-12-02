@@ -180,6 +180,9 @@ export default class u {
         if (!$is.plainObject(updates)) {
             throw new Error('u.updatePkg: Unable to parse `' + updatesFile + '`.');
         }
+        if (await u.isPkgFork()) {
+            if (updates.$ꓺdefaults?.imports) updates.$ꓺdefaults.imports = {};
+        }
         if (Object.hasOwn(updates.$ꓺset?.engines || {}, 'node')) {
             updates.$ꓺset.engines.node = []; // Initialize.
             if (nodeVersion.previous) updates.$ꓺset.engines.node.push(nodeVersion.previous);

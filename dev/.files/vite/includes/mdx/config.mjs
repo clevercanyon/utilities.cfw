@@ -22,34 +22,43 @@ import extensions from '../../../bin/includes/extensions.mjs';
  * @returns       MDX configuration for Vite.
  */
 export default async ({ projDir }) => {
-    return (await import('@mdx-js/rollup')).default({
-        exclude: [
-            ...new Set([
-                ...exclusions.localIgnores, //
-                ...exclusions.logIgnores,
-                ...exclusions.backupIgnores,
-                ...exclusions.patchIgnores,
-                ...exclusions.editorIgnores,
-                ...exclusions.toolingIgnores,
-                ...exclusions.pkgIgnores,
-                ...exclusions.vcsIgnores,
-                ...exclusions.osIgnores,
-                ...exclusions.dotIgnores,
-                ...exclusions.dtsIgnores,
-                ...exclusions.configIgnores,
-                ...exclusions.lockIgnores,
-                ...exclusions.devIgnores,
-                ...exclusions.distIgnores,
-                ...exclusions.docIgnores,
-            ]),
-        ],
-        include: [
-            '**/*.' +
-                extensions.asBracedGlob([
-                    ...extensions.byVSCodeLang.markdown, // Single default export only.
-                    ...extensions.byVSCodeLang.mdx, // Default + potentially other exports.
-                ]),
-        ],
-        ...(await (await import(path.resolve(projDir, './mdx.config.mjs'))).default()),
-    });
+    return (await import('@mdx-js/rollup')).default(await config({ projDir }));
 };
+
+/**
+ * Configures MDX for Vite.
+ *
+ * @param   props Props from vite config file driver.
+ *
+ * @returns       MDX configuration for Vite.
+ */
+export const config = async ({ projDir }) => ({
+    exclude: [
+        ...new Set([
+            ...exclusions.localIgnores, //
+            ...exclusions.logIgnores,
+            ...exclusions.backupIgnores,
+            ...exclusions.patchIgnores,
+            ...exclusions.editorIgnores,
+            ...exclusions.toolingIgnores,
+            ...exclusions.pkgIgnores,
+            ...exclusions.vcsIgnores,
+            ...exclusions.osIgnores,
+            ...exclusions.dotIgnores,
+            ...exclusions.dtsIgnores,
+            ...exclusions.configIgnores,
+            ...exclusions.lockIgnores,
+            ...exclusions.devIgnores,
+            ...exclusions.distIgnores,
+            ...exclusions.docIgnores,
+        ]),
+    ],
+    include: [
+        '**/*.' +
+            extensions.asBracedGlob([
+                ...extensions.byVSCodeLang.markdown, // Single default export only.
+                ...extensions.byVSCodeLang.mdx, // Default + potentially other exports.
+            ]),
+    ],
+    ...(await (await import(path.resolve(projDir, './mdx.config.mjs'))).default()),
+});

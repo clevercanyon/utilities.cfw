@@ -24,16 +24,48 @@ export default async () => {
      * Composition.
      */
     return {
-        plugins: {
-            // SCSS is not configured here, as it’s already backed into Vite; {@see https://o5p.me/CAJNAF}.
-            // To use `*.scss` files, just make sure the `sass` package is installed as a dev dependency.
+        /**
+         * SCSS is not configured here, as it’s already backed into Vite; {@see https://o5p.me/CAJNAF}. To use `*.scss`
+         * files, just make sure the `sass` package is installed as a dev dependency. Note: Sass runs before postCSS,
+         * and therefore cannot interpolate Tailwind `theme()` function calls. i.e., Tailwind’s `theme()` function
+         * works, but don’t try to feed a response into an SCSS variable or function.
+         */
+        plugins: [
+            // Tailwind CSS plugin.
+            (await import('tailwindcss')).default({ config: path.resolve(projDir, './tailwind.config.mjs') }),
 
-            // Note: Sass runs before postCSS, and therefore cannot interpolate Tailwind `theme()` function calls.
-            // i.e., Tailwind’s `theme()` function works, but don’t try to feed a response into an SCSS variable|fn.
+            // Custom plugin that modifies a few Tailwind selectors.
+            // This plugin was heavily inspired by; {@see https://o5p.me/MutM88}.
+            {
+                postcssPlugin: 'postcss-modify-selectors',
+                Once(css) {
+                    css.walkRules((rule) => {
+                        // Initializes stack.
+                        const modifiedSelectors = [];
 
-            'tailwindcss': { config: path.resolve(projDir, './tailwind.config.mjs') },
-            'postcss-preset-env': { stage: 3 }, // Includes autoprefixer.
-            'postcss-variable-compress': {}, // Compresses variables.
-        },
+                        // Iterates all rule selectors.
+                        for (let selector of rule.selectors) {
+                            // Shortens length of `lead` prose class selector.
+                            selector = selector.replaceAll('[class~="lead"]', '.lead');
+
+                            // Shortens length of `not-p` prose class selector.
+                            // In our Tailwind implementation, a much shorter class `p` = `prose`.
+                            // In our implementation, a much shorter `_` = `not-p` = `not-prose` = `not-basic`.
+                            selector = selector.replaceAll('[class~="not-p"],[class~="not-p"] *', '._, ._ *');
+
+                            // Pushes modified selector onto stack.
+                            modifiedSelectors.push(selector);
+                        }
+                        rule.selectors = modifiedSelectors;
+                    });
+                },
+            },
+            // Present env plugin, which includes autoprefixer.
+            (await import('postcss-preset-env')).default({ stage: 3, minimumVendorImplementations: 2, env: 'web' }),
+
+            // Variable compression plugin. I have a request in for variable consolidation also.
+            // {@see https://github.com/navanshu/postcss-variable-compress/issues/45}.
+            (await import('postcss-variable-compress')).default(),
+        ],
     };
 };

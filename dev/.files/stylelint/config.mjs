@@ -45,7 +45,7 @@ export default async () => {
             'no-duplicate-selectors': null,
             'selector-type-no-unknown': null,
             'no-descending-specificity': null,
-            'selector-class-pattern': '^[_-]?[a-z][a-z0-9]*(?:[_-]{1,2}[a-z0-9]+)*$',
+            'selector-class-pattern': '^(?:_|[_-]?[a-z][a-z0-9]*(?:[_-]{1,2}[a-z0-9]+)*)$',
             'selector-id-pattern': '^[a-z][a-z0-9]*(?:[_-]{1,2}[a-z0-9]+)*$',
             'at-rule-no-unknown': [true, { ignoreAtRules: ['tailwind', 'apply', 'variants', 'responsive', 'screen'] }],
         },

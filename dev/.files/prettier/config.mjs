@@ -51,25 +51,39 @@ export default async () => {
         /**
          * Standard options.
          */
-        arrowParens: 'always',
-        bracketSameLine: false,
-        bracketSpacing: true,
-        embeddedLanguageFormatting: 'auto',
-        endOfLine: 'lf',
-        htmlWhitespaceSensitivity: 'css',
-        insertPragma: false,
-        jsxSingleQuote: true,
-        printWidth: 180,
-        proseWrap: 'preserve',
-        quoteProps: 'preserve',
-        requirePragma: false,
-        semi: true,
-        singleAttributePerLine: false,
-        singleQuote: true,
-        tabWidth: 4,
-        trailingComma: 'all',
-        useTabs: false,
-        vueIndentScriptAndStyle: true,
+        // Pragma options.
+        insertPragma: false, // {@see https://prettier.io/docs/en/options#insert-pragma}
+        requirePragma: false, // {@see https://prettier.io/docs/en/options#require-pragma}
+
+        // Indentation options.
+        tabWidth: 4, // {@see https://prettier.io/docs/en/options#tab-width}.
+        useTabs: false, // {@see https://prettier.io/docs/en/options#tabs}
+
+        // Line length and EOL options.
+        printWidth: 180, // {@see https://prettier.io/docs/en/options#print-width}
+        endOfLine: 'lf', // {@see https://prettier.io/docs/en/options#tabs}
+
+        // Quote-related options.
+        singleQuote: true, // {@see https://prettier.io/docs/en/options#quotes}
+        jsxSingleQuote: true, // {@see https://prettier.io/docs/en/options#jsx-quotes}
+        quoteProps: 'preserve', // {@see https://prettier.io/docs/en/options#quote-props}
+
+        // Misc syntax-related style options.
+        semi: true, // {@see https://prettier.io/docs/en/options#semicolons}
+        trailingComma: 'all', // {@see https://prettier.io/docs/en/options#trailing-commas}
+        bracketSpacing: true, // {@see https://prettier.io/docs/en/options#bracket-spacing}
+        arrowParens: 'always', // {@see https://prettier.io/docs/en/options#arrow-function-parentheses}.
+        experimentalTernaries: false, // {@see https://prettier.io/docs/en/options#experimental-ternaries}.
+
+        // Markdown, HTML, JSX related options.
+        proseWrap: 'preserve', // {@see https://prettier.io/docs/en/options#prose-wrap}
+        bracketSameLine: false, // {@see https://prettier.io/docs/en/options#bracket-line}
+        singleAttributePerLine: false, // {@see https://prettier.io/docs/en/options#single-attribute-per-line}
+        htmlWhitespaceSensitivity: 'css', // {@see https://prettier.io/docs/en/options#html-whitespace-sensitivity}
+        vueIndentScriptAndStyle: true, // {@see https://prettier.io/docs/en/options#vue-files-script-and-style-tags-indentation}
+
+        // Embedded language formatting options.
+        embeddedLanguageFormatting: 'auto', // {@see https://prettier.io/docs/en/options#embedded-language-formatting}.
     };
 
     /**
@@ -123,9 +137,9 @@ export default async () => {
                  */
                 files: ['*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.php])],
                 options: {
-                    braceStyle: '1tbs',
                     parser: 'php',
                     phpVersion: '8.1',
+                    braceStyle: '1tbs',
                     trailingCommaPHP: true,
                 },
             },
@@ -159,6 +173,7 @@ export default async () => {
                  */
                 files: ['*.' + extensions.asBracedGlob([...extensions.byCanonical.sh])],
                 options: {
+                    parser: 'sh',
                     binaryNextLine: false,
                     experimentalWasm: false,
                     functionNextLine: false,
@@ -166,7 +181,6 @@ export default async () => {
                     keepComments: true,
                     keepPadding: false,
                     minify: false,
-                    parser: 'sh',
                     spaceRedirects: true,
                     stopAt: undefined,
                     switchCaseIndent: true,
@@ -184,6 +198,7 @@ export default async () => {
                     '{,*.}Dockerfile', // Safe to assume ours always uses bash.
                 ],
                 options: {
+                    parser: 'sh',
                     binaryNextLine: false,
                     experimentalWasm: false,
                     functionNextLine: false,
@@ -191,7 +206,6 @@ export default async () => {
                     keepComments: true,
                     keepPadding: false,
                     minify: false,
-                    parser: 'sh',
                     spaceRedirects: true,
                     stopAt: undefined,
                     switchCaseIndent: true,
@@ -309,6 +323,7 @@ export default async () => {
                  */
                 files: ['*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.sql])],
                 options: {
+                    parser: 'sql',
                     commaPosition: 'after',
                     database: 'mysql',
                     denseOperators: false,
@@ -322,7 +337,6 @@ export default async () => {
                     newlineBeforeSemicolon: false,
                     params: Object,
                     paramTypes: Object,
-                    parser: 'sql',
                     tabulateAlias: false,
                     type: 'table',
                 },
@@ -384,8 +398,8 @@ export default async () => {
                 files: ['*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.properties]), '*.env{,.*}'],
                 options: {
                     parser: 'dot-properties',
-                    keySeparator: '=',
                     escapeNonLatin1: false,
+                    keySeparator: '=',
                 },
             },
             {

@@ -64,6 +64,13 @@ export default async ({ projDir }) => {
     const isPkgName = async (name) => name === pkgName; // True if is current package name.
 
     /**
+     * Tests `pkgName` to see if it’s a fork.
+     *
+     * @returns {boolean} True if current package is a fork.
+     */
+    const isPkgFork = async () => pkgName.endsWith('.fork'); // True if current package is a fork.
+
+    /**
      * Checks dotfile locks.
      *
      * @param   {string}  relPath Relative dotfile path.
@@ -214,6 +221,9 @@ export default async ({ projDir }) => {
 
             if (!$is.plainObject(updates)) {
                 throw new Error('updater: Unable to parse `' + updatesFile + '`.');
+            }
+            if (await isPkgFork()) {
+                if (updates.$ꓺdefaults?.imports) updates.$ꓺdefaults.imports = {};
             }
             if ('./package.json' === relPath) {
                 if (Object.hasOwn(updates.$ꓺset?.engines || {}, 'node')) {

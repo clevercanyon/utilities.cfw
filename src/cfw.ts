@@ -2,7 +2,7 @@
  * Utility class.
  */
 
-import './resources/init.ts';
+import '#@init.ts';
 
 import type { $type } from '@clevercanyon/utilities';
 import { $env, $http, $json, $mm, $str, $url } from '@clevercanyon/utilities';
@@ -49,7 +49,7 @@ export type InitialFetchEventData = {
  *
  * @param   ifeData Initial fetch event data.
  *
- * @returns        Response promise.
+ * @returns         Response promise.
  */
 export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<$type.cf.Response> => {
     let { request } = ifeData;

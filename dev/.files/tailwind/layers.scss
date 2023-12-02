@@ -1,0 +1,148 @@
+/**
+ * Charset.
+ */
+@charset "UTF-8"; // Must use double quotes.
+
+/**
+  * Defaults.
+  */
+$google-fonts: (
+    'Georama': 'ital,wght@0,100..900;1,100..900',
+) !default;
+
+/**
+  * Various mixins.
+  */
+@use './mixins/starry-night';
+
+/**
+  * Google fonts.
+  */
+@each $family, $weights in $google-fonts {
+    // This import is ok. It must use `url()` for variable interpolation to work properly.
+    /* stylelint-disable-next-line no-invalid-position-at-import-rule, import-notation -- ok. */
+    @import url('https://fonts.googleapis.com/css2?family=#{$family}:#{$weights}&display=swap');
+}
+
+/**
+  * Tailwind layers.
+  */
+@tailwind base;
+@tailwind components;
+@include starry-night.styles;
+@tailwind utilities;
+@tailwind variants;
+
+/**
+  * Our base layer.
+  *
+  * We borrow the `_` = `not-prose` selector here and reuse it as `not-basic`.
+  * It works fine, because all basic styles already exclude `p` = `prose` altogether.
+  *
+  * - In our Tailwind implementation, class `p` = `prose`.
+  * - In our Tailwind implementation, a much shorter `_` = `not-p` = `not-prose`.
+  * - In our basic styles implementation, `_` = `not-p` = `not-prose` = `not-basic`.
+  *
+  * Also worth noting that in our Tailwind prose implementation, the `~` class means prose colors
+  * should be inherited from the parent containing the `~` class; e.g., if a component applies colors
+  * that differ from prose colors, then it needs to make sure any prose it contains will inherit the colors
+  * it has assigned, and not use the default prose colors. So `~` is an alternative to `_`, indicating
+  * that prose is to be allowed, but it must use inherited coloration.
+  */
+@layer base {
+    html {
+        font-size: 16px; // No auto-scaling at root node.
+
+        @apply bg-color-basic text-color-basic-fg;
+
+        :where(a, .link):not(:where(.p, .p *, ._, ._ *)) {
+            @apply cursor-pointer text-color-basic-link no-underline opacity-90 hover:underline hover:opacity-100;
+        }
+
+        :where(h1, h2, h3, h4, h5, h6):not(:where(.p, .p *, ._, ._ *)) {
+            @apply text-color-basic-heading;
+        }
+
+        ::-webkit-scrollbar {
+            @apply w-2;
+            @apply h-2;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            @apply rounded;
+            @apply bg-color-basic-fg/25;
+
+            &:hover {
+                @apply bg-color-basic-fg/50;
+            }
+        }
+
+        ::-webkit-scrollbar-track {
+            @apply bg-color-basic-fg/5;
+        }
+    }
+
+    .basic-header {
+        @apply border-color-header-bdr bg-color-header text-color-header-fg;
+
+        :where(a, .link):not(:where(.p, .p *, ._, ._ *)) {
+            @apply text-color-header-link;
+        }
+
+        :where(h1, h2, h3, h4, h5, h6):not(:where(.p, .p *, ._, ._ *)) {
+            @apply text-color-header-heading;
+        }
+    }
+
+    .basic-sidebar {
+        @apply border-color-sidebar-bdr bg-color-sidebar text-color-sidebar-fg;
+
+        :where(a, .link):not(:where(.p, .p *, ._, ._ *)) {
+            @apply text-color-sidebar-link;
+        }
+
+        :where(h1, h2, h3, h4, h5, h6):not(:where(.p, .p *, ._, ._ *)) {
+            @apply text-color-sidebar-heading;
+        }
+    }
+
+    .basic-footer {
+        @apply border-color-footer-bdr bg-color-footer text-color-footer-fg;
+
+        :where(a, .link):not(:where(.p, .p *, ._, ._ *)) {
+            @apply text-color-footer-link;
+        }
+
+        :where(h1, h2, h3, h4, h5, h6):not(:where(.p, .p *, ._, ._ *)) {
+            @apply text-color-footer-heading;
+        }
+    }
+}
+
+/**
+  * Our utilities layer.
+  *
+  * All of our utilities get prefixed with a leading `_` to help indicate what is being used.
+  * In the same way that all of our JS utilities are prefixed with a `$` sign, we use `_` in CSS.
+  */
+@layer utilities {
+    // Y margins like prose `p` tag.
+    ._my-lp {
+        @apply mt-[1.25em];
+        @apply mb-[1.25em];
+    }
+
+    // First child margin-top 0.
+    ._fc-mt-0 {
+        > :first-child {
+            @apply mt-0;
+        }
+    }
+
+    // Last child margin-bottom 0.
+    ._lc-mb-0 {
+        > :last-child {
+            @apply mb-0;
+        }
+    }
+}

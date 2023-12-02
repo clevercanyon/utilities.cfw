@@ -452,6 +452,16 @@ export default async () => {
                             'ts-ignore': 'allow-with-description',
                         },
                     ],
+                    '@typescript-eslint/ban-types': [
+                        'warn',
+                        {
+                            'extendDefaults': true,
+                            // We want to use `{}` instead of `object` in some cases.
+                            // e.g., `$preact.Props<{}>` is cleaner than `$preact.Props<object>`.
+                            // {@see https://o5p.me/LDY2YY} {@see https://o5p.me/Cl4qSW}.
+                            'types': { '{}': false },
+                        },
+                    ],
                     '@typescript-eslint/triple-slash-reference': [
                         'warn',
                         {

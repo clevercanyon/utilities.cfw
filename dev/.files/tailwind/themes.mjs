@@ -59,10 +59,15 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
          *
          * 💡 Tip: Fast track. Just change `color-basic-link` to match your brand colors. The other colors use common
          * defaults that typically work well for most brands. Tune the rest in later.
+         *
+         * 💡 Tip: If you change `color-basic`, please remember to adjust `themeIsDark` in `<LayoutContext>`
+         * accordingly; i.e., if your theme is dark, then `themeIsDark` should be set to `true`, such that consumers of
+         * `<LayoutContext>` are aware. Simply map themes by name in your `<LayoutContext>` implementation.
          */
         const defaultBasicColors = {
             'color-basic': '#09090b', // Background color.
             'color-basic-fg': '#f0f0f0', // Foreground color.
+            'color-basic-bdr': '#17171c', // Border color.
             'color-basic-link': '#80aff9', // Link/anchor color.
             'color-basic-heading': '#ffffff', // Heading color.
         };
@@ -81,30 +86,35 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
             'color-prose-links': basicColors['color-basic-link'],
 
             'color-prose-headings': basicColors['color-basic-heading'],
-            'color-prose-lead': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.1),
-            'color-prose-bold': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.1),
+            'color-prose-lead': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.15),
+            'color-prose-bold': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.15),
 
-            'color-prose-counters': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.35),
-            'color-prose-bullets': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.35),
+            'color-prose-counters': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.25),
+            'color-prose-bullets': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.25),
 
             'color-prose-quotes': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.25),
-            'color-prose-quote-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.85),
+            'color-prose-quote-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.825),
 
-            'color-prose-kbd': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.1),
+            // We don’t actually use `color-prose-kbd`; only shadows. See notes in `./config.mjs` file.
+            'color-prose-kbd': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.15),
             // This is incorporated into an `rgb(x x x / x)` final color.
             'color-prose-kbd-shadows': $color.toRGBListNoAlpha(basicColors['color-basic-fg']),
 
-            'color-prose-code': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.1),
+            // We don’t actually use `color-prose-code`; only shadows. See notes in `./config.mjs` file.
+            'color-prose-code': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.15),
             // This is incorporated into an `rgb(x x x / x)` final color.
             'color-prose-code-shadows': $color.toRGBListNoAlpha(basicColors['color-basic-fg']),
 
-            'color-prose-pre': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.05),
-            'color-prose-pre-code': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic-fg'], 0.25),
+            'color-prose-pre': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic'], 0.005),
+            // We don’t actually use `color-prose-pre-code`. See notes in `./config.mjs` file.
+            'color-prose-pre-code': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.005),
+            'color-prose-pre-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.825),
+            'color-prose-pre-shadows': basicBGIsDark ? $color.darken(basicColors['color-basic'], 0.25) : $color.darken(basicColors['color-basic'], 0.025),
 
-            'color-prose-th-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.75),
-            'color-prose-td-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.85),
+            'color-prose-th-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.825),
+            'color-prose-td-borders': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.825),
 
-            'color-prose-hr': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.85),
+            'color-prose-hr': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.825),
             'color-prose-captions': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.25),
         };
 
@@ -126,16 +136,19 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
         const defaultBasicSectionColors = {
             'color-header': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic'], 0.015),
             'color-header-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.015),
+            'color-header-bdr': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.075),
             'color-header-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-link'], 0.015),
             'color-header-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-heading'], 0.015),
 
-            'color-sidebar': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.05),
-            'color-sidebar-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.225),
-            'color-sidebar-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-link'], 0.05),
-            'color-sidebar-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-heading'], 0.225),
+            'color-sidebar': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic'], 0.015),
+            'color-sidebar-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.015),
+            'color-sidebar-bdr': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.075),
+            'color-sidebar-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-link'], 0.015),
+            'color-sidebar-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-heading'], 0.015),
 
             'color-footer': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic'], 0.015),
             'color-footer-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.015),
+            'color-footer-bdr': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.075),
             'color-footer-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-link'], 0.015),
             'color-footer-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-heading'], 0.015),
         };
@@ -184,7 +197,73 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
         };
         for (const [name, value] of Object.entries(defaultBrandColors)) {
             defaultBrandColors[name + '-fg'] = $color.getReadable(value);
-        }
+            defaultBrandColors[name + '-bdr'] = $color[basicBGIsDark ? 'lighten' : 'darken'](value, 0.075);
+        } // We go ahead and calculate brand colors so they can be used for starry night defaults below.
+        const brandColors = $obj.defaults({}, $obj.pick(theme.extend.colors, Object.keys(defaultBrandColors)), defaultBrandColors);
+
+        /**
+         * Defines starry night colors.
+         *
+         * Starry night is a beautiful code syntax highlighter that compiles to JSX — compatible with Preact/MDX. These
+         * color derivations are based on the configured basic colors, and also based on configured brand colors.
+         *
+         * 💡 Tip: Fast track. These colors use defaults that typically work well for most brands. That said, if you
+         * customize, consider starting with `color-starry-night-syntax-*` colors. Tune the rest in later.
+         */
+        const defaultStarryNightColors = {
+            // Highlighted bg/fg colors.
+            'color-starry-night': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic'], 0.005),
+            'color-starry-night-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.005),
+
+            // Highlighted presentation colors.
+            'color-starry-night-border': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.825),
+            'color-starry-night-box-shadows': basicBGIsDark ? $color.darken(basicColors['color-basic'], 0.25) : $color.darken(basicColors['color-basic'], 0.025),
+            'color-starry-night-hilited-lines': basicBGIsDark ? $color.lighten(basicColors['color-basic'], 0.05) : $color.lighten(basicColors['color-basic'], 0.0375),
+
+            // Highlighted header colors.
+            'color-starry-night-header': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic'], 0.25),
+            'color-starry-night-header-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.005),
+
+            // Highlighted header language colors.
+            'color-starry-night-header-language': brandColors['color-accent'],
+            'color-starry-night-header-language-fg': brandColors['color-accent-fg'],
+
+            ...(basicBGIsDark // Dark syntax theme.
+                ? {
+                      // Script comments, gutter marks, punctuation.
+                      'color-starry-night-syntax-comment-fg': '#696969',
+                      'color-starry-night-syntax-gutter-mark-fg': '#3c3c3c',
+                      'color-starry-night-syntax-punctuation-fg': '#6a6e76',
+
+                      // Script keywords, variables, constants, strings, etc.
+                      'color-starry-night-syntax-keyword-fg': '#6382a9',
+                      'color-starry-night-syntax-variable-fg': '#be7175',
+                      'color-starry-night-syntax-constant-fg': '#ca9d6b',
+                      'color-starry-night-syntax-modifier-fg': '#be7175',
+                      'color-starry-night-syntax-entity-fg': '#ca9d6b',
+                      'color-starry-night-syntax-entity-tag-fg': '#e5c07b',
+                      'color-starry-night-syntax-other-link-fg': '#80aff9',
+                      'color-starry-night-syntax-string-fg': '#84a267',
+                      'color-starry-night-syntax-regexp-fg': '#759d6d',
+                  }
+                : {
+                      // Script comments, gutter marks, punctuation.
+                      'color-starry-night-syntax-comment-fg': '#a8a8a8',
+                      'color-starry-night-syntax-gutter-mark-fg': '#d5d5d5',
+                      'color-starry-night-syntax-punctuation-fg': '#333333',
+
+                      // Script keywords, variables, constants, strings, etc.
+                      'color-starry-night-syntax-keyword-fg': '#006a7a',
+                      'color-starry-night-syntax-variable-fg': '#b80f15',
+                      'color-starry-night-syntax-constant-fg': '#845015',
+                      'color-starry-night-syntax-modifier-fg': '#224f87',
+                      'color-starry-night-syntax-entity-fg': '#7a4100',
+                      'color-starry-night-syntax-entity-tag-fg': '#754c00',
+                      'color-starry-night-syntax-other-link-fg': '#004ecc',
+                      'color-starry-night-syntax-string-fg': '#508b18',
+                      'color-starry-night-syntax-regexp-fg': '#357e25',
+                  }),
+        };
 
         /**
          * Composition.
@@ -193,7 +272,9 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
             ...defaultBasicColors,
             ...defaultBasicProseColors,
             ...defaultBasicSectionColors,
+
             ...defaultBrandColors,
+            ...defaultStarryNightColors,
 
             ...themes.defaultTheme.extend.colors,
             ...theme.extend.colors,
@@ -234,14 +315,11 @@ const baseConfigThemes = /* not async compatible */ () => {
                     'sans-serif',
                 ],
                 serif: [
-                    'Palatino', //
-                    '"Palatino Linotype"',
-                    'ui-serif',
+                    'ui-serif', //
                     'serif',
                 ],
                 mono: [
-                    '"Operator Mono"', //
-                    'ui-monospace',
+                    'ui-monospace', //
                     'monospace',
                 ],
             },
@@ -324,9 +402,9 @@ const baseConfigThemes = /* not async compatible */ () => {
      * Configures other named themes.
      *
      * Named themes extend the default theme, so anything configured here only needs to override defaults. To enable a
-     * named theme, add `<html class="{named-theme}">`, which is handled automatically by `<LayoutContext>`, `<HTML>`.
-     * Each theme’s name must end with a `-theme` suffix. If a named theme class is not present in the HTML markup, then
-     * the default theme will be applied automatically.
+     * named theme, add `<html class="{named-theme}">`, which is handled automatically by our `<LayoutContext>` and
+     * `<HTML>` components. Each theme’s name must end with a `-theme` suffix. If a named theme class is not present in
+     * the HTML markup, then the default theme will be applied automatically.
      *
      * Don’t add named themes unnecessarily. A default theme will typically do fine. The more themes you add, the larger
      * your bundle size becomes. Also, don’t name a theme `dark`; {@see https://o5p.me/jLROv0}.

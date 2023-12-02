@@ -41,7 +41,7 @@ export default async ({ projDir, srcDir, distDir, a16sDir, appType, appEntries, 
             }, // {@see https://o5p.me/7YF2NU}.
         },
         external: [
-            ...(['lib'].includes(appType) ? [/^(?![./~]|file:|data:|virtual:).*$/iu] : []),
+            ...(['lib'].includes(appType) ? [/^(?![./~#]|file:|data:|virtual:).*$/iu] : []),
             ...peerDepKeys.map((pkgName) => new RegExp('^' + $str.escRegExp(pkgName) + '(?:$|[/?])', 'u')),
             ...[/^__STATIC_CONTENT_MANIFEST(?:$|[/?])/u], // Cloudflare worker sites use this for static assets.
         ],
@@ -60,7 +60,6 @@ export default async ({ projDir, srcDir, distDir, a16sDir, appType, appEntries, 
 
             // By default, in SSR mode, Vite forces all entry files into the `distDir` root.
             // This prevents that by enforcing a consistently relative location for all entries.
-            // @review Consider using this `node_modules` workaround; {@see https://github.com/rollup/rollup/issues/3684#issuecomment-1535836196}.
             entryFileNames: (entry) => {
                 if (extensions.noDot([...extensions.byCanonical.html]).includes($path.ext(entry.facadeModuleId))) {
                     if (/\//u.test(entry.name)) return '[name]-[hash].js'; // Already a subpath.

@@ -12,7 +12,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadEnv } from 'vite';
+import { createLogger, loadEnv } from 'vite';
 import { $fs, $glob } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 import { $is, $json, $obj, $obp, $str, $time, $url } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import esVersion from '../bin/includes/es-version.mjs';
@@ -26,6 +26,7 @@ import viteEJSConfig from './includes/ejs/config.mjs';
 import viteESBuildConfig from './includes/esbuild/config.mjs';
 import viteIconsConfig from './includes/icons/config.mjs';
 import viteMDXConfig from './includes/mdx/config.mjs';
+import viteMDXESBuildConfig from './includes/mdx/esbuild.mjs';
 import viteMinifyConfig from './includes/minify/config.mjs';
 import vitePkgUpdates from './includes/package/updates.mjs';
 import vitePrefreshConfig from './includes/prefresh/config.mjs';
@@ -39,7 +40,7 @@ import viteVitestConfig from './includes/vitest/config.mjs';
  *
  * @returns      Vite configuration object properties.
  */
-export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
+export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     /**
      * Configures `NODE_ENV` environment variable.
      */
@@ -52,7 +53,7 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
      *
      * @note The `APP_` prefix ensures Vite picks this up and adds it to app builds.
      *       This can be useful, as it allows us to detect, within our app,
-     *       whether the Vite dev server is running our app.
+     *       whether the Vite dev server is currently running.
      */
     process.env.APP_IS_VITE = command + '=' + mode;
 
@@ -199,8 +200,22 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
     /**
      * Configures imported workers.
      */
-    const importedWorkerPlugins = []; // No worker plugins at this time.
+    const importedWorkerPlugins = () => []; // No worker plugins at this time.
     const importedWorkerRollupConfig = { ...$obj.omit(rollupConfig, ['input']) };
+
+    /**
+     * Custom logger.
+     */
+    const customLogger = createLogger();
+    const originalLoggerWarnOnce = customLogger.warnOnce;
+
+    customLogger.warnOnce = (msg, options) => {
+        if (/^Sourcemap for "[^"]+\.mdx" points to missing source files$/iu.test(msg)) {
+            return; // Safe to ignore. Some MDX glob imports contain query strings, which makes the filesystem path unreachable.
+            // This is a consequence of us needing to create a distinct import for frontMatter. See `importGlobRestoreExtension` below.
+        }
+        originalLoggerWarnOnce(msg, options);
+    };
 
     /**
      * Base config for Vite.
@@ -248,8 +263,9 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
         },
         optimizeDeps: {
             force: true, // Don’t use cache for optimized deps; recreate.
+            esbuildOptions: { plugins: [await viteMDXESBuildConfig({ projDir })] },
             // Preact is required by prefresh plugin; {@see https://o5p.me/WmuefH}.
-            ...(prefreshEnable ? { include: ['preact', 'preact/hooks', 'preact/compat', '@preact/signals'] } : {}),
+            ...(prefreshEnable ? { include: ['preact', 'preact/jsx-runtime', 'preact/hooks', 'preact/compat', '@preact/signals'] } : {}),
         },
         esbuild: esbuildConfig, // esBuild config options.
 
@@ -264,17 +280,30 @@ export default async ({ mode, command, ssrBuild: isSSRBuild }) => {
             assetsDir: path.relative(distDir, a16sDir), // Relative to `outDir` directory.
             // Note: `a16s` is a numeronym for 'acquired resources'; i.e. via imports.
 
-            manifest: !isSSRBuild, // Enables creation of manifest (for assets).
-            sourcemap: 'dev' === mode, // Enables creation of sourcemaps (for debugging).
+            manifest: !isSSRBuild ? 'vite/manifest.json' : false, // Enables manifest of asset locations.
+            ssrManifest: isSSRBuild ? 'vite/ssr-manifest.json' : false, // Enables SSR manifest of asset locations.
+            sourcemap: 'dev' === mode ? 'inline' : false, // Enables creation of sourcemaps; i.e., for debugging.
 
             minify: minifyEnable ? 'esbuild' : false, // {@see https://o5p.me/pkJ5Xz}.
             cssMinify: minifyEnable ? 'lightningcss' : false, // {@see https://o5p.me/h0Hgj3}.
             // We ran several tests between `esbuild`, `cssnano`, and `lightningcss` wins.
 
             modulePreload: false, // Disable. DOM injections conflict with our SPAs.
+            // This option is sort-of respected, but not fully; {@see https://github.com/vitejs/vite/issues/13952}.
 
             ...(['cma', 'lib'].includes(appType) ? { lib: { entry: appEntries, formats: ['es'] } } : {}),
             rollupOptions: rollupConfig, // See: <https://o5p.me/5Vupql>.
+        },
+        customLogger, // Uses our custom logger, which is based on the default logger.
+        experimental: {
+            importGlobRestoreExtension: true, // Restores file extension on glob imports containing a query string.
+            // This is needed by our use of the MDX plugin for Vite; e.g., when we glob MDX files to import frontMatter,
+            // we add a query to make the glob import distinct from other dynamic imports of the same file elsewhere.
+            // Enabling this option restores the `.mdx` extension, such that the MDX plugin still considers
+            // the import to be an MDX file; i.e., given that it ends with a query string otherwise.
+
+            // Another way to accomplish the same thing is to set the query string to a value that ends with `.mdx`.
+            // Just documenting this for future reference in case the experimental option goes away or changes.
         },
         test: vitestConfig, // Vitest configuration.
     };

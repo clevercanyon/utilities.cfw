@@ -272,6 +272,7 @@ export default async () => {
         'json.validate.enable': true,
         'javascript.validate.enable': true,
         'typescript.validate.enable': true,
+
         // <https://stackoverflow.com/a/52397123>.
         'javascript.suggestionActions.enabled': false,
 
@@ -285,14 +286,24 @@ export default async () => {
 
         'eslint.run': 'onType',
         'eslint.runtime': 'node',
+        'eslint.useESLintClass': true,
 
         'eslint.codeActionsOnSave.mode': 'all',
         'eslint.experimental.useFlatConfig': true,
         'eslint.workingDirectories': [{ 'mode': 'auto' }],
 
         'eslint.validate': [
-            'mdx', //
-            'markdown',
+            // For now, disabling eslint for markdown.
+
+            // MDX eslint plugin not compatible with MDX v3 yet.
+            // Outdated package: `eslint-plugin-mdx`.
+
+            // Additionally, the formatter for MDX/markdown has been changed
+            // from eslint to prettier, for now. See langauge settings below.
+
+            // 'mdx',
+            // 'markdown',
+
             'javascript',
             'javascriptreact',
             'typescript',
@@ -334,7 +345,7 @@ export default async () => {
         ],
 
         /**
-         * Markdown options.
+         * Markdown/MDX options.
          */
 
         'markdown.styles': [],
@@ -342,6 +353,12 @@ export default async () => {
         'markdown.preview.lineHeight': 1.5,
         'markdown.preview.typographer': true,
         'markdown.preview.fontFamily': 'Georama, ui-sans-serif, sans-serif',
+
+        'markdown.validate.enabled': false, // For a different markdown flavor.
+        // Disabling because we use remark, a different flavor than VSCode, and several plugins.
+
+        'mdx.server.enable': false, // Experimental, so disabling.
+        // MDX intellisense has trouble validating links in frontmatter, footnotes.
 
         /**
          * Prettier options.
@@ -363,22 +380,26 @@ export default async () => {
         '[mdx]': {
             'editor.tabSize': prettierConfig.tabWidth,
             'editor.insertSpaces': !prettierConfig.useTabs,
+            'files.trimTrailingWhitespace': false,
             'editor.wordWrap': 'on',
 
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
-            'editor.defaultFormatter': 'dbaeumer.vscode-eslint',
+            // Change this back to `dbaeumer.vscode-eslint` when `eslint-plugin-mdx` is compatible with MDX v3.
+            'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[markdown]': {
             'editor.tabSize': prettierConfig.tabWidth,
             'editor.insertSpaces': !prettierConfig.useTabs,
+            'files.trimTrailingWhitespace': false,
             'editor.wordWrap': 'on',
 
             'editor.codeActionsOnSave': {
                 'source.fixAll': true,
             },
-            'editor.defaultFormatter': 'dbaeumer.vscode-eslint',
+            // Change this back to `dbaeumer.vscode-eslint` when `eslint-plugin-mdx` is compatible with MDX v3.
+            'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[html]': {
             'editor.tabSize': prettierConfig.tabWidth,
