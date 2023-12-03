@@ -186,11 +186,16 @@ export default {
 
                 /**
                  * Attempts to create a remote repository origin at GitHub; if at all possible.
+                 *
+                 * The `--add-readme` argument to `gh repo create` is important because it forces repo creation to also
+                 * create the default branch. Without creating a readme, the repo will exist, but it will have no branch
+                 * yet, which is confusing and problematic; i.e., the rest of our automation routines expect a default
+                 * `main` branch to exist, such that we can configure branch protection, etc.
                  */
                 if ('clevercanyon' === repoOwner) {
                     if (process.env.GH_TOKEN && 'owner' === (await u.gistGetC10NUser()).github?.role) {
                         u.log($chalk.green('Creating remote project repo at GitHub [' + (args.public ? 'public' : 'private') + '].'));
-                        await u.spawn('gh', ['repo', 'create', repoOwner + '/' + repoName, '--source', projDir, args.public ? '--public' : '--private']);
+                        await u.spawn('gh', ['repo', 'create', repoOwner + '/' + repoName, '--source', projDir, args.public ? '--public' : '--private', '--add-readme']);
                     } else {
                         u.log($chalk.green('Configuring a remote repo origin.'));
                         const origin = 'https://github.com/' + $url.encode(repoOwner) + '/' + $url.encode(repoName) + '.git';
@@ -199,7 +204,7 @@ export default {
                 } else if (process.env.USER_GITHUB_USERNAME === repoOwner) {
                     if (process.env.GH_TOKEN) {
                         u.log($chalk.green('Creating remote project repo at GitHub [' + (args.public ? 'public' : 'private') + '].'));
-                        await u.spawn('gh', ['repo', 'create', repoOwner + '/' + repoName, '--source', projDir, args.public ? '--public' : '--private']);
+                        await u.spawn('gh', ['repo', 'create', repoOwner + '/' + repoName, '--source', projDir, args.public ? '--public' : '--private', '--add-readme']);
                     } else {
                         u.log($chalk.green('Configuring a remote repo origin.'));
                         const origin = 'https://github.com/' + $url.encode(repoOwner) + '/' + $url.encode(repoName) + '.git';
