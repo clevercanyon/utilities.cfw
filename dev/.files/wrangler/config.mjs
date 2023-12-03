@@ -22,7 +22,7 @@
 
 import path from 'node:path';
 import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $obp, $path, $url } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $obp, $path } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import extensions from '../bin/includes/extensions.mjs';
 import u from '../bin/includes/utilities.mjs';
 import wranglerSettings from './settings.mjs';
@@ -113,6 +113,10 @@ export default async () => {
                                           ...extensions.byDevGroup.cJavaScriptReact,
 
                                           ...extensions.byCanonical.wasm,
+                                          ...extensions.byDevGroup.allTypeScript,
+                                          // Omit TypeScript also, because it causes Wrangler to choke. Apparently, Wrangler’s build system incorporates TypeScript middleware files.
+                                          // Therefore, we omit all TypeScript such that Wrangler’s build system can add TS files without them inadvertently being classified as text by our rules.
+                                          // We don’t expect TypeScript to be present in our `./dist` anyway, so this is harmless, and probably a good idea in general to omit TypeScript here.
                                       ].includes(ext),
                               ),
                           ),
@@ -134,6 +138,7 @@ export default async () => {
                                           ...extensions.byDevGroup.cJavaScriptReact,
 
                                           ...extensions.byCanonical.wasm,
+                                          ...extensions.byDevGroup.allTypeScript,
                                       ].includes(ext),
                               ),
                           ),
@@ -161,7 +166,7 @@ export default async () => {
 
                   route: {
                       zone_name: wranglerSettings.defaultZoneName,
-                      pattern: wranglerSettings.defaultZoneDomain + '/' + $url.encode(wranglerSettings.defaultWorkerName) + '/*',
+                      pattern: wranglerSettings.defaultZoneDomain + '/' + wranglerSettings.defaultWorkerName + '/*',
                   },
                   // Other environments used by this worker.
 
@@ -170,6 +175,14 @@ export default async () => {
                           workers_dev: false,
                           build: { command: 'npx @clevercanyon/madrun build --mode=dev' },
                       },
+                  },
+                  // `$ wrangler dev` settings.
+
+                  dev: {
+                      ip: wranglerSettings.defaultLocalIP,
+                      local_protocol: wranglerSettings.defaultLocalProtocol,
+                      // Wrangler requires this to be a number, not a string.
+                      port: Number(wranglerSettings.defaultLocalPort),
                   },
               }),
     };

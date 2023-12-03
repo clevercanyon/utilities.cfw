@@ -4,8 +4,7 @@
 
 import '#@init.ts';
 
-import type { $type } from '@clevercanyon/utilities';
-import { $env, $http, $json, $mm, $str, $url } from '@clevercanyon/utilities';
+import { $env, $http, $json, $mm, $str, $url, type $type } from '@clevercanyon/utilities';
 import * as cfKVA from '@cloudflare/kv-asset-handler';
 
 const cache = (caches as unknown as $type.cf.CacheStorage).default;

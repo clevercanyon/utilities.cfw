@@ -52,9 +52,9 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
             /**
              * Generates typescript type declaration file(s).
              */
-            if ('build' === command /* Also does important type checking at build time. */) {
-                u.log($chalk.gray('Generating TypeScript type declarations.'));
-                await u.spawn('npx', ['tsc', '--emitDeclarationOnly']);
+            if ('build' === command /* Does important type checking at build time. */) {
+                u.log($chalk.gray('Running TypeScript type checks.'));
+                await u.spawn('npx', ['tsc']);
             }
 
             /**

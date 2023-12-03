@@ -22,6 +22,7 @@ import u from '../bin/includes/utilities.mjs';
 import viteA16sDir from './includes/a16s/dir.mjs';
 import viteC10nPostProcessingConfig from './includes/c10n/post-processing.mjs';
 import viteC10nTransformsConfig from './includes/c10n/transforms.mjs';
+import viteDTSConfig from './includes/dts/config.mjs';
 import viteEJSConfig from './includes/ejs/config.mjs';
 import viteESBuildConfig from './includes/esbuild/config.mjs';
 import viteIconsConfig from './includes/icons/config.mjs';
@@ -151,7 +152,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     if (!['spa', 'mpa', 'cma', 'lib'].includes(appType)) {
         throw new Error('Must have a valid `config.c10n.&.build.appType` in `package.json`.');
     }
-    if (['spa', 'mpa'].includes(appType) && !appBaseURL) {
+    if ((['spa', 'mpa'].includes(appType) || (['cfw'].includes(targetEnv) && !['lib'].includes(appType))) && !appBaseURL) {
         throw new Error('Must have a valid `APP_BASE_URL` environment variable.');
     }
     if (!['any', 'node', 'cfw', 'cfp', 'web', 'webw'].includes(targetEnv)) {
@@ -175,6 +176,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
         await viteMDXConfig({ projDir }),
         await viteEJSConfig({ mode, projDir, srcDir, pkg, env }),
         await viteMinifyConfig({ mode }),
+        await viteDTSConfig({ distDir }),
         await viteC10nPostProcessingConfig({
             mode, command, isSSRBuild, projDir, distDir,
             pkg, env, appType, targetEnv, staticDefs, pkgUpdates

@@ -18,7 +18,6 @@ import u from '../../bin/includes/utilities.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../../..');
-const hop = $brand.get('@clevercanyon/hop.gdn');
 
 /**
  * Defines event handlers.
@@ -107,7 +106,17 @@ export default {
                     ...(args.pkg ? { $set: { private: false } } : {}),
                     ...(args.pkg && args.public ? { $set: { 'publishConfig.access': 'public' } } : {}),
                 });
-                u.log($chalk.gray($json.stringify(await u.pkg(), { pretty: true })));
+
+                /**
+                 * Acquires updated `./package.json` file.
+                 */
+                const pkg = await u.pkg(); // Log it for review.
+                u.log($chalk.gray($json.stringify(pkg, { pretty: true })));
+
+                /**
+                 * Gets Wrangler settings now that we have a valid `./package.json` file.
+                 */
+                const wranglerSettings = (await import('../../wrangler/settings.mjs')).default;
 
                 /**
                  * Updates `./dev/.envs`, if applicable.
@@ -116,9 +125,19 @@ export default {
                     u.log($chalk.green('Updating `./dev/.envs`.'));
                     await fsp
                         .readFile(envProdFile)
+                        .then((envProd) => envProd.toString())
                         .then(async (envProd) => {
-                            envProd = envProd.toString();
-                            envProd = envProd.replace(/^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu, "$1='https://" + pkgSlug + '.' + hop.hostname + "/'");
+                            if ('cfw' === pkg.config.c10n.build.targetEnv) {
+                                envProd = envProd.replace(
+                                    /^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu,
+                                    "$1='https://" + wranglerSettings.defaultZoneDomain + '/' + wranglerSettings.defaultWorkerName + "/'",
+                                );
+                            } else if ('cfp' === pkg.config.c10n.build.targetEnv) {
+                                envProd = envProd.replace(
+                                    /^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu,
+                                    "$1='https://" + wranglerSettings.defaultProjectName + '.' + wranglerSettings.defaultZoneName + "/'",
+                                );
+                            }
                             await fsp.writeFile(envProdFile, envProd);
                         })
                         .catch((error) => {

@@ -7,7 +7,7 @@
 # @note This entire file will be updated automatically.
 # @note Instead of editing here, please review `./wrangler.mjs`.
 #
-# Last generated using `./wrangler.mjs` Dec 2, 2023 5:21 PM UTC.
+# Last generated using `./wrangler.mjs` Dec 3, 2023 10:12 AM UTC.
 ##
 
 send_metrics = false
@@ -76,12 +76,6 @@ globs = [
   "**/*.jxa",
   "**/*.applescript",
   "**/*.bat",
-  "**/*.ts",
-  "**/*.mts",
-  "**/*.cts",
-  "**/*.tsx",
-  "**/*.mtsx",
-  "**/*.ctsx",
   "**/*.css",
   "**/*.scss",
   "**/*.less",
@@ -427,3 +421,8 @@ workers_dev = false
 
   [env.dev.build]
   command = "npx @clevercanyon/madrun build --mode=dev"
+
+[dev]
+ip = "0.0.0.0"
+local_protocol = "https"
+port = 443

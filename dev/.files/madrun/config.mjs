@@ -134,6 +134,21 @@ export default async () => {
                 cmds: [['npx', 'wrangler', '{{@}}']],
             };
         },
+        'wrangler:flush': async () => {
+            return {
+                env: { ...nodeEnvVars, ...cloudflareEnvVars },
+                cmds: [
+                    async () => {
+                        u.log($chalk.green('Flushing Wrangler state for local dev testing.'));
+                        await fsp.rm(wranglerSettings.projStateDir, { recursive: true, force: true });
+                    },
+                ],
+            };
+        },
+
+        /**
+         * Wrangler pages commands.
+         */
         'pages': async ({ args }) => {
             return {
                 opts: { cwd: distDir }, // See: <https://o5p.me/k9Fqml>.

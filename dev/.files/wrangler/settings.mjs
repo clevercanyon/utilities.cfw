@@ -20,7 +20,9 @@ const projDir = path.resolve(__dirname, '../../..');
 
 const pkg = await u.pkg();
 const pkgSlug = $app.pkgSlug(pkg.name);
+
 const hop = $brand.get('@clevercanyon/hop.gdn');
+const hopGDNSlug = $str.kebabCase(hop.hostname);
 
 /**
  * Defines Wrangler settings.
@@ -42,8 +44,8 @@ export default {
     defaultEnvironment: 'production',
     defaultProductionBranch: 'production',
 
-    defaultProjectName: pkgSlug.replace(new RegExp('[._-]' + $str.escRegExp(hop.hostname) + '$', 'ui'), ''),
-    defaultWorkerName: pkgSlug.replace(new RegExp('^' + $str.escRegExp('workers.' + hop.hostname) + '[._-]', 'ui'), ''),
+    defaultProjectName: pkgSlug.replace(new RegExp('-' + $str.escRegExp(hopGDNSlug) + '$', 'ui'), ''), // Pages project name.
+    defaultWorkerName: pkgSlug.replace(new RegExp('^' + $str.escRegExp('workers-' + hopGDNSlug) + '-', 'ui'), ''), // Worker name.
 
     osDir: path.resolve(os.homedir(), './.wrangler'),
     projDir: path.resolve(projDir, './.wrangler'),
