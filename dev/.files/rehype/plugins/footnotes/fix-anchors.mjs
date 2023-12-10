@@ -9,7 +9,7 @@
 import { visit as unistVisit } from 'unist-util-visit';
 
 /**
- * Modifies `remark-gfm` footnote anchors to enforce a `~` prefix.
+ * Modifies `remark-gfm` footnote anchors, shortening ID references and enforcing a `~` prefix.
  */
 export default () => {
     return (tree) => {
@@ -24,7 +24,7 @@ export default () => {
                 if (node.properties.href.startsWith('#user-content-fn-')) {
                     node.properties.href = node.properties.href.replace('#user-content-fn-', '#~fn-');
                     node.properties.id = (node.properties.id || '').replace('user-content-fnref-', '~fnr-');
-                    node.properties['aria-describedby'] = '~footnotes'; // Update this.
+                    node.properties.ariaDescribedBy = '~footnotes'; // Update this.
                     node.properties.dataFootnoteRef = null; // Ditch this.
                     //
                 } else if (node.properties.href.startsWith('#user-content-fnref-')) {

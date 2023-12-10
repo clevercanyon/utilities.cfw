@@ -21,7 +21,7 @@ export default () => {
                 node.properties.role = node.properties.role || 'link';
                 node.properties.tabIndex = node.properties.tabIndex || 0;
 
-                // Styles `<x-hash>` tags just like `<a>` tags are styled.
+                // Styles custom element `<x-hash>` just like `<a>` using our own `.link` class.
                 node.properties.class = (node.properties.class || []).concat(node.properties.className || []).concat(['link']);
                 delete node.properties.className; // Removes `className` in favor of `class`.
             }

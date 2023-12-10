@@ -3,7 +3,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "1.0.127",
+    "version": "1.0.128",
     "license": "GPL-3.0-or-later",
     "name": "@clevercanyon/utilities.cfw",
     "description": "Utilities for JavaScript apps running in a Cloudflare Worker environment.",
@@ -41,7 +41,7 @@
             "default": "./dist/geo.js"
         }
     },
-    "sideEffects": ["**/*.{css,scss,less}", "./src/resources/init.ts"],
+    "sideEffects": ["**/*.{css,scss,less}", "./src/resources/initialize.ts"],
     "module": "./dist/index.js",
     "main": "./dist/index.js",
     "browser": "",
@@ -54,14 +54,14 @@
     },
     "dependencies": {},
     "peerDependencies": {
-        "@clevercanyon/utilities": "^1.0.504",
+        "@clevercanyon/utilities": "^1.0.559",
         "@cloudflare/kv-asset-handler": "0.2.0"
     },
     "peerDependenciesMeta": {},
     "optionalDependencies": {},
     "bundleDependencies": [],
     "devDependencies": {
-        "@clevercanyon/dev-deps": "^1.0.287"
+        "@clevercanyon/dev-deps": "^1.0.296"
     },
     "overrides": {},
     "cpu": ["x64", "arm64"],

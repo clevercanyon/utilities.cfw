@@ -16,16 +16,17 @@ Example `index.scss` starter file contents:
 -------------------------------------------------------------------------------------------------------------------- */
 
 import { $color, $is, $obj } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import getBrand from './brand.mjs'; // Uses `make-synchronous` to acquire brand in a Tailwind/Jiti context.
 
 /**
  * Merges Tailwind themes configuration.
  *
  * Jiti, which is used by Tailwind to load ESM config files, doesn’t support top-level await. Thus, we cannot use async
- * functionality here. Consider `make-synchronous` (already in dev-deps) if necessary. {@see https://o5p.me/1odhxy}.
+ * functionality here. Consider using a CLI request to acquire resources, if necessary. {@see https://o5p.me/1odhxy}.
  */
 export default /* not async compatible */ ({ themesConfig } = {}) => {
     /**
-     * Gets themes.
+     * Acquires themes.
      */
     let themes; // Initialize.
 
@@ -37,6 +38,11 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
 
     themes.themes = $is.array(themes.themes) ? themes.themes : [];
     themes.themes.map((theme) => Object(theme || {}));
+
+    /**
+     * Acquires app’s brand theme.
+     */
+    const brandTheme = getBrand()?.theme || {};
 
     /**
      * Sets color defaults, for each theme, using basic colors.
@@ -51,28 +57,29 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
         /**
          * Defines basic colors.
          *
-         * - Basic palette: {@see https://coolors.co/09090b-f0f0f0-80aff9-ffffff}.
+         * - Basic palette: {@see https://coolors.co/09090b-f0f0f0-80aff9-17171c-ffffff}.
          *
          * From these basic colors we derive additional colors for commonly-used sections automatically, such as those
          * prefixed as `color-prose-*`, `color-header-*`, `color-sidebar-*`, `color-footer-*`. If you'd like to override
          * any basic color derivations, explicitly define the colors you wish to override.
          *
          * 💡 Tip: Fast track. Just change `color-basic-link` to match your brand colors. The other colors use common
-         * defaults that typically work well for most brands. Tune the rest in later.
+         * defaults that typically work well for most brands. Tune the rest in later. It is generally a good practice to
+         * simply reuse the colors defined by your brand theme; see: `./brand.config.mjs`.
          *
          * 💡 Tip: If you change `color-basic`, please remember to adjust `themeIsDark` in `<LayoutContext>`
          * accordingly; i.e., if your theme is dark, then `themeIsDark` should be set to `true`, such that consumers of
          * `<LayoutContext>` are aware. Simply map themes by name in your `<LayoutContext>` implementation.
          */
         const defaultBasicColors = {
-            'color-basic': '#09090b', // Background color.
-            'color-basic-fg': '#f0f0f0', // Foreground color.
-            'color-basic-bdr': '#17171c', // Border color.
-            'color-basic-link': '#80aff9', // Link/anchor color.
-            'color-basic-heading': '#ffffff', // Heading color.
+            'color-basic': brandTheme.color || '#09090b', // Background color.
+            'color-basic-fg': brandTheme.fgColor || '#f0f0f0', // Foreground color.
+            'color-basic-link': brandTheme.linkColor || '#80aff9', // Link/anchor color.
+            'color-basic-line': brandTheme.lineColor || '#17171c', // Line/border color.
+            'color-basic-heading': brandTheme.headingColor || '#ffffff', // Heading color.
         };
         const basicColors = $obj.defaults({}, $obj.pick(theme.extend.colors, Object.keys(defaultBasicColors)), defaultBasicColors);
-        const basicBGIsDark = $color.isDark(basicColors['color-basic']); // Detects basic background color being dark.
+        const basicBGIsDark = basicColors['color-basic'] === brandTheme.color ? brandTheme.isDark : $color.isDark(basicColors['color-basic']);
 
         /**
          * Defines basic prose colors.
@@ -136,20 +143,20 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
         const defaultBasicSectionColors = {
             'color-header': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic'], 0.015),
             'color-header-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.015),
-            'color-header-bdr': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.075),
             'color-header-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-link'], 0.015),
+            'color-header-line': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.075),
             'color-header-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-heading'], 0.015),
 
             'color-sidebar': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic'], 0.015),
             'color-sidebar-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.015),
-            'color-sidebar-bdr': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.075),
             'color-sidebar-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-link'], 0.015),
+            'color-sidebar-line': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.075),
             'color-sidebar-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-heading'], 0.015),
 
             'color-footer': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic'], 0.015),
             'color-footer-fg': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-fg'], 0.015),
-            'color-footer-bdr': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.075),
             'color-footer-link': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-link'], 0.015),
+            'color-footer-line': $color[basicBGIsDark ? 'lighten' : 'darken'](basicColors['color-basic'], 0.075),
             'color-footer-heading': $color[basicBGIsDark ? 'darken' : 'lighten'](basicColors['color-basic-heading'], 0.015),
         };
 
@@ -197,7 +204,7 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
         };
         for (const [name, value] of Object.entries(defaultBrandColors)) {
             defaultBrandColors[name + '-fg'] = $color.getReadable(value);
-            defaultBrandColors[name + '-bdr'] = $color[basicBGIsDark ? 'lighten' : 'darken'](value, 0.075);
+            defaultBrandColors[name + '-line'] = $color[basicBGIsDark ? 'lighten' : 'darken'](value, 0.075);
         } // We go ahead and calculate brand colors so they can be used for starry night defaults below.
         const brandColors = $obj.defaults({}, $obj.pick(theme.extend.colors, Object.keys(defaultBrandColors)), defaultBrandColors);
 
@@ -301,17 +308,10 @@ const baseConfigThemes = /* not async compatible */ () => {
         extend: {
             /**
              * Defines font families.
-             *
-             * If font families are customized in ways that introduce new Google fonts, then those new Google fonts must
-             * be declared as an SCSS map in order to configure our Tailwind layers. The variable is `$google-fonts`.
-             * Add the variale to your `./index.scss` file before `@use '../dev/.files/tailwind/layers';`.
-             *
-             *     $google-fonts: ( 'Georama': 'ital,wght@0,100..900;1,100..900' );
              */
             fontFamily: {
                 sans: [
-                    'Georama', //
-                    'ui-sans-serif',
+                    'ui-sans-serif', //
                     'sans-serif',
                 ],
                 serif: [

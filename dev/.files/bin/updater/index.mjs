@@ -163,6 +163,7 @@ export default async ({ projDir }) => {
         './wrangler.toml',
         './wrangler.mjs',
 
+        './brand.config.mjs',
         './madrun.config.mjs',
     ]) {
         if (await isLocked(relPath)) {

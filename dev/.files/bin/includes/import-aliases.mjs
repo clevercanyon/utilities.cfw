@@ -29,7 +29,12 @@ for (const [glob, relPath] of Object.entries(pkg.imports || {})) {
     if (!$is.string(relPath)) throw new Error('Invalid subpath imports.');
 
     let regExpRepCounter = 0; // e.g., `$1`, `$2`, `$3`, etc.
-    const regExpString = '^' + $str.escRegExp(glob).replace(/\\\*/gu, '(.+?)') + '$';
+    // For some reason, Vite chooses not to resolve `url()` values in CSS whenever they begin with a `#`.
+    // Unfortunate, because our import aliases use `#`. To fix, we prepend `url()` values starting with `#`, with `&#`.
+    // For that reason, any glob pattern found here that begins with `#` will be updated to accept an optional leading `&`.
+    // This only impacts Vite/PostCSS, and therefore we only need to alter the regular expression variants of our import aliases.
+    // See also: `./dev/.files/postcss/config.mjs` for details regarding the way we automatically prepend CSS `url()`s with `&#`.
+    const regExpString = '^' + (glob.startsWith('#') ? '&?' : '') + $str.escRegExp(glob).replace(/\\\*/gu, '(.+?)') + '$';
 
     userlandAliasesAsGlobs[glob] = path.resolve(projDir, relPath);
     userlandAliasesAsRegExpStrings[regExpString] = path.resolve(projDir, relPath).replace(/\*/gu, () => '$' + String(++regExpRepCounter));

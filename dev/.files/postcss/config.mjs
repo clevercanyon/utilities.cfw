@@ -24,13 +24,17 @@ export default async () => {
      * Composition.
      */
     return {
-        /**
-         * SCSS is not configured here, as it’s already backed into Vite; {@see https://o5p.me/CAJNAF}. To use `*.scss`
-         * files, just make sure the `sass` package is installed as a dev dependency. Note: Sass runs before postCSS,
-         * and therefore cannot interpolate Tailwind `theme()` function calls. i.e., Tailwind’s `theme()` function
-         * works, but don’t try to feed a response into an SCSS variable or function.
-         */
         plugins: [
+            (await import('postcss-import')).default(),
+            (await import('postcss-mixins')).default(),
+            (await import('postcss-simple-vars')).default(),
+            (await import('tailwindcss/nesting/index.js')).default(),
+
+            // For some reason, Vite chooses not to resolve `url()` values in CSS whenever they begin with a `#`.
+            // Unfortunate, because our import aliases use `#`. To fix, we prepend `url()` values starting with `#`, with `&#`.
+            // See also: `./dev/.files/bin/includes/import-aliases.mjs` for details regarding alias pattern matching formulation.
+            (await import('postcss-url')).default([{ filter: /./u, url: ({ url }) => (url.startsWith('#') ? '&' + url : url) }]),
+
             // Tailwind CSS plugin.
             (await import('tailwindcss')).default({ config: path.resolve(projDir, './tailwind.config.mjs') }),
 

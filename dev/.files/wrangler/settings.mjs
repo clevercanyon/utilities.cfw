@@ -24,6 +24,9 @@ const pkgSlug = $app.pkgSlug(pkg.name);
 const hop = $brand.get('@clevercanyon/hop.gdn');
 const hopGDNSlug = $str.kebabCase(hop.hostname);
 
+const hopProjectName = pkgSlug.replace(new RegExp('-' + $str.escRegExp(hopGDNSlug) + '$', 'ui'), '');
+const hopWorkerName = pkgSlug.replace(new RegExp('^' + $str.escRegExp('workers-' + hopGDNSlug) + '-', 'ui'), '');
+
 /**
  * Defines Wrangler settings.
  */
@@ -38,14 +41,18 @@ export default {
     defaultLocalProtocol: 'https',
     defaultLocalPort: '443',
 
+    defaultDevLogLevel: 'error',
+    miniflareDevBinding: 'MINIFLARE=true',
+    miniflareDevEnvVar: { MINIFLARE: 'true' },
+
     defaultZoneName: hop.hostname,
     defaultZoneDomain: 'workers.' + hop.hostname,
 
     defaultEnvironment: 'production',
     defaultProductionBranch: 'production',
 
-    defaultProjectName: pkgSlug.replace(new RegExp('-' + $str.escRegExp(hopGDNSlug) + '$', 'ui'), ''), // Pages project name.
-    defaultWorkerName: pkgSlug.replace(new RegExp('^' + $str.escRegExp('workers-' + hopGDNSlug) + '-', 'ui'), ''), // Worker name.
+    defaultProjectName: hopProjectName, // Pages project name.
+    defaultWorkerName: hopWorkerName, // Cloudflare worker name.
 
     osDir: path.resolve(os.homedir(), './.wrangler'),
     projDir: path.resolve(projDir, './.wrangler'),

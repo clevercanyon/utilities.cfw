@@ -14,7 +14,7 @@ import fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { $chalk, $cmd, $dotenv, $fs, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $is, $json, $obj, $obp, $str, $url, $version } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $brand, $fn, $is, $json, $obj, $obp, $str, $url, $version } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import nodeVersion from './node-version.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
@@ -210,6 +210,25 @@ export default class u {
         $obj.patchDeep(pkg, updates); // Potentially declarative ops.
         const prettierConfig = { ...(await $prettier.resolveConfig(pkgFile)), parser: 'json' };
         await fsp.writeFile(pkgFile, await $prettier.format($json.stringify(pkg, { pretty: true }), prettierConfig));
+    }
+
+    /**
+     * Brand utilities.
+     */
+
+    static async brand({ baseURL } = {}) {
+        return (
+            $fn.try(() => $brand.get(pkgName), undefined)() ||
+            $brand.addApp({
+                pkgName: pkgName,
+                baseURL: baseURL || '',
+                props: await u.brandConfig(),
+            })
+        );
+    }
+
+    static async brandConfig() {
+        return await (await import(path.resolve(projDir, './brand.config.mjs'))).default();
     }
 
     /*
@@ -998,7 +1017,7 @@ export default class u {
             u.log($chalk.gray('Decrypting `' + envName + '` env using Dotenv Vault key.'));
             if (!opts.dryRun) {
                 // Note: this doesn’t leak our environment variables, but it does leak all of the
-                // variables in `./.env.vault`, because of the way it is processed internally by dotenv.
+                // variables in `./.env.vault` because of the way it is processed internally by dotenv.
                 // Issue opened at dotenv regarding the problem; {@see https://o5p.me/DBbi7j}.
                 const env = $dotenv.$._parseVault({
                     DOTENV_KEY: key, // Pass explicitly.

@@ -24,7 +24,7 @@ export default () => {
 
                 props.class += ' bg-color-' + (atts.color || 'neutral');
                 props.class += ' text-color-' + (atts.color || 'neutral') + '-fg';
-                props.class += ' border-color-' + (atts.color || 'neutral') + '-bdr';
+                props.class += ' border-color-' + (atts.color || 'neutral') + '-line';
                 if (atts.size) {
                     props.class += ' text-' + atts.size;
                 }

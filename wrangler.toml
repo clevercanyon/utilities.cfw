@@ -7,11 +7,10 @@
 # @note This entire file will be updated automatically.
 # @note Instead of editing here, please review `./wrangler.mjs`.
 #
-# Last generated using `./wrangler.mjs` Dec 3, 2023 10:53 AM UTC.
+# Last generated using `./wrangler.mjs` Dec 10, 2023 10:10 PM UTC.
 ##
 
 send_metrics = false
-usage_model = "bundled"
 compatibility_date = "2023-08-15"
 compatibility_flags = [ ]
 account_id = "f1176464a976947aa5665d989814a4b1"
@@ -371,6 +370,7 @@ exclude = [
   "dist",
   "!dist",
   ".*",
+  "!.well-known",
   "*.config.*",
   "wrangler.*",
   "tsconfig.*",
@@ -419,10 +419,13 @@ pattern = "workers.hop.gdn/utilities-cfw/*"
 [env.dev]
 workers_dev = false
 
+  [env.dev.vars]
+  MINIFLARE = "true"
+
   [env.dev.build]
-  command = "npx @clevercanyon/madrun build --mode=dev"
+  command = "VITE_WRANGLER_MODE=dev npx @clevercanyon/madrun build --mode=dev"
 
 [dev]
-ip = "0.0.0.0"
 local_protocol = "https"
+ip = "0.0.0.0"
 port = 443

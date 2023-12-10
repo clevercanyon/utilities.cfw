@@ -67,7 +67,6 @@ export default {
                 const repoName = (/^@/u.test(pkgName) && /[^@/]\/[^@/]/u.test(pkgName) ? pkgName.replace(/^@/u, '').split('/')[1] : '') || _dirBasename;
 
                 const envsDir = path.resolve(projDir, './dev/.envs');
-                const envProdFile = path.resolve(envsDir, './.env.prod');
                 const readmeFile = path.resolve(projDir, './README.md');
 
                 u.log($chalk.gray($json.stringify({ pkgName, pkgSlug, repoOwner, repoName }, { pretty: true })));
@@ -123,22 +122,33 @@ export default {
                  */
                 if (fs.existsSync(envsDir)) {
                     u.log($chalk.green('Updating `./dev/.envs`.'));
+                    const envFiles = await u.envFiles();
+
                     await fsp
-                        .readFile(envProdFile)
-                        .then((envProd) => envProd.toString())
-                        .then(async (envProd) => {
+                        .readFile(envFiles.main)
+                        .then((buffer) => buffer.toString())
+                        .then(async (contents) => {
                             if ('cfw' === pkg.config.c10n.build.targetEnv) {
-                                envProd = envProd.replace(
-                                    /^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu,
-                                    "$1='https://" + wranglerSettings.defaultZoneDomain + '/' + wranglerSettings.defaultWorkerName + "/'",
-                                );
+                                contents = contents.replace(/^(BASE_PATH)\s*=\s*[^\r\n]*$/gmu, "$1='/" + wranglerSettings.defaultWorkerName + "'");
                             } else if ('cfp' === pkg.config.c10n.build.targetEnv) {
-                                envProd = envProd.replace(
-                                    /^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu,
-                                    "$1='https://" + wranglerSettings.defaultProjectName + '.' + wranglerSettings.defaultZoneName + "/'",
-                                );
+                                contents = contents.replace(/^(BASE_PATH)\s*=\s*[^\r\n]*$/gmu, "$1='' # No base path.");
                             }
-                            await fsp.writeFile(envProdFile, envProd);
+                            await fsp.writeFile(envFiles.main, contents);
+                        })
+                        .catch((error) => {
+                            if ('ENOENT' !== error.code) throw error;
+                        });
+
+                    await fsp
+                        .readFile(envFiles.prod)
+                        .then((buffer) => buffer.toString())
+                        .then(async (contents) => {
+                            if ('cfw' === pkg.config.c10n.build.targetEnv) {
+                                contents = contents.replace(/^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu, "$1='https://" + wranglerSettings.defaultZoneDomain + "${BASE_PATH}/'");
+                            } else if ('cfp' === pkg.config.c10n.build.targetEnv) {
+                                contents = contents.replace(/^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu, "$1='https://" + wranglerSettings.defaultProjectName + '.' + wranglerSettings.defaultZoneName + "${BASE_PATH}/'"); // prettier-ignore
+                            }
+                            await fsp.writeFile(envFiles.prod, contents);
                         })
                         .catch((error) => {
                             if ('ENOENT' !== error.code) throw error;
@@ -146,19 +156,22 @@ export default {
                 }
 
                 /**
-                 * Updates `./README.md` file in new project directory.
+                 * Updates `./README.md` file, if applicable.
                  */
-                u.log($chalk.green('Updating `./README.md`.'));
-                await fsp
-                    .readFile(readmeFile)
-                    .then(async (readme) => {
-                        readme = readme.toString();
-                        readme = readme.replace(/^(#\s+)(@[^/?#\s]+\/[^/?#\s]+)/gmu, '$1' + pkgName);
-                        await fsp.writeFile(readmeFile, readme);
-                    })
-                    .catch((error) => {
-                        if ('ENOENT' !== error.code) throw error;
-                    });
+                if (fs.existsSync(readmeFile)) {
+                    u.log($chalk.green('Updating `./README.md`.'));
+
+                    await fsp
+                        .readFile(readmeFile)
+                        .then((buffer) => buffer.toString())
+                        .then(async (contents) => {
+                            contents = contents.replace(/^(#\s+)(@[^/?#\s]+\/[^/?#\s]+)/gmu, '$1' + pkgName);
+                            await fsp.writeFile(readmeFile, contents);
+                        })
+                        .catch((error) => {
+                            if ('ENOENT' !== error.code) throw error;
+                        });
+                }
 
                 /**
                  * Initializes this as a new git repository.

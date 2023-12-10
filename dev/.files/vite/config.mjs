@@ -20,8 +20,10 @@ import extensions from '../bin/includes/extensions.mjs';
 import importAliases from '../bin/includes/import-aliases.mjs';
 import u from '../bin/includes/utilities.mjs';
 import viteA16sDir from './includes/a16s/dir.mjs';
+import viteC10nBrandConfig from './includes/c10n/brand-config.mjs';
+import viteC10nNoModulePreloadConfig from './includes/c10n/no-module-preload.mjs';
 import viteC10nPostProcessingConfig from './includes/c10n/post-processing.mjs';
-import viteC10nTransformsConfig from './includes/c10n/transforms.mjs';
+import viteC10nSideEffectsConfig from './includes/c10n/side-effects.mjs';
 import viteDTSConfig from './includes/dts/config.mjs';
 import viteEJSConfig from './includes/ejs/config.mjs';
 import viteESBuildConfig from './includes/esbuild/config.mjs';
@@ -32,6 +34,7 @@ import viteMinifyConfig from './includes/minify/config.mjs';
 import vitePkgUpdates from './includes/package/updates.mjs';
 import vitePrefreshConfig from './includes/prefresh/config.mjs';
 import viteRollupConfig from './includes/rollup/config.mjs';
+import viteTerserConfig from './includes/terser/config.mjs';
 import viteVitestConfig from './includes/vitest/config.mjs';
 
 /**
@@ -82,12 +85,30 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     if (isSSRBuild) appEnvPrefixes.push('SSR_APP_'); // Added to SSR builds.
     const env = loadEnv(mode, envsDir, appEnvPrefixes); // Includes `APP_IS_VITE`.
 
+    const appBaseURL = env.APP_BASE_URL || '';
+    // A trailing slash or no trailing slash; it definitely matters!
+    // e.g., `new URL('./', 'https://example.com/')` = `https://example.com/`.
+    // e.g., `new URL('./', 'https://example.com/base')` = `https://example.com/`.
+    // e.g., `new URL('./', 'https://example.com/base/')` = `https://example.com/base/`.
+
+    // We leave it up to the implementation to decide which it prefers to use.
+    // A base URL is only required for some app types; e.g., `spa|mpa`. Validation below.
+
+    // This is a variant of the base URL that’s resolved and has no trailing slash.
+    const appBaseURLResolvedNTS = appBaseURL ? $str.rTrim(new URL('./', appBaseURL).toString(), '/') : '';
+
+    // No other choice at this time, we have to store this in an environment variable for Tailwind configuration.
+    // This uses a leading underscore to avoid contaminating current environment variables in @clevercanyon/utilities.
+    process.env._MODE_AWARE_APP_BASE_URL = appBaseURL; // Informs brand acquisition in our Tailwind configuration file.
+
     const staticDefs = {
         ['$$__' + appEnvPrefixes[0] + 'PKG_NAME__$$']: pkg.name || '',
         ['$$__' + appEnvPrefixes[0] + 'PKG_VERSION__$$']: pkg.version || '',
         ['$$__' + appEnvPrefixes[0] + 'PKG_REPOSITORY__$$']: pkg.repository || '',
         ['$$__' + appEnvPrefixes[0] + 'PKG_HOMEPAGE__$$']: pkg.homepage || '',
         ['$$__' + appEnvPrefixes[0] + 'PKG_BUGS__$$']: pkg.bugs || '',
+        ['$$__' + appEnvPrefixes[0] + 'BASE_URL__$$']: appBaseURL || '',
+        ['$$__' + appEnvPrefixes[0] + 'BASE_URL_RESOLVED_NTS__$$']: appBaseURLResolvedNTS || '',
         ['$$__' + appEnvPrefixes[0] + 'BUILD_TIME_YMD__$$']: $time.now().toYMD() || '',
     };
     Object.keys(env) // Add string env vars to static defines.
@@ -98,9 +119,6 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     /**
      * App type, target, path, and related vars.
      */
-    const appBaseURL = env.APP_BASE_URL || ''; // e.g., `https://example.com/`, `https://example.com/base`.
-    // A base URL is only required for some app types; e.g., `spa|mpa`. See validation below for details.
-
     const appType = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.appType') || 'cma';
     const targetEnv = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.targetEnv') || 'any';
     const entryFiles = $obp.get(pkg, 'config.c10n.&.' + (isSSRBuild ? 'ssrBuild' : 'build') + '.entryFiles') || [];
@@ -129,7 +147,10 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
      */
     const peerDepKeys = Object.keys(pkg.peerDependencies || {});
     const targetEnvIsServer = ['cfw', 'node'].includes(targetEnv);
-    const minifyEnable = 'dev' !== mode && !['lib'].includes(appType);
+    const wranglerMode = process.env.VITE_WRANGLER_MODE || ''; // Wrangler mode.
+    const inProdLikeMode = ['prod', 'stage'].includes(mode) || ('dev' === mode && 'dev' === wranglerMode);
+    const sourcemapsEnable = ['dev'].includes(mode); // Only generate sourcemaps when explicitly in dev mode.
+    const minifyEnable = !['lib'].includes(appType) && inProdLikeMode; // We don’t ever minify code in a library.
     const vitestSandboxEnable = process.env.VITEST && $str.parseValue(String(process.env.VITEST_SANDBOX_ENABLE || ''));
     const vitestExamplesEnable = process.env.VITEST && $str.parseValue(String(process.env.VITEST_EXAMPLES_ENABLE || ''));
     const prefreshEnable = process.env.VITE_PREFRESH_ENABLE && !process.env.VITEST && 'serve' === command && 'dev' === mode && ['spa', 'mpa'].includes(appType);
@@ -168,18 +189,25 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     }); // prettier-ignore
 
     /**
+     * Updates `sideEffects` to full set established by package update routines.
+     */
+    (sideEffects.length = 0), pkgUpdates.sideEffects.forEach((s) => sideEffects.push(s));
+
+    /**
      * Configures plugins for Vite.
      */
     const plugins = [
-        await viteC10nTransformsConfig({}),
         await viteIconsConfig({}),
+        await viteC10nBrandConfig({}),
+        await viteC10nSideEffectsConfig({}),
+        await viteC10nNoModulePreloadConfig({}),
         await viteMDXConfig({ projDir }),
         await viteEJSConfig({ mode, projDir, srcDir, pkg, env }),
-        await viteMinifyConfig({ mode }),
+        await viteMinifyConfig({ minifyEnable }),
         await viteDTSConfig({ distDir }),
         await viteC10nPostProcessingConfig({
-            mode, command, isSSRBuild, projDir, distDir,
-            pkg, env, appType, targetEnv, staticDefs, pkgUpdates
+            mode, wranglerMode, inProdLikeMode, command, isSSRBuild, projDir, distDir,
+            pkg, env, appBaseURL, appType, targetEnv, staticDefs, pkgUpdates
         }), // prettier-ignore
         ...(prefreshEnable ? [await vitePrefreshConfig({})] : []),
     ];
@@ -187,12 +215,17 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     /**
      * Configures esbuild for Vite.
      */
-    const esbuildConfig = await viteESBuildConfig({}); // Minimal config; no props at this time.
+    const esbuildConfig = await viteESBuildConfig({}); // Minimal config. No props at this time.
+
+    /**
+     * Configures terser for Vite.
+     */
+    const terserConfig = await viteTerserConfig({}); // Minimal config. No props passed at this time.
 
     /**
      * Configures rollup for Vite.
      */
-    const rollupConfig = await viteRollupConfig({ projDir, srcDir, distDir, a16sDir, appType, appEntries, peerDepKeys, minifyEnable, sideEffects: pkgUpdates.sideEffects });
+    const rollupConfig = await viteRollupConfig({ projDir, srcDir, distDir, a16sDir, appType, appEntries, peerDepKeys, minifyEnable, sideEffects });
 
     /**
      * Configures tests for Vite.
@@ -230,7 +263,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
 
         root: srcDir, // Absolute path where entry indexes live.
         publicDir: isSSRBuild ? false : path.relative(srcDir, cargoDir),
-        base: appBaseURL ? $url.toPath(appBaseURL) : '/',
+        base: appBaseURLResolvedNTS ? $url.toPath(appBaseURLResolvedNTS) : '/',
 
         envDir: path.relative(srcDir, envsDir), // Relative to `root` directory.
         envPrefix: appEnvPrefixes, // Env vars w/ these prefixes become part of the app.
@@ -241,12 +274,14 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
         server: {
             host: '0.0.0.0', // All.
             port: 443, // Default https.
+            strictPort: true, // Only use 443.
             open: false, // Not automatically.
             https: { key: sslKey, cert: sslCrt },
         },
         preview: {
             host: '0.0.0.0', // All.
             port: 443, // Default https.
+            strictPort: true, // Only use 443.
             open: false, // Not automatically.
             https: { key: sslKey, cert: sslCrt },
         },
@@ -284,14 +319,16 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
 
             manifest: !isSSRBuild ? 'vite/manifest.json' : false, // Enables manifest of asset locations.
             ssrManifest: isSSRBuild ? 'vite/ssr-manifest.json' : false, // Enables SSR manifest of asset locations.
-            sourcemap: 'dev' === mode ? 'inline' : false, // Enables creation of sourcemaps; i.e., for debugging.
+            sourcemap: sourcemapsEnable, // Enables creation of sourcemaps; i.e., purely for debugging purposes.
 
-            minify: minifyEnable ? 'esbuild' : false, // {@see https://o5p.me/pkJ5Xz}.
+            terserOptions: terserConfig, // Terser config options.
+            minify: minifyEnable ? 'terser' : false, // {@see https://o5p.me/pkJ5Xz}.
             cssMinify: minifyEnable ? 'lightningcss' : false, // {@see https://o5p.me/h0Hgj3}.
             // We ran several tests between `esbuild`, `cssnano`, and `lightningcss` wins.
 
             modulePreload: false, // Disable. DOM injections conflict with our SPAs.
             // This option is sort-of respected, but not fully; {@see https://github.com/vitejs/vite/issues/13952}.
+            // For now, we have a custom plugin, configured above, which effectively disables all preloading.
 
             ...(['cma', 'lib'].includes(appType) ? { lib: { entry: appEntries, formats: ['es'] } } : {}),
             rollupOptions: rollupConfig, // See: <https://o5p.me/5Vupql>.

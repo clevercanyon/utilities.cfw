@@ -17,6 +17,6 @@
  *
  * @returns       Minify configuration; else `null` if not applicable.
  */
-export default async ({ mode }) => {
-    return 'dev' === mode ? null : (await import('vite-plugin-minify')).ViteMinifyPlugin();
+export default async ({ minifyEnable }) => {
+    return minifyEnable ? (await import('vite-plugin-minify')).ViteMinifyPlugin() : null;
 };

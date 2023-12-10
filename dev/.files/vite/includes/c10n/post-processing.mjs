@@ -12,39 +12,40 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { $http as $cfpꓺhttp } from '../../../../../node_modules/@clevercanyon/utilities.cfp/dist/index.js';
-import { $chalk, $fs, $glob } from '../../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $mm, $obp, $preact, $str } from '../../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $chalk, $fs, $glob, $prettier } from '../../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $crypto, $json, $mm, $obp, $preact, $str, $url } from '../../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import { StandAlone as StandAlone404 } from '../../../../../node_modules/@clevercanyon/utilities/dist/preact/components/404.js';
 import exclusions from '../../../bin/includes/exclusions.mjs';
 import extensions from '../../../bin/includes/extensions.mjs';
 import u from '../../../bin/includes/utilities.mjs';
 
 /**
- * Configures Vite/Rollup post-processing.
+ * Configures Vite post-processing plugin.
  *
  * @param   props Props from vite config file driver.
  *
  * @returns       Plugin configuration.
  */
-export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, appType, targetEnv, staticDefs, pkgUpdates }) => {
-    let postProcessed = false; // Initialize.
+export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild, projDir, distDir, pkg, env, appBaseURL, appType, targetEnv, staticDefs, pkgUpdates }) => {
+    let buildEndError = undefined, // Initialize.
+        postProcessed = false; // Initialize.
+
     return {
         name: 'vite-plugin-c10n-post-processing',
         enforce: 'post', // After others on this hook.
 
-        async closeBundle(/* Rollup hook. */) {
-            if (postProcessed) return;
-            postProcessed = true;
+        // Listens for build-related errors.
+        // No post-processing if there were errors.
+        buildEnd: (error) => void (buildEndError = error),
 
-            /**
-             * Not during SSR builds.
-             */
-            if (isSSRBuild) return;
+        async closeBundle(/* Rollup hook. */) {
+            if (postProcessed || buildEndError) return;
+            postProcessed = true; // Processing now.
 
             /**
              * Recompiles `./package.json`.
              */
-            if ('build' === command) {
+            if (!isSSRBuild && 'build' === command) {
                 u.log($chalk.gray('Recompiling `./package.json`.'));
                 await u.updatePkg({ $set: pkgUpdates });
             }
@@ -52,7 +53,7 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
             /**
              * Generates typescript type declaration file(s).
              */
-            if ('build' === command /* Does important type checking at build time. */) {
+            if (!isSSRBuild && 'build' === command /* Does important type checking at build time. */) {
                 u.log($chalk.gray('Running TypeScript type checks.'));
                 await u.spawn('npx', ['tsc']);
             }
@@ -60,9 +61,9 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
             /**
              * Prunes `./.npmignore`s, which we don’t include in any distribution.
              *
-             * We only prune `./.npmignore`s when building for production, as it’s possible there are files being
-             * compiled by TypeScript that are needed for development; i.e., they need to exist in dev mode in order to
-             * be capable of serving their intended purpose; e.g., dev-only utilities, runners, sandbox files, etc.
+             * We only prune `./.npmignore`s when building in a prod-like mode, as it’s possible there are files being
+             * compiled by TypeScript that are needed for development; i.e., they need to exist in to be capable of
+             * serving their intended purpose; e.g., dev-only utilities, runners, sandbox files, etc.
              *
              * Regarding `node_modules`. There is an exception for the case of `node_modules/assets/a16s`, used for
              * Cloudflare SSR-specific assets. See `../a16s/dir.mjs` for details. The `node_modules` folder is pruned by
@@ -74,7 +75,7 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
              * potentially customized `./.npmignore` file in the current project directory. The reason is because we
              * intend to enforce our standards. For further details {@see https://o5p.me/MuskgW}.
              */
-            if ('build' === command && 'prod' === mode) {
+            if (!isSSRBuild && 'build' === command && inProdLikeMode) {
                 for (let globOpts = [{ onlyDirectories: true }, { onlyFiles: false }], i = 0; i < globOpts.length; i++) {
                     for (const fileOrDir of await $glob.promise(exclusions.defaultNPMIgnores, { cwd: distDir, ignoreCase: true, ...globOpts[i] })) {
                         const projRelPath = path.relative(projDir, fileOrDir);
@@ -114,11 +115,11 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
             /**
              * Deletes a few things that are not needed by apps running on Cloudflare Pages.
              *
-             * We only prune when building for production, as it’s possible there are files being compiled by TypeScript
-             * that are needed for development; i.e., they need to exist in dev mode in order to be capable of serving
-             * their intended purpose; e.g., dev-only utilities, runners, sandbox files, etc.
+             * We only prune when building in a prod-like mode, as it’s possible there are files being compiled by
+             * TypeScript that are needed for development; i.e., they need to exist in dev mode in order to be capable
+             * of serving their intended purpose; e.g., dev-only utilities, runners, sandbox files, etc.
              */
-            if ('build' === command && 'prod' === mode && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
+            if (!isSSRBuild && 'build' === command && inProdLikeMode && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
                 for (const fileOrDir of await $glob.promise(
                     [
                         'types', // Prunes TypeScript type declarations.
@@ -134,21 +135,27 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
             /**
              * Updates a few files that configure apps running on Cloudflare Pages.
              *
-             * None of these file must exist, and none of these must contain replacement codes. We leave it up to the
+             * None of these files must exist, and none of these must contain replacement codes. We leave it for the
              * implementation to decide. If they do not exist, or do not contain replacement codes, we assume that
              * nothing should occur. For example, it might be desirable in some cases for `./robots.txt`, `sitemap.xml`,
              * or others to be served dynamically. In which case they may not exist in these locations statically.
+             *
+             * @review Consider expanding `.well-known/` to include extension variants instead of the hard-coded `{txt,xml,html,json}`.
              */
-            if ('build' === command && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
+            if (!isSSRBuild && 'build' === command && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
                 for (const file of await $glob.promise(
                     [
                         '_headers', //
                         '_redirects',
                         '_routes.json',
-                        '404.html',
-                        'robots.txt',
-                        'sitemap.xml',
+                        '.well-known/**/*.{txt,xml,html,json}',
                         'sitemaps/**/*.xml',
+                        'sitemap.xml',
+                        'manifest.json',
+                        'ads.txt',
+                        'humans.txt',
+                        'robots.txt',
+                        '404.html',
                     ],
                     { cwd: distDir },
                 )) {
@@ -168,7 +175,7 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
                         const cfpDefault404 = '<!doctype html>' + $preact.ssr.renderToString($preact.create(StandAlone404));
                         fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_404_HTML__$$', cfpDefault404);
                     }
-                    if (['_headers', '_redirects', 'robots.txt'].includes(fileRelPath)) {
+                    if (['_headers', '_redirects'].includes(fileRelPath) || ['txt'].includes(fileExt)) {
                         fileContents = fileContents.replace(/^#[^\n]*\n/gmu, '');
                         //
                     } else if (['json'].includes(fileExt)) {
@@ -185,9 +192,110 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
             }
 
             /**
+             * Generates SHA-1 manifests for JS import compatibility.
+             */
+            if ('build' === command && fs.existsSync(path.resolve(distDir, './vite/' + (isSSRBuild ? 'ssr-' : '') + 'manifest.json'))) {
+                u.log($chalk.gray('Generating MD5-keyed ' + (isSSRBuild ? 'SSR ' : '') + 'manifest.'));
+
+                const file = path.resolve(distDir, './vite/' + (isSSRBuild ? 'ssr-' : '') + 'manifest.json');
+                const data = $json.parse((await fsp.readFile(file)).toString());
+                const sha1Data = {}; // Initialize.
+
+                for (const [key, value] of Object.entries(data)) {
+                    sha1Data['x' + (await $crypto.sha1(key))] = { [key]: value };
+                }
+                const prettierConfig = { ...(await $prettier.resolveConfig(file)), parser: 'json' };
+                await fsp.writeFile(file, await $prettier.format($json.stringify(sha1Data, { pretty: true }), prettierConfig));
+            }
+
+            /**
+             * Generates PWA manifest if it doesn’t exist already; {@see https://web.dev/articles/add-manifest}.
+             */
+            if (!isSSRBuild && 'build' === command && ['spa', 'mpa'].includes(appType) && appBaseURL && !fs.existsSync(path.resolve(distDir, './manifest.json'))) {
+                u.log($chalk.gray('Generating PWA `./manifest.json`.'));
+
+                const file = path.resolve(distDir, './manifest.json');
+                const brand = await u.brand({ baseURL: appBaseURL }),
+                    data = {
+                        id: $url.toPathQueryHash($url.addQueryVar('utm_source', 'pwa', brand.url)),
+                        start_url: $url.toPathQueryHash($url.addQueryVar('utm_source', 'pwa', brand.url)),
+                        scope: $str.rTrim($url.parse(brand.url).pathname, '/') + '/',
+
+                        display_override: ['standalone', 'browser'],
+                        display: 'standalone', // Preferred presentation.
+
+                        theme_color: brand.theme.color,
+                        background_color: brand.theme.color,
+
+                        name: brand.name,
+                        short_name: brand.name,
+                        description: brand.description,
+
+                        icons: [
+                            // SVGs.
+                            {
+                                type: 'image/svg+xml',
+                                src: $url.toPathQueryHash(brand.icon.svg),
+                                sizes: brand.icon.width + 'x' + brand.icon.height,
+                                purpose: 'any maskable',
+                            },
+                            {
+                                type: 'image/svg+xml',
+                                src: $url.toPathQueryHash(brand.icon.svg),
+                                sizes: '512x512', // Required size in Chrome.
+                                purpose: 'any maskable',
+                            },
+                            {
+                                type: 'image/svg+xml',
+                                src: $url.toPathQueryHash(brand.icon.svg),
+                                sizes: '192x192', // Required size in Chrome.
+                                purpose: 'any maskable',
+                            },
+                            // PNGs.
+                            {
+                                type: 'image/png',
+                                src: $url.toPathQueryHash(brand.icon.png),
+                                sizes: brand.icon.width + 'x' + brand.icon.height,
+                                purpose: 'any maskable',
+                            },
+                            {
+                                type: 'image/png',
+                                src: $url.toPathQueryHash(brand.icon.png),
+                                sizes: '512x512', // Required size in Chrome.
+                                purpose: 'any maskable',
+                            },
+                            {
+                                type: 'image/png',
+                                src: $url.toPathQueryHash(brand.icon.png),
+                                sizes: '192x192', // Required size in Chrome.
+                                purpose: 'any maskable',
+                            },
+                        ],
+                        screenshots: [
+                            // Wide.
+                            {
+                                type: 'image/png',
+                                form_factor: 'wide',
+                                src: $url.toPathQueryHash(brand.ogImage.png),
+                                sizes: brand.ogImage.width + 'x' + brand.ogImage.height,
+                            },
+                            // Narrow.
+                            {
+                                type: 'image/png',
+                                form_factor: 'narrow',
+                                src: $url.toPathQueryHash(brand.ogImage.png),
+                                sizes: brand.ogImage.width + 'x' + brand.ogImage.height,
+                            },
+                        ],
+                    };
+                const prettierConfig = { ...(await $prettier.resolveConfig(file)), parser: 'json' };
+                await fsp.writeFile(file, await $prettier.format($json.stringify(data, { pretty: true }), prettierConfig));
+            }
+
+            /**
              * Generates SSR build on-the-fly internally.
              */
-            if ('build' === command && $obp.get(pkg, 'config.c10n.&.ssrBuild.appType')) {
+            if (!isSSRBuild && 'build' === command && $obp.get(pkg, 'config.c10n.&.ssrBuild.appType')) {
                 u.log($chalk.gray('Running secondary SSR build routine.'));
                 await u.spawn('npx', ['vite', 'build', '--mode', mode, '--ssr']);
             }
@@ -195,7 +303,7 @@ export default async ({ mode, command, isSSRBuild, projDir, distDir, pkg, env, a
             /**
              * Generates a zip archive containing `./dist` directory.
              */
-            if ('build' === command) {
+            if (!isSSRBuild && 'build' === command && 'dev' !== wranglerMode) {
                 const zipFile = path.resolve(projDir, './.~dist.zip');
                 u.log($chalk.gray('Generating `' + path.relative(projDir, zipFile) + '`.'));
 

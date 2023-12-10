@@ -7,7 +7,7 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  *
- * @see https://github.com/trapcodeio/vite-plugin-ejs
+ * @see https://www.npmjs.com/package/vite-plugin-dts
  */
 
 /**
@@ -19,7 +19,7 @@
  */
 export default async ({ distDir }) => {
     return (await import('vite-plugin-dts')).default({
-        // logLevel: 'error',
+        logLevel: 'error',
         outDir: distDir + '/types',
     });
 };

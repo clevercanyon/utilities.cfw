@@ -53,6 +53,12 @@ export default async ({
         if (fs.existsSync(path.resolve(srcDir, './resources/init.ts'))) {
             updates.sideEffects.push('./' + path.relative(projDir, path.resolve(srcDir, './resources/init.ts')));
         }
+        if (fs.existsSync(path.resolve(srcDir, './resources/initialize.ts'))) {
+            updates.sideEffects.push('./' + path.relative(projDir, path.resolve(srcDir, './resources/initialize.ts')));
+        }
+        if (['spa', 'mpa'].includes(appType) && fs.existsSync(path.resolve(srcDir, './resources/hydrate.tsx'))) {
+            updates.sideEffects.push('./' + path.relative(projDir, path.resolve(srcDir, './resources/hydrate.tsx')));
+        }
         const distDirAsProjRelPath = './' + path.relative(projDir, distDir); // Relative dist directory path.
 
         switch (true /* Conditional case handlers. */) {

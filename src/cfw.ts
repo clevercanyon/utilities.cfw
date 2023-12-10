@@ -2,7 +2,7 @@
  * Utility class.
  */
 
-import '#@init.ts';
+import '#@initialize.ts';
 
 import { $env, $http, $json, $mm, $str, $url, type $type } from '@clevercanyon/utilities';
 import * as cfKVA from '@cloudflare/kv-asset-handler';
@@ -60,6 +60,10 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         request = $http.prepareRequest(request, {}) as $type.cf.Request;
         const url = $url.parse(request.url) as $type.cf.URL;
         const feData = { request, env, ctx, routes, url };
+
+        // This is somewhat in reverse of how we would normally serve requests.
+        // Typically, we would first check if it’s potentially dynamic, and then fall back on assets.
+        // We still do that, but in the case of a worker site, if it’s in `/assets` it can only be static.
         if (
             $http.requestPathIsStatic(request, url) && //
             $env.get('__STATIC_CONTENT' /* Worker site? */) &&
@@ -131,6 +135,14 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type
         if ($mm.test(url.pathname, $url.pathFromAppBase('./') + routeSubpathGlob)) {
             return routeSubpathHandler(feData);
         }
+    }
+    // Falls back on static assets, when applicable. Remember, it *might* have been dynamic. We now know it wasn’t.
+    // e.g., In the case of {@see $http.requestPathIsStatic()} having returned false above for a potentially-dynamic path.
+    if (
+        $env.get('__STATIC_CONTENT' /* Worker site? */) && //
+        $mm.test(url.pathname, $url.pathFromAppBase('./assets/') + '**')
+    ) {
+        return handleFetchCache(handleFetchStaticAssets, feData);
     }
     return $http.prepareResponse(request, { status: 404 }) as $type.cf.Response;
 };

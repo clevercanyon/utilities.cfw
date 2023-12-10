@@ -9,7 +9,7 @@
 import { visit as unistVisit } from 'unist-util-visit';
 
 /**
- * Modifies external anchors by adding `rel` attribute for improved SEO.
+ * Modifies external anchors, adding `rel="external nofollow"`, if applicable, for improved SEO.
  */
 export default () => {
     return (tree) => {

@@ -16,12 +16,22 @@ declare const $$__APP_PKG_VERSION__$$: string;
 declare const $$__APP_PKG_REPOSITORY__$$: string;
 declare const $$__APP_PKG_HOMEPAGE__$$: string;
 declare const $$__APP_PKG_BUGS__$$: string;
+declare const $$__APP_BASE_URL__$$: string;
+declare const $$__APP_BASE_URL_RESOLVED_NTS__$$: string;
 declare const $$__APP_BUILD_TIME_YMD__$$: string;
 
 /**
  * Declares prefresh API in Vite plugin.
  */
 declare var __PREFRESH__: object;
+
+/**
+ * Declares virtual brand config file.
+ */
+declare module 'virtual:brand/config' {
+    import { $type } from '@clevercanyon/utilities';
+    export default {} as Partial<$type.BrandRawProps>;
+}
 
 /*
  * Customizations.

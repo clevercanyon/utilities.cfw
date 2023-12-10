@@ -1,5 +1,5 @@
 /**
- * C10n transforms plugin.
+ * C10n side-effects plugin.
  *
  * Vite is not aware of this config file's location.
  *
@@ -9,7 +9,7 @@
  */
 
 /**
- * Configures Vite/Rollup transforms.
+ * Configures Vite side-effects plugin.
  *
  * @param   props Props from vite config file driver.
  *
@@ -17,9 +17,9 @@
  */
 export default async (/* {} */) => {
     return {
-        name: 'vite-plugin-c10n-transforms',
+        name: 'vite-plugin-c10n-side-effects',
 
-        async transform(/* Rollup hook. */ unusedꓺ, id) {
+        async transform(unusedꓺ, id) {
             /**
              * If `moduleSideEffects` is set to `false` and no other module imports anything from the module, then the
              * module will not be included even if the module would have side effects; {@see https://o5p.me/EcB2d6}.
@@ -31,7 +31,6 @@ export default async (/* {} */) => {
             if (/@preact\/signals(?:-core)?\b/iu.test(id)) {
                 return { moduleSideEffects: false };
             }
-            return null; // No transform.
         },
     };
 };

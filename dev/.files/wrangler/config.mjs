@@ -44,7 +44,10 @@ export default async () => {
         // Platform settings.
 
         send_metrics: false, // Don't share usage.
-        usage_model: 'bundled', // 10M/mo free + $0.50/M.
+
+        // Cannot be added once we opt into standard pricing.
+        // This field should be configured from CF dashboard.
+        // usage_model: 'bundled', // 10M/mo free + $0.50/M.
 
         // Compatibility settings.
 
@@ -173,15 +176,15 @@ export default async () => {
                   env: {
                       dev: {
                           workers_dev: false,
-                          build: { command: 'npx @clevercanyon/madrun build --mode=dev' },
+                          vars: wranglerSettings.miniflareDevEnvVar,
+                          build: { command: 'VITE_WRANGLER_MODE=dev npx @clevercanyon/madrun build --mode=dev' },
                       },
                   },
                   // `$ wrangler dev` settings.
 
                   dev: {
-                      ip: wranglerSettings.defaultLocalIP,
                       local_protocol: wranglerSettings.defaultLocalProtocol,
-                      // Wrangler requires this to be a number, not a string.
+                      ip: wranglerSettings.defaultLocalIP, // e.g., `0.0.0.0`.
                       port: Number(wranglerSettings.defaultLocalPort),
                   },
               }),
