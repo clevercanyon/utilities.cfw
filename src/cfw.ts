@@ -55,7 +55,6 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
     const { env, ctx, routes } = ifeData;
 
     $env.capture('@global', env); // Captures environment vars.
-
     try {
         request = $http.prepareRequest(request, {}) as $type.cf.Request;
         const url = $url.parse(request.url) as $type.cf.URL;
@@ -73,9 +72,9 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         }
         return handleFetchCache(handleFetchDynamics, feData);
         //
-    } catch (error) {
-        if (error instanceof Response) {
-            return error as unknown as $type.cf.Response;
+    } catch (thrown) {
+        if (thrown instanceof Response) {
+            return thrown as unknown as $type.cf.Response;
         }
         return $http.prepareResponse(request, { status: 500 }) as $type.cf.Response;
     }
@@ -185,11 +184,11 @@ export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$
         });
         return $http.prepareResponse(request, { ...response }) as $type.cf.Response;
         //
-    } catch (error) {
-        if (error instanceof cfKVA.NotFoundError) {
+    } catch (thrown) {
+        if (thrown instanceof cfKVA.NotFoundError) {
             return $http.prepareResponse(request, { status: 404 }) as $type.cf.Response;
         }
-        if (error instanceof cfKVA.MethodNotAllowedError) {
+        if (thrown instanceof cfKVA.MethodNotAllowedError) {
             return $http.prepareResponse(request, { status: 405 }) as $type.cf.Response;
         }
         return $http.prepareResponse(request, { status: 500 }) as $type.cf.Response;
