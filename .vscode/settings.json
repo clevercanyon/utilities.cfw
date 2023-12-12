@@ -7,7 +7,7 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./settings.mjs`.
  *
- * Last generated using `./settings.mjs` Dec 10, 2023 10:10 PM UTC.
+ * Last generated using `./settings.mjs` Dec 12, 2023 2:02 AM UTC.
  */
 {
     "editor.formatOnType": false,
@@ -72,12 +72,13 @@
         "**/CODEOWNERS": "ignore",
         "**/tsconfig.{json,×××××××}": "jsonc",
         "**/.vscode/*.{json,×××××××}": "jsonc",
+        "**/src/cargo/.well-known/**/*.{json,×××××××}": "jsonc",
         "**/dist/_headers": "plaintext",
         "**/src/cargo/_headers": "plaintext",
         "**/dist/_redirects": "plaintext",
         "**/src/cargo/_redirects": "plaintext",
-        "**/src/cargo/_routes.{json,×××××××}": "jsonc",
-        "**/src/cargo/.well-known/*.{json,×××××××}": "jsonc"
+        "**/src/cargo/manifest.{json,×××××××}": "jsonc",
+        "**/src/cargo/_routes.{json,×××××××}": "jsonc"
     },
     "files.exclude": {
         "**/._*": true,
@@ -317,7 +318,7 @@
     "markdown.preview.fontSize": 16,
     "markdown.preview.lineHeight": 1.5,
     "markdown.preview.typographer": true,
-    "markdown.preview.fontFamily": "Georama, ui-sans-serif, sans-serif",
+    "markdown.preview.fontFamily": "Georama, sans-serif, 'Apple Color Emoji'",
     "markdown.validate.enabled": false,
     "mdx.server.enable": false,
     "prettier.ignorePath": ".prettierignore",

@@ -18,53 +18,93 @@
  *   So `~` is an alternative to `_`, indicating prose is allowed, but it must use inherited coloration.
  */
 @layer base {
-    html {
-        font-size: 16px; // No auto-scaling at root node.
+    /**
+     * Scrollbars.
+     */
+    ::-webkit-scrollbar {
+        @apply w-2;
+        @apply h-2;
+    }
 
-        @apply bg-color-basic text-color-basic-fg;
+    ::-webkit-scrollbar-thumb {
+        @apply rounded;
+        @apply bg-color-basic-fg/25;
 
-        :where(a, .link):not(:where(.p, .p *, ._, ._ *)) {
-            @apply cursor-pointer text-color-basic-link no-underline opacity-90 hover:underline hover:opacity-100;
-        }
-
-        :where(h1, h2, h3, h4, h5, h6):not(:where(.p, .p *, ._, ._ *)) {
-            @apply text-color-basic-heading;
-        }
-
-        ::-webkit-scrollbar {
-            @apply w-2;
-            @apply h-2;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            @apply rounded;
-            @apply bg-color-basic-fg/25;
-
-            &:hover {
-                @apply bg-color-basic-fg/50;
-            }
-        }
-
-        ::-webkit-scrollbar-track {
-            @apply bg-color-basic-fg/5;
+        &:hover {
+            @apply bg-color-basic-fg/50;
         }
     }
 
-    .basic-header {
-        @apply border-color-header-line bg-color-header text-color-header-fg;
+    ::-webkit-scrollbar-track {
+        @apply bg-color-basic-fg/5;
+    }
 
+    /**
+     * Basic HTML styles.
+     */
+    html {
+        @apply bg-color-basic text-color-basic-fg;
+
+        font-size: 16px; // No auto-scaling at root node.
+    }
+
+    /**
+     * Basic link styles and color.
+     */
+    :where(a, .link):not(:where(.p, .p *, ._, ._ *)) {
+        @apply cursor-pointer text-color-basic-link no-underline opacity-90 hover:underline hover:opacity-100;
+    }
+
+    /**
+     * Basic heading color.
+     */
+    :where(h1, h2, h3, h4, h5, h6):not(:where(.p, .p *, ._, ._ *)) {
+        @apply text-color-basic-heading;
+    }
+
+    /**
+     * Form element placeholders.
+     */
+    input::placeholder,
+    textarea::placeholder,
+    select:has(> :checked[data-placeholder]) {
+        @apply italic;
+
+        color: rgb(from rgb(var(--colors-color-basic-fg)) r g b / calc(alpha - 0.5));
+    }
+
+    /**
+     * Beautify select elements.
+     */
+    label:has(> select) {
+        @apply relative;
+
+        &::before {
+            @apply absolute rotate-90 text-.75em opacity-50;
+
+            top: calc(50% - 0.75em / 2);
+            right: 1.25em;
+            content: '❯';
+        }
+
+        > select {
+            @apply cursor-pointer appearance-none;
+        }
+    }
+
+    /**
+     * Basic header link color.
+     */
+    .basic-header {
         :where(a, .link):not(:where(.p, .p *, ._, ._ *)) {
             @apply text-color-header-link;
         }
-
-        :where(h1, h2, h3, h4, h5, h6):not(:where(.p, .p *, ._, ._ *)) {
-            @apply text-color-header-heading;
-        }
     }
 
+    /**
+     * Basic sidebar link and heading colors.
+     */
     .basic-sidebar {
-        @apply border-color-sidebar-line bg-color-sidebar text-color-sidebar-fg;
-
         :where(a, .link):not(:where(.p, .p *, ._, ._ *)) {
             @apply text-color-sidebar-link;
         }
@@ -74,15 +114,12 @@
         }
     }
 
+    /**
+     * Basic footer link color.
+     */
     .basic-footer {
-        @apply border-color-footer-line bg-color-footer text-color-footer-fg;
-
         :where(a, .link):not(:where(.p, .p *, ._, ._ *)) {
             @apply text-color-footer-link;
-        }
-
-        :where(h1, h2, h3, h4, h5, h6):not(:where(.p, .p *, ._, ._ *)) {
-            @apply text-color-footer-heading;
         }
     }
 }

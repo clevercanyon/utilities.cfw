@@ -59,8 +59,10 @@ export default async () => {
         ['**/.env.*']: 'properties', // Suffix, not extension.
         ['**/CODEOWNERS']: 'ignore', // File has no extension.
 
-        ['**/tsconfig.' + fileAssociationsOverrideExt('json')]: 'jsonc', // JSON w/comments.
-        ['**/.vscode/*.' + fileAssociationsOverrideExt('json')]: 'jsonc', // JSON w/comments.
+        ['**/tsconfig.' + fileAssociationsOverrideExt('json')]: 'jsonc',
+        ['**/.vscode/*.' + fileAssociationsOverrideExt('json')]: 'jsonc',
+
+        ['**/src/cargo/.well-known/**/*.' + fileAssociationsOverrideExt('json')]: 'jsonc',
 
         ['**/dist/_headers']: 'plaintext', // File has no extension.
         ['**/src/cargo/_headers']: 'plaintext', // File has no extension.
@@ -68,8 +70,8 @@ export default async () => {
         ['**/dist/_redirects']: 'plaintext', // File has no extension.
         ['**/src/cargo/_redirects']: 'plaintext', // File has no extension.
 
-        ['**/src/cargo/_routes.' + fileAssociationsOverrideExt('json')]: 'jsonc', // JSON w/comments.
-        ['**/src/cargo/.well-known/*.' + fileAssociationsOverrideExt('json')]: 'jsonc', // JSON w/comments.
+        ['**/src/cargo/manifest.' + fileAssociationsOverrideExt('json')]: 'jsonc',
+        ['**/src/cargo/_routes.' + fileAssociationsOverrideExt('json')]: 'jsonc',
     };
 
     /**
@@ -374,7 +376,7 @@ export default async () => {
         'markdown.preview.fontSize': 16,
         'markdown.preview.lineHeight': 1.5,
         'markdown.preview.typographer': true,
-        'markdown.preview.fontFamily': 'Georama, ui-sans-serif, sans-serif',
+        'markdown.preview.fontFamily': "Georama, sans-serif, 'Apple Color Emoji'",
 
         'markdown.validate.enabled': false, // For a different markdown flavor.
         // Disabling because we use remark, a different flavor than VSCode, and several plugins.

@@ -33,6 +33,13 @@ declare module 'virtual:brand/config' {
     export default {} as Partial<$type.BrandRawProps>;
 }
 
+/**
+ * Defines missing `entries()` on FormData.
+ */
+interface FormData {
+    entries(): IterableIterator<[key: string, value: string | Blob]>;
+}
+
 /*
  * Customizations.
  *

@@ -311,17 +311,13 @@ const baseConfigThemes = /* not async compatible */ () => {
              */
             fontFamily: {
                 sans: [
-                    'ui-sans-serif', //
-                    'sans-serif',
+                    'sans-serif', //
+                    'Apple Color Emoji',
+                    'Segoe UI Emoji',
+                    'Segoe UI Symbol',
                 ],
-                serif: [
-                    'ui-serif', //
-                    'serif',
-                ],
-                mono: [
-                    'ui-monospace', //
-                    'monospace',
-                ],
+                serif: ['serif'],
+                mono: ['monospace'],
             },
 
             /**
