@@ -198,7 +198,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     /**
      * Performs HTML entry <base> updates.
      */
-    await viteBaseUpdates({ command, isSSRBuild, appBaseURL, appType, appEntries });
+    await viteBaseUpdates({ command, isSSRBuild, projDir, appBaseURL, appType, appEntries });
 
     /**
      * Configures plugins for Vite.

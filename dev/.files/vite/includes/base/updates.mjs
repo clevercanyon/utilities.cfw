@@ -9,8 +9,9 @@
  */
 
 import fs from 'node:fs';
+import path from 'node:path';
 import { $chalk } from '../../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $path, $str } from '../../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $path, $str, $url } from '../../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import extensions from '../../../bin/includes/extensions.mjs';
 import u from '../../../bin/includes/utilities.mjs';
 
@@ -19,15 +20,21 @@ import u from '../../../bin/includes/utilities.mjs';
  *
  * @param props Props from vite config file driver.
  */
-export default async ({ command, isSSRBuild, appBaseURL, appType, appEntries }) => {
+export default async ({ command, isSSRBuild, projDir, appBaseURL, appType, appEntries }) => {
     if (isSSRBuild) return; // Not applicable.
     if ('build' !== command) return; // Not applicable.
     if (!['spa', 'mpa'].includes(appType)) return; // Not applicable.
 
-    u.log($chalk.gray('Updating `baseURL` in HTML entries.'));
-    const htmlExts = extensions.noDot(extensions.byCanonical.html);
+    const appBaseURLRootHost = $url.rootHost(new URL(appBaseURL), { withPort: false });
+    if (!$str.test(appBaseURLRootHost, $url.localHostPatterns())) return; // Not applicable.
 
-    for (const htmlEntry of appEntries.filter((entry) => htmlExts.includes($path.ext(entry)))) {
+    const htmlExts = extensions.noDot(extensions.byCanonical.html);
+    const htmlEntries = appEntries.filter((entry) => htmlExts.includes($path.ext(entry)));
+    if (!htmlEntries.length) return; // Not applicable.
+
+    u.log($chalk.gray('Updating `baseURL` in HTML entries; e.g., `./' + path.relative(projDir, htmlEntries[0]) + '.'));
+
+    for (const htmlEntry of htmlEntries) {
         let contents = fs.readFileSync(htmlEntry).toString();
         contents = contents.replace(
             /<base\s+href\s*=\s*['"][^'"\r\n]*['"]\s+data-key\s*=\s*['"]baseURL['"]\s*\/>/iu, //

@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $env, $http, $json, $mm, $str, $url, type $type } from '@clevercanyon/utilities';
+import { $env, $http, $is, $json, $mime, $mm, $str, $url, type $type } from '@clevercanyon/utilities';
 import * as cfKVA from '@cloudflare/kv-asset-handler';
 
 /**
@@ -73,8 +73,9 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
     let { request } = ifeData;
     const { env, ctx, routes } = ifeData;
 
-    await maybeInitialize(ifeData); // Env capture.
     try {
+        await maybeInitialize(ifeData); // Env capture.
+
         request = $http.prepareRequest(request, {}) as $type.cf.Request;
         const url = $url.parse(request.url) as $type.cf.URL;
         const feData = { request, env, ctx, routes, url };
@@ -95,7 +96,11 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         if (thrown instanceof Response) {
             return thrown as unknown as $type.cf.Response;
         }
-        return $http.prepareResponse(request, { status: 500 }) as $type.cf.Response;
+        return $http.prepareResponse(request, {
+            status: 500,
+            headers: { 'content-type': $mime.contentType('.txt') },
+            body: 'Error Code: ' + ($is.error(thrown) && $str.isErrorCode(thrown.message) ? thrown.message : 'tQPQ5YXQ'),
+        }) as $type.cf.Response;
     }
 };
 
@@ -210,6 +215,6 @@ export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$
         if (thrown instanceof cfKVA.MethodNotAllowedError) {
             return $http.prepareResponse(request, { status: 405 }) as $type.cf.Response;
         }
-        return $http.prepareResponse(request, { status: 500 }) as $type.cf.Response;
+        throw thrown; // Re-throw, allowing our default error handler to catch.
     }
 };
