@@ -17,4 +17,7 @@ $env.setTopLevelObp(appPkgName);
 /**
  * Captures environment vars.
  */
-$env.capture(appPkgName, import.meta.env);
+$env.capture(appPkgName, {
+    APP_PKG_NAME: appPkgName,
+    ...import.meta.env,
+});

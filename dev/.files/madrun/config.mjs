@@ -174,6 +174,16 @@ export default async () => {
                                           },
                                       ]
                                     : []),
+                                // `$ madrun wrangler pages deploy|publish`.
+                                ...(['deploy', 'publish'].includes(args._?.[1]) && !args.help
+                                    ? [
+                                          {
+                                              opts: { cwd: projDir },
+                                              cmd: ['npx', 'vite', 'build', '--mode', // Mode can only be `prod` or `stage` when deploying remotely.
+                                                args.branch && args.branch !== wranglerSettings.defaultProductionBranch ? 'stage' : 'prod'], // prettier-ignore
+                                          },
+                                      ]
+                                    : []),
                                 // `$ madrun wrangler pages *`.
                                 [
                                     'npx',
@@ -202,7 +212,8 @@ export default async () => {
                                     ...('dev' === args._?.[1] ? (args.logLevel ? [] : ['--log-level', wranglerSettings.defaultDevLogLevel]) : []),
                                     ...('dev' === args._?.[1] ? ['--binding', wranglerSettings.miniflareDevBinding] : []), // Always on; `--binding` can be passed multiple times.
 
-                                    // Default `deploy` command args.
+                                    // Default `deploy|publish` command args.
+                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args._?.[2] ? [] : [distDir]) : []),
                                     ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
                                     ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.branch ? [] : ['--branch', wranglerSettings.defaultProductionBranch]) : []),
 

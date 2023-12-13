@@ -65,19 +65,25 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
              * compiled by TypeScript that are needed for development; i.e., they need to exist in to be capable of
              * serving their intended purpose; e.g., dev-only utilities, runners, sandbox files, etc.
              *
-             * Regarding `node_modules`. There is an exception for the case of `node_modules/assets/a16s`, used for
-             * Cloudflare SSR-specific assets. See `../a16s/dir.mjs` for details. The `node_modules` folder is pruned by
-             * this routine (i.e., it’s in `./.npmignore`) which is why we need to be aware of the exception. As of
-             * right now, we don’t actually have to deal with the exception here, since this particular routine is
-             * bypassed if `isSSRBuild`. However, please keep it in mind for future reference.
+             * Regarding `node_modules`. There is an exception for the case of `node_modules/assets/a16s` used for
+             * Cloudflare SSR-specific assets. See `../a16s/dir.mjs` for details. By default, `node_modules` is pruned
+             * by this routine; i.e., it is in our default `./.npmignore`, which is why we need the exception below to
+             * bypass pruning of `dist/node_modules/assets/a16s` following an SSR build. We also bypass pruning of
+             * dotfiles in `dist/node_modules/.*` following an SSR build, as deployment handlers may need them; e.g.,
+             * Wrangler stores its cache files there when working from `./dist` to deploy to Cloudflare Pages.
              *
              * We intentionally use our 'default' NPM ignores when pruning; i.e., as opposed to using the current and
              * potentially customized `./.npmignore` file in the current project directory. The reason is because we
              * intend to enforce our standards. For further details {@see https://o5p.me/MuskgW}.
              */
-            if (!isSSRBuild && 'build' === command && inProdLikeMode) {
+            if ('build' === command && inProdLikeMode) {
+                const ignores = isSSRBuild
+                    ? exclusions.defaultNPMIgnores // See notes above.
+                          .concat(['!**/dist/node_modules/.*', '!**/dist/node_modules/assets/a16s/**'])
+                    : exclusions.defaultNPMIgnores;
+
                 for (let globOpts = [{ onlyDirectories: true }, { onlyFiles: false }], i = 0; i < globOpts.length; i++) {
-                    for (const fileOrDir of await $glob.promise(exclusions.defaultNPMIgnores, { cwd: distDir, ignoreCase: true, ...globOpts[i] })) {
+                    for (const fileOrDir of await $glob.promise(ignores, { cwd: distDir, ignoreCase: true, ...globOpts[i] })) {
                         const projRelPath = path.relative(projDir, fileOrDir);
 
                         if (!fs.existsSync(fileOrDir)) {
@@ -119,7 +125,7 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
              * TypeScript that are needed for development; i.e., they need to exist in dev mode in order to be capable
              * of serving their intended purpose; e.g., dev-only utilities, runners, sandbox files, etc.
              */
-            if (!isSSRBuild && 'build' === command && inProdLikeMode && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
+            if ('build' === command && inProdLikeMode && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
                 for (const fileOrDir of await $glob.promise(
                     [
                         'types', // Prunes TypeScript type declarations.

@@ -50,9 +50,6 @@ export default async ({
         updates.sideEffects = ['**/*.' + extensions.asBracedGlob([...extensions.byVSCodeLang.css, ...extensions.byVSCodeLang.scss, ...extensions.byVSCodeLang.less])];
         updates.sideEffects = updates.sideEffects.concat(sideEffects);
 
-        if (fs.existsSync(path.resolve(srcDir, './resources/init.ts'))) {
-            updates.sideEffects.push('./' + path.relative(projDir, path.resolve(srcDir, './resources/init.ts')));
-        }
         if (fs.existsSync(path.resolve(srcDir, './resources/initialize.ts'))) {
             updates.sideEffects.push('./' + path.relative(projDir, path.resolve(srcDir, './resources/initialize.ts')));
         }

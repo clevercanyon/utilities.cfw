@@ -17,9 +17,11 @@
  *
  * @returns       DTS configuration.
  */
-export default async ({ distDir }) => {
-    return (await import('vite-plugin-dts')).default({
-        logLevel: 'error',
-        outDir: distDir + '/types',
-    });
+export default async ({ isSSRBuild, distDir }) => {
+    return isSSRBuild
+        ? null // No types for SSR builds.
+        : (await import('vite-plugin-dts')).default({
+              logLevel: 'error',
+              outDir: distDir + '/types',
+          });
 };

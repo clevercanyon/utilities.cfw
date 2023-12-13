@@ -164,7 +164,7 @@ export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$
             },
         };
         const response = await cfKVA.getAssetFromKV(kvAssetEventData, {
-            ASSET_NAMESPACE: $env.get('__STATIC_CONTENT', { type: 'string', default: '' }),
+            ASSET_NAMESPACE: $env.get('__STATIC_CONTENT', { type: 'string' }),
             // @ts-ignore: This is dynamically resolved by Cloudflare.
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- manifest ok.
             ASSET_MANIFEST: $json.parse(await import('__STATIC_CONTENT_MANIFEST')) as { [x: string]: string },
