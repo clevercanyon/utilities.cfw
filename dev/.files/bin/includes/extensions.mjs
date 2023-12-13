@@ -65,8 +65,6 @@ const asRegExpFrag = (exts) => {
 
 /**
  * Defines extensions.
- *
- * @review Consider removing the `.` in our exported extensions, it’s unexpected here, yes?
  */
 const extensions = {
     /**

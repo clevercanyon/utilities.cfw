@@ -7,40 +7,59 @@ import '#@initialize.ts';
 import { $env, $http, $json, $mm, $str, $url, type $type } from '@clevercanyon/utilities';
 import * as cfKVA from '@cloudflare/kv-asset-handler';
 
-const cache = (caches as unknown as $type.cf.CacheStorage).default;
-
 /**
  * Defines types.
  */
 export type Context = $type.cf.ExecutionContext;
 
-export type Environment = {
-    readonly D1?: $type.cf.D1Database;
-    readonly R2?: $type.cf.R2Bucket;
-    readonly KV?: $type.cf.KVNamespace;
-    readonly DO?: $type.cf.DurableObjectNamespace;
-    readonly __STATIC_CONTENT?: $type.cf.KVNamespace;
-    readonly [x: string]: unknown;
-};
+export type Environment = Readonly<{
+    D1?: $type.cf.D1Database;
+    R2?: $type.cf.R2Bucket;
+    KV?: $type.cf.KVNamespace;
+    DO?: $type.cf.DurableObjectNamespace;
+    __STATIC_CONTENT?: $type.cf.KVNamespace;
+    [x: string]: unknown;
+}>;
 export type Route = (x: FetchEventData) => Promise<$type.cf.Response>;
 
-export type Routes = {
-    readonly subpathGlobs: {
-        readonly [x: string]: Route;
-    };
-};
-export type FetchEventData = {
-    readonly request: $type.cf.Request;
-    readonly env: Environment;
-    readonly ctx: Context;
-    readonly routes: Routes;
-    readonly url: $type.cf.URL;
-};
-export type InitialFetchEventData = {
-    readonly request: $type.cf.Request;
-    readonly env: Environment;
-    readonly ctx: Context;
-    readonly routes: Routes;
+export type Routes = Readonly<{
+    subpathGlobs: Readonly<{
+        [x: string]: Route;
+    }>;
+}>;
+export type FetchEventData = Readonly<{
+    request: $type.cf.Request;
+    env: Environment;
+    ctx: Context;
+    routes: Routes;
+    url: $type.cf.URL;
+}>;
+export type InitialFetchEventData = Readonly<{
+    request: $type.cf.Request;
+    env: Environment;
+    ctx: Context;
+    routes: Routes;
+}>;
+
+/**
+ * Tracks initialization.
+ */
+let initialized = false;
+
+/**
+ * Defines cache to use for HTTP requests.
+ */
+const cache = (caches as unknown as $type.cf.CacheStorage).default;
+
+/**
+ * Handles worker initialization.
+ */
+const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> => {
+    if (initialized) return;
+    initialized = true;
+
+    const { env } = ifeData;
+    $env.capture('@global', env);
 };
 
 /**
@@ -54,7 +73,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
     let { request } = ifeData;
     const { env, ctx, routes } = ifeData;
 
-    $env.capture('@global', env); // Captures environment vars.
+    await maybeInitialize(ifeData); // Env capture.
     try {
         request = $http.prepareRequest(request, {}) as $type.cf.Request;
         const url = $url.parse(request.url) as $type.cf.URL;

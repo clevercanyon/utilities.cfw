@@ -1,5 +1,5 @@
 /**
- * `./package.json` build-related property updates.
+ * `./package.json` property updates.
  *
  * Vite is not aware of this config file's location.
  *
@@ -16,11 +16,11 @@ import extensions from '../../../bin/includes/extensions.mjs';
 import u from '../../../bin/includes/utilities.mjs';
 
 /**
- * Prepares `./package.json` build-related property updates.
+ * Performs `./package.json` property updates.
  *
  * @param   props Props from vite config file driver.
  *
- * @returns       Build-related property updates.
+ * @returns       `./package.json` property updates.
  */
 export default async ({
     command,

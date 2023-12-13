@@ -20,6 +20,7 @@ import extensions from '../bin/includes/extensions.mjs';
 import importAliases from '../bin/includes/import-aliases.mjs';
 import u from '../bin/includes/utilities.mjs';
 import viteA16sDir from './includes/a16s/dir.mjs';
+import viteBaseUpdates from './includes/base/updates.mjs';
 import viteC10nBrandConfig from './includes/c10n/brand-config.mjs';
 import viteC10nNoModulePreloadConfig from './includes/c10n/no-module-preload.mjs';
 import viteC10nPostProcessingConfig from './includes/c10n/post-processing.mjs';
@@ -182,7 +183,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     }
 
     /**
-     * Prepares `package.json` property updates.
+     * Performs `./package.json` property updates.
      */
     const pkgUpdates = await vitePkgUpdates({
         command, isSSRBuild, projDir, srcDir, distDir, pkg, appType, targetEnv, sideEffects,
@@ -193,6 +194,11 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
      * Updates `sideEffects` to full set established by package update routines.
      */
     (sideEffects.length = 0), pkgUpdates.sideEffects.forEach((s) => sideEffects.push(s));
+
+    /**
+     * Performs HTML entry <base> updates.
+     */
+    await viteBaseUpdates({ command, isSSRBuild, appBaseURL, appType, appEntries });
 
     /**
      * Configures plugins for Vite.
