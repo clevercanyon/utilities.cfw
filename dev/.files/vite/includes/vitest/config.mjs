@@ -173,13 +173,9 @@ export default async ({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable
         allowOnly: true, // Allows `describe.only`, `test.only`, `bench.only`.
 
         watch: false, // Disable watching by default; instead use `--watch`.
-        forceRerunTriggers: [
-            ...new Set([
-                ...exclusions.dotIgnores, //
-                ...exclusions.devIgnores,
-                ...exclusions.configIgnores,
-            ]),
-        ],
+        forceRerunTriggers: [], // Disable; we’ll perform our own full re-runs when necessary.
+        // One of the reasons for disabling this is because it doesn’t support negated `!` patterns.
+
         reporters: ['verbose'], // Verbose reporting.
         // {@see https://o5p.me/p0f9j5} for further details.
 

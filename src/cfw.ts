@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $env, $http, $is, $json, $mime, $mm, $str, $url, type $type } from '@clevercanyon/utilities';
+import { $env, $error, $http, $json, $mime, $mm, $str, $url, type $type } from '@clevercanyon/utilities';
 import * as cfKVA from '@cloudflare/kv-asset-handler';
 
 /**
@@ -99,7 +99,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         return $http.prepareResponse(request, {
             status: 500,
             headers: { 'content-type': $mime.contentType('.txt') },
-            body: 'Error Code: ' + ($is.errorCode(thrown) ? thrown.message : 'tQPQ5YXQ'),
+            body: $error.safeMessageFrom(thrown, { default: '9eMw8Ave' }),
         }) as $type.cf.Response;
     }
 };
