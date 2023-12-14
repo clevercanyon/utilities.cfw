@@ -74,7 +74,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
     const { env, ctx, routes } = ifeData;
 
     try {
-        await maybeInitialize(ifeData); // Env capture.
+        await maybeInitialize(ifeData);
 
         request = $http.prepareRequest(request, {}) as $type.cf.Request;
         const url = $url.parse(request.url) as $type.cf.URL;
