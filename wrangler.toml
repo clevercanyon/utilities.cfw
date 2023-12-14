@@ -7,7 +7,7 @@
 # @note This entire file will be updated automatically.
 # @note Instead of editing here, please review `./wrangler.mjs`.
 #
-# Last generated using `./wrangler.mjs` Dec 14, 2023 2:45 PM UTC.
+# Last generated using `./wrangler.mjs` Dec 14, 2023 9:18 PM UTC.
 ##
 
 send_metrics = false
@@ -421,23 +421,23 @@ local_protocol = "https"
 ip = "0.0.0.0"
 port = 443
 
-[env.dev]
-route = { }
-workers_dev = false
+[env.dev.route]
+zone_name = "localhost"
+pattern = "localhost/utilities-cfw/*"
 
-  [env.dev.vars]
-  MINIFLARE = "true"
+[env.dev.vars]
+MINIFLARE = "true"
 
-  [env.dev.build]
-  cwd = "./"
-  watch_dir = "./src"
-  command = "VITE_WRANGLER_MODE=dev npx @clevercanyon/madrun build --mode=dev"
+[env.dev.build]
+cwd = "./"
+watch_dir = "./src"
+command = "VITE_WRANGLER_MODE=dev npx @clevercanyon/madrun build --mode=dev"
 
-[env.stage]
-route = { }
-workers_dev = true
+[env.stage.route]
+zone_name = "hop.gdn"
+pattern = "workers.hop.gdn/utilities-cfw-stage/*"
 
-  [env.stage.build]
-  cwd = "./"
-  watch_dir = "./src"
-  command = "npx @clevercanyon/madrun build --mode=stage"
+[env.stage.build]
+cwd = "./"
+watch_dir = "./src"
+command = "npx @clevercanyon/madrun build --mode=stage"

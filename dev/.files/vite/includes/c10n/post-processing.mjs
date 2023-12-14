@@ -80,7 +80,7 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
                 const ignores = isSSRBuild
                     ? exclusions.defaultNPMIgnores // See notes above regarding these exceptions.
                           .concat(['!**/dist/node_modules/.cache/**', '!**/dist/node_modules/assets/a16s/**'])
-                    : exclusions.defaultNPMIgnores;
+                    : exclusions.defaultNPMIgnores.concat(['!**/dist/node_modules/.cache/**']);
 
                 for (let globOpts = [{ onlyDirectories: true }, { onlyFiles: false }], i = 0; i < globOpts.length; i++) {
                     for (const fileOrDir of await $glob.promise(ignores, { cwd: distDir, ignoreCase: true, ...globOpts[i] })) {

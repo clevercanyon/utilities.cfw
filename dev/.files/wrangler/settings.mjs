@@ -34,6 +34,7 @@ export default {
     compatibilityFlags: [], // None, for now.
 
     defaultLocalIP: '0.0.0.0',
+    defaultLocalHostname: 'localhost',
     defaultLocalProtocol: 'https',
     defaultLocalPort: '443',
 
@@ -57,6 +58,7 @@ export default {
 
     defaultWorkerName: pkgSlug.replace(/^workers-/iu, ''),
     defaultWorkerShortName: pkgSlug.replace(/^(?:workers-)?hop-gdn-/iu, ''),
+    defaultWorkerStageShortName: pkgSlug.replace(/^(?:workers-)?hop-gdn-/iu, '') + '-stage',
 
     osDir: path.resolve(os.homedir(), './.wrangler'),
     projDir: path.resolve(projDir, './.wrangler'),

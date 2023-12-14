@@ -144,10 +144,8 @@ export default {
                         .then((buffer) => buffer.toString())
                         .then(async (contents) => {
                             if ('cfw' === pkg.config.c10n.build.targetEnv) {
-                                contents = contents.replace(
-                                    /^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu,
-                                    "$1='https://" + wranglerSettings.defaultWorkerName + '.' + wranglerSettings.defaultWorkersDevZoneName + "/'",
-                                );
+                                contents = contents.replace(/^(BASE_PATH)\s*=\s*[^\r\n]*$/gmu, "$1='/" + wranglerSettings.defaultWorkerStageShortName + "'");
+                                contents = contents.replace(/^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu, "$1='https://" + wranglerSettings.defaultWorkersDomain + "${BASE_PATH}/'");
                             } else if ('cfp' === pkg.config.c10n.build.targetEnv) {
                                 contents = contents.replace(
                                     /^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu,

@@ -66,7 +66,7 @@ export default async () => {
                   // Cloudflare Pages does not use.
               }
             : {
-                  // Off by default.
+                  // We don’t use.
 
                   workers_dev: false,
 
@@ -183,8 +183,10 @@ export default async () => {
                   env: {
                       // `$ madrun wrangler dev` environment, for local testing.
                       dev: {
-                          route: {},
-                          workers_dev: false,
+                          route: {
+                              zone_name: wranglerSettings.defaultLocalHostname,
+                              pattern: wranglerSettings.defaultLocalHostname + '/' + wranglerSettings.defaultWorkerShortName + '/*',
+                          },
                           vars: wranglerSettings.miniflareEnvVarAsObject,
                           build: {
                               cwd: './' + path.relative(projDir, './'),
@@ -192,10 +194,12 @@ export default async () => {
                               command: 'VITE_WRANGLER_MODE=dev npx @clevercanyon/madrun build --mode=dev',
                           },
                       },
-                      // `$ madrun wrangler deploy --env=stage` using `workers.dev`.
+                      // `$ madrun wrangler deploy --env=stage`.
                       stage: {
-                          route: {},
-                          workers_dev: true,
+                          route: {
+                              zone_name: wranglerSettings.defaultWorkerZoneName,
+                              pattern: wranglerSettings.defaultWorkersDomain + '/' + wranglerSettings.defaultWorkerStageShortName + '/*',
+                          },
                           build: {
                               cwd: './' + path.relative(projDir, './'),
                               watch_dir: './' + path.relative(projDir, './src'),

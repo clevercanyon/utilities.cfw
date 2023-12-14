@@ -216,6 +216,7 @@ export default async () => {
                                     ...(['deploy', 'publish'].includes(args._?.[1]) ? (args._?.[2] ? [] : [distDir]) : []),
                                     ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultPagesProjectName]) : []),
                                     ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.branch ? [] : ['--branch', wranglerSettings.defaultPagesProductionBranch]) : []),
+                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.commitDirty ? [] : ['--commit-dirty', 'true']) : []), // Let’s not nag ourselves.
 
                                     // Default `deployment` command args.
                                     ...('deployment' === args._?.[1] && 'list' === args._?.[2]
