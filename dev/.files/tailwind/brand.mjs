@@ -29,12 +29,14 @@ export default /* not async compatible */ () => {
     let brand = $fn.try(() => $brand.get(pkg.name), undefined)();
     if (brand) return brand; // That was’t such a chore, now was it?
 
-    const baseURL = // Acquires base URL.
-        process.env._MODE_AWARE_APP_BASE_URL || // Mode-aware.
-        $str.trim(execSync('./cli-sync/base-url.mjs', { cwd: curDir }).toString());
-    if (!baseURL) return; // Not possible; i.e., app has no base URL.
+    const mode = process.env._VITE_MODE_ || 'prod',
+        baseURL = // Acquires base URL, from Vite, if possible.
+            process.env._VITE_APP_BASE_URL_ || // Mode-aware base URL.
+            $str.trim(execSync("./cli-sync/base-url.mjs '" + mode + "'", { cwd: curDir }).toString());
 
-    const brandConfig = $json.parse(execSync('./cli-sync/brand-config.mjs', { cwd: curDir }).toString());
+    if (!mode || !baseURL) return; // Not possible; e.g., app has no base URL.
+
+    const brandConfig = $json.parse(execSync("./cli-sync/brand-config.mjs '" + mode + "' '" + baseURL + "'", { cwd: curDir }).toString());
     if (!brandConfig) throw new Error('Missing brand config for Tailwind themes.');
 
     return $brand.addApp({ pkgName: pkg.name, baseURL, props: brandConfig });

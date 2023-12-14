@@ -66,13 +66,13 @@ export default async () => {
                   // Cloudflare Pages does not use.
               }
             : {
+                  // Off by default.
+
+                  workers_dev: false,
+
                   // Worker name.
 
                   name: wranglerSettings.defaultWorkerName,
-
-                  // Workers.dev configuration.
-
-                  workers_dev: false,
 
                   // App main entry configuration.
 
@@ -168,24 +168,40 @@ export default async () => {
                   // Worker route configuration.
 
                   route: {
-                      zone_name: wranglerSettings.defaultZoneName,
-                      pattern: wranglerSettings.defaultZoneDomain + '/' + wranglerSettings.defaultWorkerName + '/*',
+                      zone_name: wranglerSettings.defaultWorkerZoneName,
+                      pattern: wranglerSettings.defaultWorkersDomain + '/' + wranglerSettings.defaultWorkerShortName + '/*',
                   },
-                  // Other environments used by this worker.
 
-                  env: {
-                      dev: {
-                          workers_dev: false,
-                          vars: wranglerSettings.miniflareDevEnvVar,
-                          build: { command: 'VITE_WRANGLER_MODE=dev npx @clevercanyon/madrun build --mode=dev' },
-                      },
-                  },
-                  // `$ wrangler dev` settings.
-
+                  // `$ madrun wrangler dev` settings.
                   dev: {
                       local_protocol: wranglerSettings.defaultLocalProtocol,
                       ip: wranglerSettings.defaultLocalIP, // e.g., `0.0.0.0`.
                       port: Number(wranglerSettings.defaultLocalPort),
+                  },
+
+                  // Environments used by this worker.
+                  env: {
+                      // `$ madrun wrangler dev` environment, for local testing.
+                      dev: {
+                          route: {},
+                          workers_dev: false,
+                          vars: wranglerSettings.miniflareEnvVarAsObject,
+                          build: {
+                              cwd: './' + path.relative(projDir, './'),
+                              watch_dir: './' + path.relative(projDir, './src'),
+                              command: 'VITE_WRANGLER_MODE=dev npx @clevercanyon/madrun build --mode=dev',
+                          },
+                      },
+                      // `$ madrun wrangler deploy --env=stage` using `workers.dev`.
+                      stage: {
+                          route: {},
+                          workers_dev: true,
+                          build: {
+                              cwd: './' + path.relative(projDir, './'),
+                              watch_dir: './' + path.relative(projDir, './src'),
+                              command: 'npx @clevercanyon/madrun build --mode=stage',
+                          },
+                      },
                   },
               }),
     };

@@ -67,10 +67,10 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
              *
              * Regarding `node_modules`. There is an exception for the case of `node_modules/assets/a16s` used for
              * Cloudflare SSR-specific assets. See `../a16s/dir.mjs` for details. By default, `node_modules` is pruned
-             * by this routine; i.e., it is in our default `./.npmignore`, which is why we need the exception below to
-             * bypass pruning of `dist/node_modules/assets/a16s` following an SSR build. We also bypass pruning of
-             * dotfiles in `dist/node_modules/.*` following an SSR build, as deployment handlers may need them; e.g.,
-             * Wrangler stores its cache files there when working from `./dist` to deploy to Cloudflare Pages.
+             * by this routine because it’s in our default `./.npmignore`, which is why we need the exception below to
+             * bypass pruning of `dist/node_modules/assets/a16s` following an SSR build. We also bypass pruning of files
+             * in `dist/node_modules/.cache` following an SSR build, as deployment handlers may need these; e.g.,
+             * Wrangler stores a few important-ish cache files there when deploying a `./dist` directory.
              *
              * We intentionally use our 'default' NPM ignores when pruning; i.e., as opposed to using the current and
              * potentially customized `./.npmignore` file in the current project directory. The reason is because we
@@ -78,8 +78,8 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
              */
             if ('build' === command && inProdLikeMode) {
                 const ignores = isSSRBuild
-                    ? exclusions.defaultNPMIgnores // See notes above.
-                          .concat(['!**/dist/node_modules/.*', '!**/dist/node_modules/assets/a16s/**'])
+                    ? exclusions.defaultNPMIgnores // See notes above regarding these exceptions.
+                          .concat(['!**/dist/node_modules/.cache/**', '!**/dist/node_modules/assets/a16s/**'])
                     : exclusions.defaultNPMIgnores;
 
                 for (let globOpts = [{ onlyDirectories: true }, { onlyFiles: false }], i = 0; i < globOpts.length; i++) {
@@ -147,8 +147,8 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
              * or others to be served dynamically. In which case they may not exist in these locations statically.
              */
             if (!isSSRBuild && 'build' === command && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
-                const brand = await u.brand({ baseURL: appBaseURL });
-                const isC10n = env.APP_IS_C10N || false;
+                const isC10n = env.APP_IS_C10N || false,
+                    brand = await u.brand({ mode, baseURL: appBaseURL });
 
                 for (const file of await $glob.promise(
                     [

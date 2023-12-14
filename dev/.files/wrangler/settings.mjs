@@ -12,7 +12,7 @@
 import os from 'node:os';
 import path from 'node:path';
 import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $app, $brand, $str } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $app, $brand } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import u from '../bin/includes/utilities.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
@@ -22,10 +22,6 @@ const pkg = await u.pkg();
 const pkgSlug = $app.pkgSlug(pkg.name);
 
 const hop = $brand.get('@clevercanyon/hop.gdn');
-const hopGDNSlug = $str.kebabCase(hop.hostname);
-
-const hopProjectName = pkgSlug.replace(new RegExp('-' + $str.escRegExp(hopGDNSlug) + '$', 'ui'), '');
-const hopWorkerName = pkgSlug.replace(new RegExp('^' + $str.escRegExp('workers-' + hopGDNSlug) + '-', 'ui'), '');
 
 /**
  * Defines Wrangler settings.
@@ -42,17 +38,25 @@ export default {
     defaultLocalPort: '443',
 
     defaultDevLogLevel: 'error',
-    miniflareDevBinding: 'MINIFLARE=true',
-    miniflareDevEnvVar: { MINIFLARE: 'true' },
+    miniflareEnvVarAsString: 'MINIFLARE=true',
+    miniflareEnvVarAsObject: { MINIFLARE: 'true' },
 
-    defaultZoneName: hop.hostname,
-    defaultZoneDomain: 'workers.' + hop.hostname,
+    defaultPagesZoneName: hop.hostname,
+    defaultPagesDevZoneName: 'pages.dev',
 
-    defaultEnvironment: 'production',
-    defaultProductionBranch: 'production',
+    defaultPagesProjectName: pkgSlug,
+    defaultPagesProjectShortName: pkgSlug.replace(/-hop-gdn$/iu, ''),
 
-    defaultProjectName: hopProjectName, // Pages project name.
-    defaultWorkerName: hopWorkerName, // Cloudflare worker name.
+    defaultPagesProductionBranch: 'production',
+    defaultPagesProjectStageBranchName: 'stage',
+    defaultPagesProductionEnvironment: 'production',
+
+    defaultWorkerZoneName: hop.hostname,
+    defaultWorkersDevZoneName: 'c10n.workers.dev',
+    defaultWorkersDomain: 'workers.' + hop.hostname,
+
+    defaultWorkerName: pkgSlug.replace(/^workers-/iu, ''),
+    defaultWorkerShortName: pkgSlug.replace(/^(?:workers-)?hop-gdn-/iu, ''),
 
     osDir: path.resolve(os.homedir(), './.wrangler'),
     projDir: path.resolve(projDir, './.wrangler'),

@@ -12,4 +12,4 @@ import u from '../../bin/includes/utilities.mjs';
 /**
  * Acquires app’s base URL; i.e., here within a separate CLI process.
  */
-console.log((await u.loadEnv({ mode: 'prod' })).APP_BASE_URL || '');
+console.log((await u.loadEnv({ mode: process.argv[2] })).APP_BASE_URL || '');

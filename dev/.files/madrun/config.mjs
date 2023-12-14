@@ -180,7 +180,7 @@ export default async () => {
                                           {
                                               opts: { cwd: projDir },
                                               cmd: ['npx', 'vite', 'build', '--mode', // Mode can only be `prod` or `stage` when deploying remotely.
-                                                args.branch && args.branch !== wranglerSettings.defaultProductionBranch ? 'stage' : 'prod'], // prettier-ignore
+                                                args.branch && args.branch !== wranglerSettings.defaultPagesProductionBranch ? 'stage' : 'prod'], // prettier-ignore
                                           },
                                       ]
                                     : []),
@@ -191,11 +191,11 @@ export default async () => {
                                     '{{@}}',
 
                                     // Default `project` command args.
-                                    ...('project' === args._?.[1] && 'create' === args._?.[2] ? (args._?.[3] ? [] : [wranglerSettings.defaultProjectName]) : []),
+                                    ...('project' === args._?.[1] && 'create' === args._?.[2] ? (args._?.[3] ? [] : [wranglerSettings.defaultPagesProjectName]) : []),
                                     ...('project' === args._?.[1] && 'create' === args._?.[2]
                                         ? args.productionBranch
                                             ? [] // This is the production branch on the Cloudflare side.
-                                            : ['--production-branch', wranglerSettings.defaultProductionBranch]
+                                            : ['--production-branch', wranglerSettings.defaultPagesProductionBranch]
                                         : []),
 
                                     // Default `dev` command args.
@@ -210,28 +210,28 @@ export default async () => {
                                             : wranglerSettings.compatibilityFlags.map((f) => ['--compatibility-flag', f]).flat()
                                         : []),
                                     ...('dev' === args._?.[1] ? (args.logLevel ? [] : ['--log-level', wranglerSettings.defaultDevLogLevel]) : []),
-                                    ...('dev' === args._?.[1] ? ['--binding', wranglerSettings.miniflareDevBinding] : []), // Always on; `--binding` can be passed multiple times.
+                                    ...('dev' === args._?.[1] ? ['--binding', wranglerSettings.miniflareEnvVarAsString] : []), // Always on for `dev`. Note: `--binding` can be passed multiple times.
 
                                     // Default `deploy|publish` command args.
                                     ...(['deploy', 'publish'].includes(args._?.[1]) ? (args._?.[2] ? [] : [distDir]) : []),
-                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultProjectName]) : []),
-                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.branch ? [] : ['--branch', wranglerSettings.defaultProductionBranch]) : []),
+                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultPagesProjectName]) : []),
+                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.branch ? [] : ['--branch', wranglerSettings.defaultPagesProductionBranch]) : []),
 
                                     // Default `deployment` command args.
                                     ...('deployment' === args._?.[1] && 'list' === args._?.[2]
                                         ? args.projectName
                                             ? []
-                                            : ['--project-name', wranglerSettings.defaultProjectName]
+                                            : ['--project-name', wranglerSettings.defaultPagesProjectName]
                                         : []),
                                     ...('deployment' === args._?.[1] && 'tail' === args._?.[2]
                                         ? args.projectName
                                             ? []
-                                            : ['--project-name', wranglerSettings.defaultProjectName]
+                                            : ['--project-name', wranglerSettings.defaultPagesProjectName]
                                         : []),
                                     ...('deployment' === args._?.[1] && 'tail' === args._?.[2]
                                         ? args.environment
                                             ? []
-                                            : ['--environment', wranglerSettings.defaultEnvironment]
+                                            : ['--environment', wranglerSettings.defaultPagesProductionEnvironment]
                                         : []),
                                 ],
                             ]

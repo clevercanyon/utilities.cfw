@@ -216,19 +216,19 @@ export default class u {
      * Brand utilities.
      */
 
-    static async brand({ baseURL } = {}) {
+    static async brand({ mode, baseURL } = {}) {
         return (
             $fn.try(() => $brand.get(pkgName), undefined)() ||
             $brand.addApp({
                 pkgName: pkgName,
-                baseURL: baseURL || '',
-                props: await u.brandConfig(),
+                baseURL: baseURL,
+                props: await u.brandConfig({ mode, baseURL }),
             })
         );
     }
 
-    static async brandConfig() {
-        return await (await import(path.resolve(projDir, './brand.config.mjs'))).default();
+    static async brandConfig({ mode, baseURL }) {
+        return await (await import(path.resolve(projDir, './brand.config.mjs'))).default({ mode, baseURL });
     }
 
     /*

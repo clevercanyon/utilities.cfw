@@ -18,7 +18,7 @@ import u from '../../../bin/includes/utilities.mjs';
  *
  * @returns       Plugin configuration.
  */
-export default async (/* {} */) => {
+export default async ({ mode, appBaseURL }) => {
     const virtualId = 'virtual:brand/config';
     const resolvedVirtualId = '\0' + virtualId;
 
@@ -32,7 +32,7 @@ export default async (/* {} */) => {
         },
         async load(id) {
             if (id === resolvedVirtualId) {
-                return 'export default ' + $json.stringify(await u.brandConfig(), { pretty: true });
+                return 'export default ' + $json.stringify(await u.brandConfig({ mode, baseURL: appBaseURL }), { pretty: true });
             }
         },
     };

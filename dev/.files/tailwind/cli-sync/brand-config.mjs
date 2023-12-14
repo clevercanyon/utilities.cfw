@@ -13,4 +13,12 @@ import u from '../../bin/includes/utilities.mjs';
 /**
  * Acquires app’s brand config; i.e., here within a separate CLI process.
  */
-console.log($json.stringify(await u.brandConfig(), { pretty: true }));
+console.log(
+    $json.stringify(
+        await u.brandConfig({
+            mode: process.argv[2],
+            baseURL: process.argv[3],
+        }),
+        { pretty: true },
+    ),
+);

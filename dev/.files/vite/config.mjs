@@ -20,10 +20,11 @@ import extensions from '../bin/includes/extensions.mjs';
 import importAliases from '../bin/includes/import-aliases.mjs';
 import u from '../bin/includes/utilities.mjs';
 import viteA16sDir from './includes/a16s/dir.mjs';
-import viteBaseUpdates from './includes/base/updates.mjs';
 import viteC10nBrandConfig from './includes/c10n/brand-config.mjs';
+import viteC10nHTMLTransformsConfig from './includes/c10n/html-transforms.mjs';
 import viteC10nNoModulePreloadConfig from './includes/c10n/no-module-preload.mjs';
 import viteC10nPostProcessingConfig from './includes/c10n/post-processing.mjs';
+import viteC10nPreProcessingConfig from './includes/c10n/pre-processing.mjs';
 import viteC10nSideEffectsConfig from './includes/c10n/side-effects.mjs';
 import viteDTSConfig from './includes/dts/config.mjs';
 import viteEJSConfig from './includes/ejs/config.mjs';
@@ -99,9 +100,9 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     // This is a variant of the base URL that’s resolved and has no trailing slash.
     const appBaseURLResolvedNTS = appBaseURL ? $str.rTrim(new URL('./', appBaseURL).toString(), '/') : '';
 
-    // No other choice at this time, we have to store this in an environment variable for Tailwind configuration.
-    // This uses a leading underscore to avoid contaminating current environment variables in @clevercanyon/utilities.
-    process.env._MODE_AWARE_APP_BASE_URL = appBaseURL; // Informs brand acquisition in our Tailwind configuration file.
+    // No other choice at this time, we have to store these in environment variables for Tailwind configuration.
+    process.env._VITE_MODE_ = mode; // Informs brand acquisition in our Tailwind configuration file.
+    process.env._VITE_APP_BASE_URL_ = appBaseURL; // Informs brand acquisition.
 
     const staticDefs = {
         ['$$__' + appEnvPrefixes[0] + 'PKG_NAME__$$']: pkg.name || '',
@@ -196,22 +197,23 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     (sideEffects.length = 0), pkgUpdates.sideEffects.forEach((s) => sideEffects.push(s));
 
     /**
-     * Performs HTML entry <base> updates.
-     */
-    await viteBaseUpdates({ command, isSSRBuild, projDir, appBaseURL, appType, appEntries });
-
-    /**
      * Configures plugins for Vite.
      */
     const plugins = [
-        await viteIconsConfig({}),
-        await viteC10nBrandConfig({}),
         await viteC10nSideEffectsConfig({}),
         await viteC10nNoModulePreloadConfig({}),
+
+        await viteIconsConfig({}),
+        await viteC10nBrandConfig({ mode, appBaseURL }),
+        //
         await viteMDXConfig({ projDir }),
         await viteEJSConfig({ mode, projDir, srcDir, pkg, env }),
+        await viteC10nHTMLTransformsConfig({ staticDefs }),
+        //
         await viteMinifyConfig({ minifyEnable }),
         await viteDTSConfig({ isSSRBuild, distDir }),
+        //
+        await viteC10nPreProcessingConfig({ command, isSSRBuild, projDir, distDir, appType }),
         await viteC10nPostProcessingConfig({
             mode, wranglerMode, inProdLikeMode, command, isSSRBuild, projDir, distDir,
             pkg, env, appBaseURL, appType, targetEnv, staticDefs, pkgUpdates
@@ -317,7 +319,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
             target: esVersion.lcnYear, // Matches TypeScript config.
             ssr: targetEnvIsServer, // Target environment is server-side?
 
-            emptyOutDir: isSSRBuild ? false : true, // Not during SSR builds.
+            emptyOutDir: false, // Instead, we handle this via our own plugin.
             outDir: path.relative(srcDir, distDir), // Relative to `root` directory.
 
             assetsInlineLimit: 0, // Disable entirely. Use import `?raw`, `?url`, etc.
