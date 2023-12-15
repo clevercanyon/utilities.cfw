@@ -130,6 +130,7 @@ export default async () => {
          * Wrangler commands.
          */
         'wrangler': async ({ args }) => {
+            const settings = wranglerSettings();
             return {
                 env: { ...nodeEnvVars, ...cloudflareEnvVars },
                 opts: { ...('pages' === args._?.[0] ? { cwd: distDir } : {}) },
@@ -139,18 +140,18 @@ export default async () => {
                     ...('dev' === args._?.[0] || 'pages' === args._?.[0]
                         ? [
                               async () => {
-                                  if (!(await fs.existsSync(wranglerSettings.osDir))) return;
+                                  if (!(await fs.existsSync(settings.osDir))) return;
 
                                   // Ensure `~/.wrangler/local-cert` directory exists.
-                                  await fsp.mkdir(wranglerSettings.osSSLCertDir, { recursive: true, mode: 0o700 });
+                                  await fsp.mkdir(settings.osSSLCertDir, { recursive: true, mode: 0o700 });
 
                                   // Link our custom SSL key to that used by Wrangler.
-                                  await fsp.rm(wranglerSettings.osSSLKeyFile, { recursive: true, force: true });
-                                  await fsp.symlink(wranglerSettings.customSSLKeyFile, wranglerSettings.osSSLKeyFile);
+                                  await fsp.rm(settings.osSSLKeyFile, { recursive: true, force: true });
+                                  await fsp.symlink(settings.customSSLKeyFile, settings.osSSLKeyFile);
 
                                   // Link our custom SSL certificate to that used by Wrangler.
-                                  await fsp.rm(wranglerSettings.osSSLCertFile, { recursive: true, force: true });
-                                  await fsp.symlink(wranglerSettings.customSSLCertFile, wranglerSettings.osSSLCertFile);
+                                  await fsp.rm(settings.osSSLCertFile, { recursive: true, force: true });
+                                  await fsp.symlink(settings.customSSLCertFile, settings.osSSLCertFile);
                               },
                           ]
                         : []),
@@ -180,7 +181,7 @@ export default async () => {
                                           {
                                               opts: { cwd: projDir },
                                               cmd: ['npx', 'vite', 'build', '--mode', // Mode can only be `prod` or `stage` when deploying remotely.
-                                                args.branch && args.branch !== wranglerSettings.defaultPagesProductionBranch ? 'stage' : 'prod'], // prettier-ignore
+                                                args.branch && args.branch !== settings.defaultPagesProductionBranch ? 'stage' : 'prod'], // prettier-ignore
                                           },
                                       ]
                                     : []),
@@ -191,48 +192,48 @@ export default async () => {
                                     '{{@}}',
 
                                     // Default `project` command args.
-                                    ...('project' === args._?.[1] && 'create' === args._?.[2] ? (args._?.[3] ? [] : [wranglerSettings.defaultPagesProjectName]) : []),
+                                    ...('project' === args._?.[1] && 'create' === args._?.[2] ? (args._?.[3] ? [] : [settings.defaultPagesProjectName]) : []),
                                     ...('project' === args._?.[1] && 'create' === args._?.[2]
                                         ? args.productionBranch
                                             ? [] // This is the production branch on the Cloudflare side.
-                                            : ['--production-branch', wranglerSettings.defaultPagesProductionBranch]
+                                            : ['--production-branch', settings.defaultPagesProductionBranch]
                                         : []),
 
                                     // Default `dev` command args.
                                     ...('dev' === args._?.[1] ? (args._?.[2] ? [] : [distDir]) : []),
-                                    ...('dev' === args._?.[1] ? (args.ip ? [] : ['--ip', wranglerSettings.defaultLocalIP]) : []),
-                                    ...('dev' === args._?.[1] ? (args.port ? [] : ['--port', wranglerSettings.defaultLocalPort]) : []),
-                                    ...('dev' === args._?.[1] ? (args.localProtocol ? [] : ['--local-protocol', wranglerSettings.defaultLocalProtocol]) : []),
-                                    ...('dev' === args._?.[1] ? (args.compatibilityDate ? [] : ['--compatibility-date', wranglerSettings.compatibilityDate]) : []),
+                                    ...('dev' === args._?.[1] ? (args.ip ? [] : ['--ip', settings.defaultLocalIP]) : []),
+                                    ...('dev' === args._?.[1] ? (args.port ? [] : ['--port', settings.defaultLocalPort]) : []),
+                                    ...('dev' === args._?.[1] ? (args.localProtocol ? [] : ['--local-protocol', settings.defaultLocalProtocol]) : []),
+                                    ...('dev' === args._?.[1] ? (args.compatibilityDate ? [] : ['--compatibility-date', settings.compatibilityDate]) : []),
                                     ...('dev' === args._?.[1]
                                         ? args.compatibilityFlag || args.compatibilityFlags
                                             ? [] // `--compatibility-flag` is an alias of `--compatibility-flags`.
-                                            : wranglerSettings.compatibilityFlags.map((f) => ['--compatibility-flag', f]).flat()
+                                            : settings.compatibilityFlags.map((f) => ['--compatibility-flag', f]).flat()
                                         : []),
-                                    ...('dev' === args._?.[1] ? (args.logLevel ? [] : ['--log-level', wranglerSettings.defaultDevLogLevel]) : []),
-                                    ...('dev' === args._?.[1] ? ['--binding', wranglerSettings.miniflareEnvVarAsString] : []), // Always on for `dev`. Note: `--binding` can be passed multiple times.
+                                    ...('dev' === args._?.[1] ? (args.logLevel ? [] : ['--log-level', settings.defaultDevLogLevel]) : []),
+                                    ...('dev' === args._?.[1] ? ['--binding', settings.miniflareEnvVarAsString] : []), // Always on for `dev`. Note: `--binding` can be passed multiple times.
 
                                     // Default `deploy|publish` command args.
                                     ...(['deploy', 'publish'].includes(args._?.[1]) ? (args._?.[2] ? [] : [distDir]) : []),
-                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.projectName ? [] : ['--project-name', wranglerSettings.defaultPagesProjectName]) : []),
-                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.branch ? [] : ['--branch', wranglerSettings.defaultPagesProductionBranch]) : []),
+                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.projectName ? [] : ['--project-name', settings.defaultPagesProjectName]) : []),
+                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.branch ? [] : ['--branch', settings.defaultPagesProductionBranch]) : []),
                                     ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.commitDirty ? [] : ['--commit-dirty', 'true']) : []), // Let’s not nag ourselves.
 
                                     // Default `deployment` command args.
                                     ...('deployment' === args._?.[1] && 'list' === args._?.[2]
                                         ? args.projectName
                                             ? []
-                                            : ['--project-name', wranglerSettings.defaultPagesProjectName]
+                                            : ['--project-name', settings.defaultPagesProjectName]
                                         : []),
                                     ...('deployment' === args._?.[1] && 'tail' === args._?.[2]
                                         ? args.projectName
                                             ? []
-                                            : ['--project-name', wranglerSettings.defaultPagesProjectName]
+                                            : ['--project-name', settings.defaultPagesProjectName]
                                         : []),
                                     ...('deployment' === args._?.[1] && 'tail' === args._?.[2]
                                         ? args.environment
                                             ? []
-                                            : ['--environment', wranglerSettings.defaultPagesProductionEnvironment]
+                                            : ['--environment', settings.defaultPagesProductionEnvironment]
                                         : []),
                                 ],
                             ]
@@ -242,12 +243,13 @@ export default async () => {
             };
         },
         'wrangler:flush': async () => {
+            const settings = wranglerSettings();
             return {
                 env: { ...nodeEnvVars, ...cloudflareEnvVars },
                 cmds: [
                     async () => {
                         u.log($chalk.green('Flushing Wrangler state.'));
-                        await fsp.rm(wranglerSettings.projStateDir, { recursive: true, force: true });
+                        await fsp.rm(settings.projStateDir, { recursive: true, force: true });
                     },
                 ],
             };

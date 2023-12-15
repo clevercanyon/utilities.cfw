@@ -13,7 +13,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { $chalk, $fs } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $app, $brand, $fn, $is, $json, $url } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $app, $brand, $fn, $is, $json, $obp, $url } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import u from '../../bin/includes/utilities.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
@@ -110,12 +110,14 @@ export default {
                  * Acquires updated `./package.json` file.
                  */
                 const pkg = await u.pkg(); // Log it for review.
+                const appType = $obp.get(pkg, 'config.c10n.&.build.appType'),
+                    targetEnv = $obp.get(pkg, 'config.c10n.&.build.targetEnv');
                 u.log($chalk.gray($json.stringify(pkg, { pretty: true })));
 
                 /**
                  * Gets Wrangler settings now that we have a valid `./package.json` file.
                  */
-                const wranglerSettings = (await import('../../wrangler/settings.mjs')).default;
+                const wranglerSettings = await (await import('../../wrangler/settings.mjs')).default();
 
                 /**
                  * Updates `./dev/.envs`, if applicable.
@@ -128,25 +130,28 @@ export default {
                         .readFile(envFiles.main)
                         .then((buffer) => buffer.toString())
                         .then(async (contents) => {
-                            if ('cfw' === pkg.config.c10n.build.targetEnv) {
+                            if (['cma'].includes(appType) && 'cfw' === targetEnv) {
                                 contents = contents.replace(/^(BASE_PATH)\s*=\s*[^\r\n]*$/gmu, "$1='/" + wranglerSettings.defaultWorkerShortName + "'");
-                            } else if ('cfp' === pkg.config.c10n.build.targetEnv) {
+                                //
+                            } else if (['spa', 'mpa'].includes(appType) && 'cfp' === targetEnv) {
                                 contents = contents.replace(/^(BASE_PATH)\s*=\s*[^\r\n]*$/gmu, "$1='' # No base path.");
                             }
+                            u.log($chalk.gray('Updating `./' + path.relative(projDir, envFiles.main) + '`.'));
                             await fsp.writeFile(envFiles.main, contents);
                         })
-                        .catch((error) => {
-                            if ('ENOENT' !== error.code) throw error;
+                        .catch((thrown) => {
+                            if (!$is.error(thrown) || 'ENOENT' !== thrown.code) throw thrown;
                         });
 
                     await fsp
                         .readFile(envFiles.stage)
                         .then((buffer) => buffer.toString())
                         .then(async (contents) => {
-                            if ('cfw' === pkg.config.c10n.build.targetEnv) {
+                            if (['cma'].includes(appType) && 'cfw' === targetEnv) {
                                 contents = contents.replace(/^(BASE_PATH)\s*=\s*[^\r\n]*$/gmu, "$1='/" + wranglerSettings.defaultWorkerStageShortName + "'");
                                 contents = contents.replace(/^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu, "$1='https://" + wranglerSettings.defaultWorkersDomain + "${BASE_PATH}/'");
-                            } else if ('cfp' === pkg.config.c10n.build.targetEnv) {
+                                //
+                            } else if (['spa', 'mpa'].includes(appType) && 'cfp' === targetEnv) {
                                 contents = contents.replace(
                                     /^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu,
                                     "$1='https://" +
@@ -158,28 +163,31 @@ export default {
                                         "${BASE_PATH}/'",
                                 );
                             }
+                            u.log($chalk.gray('Updating `./' + path.relative(projDir, envFiles.stage) + '`.'));
                             await fsp.writeFile(envFiles.stage, contents);
                         })
-                        .catch((error) => {
-                            if ('ENOENT' !== error.code) throw error;
+                        .catch((thrown) => {
+                            if (!$is.error(thrown) || 'ENOENT' !== thrown.code) throw thrown;
                         });
 
                     await fsp
                         .readFile(envFiles.prod)
                         .then((buffer) => buffer.toString())
                         .then(async (contents) => {
-                            if ('cfw' === pkg.config.c10n.build.targetEnv) {
+                            if (['cma'].includes(appType) && 'cfw' === targetEnv) {
                                 contents = contents.replace(/^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu, "$1='https://" + wranglerSettings.defaultWorkersDomain + "${BASE_PATH}/'");
-                            } else if ('cfp' === pkg.config.c10n.build.targetEnv) {
+                                //
+                            } else if (['spa', 'mpa'].includes(appType) && 'cfp' === targetEnv) {
                                 contents = contents.replace(
                                     /^(APP_BASE_URL)\s*=\s*[^\r\n]*$/gmu,
                                     "$1='https://" + wranglerSettings.defaultPagesProjectShortName + '.' + wranglerSettings.defaultPagesZoneName + "${BASE_PATH}/'",
                                 );
                             }
+                            u.log($chalk.gray('Updating `./' + path.relative(projDir, envFiles.prod) + '`.'));
                             await fsp.writeFile(envFiles.prod, contents);
                         })
-                        .catch((error) => {
-                            if ('ENOENT' !== error.code) throw error;
+                        .catch((thrown) => {
+                            if (!$is.error(thrown) || 'ENOENT' !== thrown.code) throw thrown;
                         });
                 }
 
@@ -196,8 +204,8 @@ export default {
                             contents = contents.replace(/^(#\s+)(@[^/?#\s]+\/[^/?#\s]+)/gmu, '$1' + pkgName);
                             await fsp.writeFile(readmeFile, contents);
                         })
-                        .catch((error) => {
-                            if ('ENOENT' !== error.code) throw error;
+                        .catch((thrown) => {
+                            if (!$is.error(thrown) || 'ENOENT' !== thrown.code) throw thrown;
                         });
                 }
 
@@ -226,30 +234,30 @@ export default {
                 await u.gitAddCommit('Initializing project directory. [n]');
 
                 /**
-                 * Attempts to create a remote repository origin at GitHub; if at all possible.
+                 * Attempts to create a remote repository origin at GitHub.
                  *
-                 * The `--add-readme` argument to `gh repo create` is important because it forces repo creation to also
-                 * create the default branch. Without creating a readme, the repo will exist, but it will have no branch
-                 * yet, which is confusing and problematic; i.e., the rest of our automation routines expect a default
-                 * `main` branch to exist, such that we can configure branch protection, etc.
+                 * The `--gitignore` argument to `gh repo create` is important because it forces repo creation to also
+                 * create the default branch. Without creating a `.gitignore`, the repo will exist, but it will have no
+                 * branch yet, which is confusing and problematic; i.e., the rest of our automation routines expect a
+                 * default `main` branch to exist, such that we can configure branch protection, etc.
                  */
                 if ('clevercanyon' === repoOwner) {
                     if (process.env.GH_TOKEN && 'owner' === (await u.gistGetC10NUser()).github?.role) {
                         u.log($chalk.green('Creating remote project repo at GitHub [' + (args.public ? 'public' : 'private') + '].'));
-                        await u.spawn('gh', ['repo', 'create', repoOwner + '/' + repoName, '--source', projDir, args.public ? '--public' : '--private', '--add-readme']);
+                        await u.spawn('gh', ['repo', 'create', repoOwner + '/' + repoName, args.public ? '--public' : '--private', '--gitignore', 'Yeoman']);
+                        await u.spawn('git', ['remote', 'add', 'origin', 'https://github.com/' + $url.encode(repoOwner) + '/' + $url.encode(repoName) + '.git']);
                     } else {
                         u.log($chalk.green('Configuring a remote repo origin.'));
-                        const origin = 'https://github.com/' + $url.encode(repoOwner) + '/' + $url.encode(repoName) + '.git';
-                        await u.spawn('git', ['remote', 'add', 'origin', origin]);
+                        await u.spawn('git', ['remote', 'add', 'origin', 'https://github.com/' + $url.encode(repoOwner) + '/' + $url.encode(repoName) + '.git']);
                     }
                 } else if (process.env.USER_GITHUB_USERNAME === repoOwner) {
                     if (process.env.GH_TOKEN) {
                         u.log($chalk.green('Creating remote project repo at GitHub [' + (args.public ? 'public' : 'private') + '].'));
-                        await u.spawn('gh', ['repo', 'create', repoOwner + '/' + repoName, '--source', projDir, args.public ? '--public' : '--private', '--add-readme']);
+                        await u.spawn('gh', ['repo', 'create', repoOwner + '/' + repoName, args.public ? '--public' : '--private', '--gitignore', 'Yeoman']);
+                        await u.spawn('git', ['remote', 'add', 'origin', 'https://github.com/' + $url.encode(repoOwner) + '/' + $url.encode(repoName) + '.git']);
                     } else {
                         u.log($chalk.green('Configuring a remote repo origin.'));
-                        const origin = 'https://github.com/' + $url.encode(repoOwner) + '/' + $url.encode(repoName) + '.git';
-                        await u.spawn('git', ['remote', 'add', 'origin', origin]);
+                        await u.spawn('git', ['remote', 'add', 'origin', 'https://github.com/' + $url.encode(repoOwner) + '/' + $url.encode(repoName) + '.git']);
                     }
                 }
 

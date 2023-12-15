@@ -18,56 +18,58 @@ import u from '../bin/includes/utilities.mjs';
 const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
 
-const pkg = await u.pkg();
-const pkgSlug = $app.pkgSlug(pkg.name);
-
-const hop = $brand.get('@clevercanyon/hop.gdn');
-
 /**
  * Defines Wrangler settings.
  */
-export default {
-    // This is Clever Canyon’s account ID. ↓
-    defaultAccountId: 'f1176464a976947aa5665d989814a4b1',
+export default async () => {
+    const pkg = await u.pkg();
+    const pkgSlug = $app.pkgSlug(pkg.name);
+    const hop = $brand.get('@clevercanyon/hop.gdn');
 
-    compatibilityDate: '2023-08-15',
-    compatibilityFlags: [], // None, for now.
+    return {
+        // This is Clever Canyon’s account ID. ↓
+        defaultAccountId: 'f1176464a976947aa5665d989814a4b1',
 
-    defaultLocalIP: '0.0.0.0',
-    defaultLocalHostname: 'localhost',
-    defaultLocalProtocol: 'https',
-    defaultLocalPort: '443',
+        compatibilityDate: '2023-08-15',
+        compatibilityFlags: [], // None, for now.
 
-    defaultDevLogLevel: 'error',
-    miniflareEnvVarAsString: 'MINIFLARE=true',
-    miniflareEnvVarAsObject: { MINIFLARE: 'true' },
+        defaultLocalIP: '0.0.0.0',
+        defaultLocalHostname: 'localhost',
+        defaultLocalProtocol: 'https',
+        defaultLocalPort: '443',
 
-    defaultPagesZoneName: hop.hostname,
-    defaultPagesDevZoneName: 'pages.dev',
+        defaultDevLogLevel: 'error',
+        miniflareEnvVarAsString: 'MINIFLARE=true',
+        miniflareEnvVarAsObject: { MINIFLARE: 'true' },
 
-    defaultPagesProjectName: pkgSlug,
-    defaultPagesProjectShortName: pkgSlug.replace(/-hop-gdn$/iu, ''),
+        defaultPagesZoneName: hop.hostname,
+        defaultPagesDevZoneName: 'pages.dev',
 
-    defaultPagesProductionBranch: 'production',
-    defaultPagesProjectStageBranchName: 'stage',
-    defaultPagesProductionEnvironment: 'production',
+        defaultPagesProjectName: pkgSlug,
+        defaultPagesProjectShortName: pkgSlug //
+            .replace(/-(?:com|net|org|gdn|hop-gdn)$/iu, ''),
 
-    defaultWorkerZoneName: hop.hostname,
-    defaultWorkersDevZoneName: 'c10n.workers.dev',
-    defaultWorkersDomain: 'workers.' + hop.hostname,
+        defaultPagesProductionBranch: 'production',
+        defaultPagesProjectStageBranchName: 'stage',
+        defaultPagesProductionEnvironment: 'production',
 
-    defaultWorkerName: pkgSlug.replace(/^workers-/iu, ''),
-    defaultWorkerShortName: pkgSlug.replace(/^(?:workers-)?hop-gdn-/iu, ''),
-    defaultWorkerStageShortName: pkgSlug.replace(/^(?:workers-)?hop-gdn-/iu, '') + '-stage',
+        defaultWorkerZoneName: hop.hostname,
+        defaultWorkersDevZoneName: 'c10n.workers.dev',
+        defaultWorkersDomain: 'workers.' + hop.hostname,
 
-    osDir: path.resolve(os.homedir(), './.wrangler'),
-    projDir: path.resolve(projDir, './.wrangler'),
-    projStateDir: path.resolve(projDir, './.wrangler/state'),
+        defaultWorkerName: pkgSlug.replace(/^workers-/iu, ''),
+        defaultWorkerShortName: pkgSlug.replace(/^workers-hop-gdn-/iu, ''),
+        defaultWorkerStageShortName: pkgSlug.replace(/^workers-hop-gdn-/iu, '') + '-stage',
 
-    osSSLCertDir: path.resolve(os.homedir(), './.wrangler/local-cert'),
-    osSSLKeyFile: path.resolve(os.homedir(), './.wrangler/local-cert/key.pem'),
-    osSSLCertFile: path.resolve(os.homedir(), './.wrangler/local-cert/cert.pem'),
+        osDir: path.resolve(os.homedir(), './.wrangler'),
+        projDir: path.resolve(projDir, './.wrangler'),
+        projStateDir: path.resolve(projDir, './.wrangler/state'),
 
-    customSSLKeyFile: path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-key.pem'),
-    customSSLCertFile: path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-crt.pem'),
+        osSSLCertDir: path.resolve(os.homedir(), './.wrangler/local-cert'),
+        osSSLKeyFile: path.resolve(os.homedir(), './.wrangler/local-cert/key.pem'),
+        osSSLCertFile: path.resolve(os.homedir(), './.wrangler/local-cert/cert.pem'),
+
+        customSSLKeyFile: path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-key.pem'),
+        customSSLCertFile: path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-crt.pem'),
+    };
 };

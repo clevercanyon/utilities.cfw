@@ -35,17 +35,24 @@ export default async ({ command, isSSRBuild, projDir, distDir, appType }) => {
                     if (!distDir || !fs.existsSync(distDir)) return;
 
                     if (['spa', 'mpa'].includes(appType)) {
-                        const wranglerCacheDir = path.resolve(distDir, './node_modules/.cache/wrangler'),
-                            tmpDir = fs.mkdtempSync(path.resolve(projDir, './.~c10n-')),
-                            wranglerTmpCacheDir = path.resolve(tmpDir, './tGuaPyXd');
+                        // Preserving this, as Wrangler saves a few important-ish things here.
+                        const wranglerCacheDir = path.resolve(distDir, './node_modules/.cache/wrangler');
 
                         if (fs.existsSync(wranglerCacheDir)) {
+                            const tmpDir = fs.mkdtempSync(path.resolve(projDir, './.~c10n-')),
+                                wranglerTmpCacheDir = path.resolve(tmpDir, './tGuaPyXd');
+
+                            u.log($chalk.gray('Preserving `./node_modules/.cache/wrangler`.'));
                             fs.renameSync(wranglerCacheDir, wranglerTmpCacheDir);
 
                             resetDistDir(); // Resets `./dist` directory.
+
+                            u.log($chalk.gray('Restoring `./node_modules/.cache/wrangler`.'));
                             fs.mkdirSync(path.dirname(wranglerCacheDir), { recursive: true });
                             fs.renameSync(wranglerTmpCacheDir, wranglerCacheDir);
-                            return fs.rmSync(tmpDir, { force: true, recursive: true });
+                            fs.rmSync(tmpDir, { force: true, recursive: true });
+
+                            return; // Done; stop here.
                         }
                     }
                     resetDistDir(); // Resets `./dist` directory.

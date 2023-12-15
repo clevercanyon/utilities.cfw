@@ -19,9 +19,5 @@ export default async (/* {} */) => {
     /**
      * Composition.
      */
-    return {
-        name: 'Skeleton',
-        slogan: 'Masters of the digital divide.',
-        description: 'Great things, built on great technology.',
-    };
+    return {}; // Nothing at this time.
 };

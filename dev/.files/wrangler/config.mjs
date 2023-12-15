@@ -38,7 +38,12 @@ const appType = $obp.get(pkg, 'config.c10n.&.build.appType');
  */
 export default async () => {
     /**
-     * Base config.
+     * Gets settings.
+     */
+    const settings = await wranglerSettings();
+
+    /**
+     * Defines base config.
      */
     const baseConfig = {
         // Platform settings.
@@ -51,12 +56,12 @@ export default async () => {
 
         // Compatibility settings.
 
-        compatibility_date: wranglerSettings.compatibilityDate,
-        compatibility_flags: wranglerSettings.compatibilityFlags,
+        compatibility_date: settings.compatibilityDate,
+        compatibility_flags: settings.compatibilityFlags,
 
         // Worker account ID.
 
-        account_id: wranglerSettings.defaultAccountId,
+        account_id: settings.defaultAccountId,
 
         // The rest of these settings are applied conditionally.
 
@@ -72,7 +77,7 @@ export default async () => {
 
                   // Worker name.
 
-                  name: wranglerSettings.defaultWorkerName,
+                  name: settings.defaultWorkerName,
 
                   // App main entry configuration.
 
@@ -168,15 +173,15 @@ export default async () => {
                   // Worker route configuration.
 
                   route: {
-                      zone_name: wranglerSettings.defaultWorkerZoneName,
-                      pattern: wranglerSettings.defaultWorkersDomain + '/' + wranglerSettings.defaultWorkerShortName + '/*',
+                      zone_name: settings.defaultWorkerZoneName,
+                      pattern: settings.defaultWorkersDomain + '/' + settings.defaultWorkerShortName + '/*',
                   },
 
                   // `$ madrun wrangler dev` settings.
                   dev: {
-                      local_protocol: wranglerSettings.defaultLocalProtocol,
-                      ip: wranglerSettings.defaultLocalIP, // e.g., `0.0.0.0`.
-                      port: Number(wranglerSettings.defaultLocalPort),
+                      local_protocol: settings.defaultLocalProtocol,
+                      ip: settings.defaultLocalIP, // e.g., `0.0.0.0`.
+                      port: Number(settings.defaultLocalPort),
                   },
 
                   // Environments used by this worker.
@@ -184,10 +189,10 @@ export default async () => {
                       // `$ madrun wrangler dev` environment, for local testing.
                       dev: {
                           route: {
-                              zone_name: wranglerSettings.defaultLocalHostname,
-                              pattern: wranglerSettings.defaultLocalHostname + '/' + wranglerSettings.defaultWorkerShortName + '/*',
+                              zone_name: settings.defaultLocalHostname,
+                              pattern: settings.defaultLocalHostname + '/' + settings.defaultWorkerShortName + '/*',
                           },
-                          vars: wranglerSettings.miniflareEnvVarAsObject,
+                          vars: settings.miniflareEnvVarAsObject,
                           build: {
                               cwd: './' + path.relative(projDir, './'),
                               watch_dir: './' + path.relative(projDir, './src'),
@@ -197,8 +202,8 @@ export default async () => {
                       // `$ madrun wrangler deploy --env=stage`.
                       stage: {
                           route: {
-                              zone_name: wranglerSettings.defaultWorkerZoneName,
-                              pattern: wranglerSettings.defaultWorkersDomain + '/' + wranglerSettings.defaultWorkerStageShortName + '/*',
+                              zone_name: settings.defaultWorkerZoneName,
+                              pattern: settings.defaultWorkersDomain + '/' + settings.defaultWorkerStageShortName + '/*',
                           },
                           build: {
                               cwd: './' + path.relative(projDir, './'),
