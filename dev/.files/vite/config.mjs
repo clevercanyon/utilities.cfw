@@ -48,6 +48,11 @@ import viteVitestConfig from './includes/vitest/config.mjs';
  */
 export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     /**
+     * Acquires current time.
+     */
+    const time = $time.now();
+
+    /**
      * Configures `NODE_ENV` environment variable.
      */
     process.env.NODE_ENV = // As detailed by Vite <https://o5p.me/DscTVM>.
@@ -85,9 +90,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
      */
     let appEnvPrefixes = ['APP_']; // Added to all builds.
     if (isSSRBuild) appEnvPrefixes.push('SSR_APP_'); // Added to SSR builds.
-
-    const env = loadEnv(mode, envsDir, appEnvPrefixes); // Includes `APP_IS_VITE`.
-    env.APP_PKG_NAME = pkg.name; // Adds package name just like app initializers do.
+    const env = loadEnv(mode, envsDir, appEnvPrefixes); // Includes `APP_IS_VITE` from above.
 
     const appBaseURL = env.APP_BASE_URL || '';
     // A trailing slash or no trailing slash — it does matter!
@@ -107,12 +110,14 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     const staticDefs = {
         ['$$__' + appEnvPrefixes[0] + 'PKG_NAME__$$']: pkg.name || '',
         ['$$__' + appEnvPrefixes[0] + 'PKG_VERSION__$$']: pkg.version || '',
-        ['$$__' + appEnvPrefixes[0] + 'PKG_REPOSITORY__$$']: pkg.repository || '',
-        ['$$__' + appEnvPrefixes[0] + 'PKG_HOMEPAGE__$$']: pkg.homepage || '',
-        ['$$__' + appEnvPrefixes[0] + 'PKG_BUGS__$$']: pkg.bugs || '',
-        ['$$__' + appEnvPrefixes[0] + 'BASE_URL__$$']: appBaseURL || '',
-        ['$$__' + appEnvPrefixes[0] + 'BASE_URL_RESOLVED_NTS__$$']: appBaseURLResolvedNTS || '',
-        ['$$__' + appEnvPrefixes[0] + 'BUILD_TIME_YMD__$$']: $time.now().toYMD() || '',
+
+        ['$$__' + appEnvPrefixes[0] + 'BUILD_TIME_YMD__$$']: time.toYMD(),
+        ['$$__' + appEnvPrefixes[0] + 'BUILD_TIME_SQL__$$']: time.toSQL(),
+        ['$$__' + appEnvPrefixes[0] + 'BUILD_TIME_ISO__$$']: time.toISO(),
+        ['$$__' + appEnvPrefixes[0] + 'BUILD_TIME_STAMP__$$']: time.unix().toString(),
+
+        ['$$__' + appEnvPrefixes[0] + 'BASE_URL__$$']: appBaseURL,
+        ['$$__' + appEnvPrefixes[0] + 'BASE_URL_RESOLVED_NTS__$$']: appBaseURLResolvedNTS,
     };
     Object.keys(env) // Add string env vars to static defines.
         .filter((key) => new RegExp('^(?:' + appEnvPrefixes.map((v) => $str.escRegExp(v)).join('|') + ')', 'u').test(key))

@@ -148,7 +148,8 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
              */
             if (!isSSRBuild && 'build' === command && ['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv)) {
                 const isC10n = env.APP_IS_C10N || false,
-                    brand = await u.brand({ mode, baseURL: appBaseURL });
+                    baseURL = appBaseURL, // Shorter alternative.
+                    brand = await u.brand({ mode, baseURL });
 
                 for (const file of await $glob.promise(
                     [
@@ -176,42 +177,49 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
                         fileContents = fileContents.replace(new RegExp($str.escRegExp(key), 'gu'), staticDefs[key]);
                     }
                     if (['.well-known/gpc.json'].includes(fileRelPath)) {
-                        const cfpDefaultWellKnownGPC = $cfpꓺhttp.prepareDefaultWellKnownGPC({ appType, brand, isC10n });
+                        const cfpDefaultWellKnownGPC = $cfpꓺhttp.prepareDefaultWellKnownGPC({ appType, baseURL, brand, isC10n });
                         fileContents = fileContents
                             .replace('"$$__APP_CFP_DEFAULT_WELL_KNOWN_GPC__$$"', cfpDefaultWellKnownGPC) //
                             .replace('$$__APP_CFP_DEFAULT_WELL_KNOWN_GPC__$$', cfpDefaultWellKnownGPC);
                         //
                     } else if (['.well-known/security.txt'].includes(fileRelPath)) {
-                        const cfpDefaultWellKnownSecurity = $cfpꓺhttp.prepareDefaultWellKnownSecurity({ appType, brand, isC10n });
+                        const cfpDefaultWellKnownSecurity = $cfpꓺhttp.prepareDefaultWellKnownSecurity({ appType, baseURL, brand, isC10n });
                         fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_WELL_KNOWN_SECURITY__$$', cfpDefaultWellKnownSecurity);
                         //
                     } else if (['_headers'].includes(fileRelPath)) {
-                        const cfpDefaultHeaders = $cfpꓺhttp.prepareDefaultHeaders({ appType, brand, isC10n });
+                        const cfpDefaultHeaders = $cfpꓺhttp.prepareDefaultHeaders({ appType, baseURL, brand, isC10n });
                         fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_HEADERS__$$', cfpDefaultHeaders);
                         //
                     } else if (['_redirects'].includes(fileRelPath)) {
-                        const cfpDefaultRedirects = $cfpꓺhttp.prepareDefaultRedirects({ appType, brand, isC10n });
+                        const cfpDefaultRedirects = $cfpꓺhttp.prepareDefaultRedirects({ appType, baseURL, brand, isC10n });
                         fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_REDIRECTS__$$', cfpDefaultRedirects);
                         //
                     } else if (['_routes.json'].includes(fileRelPath)) {
-                        const cfpDefaultRoutes = $cfpꓺhttp.prepareDefaultRoutes({ appType, brand, isC10n });
+                        const cfpDefaultRoutes = $cfpꓺhttp.prepareDefaultRoutes({ appType, baseURL, brand, isC10n });
                         fileContents = fileContents
                             .replace('"$$__APP_CFP_DEFAULT_ROUTES__$$"', cfpDefaultRoutes) //
                             .replace('$$__APP_CFP_DEFAULT_ROUTES__$$', cfpDefaultRoutes);
                         //
                     } else if (['manifest.json'].includes(fileRelPath)) {
-                        const cfpDefaultManifest = $cfpꓺhttp.prepareDefaultManifest({ appType, brand, isC10n });
+                        const cfpDefaultManifest = $cfpꓺhttp.prepareDefaultManifest({ appType, baseURL, brand, isC10n });
                         fileContents = fileContents
                             .replace('"$$__APP_CFP_DEFAULT_MANIFEST__$$"', cfpDefaultManifest) //
                             .replace('$$__APP_CFP_DEFAULT_MANIFEST__$$', cfpDefaultManifest);
                         //
                     } else if (['ads.txt'].includes(fileRelPath)) {
-                        const cfpDefaultAdsTxt = $cfpꓺhttp.prepareDefaultAdsTxt({ appType, brand, isC10n });
+                        const cfpDefaultAdsTxt = $cfpꓺhttp.prepareDefaultAdsTxt({ appType, baseURL, brand, isC10n });
                         fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_ADS_TXT__$$', cfpDefaultAdsTxt);
                         //
                     } else if (['humans.txt'].includes(fileRelPath)) {
-                        const cfpDefaultHumansTxt = $cfpꓺhttp.prepareDefaultHumansTxt({ appType, brand, isC10n });
+                        const cfpDefaultHumansTxt = $cfpꓺhttp.prepareDefaultHumansTxt({ appType, baseURL, brand, isC10n });
                         fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_HUMANS_TXT__$$', cfpDefaultHumansTxt);
+                        //
+                    } else if (['robots.txt'].includes(fileRelPath)) {
+                        const cfpDefaultRobotsTxt = $cfpꓺhttp.prepareDefaultRobotsTxt({ appType, baseURL, brand, isC10n, allow: false });
+                        fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_ROBOTS_TXT__$$', cfpDefaultRobotsTxt);
+
+                        const cfpDefaultAllowRobotsTxt = $cfpꓺhttp.prepareDefaultRobotsTxt({ appType, baseURL, brand, isC10n, allow: true });
+                        fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_ALLOW_ROBOTS_TXT__$$', cfpDefaultAllowRobotsTxt);
                         //
                     } else if (['404.html'].includes(fileRelPath)) {
                         const cfpDefault404 = '<!doctype html>' + $preact.ssr.renderToString($preact.create(StandAlone404));

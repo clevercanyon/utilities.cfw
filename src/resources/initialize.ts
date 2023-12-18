@@ -5,7 +5,7 @@
 import { $env } from '@clevercanyon/utilities';
 
 /**
- * Acquires app static defines.
+ * Acquires app package name.
  */
 const appPkgName = $$__APP_PKG_NAME__$$;
 
@@ -19,5 +19,7 @@ $env.setTopLevelObp(appPkgName);
  */
 $env.capture(appPkgName, {
     APP_PKG_NAME: appPkgName,
+    APP_PKG_VERSION: $$__APP_PKG_VERSION__$$,
+    APP_BUILD_TIME_STAMP: $$__APP_BUILD_TIME_STAMP__$$,
     ...import.meta.env,
 });

@@ -69,7 +69,7 @@ export default async () => {
 
             // Variable compression plugin. I have a request in for variable consolidation also.
             // {@see https://github.com/navanshu/postcss-variable-compress/issues/45}.
-            (await import('postcss-variable-compress')).default(),
+            (await import('postcss-variable-compress')).default([(name) => name.startsWith('--skip-')]),
         ],
     };
 };

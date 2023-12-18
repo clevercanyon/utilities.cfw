@@ -130,7 +130,7 @@ export default async () => {
          * Wrangler commands.
          */
         'wrangler': async ({ args }) => {
-            const settings = wranglerSettings();
+            const settings = await wranglerSettings();
             return {
                 env: { ...nodeEnvVars, ...cloudflareEnvVars },
                 opts: { ...('pages' === args._?.[0] ? { cwd: distDir } : {}) },
@@ -243,7 +243,7 @@ export default async () => {
             };
         },
         'wrangler:flush': async () => {
-            const settings = wranglerSettings();
+            const settings = await wranglerSettings();
             return {
                 env: { ...nodeEnvVars, ...cloudflareEnvVars },
                 cmds: [
