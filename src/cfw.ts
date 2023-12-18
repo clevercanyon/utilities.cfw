@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $env, $error, $http, $json, $mime, $mm, $str, $url, type $type } from '@clevercanyon/utilities';
+import { $app, $env, $error, $http, $json, $mime, $mm, $str, $url, type $type } from '@clevercanyon/utilities';
 import * as cfKVA from '@cloudflare/kv-asset-handler';
 
 /**
@@ -113,35 +113,47 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
  * @returns        Response promise.
  */
 export const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$type.cf.Response> => {
-    const { request, ctx } = feData;
-    let cachedResponse; // Initialize.
+    let key, cachedResponse; // Initialize.
+    const { request, ctx, url } = feData;
 
-    if (!$http.requestHasCacheableMethod(request)) {
-        return route(feData); // Not applicable.
+    // Populates cache key.
+
+    key = 'v=' + $app.buildTime().unix().toString();
+    if (request.headers.has('origin') /* Possibly empty. */) {
+        key += '&origin=' + (request.headers.get('origin') || '');
     }
-    if ((cachedResponse = await cache.match(request, { ignoreMethod: true }))) {
-        if (!$http.requestNeedsContentBody(request, cachedResponse.status)) {
-            cachedResponse = new Response(null /* No response body. */, {
-                status: cachedResponse.status,
-                statusText: cachedResponse.statusText,
-                headers: cachedResponse.headers,
-            }) as unknown as $type.cf.Response;
+    const keyURL = $url.removeCSOQueryVars(url); // e.g., `ut[mx]_`, `_ck`, etc.
+    keyURL.searchParams.set('_ck', key), keyURL.searchParams.sort(); // Optimizes cache.
+    const keyRequest = new Request(keyURL.toString(), request as unknown as Request) as unknown as $type.cf.Request;
+
+    // Checks if request is cacheable.
+
+    if (!['HEAD', 'GET'].includes(keyRequest.method) || !$http.requestHasCacheableMethod(keyRequest)) {
+        return route(feData); // Not cacheable; use async route.
+    }
+    // Reads response for this request from HTTP cache.
+
+    if ((cachedResponse = await cache.match(keyRequest, { ignoreMethod: true }))) {
+        if (!$http.requestNeedsContentBody(keyRequest, cachedResponse.status)) {
+            cachedResponse = new Response(null, cachedResponse) as unknown as $type.cf.Response;
         }
         return cachedResponse;
     }
-    const response = await route(feData);
+    // Routes request and writes response to HTTP cache.
 
-    if ('GET' === request.method && 206 !== response.status && '*' !== response.headers.get('vary') && !response.webSocket) {
+    const response = await route(feData); // Awaits response so we can cache.
+
+    if ('GET' === keyRequest.method && 206 !== response.status && '*' !== response.headers.get('vary') && !response.webSocket) {
         if ($env.isCFWViaMiniflare() && 'no-store' === response.headers.get('cdn-cache-control')) {
             // Miniflare doesn’t currently support `cdn-cache-control`, so we implement basic support for it here.
             response.headers.set('cf-cache-status', 'c10n.miniflare.cdn-cache-control.BYPASS');
         } else {
             // Cloudflare will not actually cache if response headers say not to cache.
             // For further details regarding `cache.put()`; {@see https://o5p.me/gMv7W2}.
-            ctx.waitUntil(cache.put(request, response.clone()));
+            ctx.waitUntil(cache.put(keyRequest, response.clone()));
         }
     }
-    return response;
+    return response; // Potentially cached async.
 };
 
 /**
@@ -165,7 +177,7 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type
         $env.get('__STATIC_CONTENT' /* Worker site? */) && //
         $mm.test(url.pathname, $url.pathFromAppBase('./assets/') + '**')
     ) {
-        return handleFetchCache(handleFetchStaticAssets, feData);
+        return handleFetchStaticAssets(feData);
     }
     return $http.prepareResponse(request, { status: 404 }) as $type.cf.Response;
 };
