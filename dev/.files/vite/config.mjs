@@ -259,6 +259,10 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     const originalLoggerWarnOnce = customLogger.warnOnce;
 
     customLogger.warnOnce = (msg, options) => {
+        if (msg.includes("didn't resolve at build time, it will remain unchanged to be resolved at runtime")) {
+            return; // Safe to ignore. Some of our CSS resources, for example, reference cargo assets.
+            // Cargo assets can only be resolved at runtime. There’s no need for this warning; we are aware.
+        }
         if (/^Sourcemap for "[^"]+\.mdx" points to missing source files$/iu.test(msg)) {
             return; // Safe to ignore. Some MDX glob imports contain query strings, which makes the filesystem path unreachable.
             // This is a consequence of us needing to create a distinct import for frontMatter. See `importGlobRestoreExtension` below.
