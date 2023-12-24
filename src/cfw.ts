@@ -6,11 +6,13 @@ import '#@initialize.ts';
 
 import { $app, $env, $error, $http, $json, $mime, $mm, $str, $url, type $type } from '@clevercanyon/utilities';
 import * as cfKVA from '@cloudflare/kv-asset-handler';
+import { Logtail } from '@logtail/edge';
 
 /**
  * Defines types.
  */
 export type Context = $type.cf.ExecutionContext;
+export type Logger = ReturnType<Logtail['withExecutionContext']>;
 
 export type Environment = Readonly<{
     D1?: $type.cf.D1Database;
@@ -33,6 +35,8 @@ export type FetchEventData = Readonly<{
     ctx: Context;
     routes: Routes;
     url: $type.cf.URL;
+    auditLogger: Logger;
+    consentLogger: Logger;
 }>;
 export type InitialFetchEventData = Readonly<{
     request: $type.cf.Request;
@@ -47,12 +51,21 @@ export type InitialFetchEventData = Readonly<{
 let initialized = false;
 
 /**
- * Defines cache to use for HTTP requests.
+ * Defines global base loggers.
+ */
+let baseAuditLogger: Logtail, baseConsentLogger: Logtail;
+
+/**
+ * Defines global cache to use for HTTP requests.
  */
 const cache = (caches as unknown as $type.cf.CacheStorage).default;
 
 /**
- * Handles worker initialization.
+ * Initializes worker globals.
+ *
+ * @param   ifeData Initial fetch event data.
+ *
+ * @returns         Void promise.
  */
 const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> => {
     if (initialized) return;
@@ -60,6 +73,12 @@ const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> =>
 
     const { env } = ifeData;
     $env.capture('@global', env);
+
+    const auditLoggerSource = $env.get('APP_AUDIT_LOGGER_SOURCE', { type: 'string', require: true }),
+        consentLoggerSource = $env.get('APP_CONSENT_LOGGER_SOURCE', { type: 'string', require: true });
+
+    (baseAuditLogger = new Logtail(auditLoggerSource, { contextObjectMaxDepthWarn: false, contextObjectCircularRefWarn: false })),
+        (baseConsentLogger = new Logtail(consentLoggerSource, { contextObjectMaxDepthWarn: false, contextObjectCircularRefWarn: false }));
 };
 
 /**
@@ -73,12 +92,14 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
     let { request } = ifeData;
     const { env, ctx, routes } = ifeData;
 
-    try {
-        await maybeInitialize(ifeData);
+    await maybeInitialize(ifeData); // Initializes worker.
+    const auditLogger = baseAuditLogger.withExecutionContext(ifeData.ctx),
+        consentLogger = baseConsentLogger.withExecutionContext(ifeData.ctx);
 
+    try {
         request = $http.prepareRequest(request, {}) as $type.cf.Request;
         const url = $url.parse(request.url) as $type.cf.URL;
-        const feData = { request, env, ctx, routes, url };
+        const feData = { request, env, ctx, routes, url, auditLogger, consentLogger };
 
         // This is somewhat in reverse of how we would normally serve requests.
         // Typically, we would first check if it’s potentially dynamic, and then fall back on assets.
@@ -94,12 +115,16 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         //
     } catch (thrown) {
         if (thrown instanceof Response) {
+            void auditLogger.info(String(thrown.status) + ': Response thrown.', { request, thrownResponse: thrown });
             return thrown as unknown as $type.cf.Response;
         }
+        const message = $error.safeMessageFrom(thrown, { default: '9eMw8Ave' });
+        void auditLogger.warn('500: ' + message, { request, thrown });
+
         return $http.prepareResponse(request, {
-            status: 500,
+            status: 500, // Failed status in this scenario.
             headers: { 'content-type': $mime.contentType('.txt') },
-            body: $error.safeMessageFrom(thrown, { default: '9eMw8Ave' }),
+            body: message, // Safe message from whatever was thrown.
         }) as $type.cf.Response;
     }
 };

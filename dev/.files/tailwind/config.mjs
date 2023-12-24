@@ -167,12 +167,11 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
                  * - In our Tailwind implementation, class `p` = `prose`.
                  * - In our Tailwind implementation, a much shorter `_` = `not-p` = `not-prose`.
                  * - In our basic styles implementation, `_` = `not-p` = `not-prose` = `not-basic`.
-                 *
-                 * Also worth noting that in our Tailwind prose implementation, the `~` class means prose colors should
-                 * be inherited from the parent containing the `~` class; e.g., if a component applies colors that
-                 * differ from prose colors, then it needs to make sure any prose it contains will inherit the colors it
-                 * has assigned, and not use the default prose colors. So `~` is an alternative to `_`, indicating that
-                 * prose is to be allowed, but it must use inherited coloration.
+                 * - In our Tailwind prose implementation, `~` = prose colors should be inherited from a parent containing
+                 *   the special `~` class; e.g., if a component applies colors that differ from prose colors, it needs
+                 *   to make sure any prose it contains will inherit the colors it has assigned, and not use the default
+                 *   prose colors. So `~` is an alternative to `_`, indicating prose is allowed, but it must use
+                 *   inherited coloration.
                  */
                 typography: {
                     DEFAULT: {
@@ -233,6 +232,16 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
                                 // All included in base `<strong>` styles.
                                 ...pluginTypographyStyles.DEFAULT.css[0]['a strong'],
                                 color: null, // Explicitly remove; see notes above.
+                            },
+                            ':where(a, .link)[target="_blank"]:not(:has(> *))::after': {
+                                content: "''",
+                                width: '.575em',
+                                height: '.575em',
+                                marginLeft: '.25em',
+                                display: 'inline-block',
+                                background: 'currentColor',
+                                '--x-prose-external-link-icon': `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M320 0a32 32 0 1 0 0 64h83L201 265a32 32 0 0 0 46 46l201-202v83a32 32 0 1 0 64 0V32c0-18-14-32-32-32H320zM80 32C36 32 0 68 0 112v320c0 44 36 80 80 80h320c44 0 80-36 80-80V320a32 32 0 1 0-64 0v112c0 9-7 16-16 16H80c-9 0-16-7-16-16V112c0-9 7-16 16-16h112a32 32 0 1 0 0-64H80z'/%3E%3C/svg%3E")`,
+                                maskImage: 'var(--x-prose-external-link-icon)',
                             },
 
                             // Auto-linked headings with `~`-prefixed IDs.

@@ -154,6 +154,7 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
                 for (const file of await $glob.promise(
                     [
                         '.well-known/gpc.json',
+                        '.well-known/gpg.txt',
                         '.well-known/security.txt',
                         '_headers',
                         '_redirects',
@@ -177,14 +178,18 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
                         fileContents = fileContents.replace(new RegExp($str.escRegExp(key), 'gu'), staticDefs[key]);
                     }
                     if (['.well-known/gpc.json'].includes(fileRelPath)) {
-                        const cfpDefaultWellKnownGPC = $cfpꓺhttp.prepareDefaultWellKnownGPC({ appType, baseURL, brand, isC10n });
+                        const cfpDefaultWellKnownGPCJSON = $cfpꓺhttp.prepareDefaultWellKnownGPCJSON({ appType, baseURL, brand, isC10n });
                         fileContents = fileContents
-                            .replace('"$$__APP_CFP_DEFAULT_WELL_KNOWN_GPC__$$"', cfpDefaultWellKnownGPC) //
-                            .replace('$$__APP_CFP_DEFAULT_WELL_KNOWN_GPC__$$', cfpDefaultWellKnownGPC);
+                            .replace('"$$__APP_CFP_DEFAULT_WELL_KNOWN_GPC_JSON__$$"', cfpDefaultWellKnownGPCJSON) //
+                            .replace('$$__APP_CFP_DEFAULT_WELL_KNOWN_GPC_JSON__$$', cfpDefaultWellKnownGPCJSON);
+                        //
+                    } else if (['.well-known/gpg.txt'].includes(fileRelPath)) {
+                        const cfpDefaultWellKnownGPGTxt = $cfpꓺhttp.prepareDefaultWellKnownGPGTxt({ appType, baseURL, brand, isC10n });
+                        fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_WELL_KNOWN_GPG_TXT__$$', cfpDefaultWellKnownGPGTxt);
                         //
                     } else if (['.well-known/security.txt'].includes(fileRelPath)) {
-                        const cfpDefaultWellKnownSecurity = $cfpꓺhttp.prepareDefaultWellKnownSecurity({ appType, baseURL, brand, isC10n });
-                        fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_WELL_KNOWN_SECURITY__$$', cfpDefaultWellKnownSecurity);
+                        const cfpDefaultWellKnownSecurityTxt = $cfpꓺhttp.prepareDefaultWellKnownSecurityTxt({ appType, baseURL, brand, isC10n });
+                        fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_WELL_KNOWN_SECURITY_TXT__$$', cfpDefaultWellKnownSecurityTxt);
                         //
                     } else if (['_headers'].includes(fileRelPath)) {
                         const cfpDefaultHeaders = $cfpꓺhttp.prepareDefaultHeaders({ appType, baseURL, brand, isC10n });
@@ -195,16 +200,16 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
                         fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_REDIRECTS__$$', cfpDefaultRedirects);
                         //
                     } else if (['_routes.json'].includes(fileRelPath)) {
-                        const cfpDefaultRoutes = $cfpꓺhttp.prepareDefaultRoutes({ appType, baseURL, brand, isC10n });
+                        const cfpDefaultRoutesJSON = $cfpꓺhttp.prepareDefaultRoutesJSON({ appType, baseURL, brand, isC10n });
                         fileContents = fileContents
-                            .replace('"$$__APP_CFP_DEFAULT_ROUTES__$$"', cfpDefaultRoutes) //
-                            .replace('$$__APP_CFP_DEFAULT_ROUTES__$$', cfpDefaultRoutes);
+                            .replace('"$$__APP_CFP_DEFAULT_ROUTES_JSON__$$"', cfpDefaultRoutesJSON) //
+                            .replace('$$__APP_CFP_DEFAULT_ROUTES_JSON__$$', cfpDefaultRoutesJSON);
                         //
                     } else if (['manifest.json'].includes(fileRelPath)) {
-                        const cfpDefaultManifest = $cfpꓺhttp.prepareDefaultManifest({ appType, baseURL, brand, isC10n });
+                        const cfpDefaultManifestJSON = $cfpꓺhttp.prepareDefaultManifestJSON({ appType, baseURL, brand, isC10n });
                         fileContents = fileContents
-                            .replace('"$$__APP_CFP_DEFAULT_MANIFEST__$$"', cfpDefaultManifest) //
-                            .replace('$$__APP_CFP_DEFAULT_MANIFEST__$$', cfpDefaultManifest);
+                            .replace('"$$__APP_CFP_DEFAULT_MANIFEST_JSON__$$"', cfpDefaultManifestJSON) //
+                            .replace('$$__APP_CFP_DEFAULT_MANIFEST_JSON__$$', cfpDefaultManifestJSON);
                         //
                     } else if (['ads.txt'].includes(fileRelPath)) {
                         const cfpDefaultAdsTxt = $cfpꓺhttp.prepareDefaultAdsTxt({ appType, baseURL, brand, isC10n });

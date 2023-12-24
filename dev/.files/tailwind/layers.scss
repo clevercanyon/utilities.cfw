@@ -50,8 +50,11 @@
 
     /**
      * Basic link styles and color.
+     *
+     * @note Using `:is` because we need some level of specificity here
+     *       in order to override Tailwind’s `a { color: inherit; }` reset CSS.
      */
-    :where(a, .link):not(:where(.p, .p *, ._, ._ *)) {
+    :is(a, .link):not(:where(.p, .p *, ._, ._ *)) {
         @apply cursor-pointer text-color-basic-link no-underline opacity-90 hover:underline hover:opacity-100;
     }
 

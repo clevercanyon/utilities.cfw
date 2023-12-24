@@ -57,7 +57,7 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
         /**
          * Defines basic colors.
          *
-         * - Basic palette: {@see https://coolors.co/09090b-f0f0f0-80aff9-17171c-ffffff}.
+         * - Basic palette: {@see https://coolors.co/09090b-f0f0f0-80aff9-17171c-5596ff}.
          *
          * From these basic colors we derive additional colors for commonly-used sections automatically, such as those
          * prefixed as `color-prose-*`, `color-header-*`, `color-sidebar-*`, `color-footer-*`. If you'd like to override
@@ -76,7 +76,7 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
             'color-basic-fg': brandTheme.fgColor || '#f0f0f0', // Foreground color.
             'color-basic-link': brandTheme.linkColor || '#80aff9', // Link/anchor color.
             'color-basic-line': brandTheme.lineColor || '#17171c', // Line/border color.
-            'color-basic-heading': brandTheme.headingColor || '#ffffff', // Heading color.
+            'color-basic-heading': brandTheme.headingColor || '#5596ff', // Heading color.
         };
         const basicColors = $obj.defaults({}, $obj.pick(theme.extend.colors, Object.keys(defaultBasicColors)), defaultBasicColors);
         const basicBGIsDark = basicColors['color-basic'] === brandTheme.color ? brandTheme.isDark : $color.isDark(basicColors['color-basic']);
@@ -163,7 +163,7 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
         /**
          * Defines brand colors.
          *
-         * - Abstract palette: {@see https://coolors.co/595959-2e489e-3e4660-615c49-745a2f-0f58b8-80aff9-ffe0b8}.
+         * - Abstract palette: {@see https://coolors.co/595959-2e489e-3e4660-615c49-745a2f-ffab3d-ffc170-ffe0b8}.
          * - Semantic palette: {@see https://coolors.co/1c5f35-8a2828-865027-2e489e-e4e4e7-3f3f46-18181b-fef9c3}.
          *
          * These colors should all consider the `color-basic` background color, because all of these colors should work
@@ -188,8 +188,8 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
             'color-secondary': '#3e4660', // Secondary component color. Typically less saturated than primary.
             'color-tertiary': '#615c49', // Tertiary component color. Typically less saturated than primary.
             'color-accent': '#745a2f', // An accented component color. Typically accentuated conservatively.
-            'color-feature': '#0f58b8', // An accented component color. Typically more accentuated; i.e., less subtle.
-            'color-dazzle': '#80aff9', // An accented component color. Typically much more accentuated; i.e., not subtle.
+            'color-feature': '#ffab3d', // An accented component color. Typically more accentuated; i.e., less subtle.
+            'color-dazzle': '#ffc170', // An accented component color. Typically much more accentuated; i.e., not subtle.
             'color-amaze': '#ffe0b8', // An accented component color. Typically much more accentuated; i.e., not subtle.
 
             // Semantic colors.
