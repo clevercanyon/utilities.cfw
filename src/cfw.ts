@@ -4,16 +4,12 @@
 
 import '#@initialize.ts';
 
-import { $app, $env, $error, $http, $json, $mime, $mm, $str, $url, type $type } from '@clevercanyon/utilities';
+import { $app, $class, $env, $error, $http, $json, $mime, $mm, $obj, $str, $url, type $type } from '@clevercanyon/utilities';
 import * as cfKVA from '@cloudflare/kv-asset-handler';
-import { Logtail } from '@logtail/edge';
 
 /**
  * Defines types.
  */
-export type Context = $type.cf.ExecutionContext;
-export type Logger = ReturnType<Logtail['withExecutionContext']>;
-
 export type Environment = Readonly<{
     D1?: $type.cf.D1Database;
     R2?: $type.cf.R2Bucket;
@@ -22,21 +18,19 @@ export type Environment = Readonly<{
     __STATIC_CONTENT?: $type.cf.KVNamespace;
     [x: string]: unknown;
 }>;
-export type Route = (x: FetchEventData) => Promise<$type.cf.Response>;
+export type Context = $type.cf.ExecutionContext;
 
-export type Routes = Readonly<{
-    subpathGlobs: Readonly<{
-        [x: string]: Route;
-    }>;
-}>;
+export type Route = (x: FetchEventData) => Promise<$type.cf.Response>;
+export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
+
 export type FetchEventData = Readonly<{
     request: $type.cf.Request;
     env: Environment;
     ctx: Context;
     routes: Routes;
     url: $type.cf.URL;
-    auditLogger: Logger;
-    consentLogger: Logger;
+    auditLogger: $type.LoggerInterface;
+    consentLogger: $type.LoggerInterface;
 }>;
 export type InitialFetchEventData = Readonly<{
     request: $type.cf.Request;
@@ -53,7 +47,8 @@ let initialized = false;
 /**
  * Defines global base loggers.
  */
-let baseAuditLogger: Logtail, baseConsentLogger: Logtail;
+let baseAuditLogger: $type.Logger, //
+    baseConsentLogger: $type.Logger;
 
 /**
  * Defines global cache to use for HTTP requests.
@@ -71,14 +66,17 @@ const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> =>
     if (initialized) return;
     initialized = true;
 
-    const { env } = ifeData;
-    $env.capture('@global', env);
+    const Logger = $class.getLogger();
+    const { request, env, ctx } = ifeData;
 
-    const auditLoggerSource = $env.get('APP_AUDIT_LOGGER_SOURCE', { type: 'string', require: true }),
-        consentLoggerSource = $env.get('APP_CONSENT_LOGGER_SOURCE', { type: 'string', require: true });
+    $env.capture('@global', env); // Captures environment variables.
 
-    (baseAuditLogger = new Logtail(auditLoggerSource, { contextObjectMaxDepthWarn: false, contextObjectCircularRefWarn: false })),
-        (baseConsentLogger = new Logtail(consentLoggerSource, { contextObjectMaxDepthWarn: false, contextObjectCircularRefWarn: false }));
+    (baseAuditLogger = new Logger({ endpointToken: $env.get('APP_AUDIT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) })),
+        (baseConsentLogger = new Logger({ endpointToken: $env.get('APP_CONSENT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) }));
+
+    void baseAuditLogger
+        .withContext({}, { request, cfwExecutionContext: ctx }) //
+        .info('Worker initialized.', { ifeData });
 };
 
 /**
@@ -89,17 +87,17 @@ const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> =>
  * @returns         Response promise.
  */
 export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<$type.cf.Response> => {
-    let { request } = ifeData;
     const { env, ctx, routes } = ifeData;
+    let { request } = ifeData; // Rewritable.
 
     await maybeInitialize(ifeData); // Initializes worker.
-    const auditLogger = baseAuditLogger.withExecutionContext(ifeData.ctx),
-        consentLogger = baseConsentLogger.withExecutionContext(ifeData.ctx);
+    const auditLogger = baseAuditLogger.withContext({}, { request, cfwExecutionContext: ctx }),
+        consentLogger = baseConsentLogger.withContext({}, { request, cfwExecutionContext: ctx });
 
     try {
         request = $http.prepareRequest(request, {}) as $type.cf.Request;
-        const url = $url.parse(request.url) as $type.cf.URL;
-        const feData = { request, env, ctx, routes, url, auditLogger, consentLogger };
+        const url = $url.parse(request.url) as $type.cf.URL,
+            feData = $obj.freeze({ request, env, ctx, routes, url, auditLogger, consentLogger });
 
         // This is somewhat in reverse of how we would normally serve requests.
         // Typically, we would first check if it’s potentially dynamic, and then fall back on assets.
@@ -115,11 +113,11 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         //
     } catch (thrown) {
         if (thrown instanceof Response) {
-            void auditLogger.info(String(thrown.status) + ': Response thrown.', { request, thrownResponse: thrown });
+            void auditLogger.info(String(thrown.status) + ': Response thrown.', { thrownResponse: thrown });
             return thrown as unknown as $type.cf.Response;
         }
         const message = $error.safeMessageFrom(thrown, { default: '9eMw8Ave' });
-        void auditLogger.warn('500: ' + message, { request, thrown });
+        void auditLogger.warn('500: ' + message, { thrown });
 
         return $http.prepareResponse(request, {
             status: 500, // Failed status in this scenario.

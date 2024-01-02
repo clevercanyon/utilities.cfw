@@ -168,7 +168,7 @@ export default {
      * Default Git/NPM ignores, by category. Categories added to the default export here. Provided by
      * `@clevercanyon/utilities`. Includes everything we have in our default `./.gitignore`, `./.npmignore`.
      */
-    ...$obj.map($path.defaultGitNPMIgnoresByCategory(), (category) => {
+    ...$obj.map($obj.cloneDeep($path.defaultGitNPMIgnoresByCategory()), (category) => {
         return category.map((gitIgnore) => $path.gitIgnoreToGlob(gitIgnore));
     }),
 
@@ -177,7 +177,7 @@ export default {
      * potentially customized `./.npmignore` file in the current project directory. The reason is because we intend to
      * enforce our standards. For further details {@see https://o5p.me/MuskgW}.
      */
-    defaultNPMIgnores: $path.defaultNPMIgnores().map((npmIgnore) => {
+    defaultNPMIgnores: $obj.cloneDeep($path.defaultNPMIgnores()).map((npmIgnore) => {
         return $path.gitIgnoreToGlob(npmIgnore);
     }),
 

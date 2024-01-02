@@ -79,17 +79,29 @@ const extensions = {
     /**
      * By canonical.
      */
-    byCanonical: $obj.map($path.extsByCanonical(), (exts) => dot(exts)),
+    byCanonical: $obj.map(
+        $obj.cloneDeep($path.extsByCanonical()), //
+        (exts) => dot(exts),
+        { byReference: true },
+    ),
 
     /**
      * By VS Code lang (camelCase, includes `codeTextual`).
      */
-    byVSCodeLang: $obj.map($path.extsByVSCodeLang({ camelCase: true, enableCodeTextual: true }), (exts) => dot(exts)),
+    byVSCodeLang: $obj.map(
+        $obj.cloneDeep($path.extsByVSCodeLang({ camelCase: true, enableCodeTextual: true })), //
+        (exts) => dot(exts),
+        { byReference: true },
+    ),
 
     /**
      * By dev group.
      */
-    byDevGroup: $obj.map($path.jsTSExtsByDevGroup(), (exts) => dot(exts)),
+    byDevGroup: $obj.map(
+        $obj.cloneDeep($path.jsTSExtsByDevGroup()), //
+        (exts) => dot(exts),
+        { byReference: true },
+    ),
 };
 
 /**
