@@ -10,39 +10,52 @@ import * as cfKVA from '@cloudflare/kv-asset-handler';
 /**
  * Defines types.
  */
-export type Environment = Readonly<{
+export type Context = $type.cf.ExecutionContext;
+export type Environment = StdEnvironment &
+    Readonly<{
+        __STATIC_CONTENT?: $type.cf.KVNamespace;
+    }>;
+export type Route = (feData: FetchEventData) => Promise<$type.cf.Response>;
+export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
+
+export type InitialFetchEventData = Readonly<{
+    ctx: Context;
+    env: Environment;
+    request: $type.cf.Request;
+    routes: Routes;
+}>;
+export type FetchEventData = StdFetchEventData &
+    Readonly<{
+        ctx: Context;
+        env: Environment;
+        routes: Routes;
+    }>;
+
+/**
+ * Defines standard types.
+ *
+ * @note Common across CFW/CFP.
+ */
+export type StdContext = Readonly<
+    Pick<
+        $type.cf.ExecutionContext | Parameters<$type.cf.PagesFunction>[0],
+        // These are the two required keys.
+        'waitUntil' | 'passThroughOnException'
+    >
+>;
+export type StdEnvironment = Readonly<{
     D1?: $type.cf.D1Database;
     R2?: $type.cf.R2Bucket;
     KV?: $type.cf.KVNamespace;
     DO?: $type.cf.DurableObjectNamespace;
-    __STATIC_CONTENT?: $type.cf.KVNamespace;
-    [x: string]: unknown;
 }>;
-export type Context = $type.cf.ExecutionContext;
-
-export type Route = (feData: FetchEventData) => Promise<$type.cf.Response>;
-export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
-
-export type FetchEventData = Readonly<
-    Omit<StdFetchEventData, 'ctx'> & {
-        ctx: Context;
-        routes: Routes;
-    }
->;
-export type InitialFetchEventData = Readonly<{
-    request: $type.cf.Request;
-    env: Environment;
-    ctx: Context;
-    routes: Routes;
-}>;
-// Common across CFW/CFP environments.
 export type StdFetchEventData = Readonly<{
-    request: $type.cf.Request;
-    env: Environment;
-    ctx:
-        | Context // Cloudflare workers.
-        | Parameters<$type.cf.PagesFunction>[0]; // Cloudflare pages.
+    ctx: StdContext;
+    env: StdEnvironment;
+
     url: $type.cf.URL;
+    request: $type.cf.Request;
+
     auditLogger: $type.LoggerInterface;
     consentLogger: $type.LoggerInterface;
 }>;
@@ -75,7 +88,7 @@ const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> =>
     initialized = true;
 
     const Logger = $class.getLogger();
-    const { request, env, ctx } = ifeData;
+    const { ctx, env, request } = ifeData;
 
     $env.capture('@global', env); // Captures environment variables.
 
@@ -83,7 +96,7 @@ const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> =>
         (baseConsentLogger = new Logger({ endpointToken: $env.get('APP_CONSENT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) }));
 
     void baseAuditLogger
-        .withContext({}, { request, cfwContext: ctx }) //
+        .withContext({}, { cfwContext: ctx, request }) //
         .info('Worker initialized.', { ifeData });
 };
 
@@ -95,25 +108,25 @@ const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> =>
  * @returns         Response promise.
  */
 export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<$type.cf.Response> => {
-    const { env, ctx, routes } = ifeData;
+    const { ctx, env, routes } = ifeData;
     let { request } = ifeData; // Rewritable.
 
     await maybeInitialize(ifeData); // Initializes worker.
 
     // Initializes audit logger early so it’s available for any errors below.
     // However, `request` is potentially rewritten, so reinitialize if it changes.
-    let auditLogger = baseAuditLogger.withContext({}, { request, cfwContext: ctx });
+    let auditLogger = baseAuditLogger.withContext({}, { cfwContext: ctx, request });
 
     try {
         let originalRequest = request; // Potentially rewritten.
         request = $http.prepareRequest(request, {}) as $type.cf.Request;
 
         if (request !== originalRequest /* Reinitializes using rewritten request. */) {
-            auditLogger = baseAuditLogger.withContext({}, { request, cfwContext: ctx });
+            auditLogger = baseAuditLogger.withContext({}, { cfwContext: ctx, request });
         }
         const url = $url.parse(request.url) as $type.cf.URL,
-            consentLogger = baseConsentLogger.withContext({}, { request, cfwContext: ctx }),
-            feData = $obj.freeze({ request, env, ctx, routes, url, auditLogger, consentLogger });
+            consentLogger = baseConsentLogger.withContext({}, { cfwContext: ctx, request }),
+            feData = $obj.freeze({ ctx, env, routes, url, request, auditLogger, consentLogger }) as FetchEventData;
 
         // This is somewhat in reverse of how we would normally serve requests.
         // Typically, we would first check if it’s potentially dynamic, and then fall back on assets.
@@ -129,7 +142,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         //
     } catch (thrown) {
         if (thrown instanceof Response) {
-            void auditLogger.info(String(thrown.status) + ': Response thrown.', { thrownResponse: thrown });
+            void auditLogger.info(String(thrown.status) + ': Response thrown.', { thrown });
             return thrown as unknown as $type.cf.Response;
         }
         const message = $error.safeMessageFrom(thrown, { default: '9eMw8Ave' });
@@ -153,7 +166,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
  */
 export const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$type.cf.Response> => {
     let key, cachedResponse; // Initialize.
-    const { request, ctx, url } = feData;
+    const { ctx, url, request } = feData;
 
     // Populates cache key.
 
@@ -203,7 +216,7 @@ export const handleFetchCache = async (route: Route, feData: FetchEventData): Pr
  * @returns        Response promise.
  */
 export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cf.Response> => {
-    const { request, routes, url } = feData;
+    const { url, request, routes } = feData;
 
     for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
         if ($mm.test(url.pathname, $url.pathFromAppBase('./') + routeSubpathGlob)) {
@@ -229,7 +242,7 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type
  * @returns        Response promise.
  */
 export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$type.cf.Response> => {
-    const { request, ctx } = feData;
+    const { ctx, request } = feData;
 
     try {
         const kvAssetEventData = {
@@ -239,7 +252,7 @@ export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$
             },
         };
         const response = await cfKVA.getAssetFromKV(kvAssetEventData, {
-            ASSET_NAMESPACE: $env.get('__STATIC_CONTENT', { type: 'string' }),
+            ASSET_NAMESPACE: $env.get('__STATIC_CONTENT', { type: 'string', require: true }),
             // @ts-ignore: This is dynamically resolved by Cloudflare.
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- manifest ok.
             ASSET_MANIFEST: $json.parse(await import('__STATIC_CONTENT_MANIFEST')) as { [x: string]: string },
