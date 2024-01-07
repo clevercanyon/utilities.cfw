@@ -23,20 +23,28 @@ export type Context = $type.cf.ExecutionContext;
 export type Route = (feData: FetchEventData) => Promise<$type.cf.Response>;
 export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
 
-export type FetchEventData = Readonly<{
-    request: $type.cf.Request;
-    env: Environment;
-    ctx: Context;
-    routes: Routes;
-    url: $type.cf.URL;
-    auditLogger: $type.LoggerInterface;
-    consentLogger: $type.LoggerInterface;
-}>;
+export type FetchEventData = Readonly<
+    Omit<StdFetchEventData, 'ctx'> & {
+        ctx: Context;
+        routes: Routes;
+    }
+>;
 export type InitialFetchEventData = Readonly<{
     request: $type.cf.Request;
     env: Environment;
     ctx: Context;
     routes: Routes;
+}>;
+// Common across CFW/CFP environments.
+export type StdFetchEventData = Readonly<{
+    request: $type.cf.Request;
+    env: Environment;
+    ctx:
+        | Context // Cloudflare workers.
+        | Parameters<$type.cf.PagesFunction>[0]; // Cloudflare pages.
+    url: $type.cf.URL;
+    auditLogger: $type.LoggerInterface;
+    consentLogger: $type.LoggerInterface;
 }>;
 
 /**

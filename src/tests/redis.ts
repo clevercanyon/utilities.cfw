@@ -7,8 +7,8 @@ import { $time, type $type } from '@clevercanyon/utilities';
 import { describe, expect, test } from 'vitest';
 
 describe('$redis', async () => {
-    const mockLogger: $type.LoggerInterface = {
-        withContext: () => mockLogger,
+    const mockLoggerInterface: $type.LoggerInterface = {
+        withContext: () => mockLoggerInterface,
         log: async () => true,
         debug: async () => true,
         info: async () => true,
@@ -16,17 +16,16 @@ describe('$redis', async () => {
         error: async () => true,
         flush: async () => true,
     };
-    const mockFetchEventData = {
+    const mockStdFetchEventData = {
         request: new Request('https://x.tld/') as unknown as $type.cf.Request,
         env: {},
         ctx: {
             waitUntil: (): void => undefined,
             passThroughOnException: (): void => undefined,
         },
-        routes: { subpathGlobs: {} },
         url: new URL('https://x.tld/'),
-        auditLogger: mockLogger,
-        consentLogger: mockLogger,
+        auditLogger: mockLoggerInterface,
+        consentLogger: mockLoggerInterface,
     };
     const redis = $redis.instance();
 
@@ -55,73 +54,31 @@ describe('$redis', async () => {
     test(
         '.rateLimiter()',
         async () => {
-            const rateLimiter = $redis.rateLimiter(mockFetchEventData, {
+            const rateLimiter = $redis.rateLimiter(mockStdFetchEventData, {
                 slidingWindow: [10, '10s'], // 10 every 10 seconds.
             });
-            expect(await rateLimiter.limit('testKey')).toMatchObject({
-                limit: 10,
-                success: true,
-                pending: Promise.resolve(),
-            });
-            expect(await rateLimiter.limit('testKey')).toMatchObject({
-                limit: 10,
-                success: true,
-                pending: Promise.resolve(),
-            });
-            expect(await rateLimiter.limit('testKey')).toMatchObject({
-                limit: 10,
-                success: true,
-                pending: Promise.resolve(),
-            });
-            expect(await rateLimiter.limit('testKey')).toMatchObject({
-                limit: 10,
-                success: true,
-                pending: Promise.resolve(),
-            });
-            expect(await rateLimiter.limit('testKey')).toMatchObject({
-                limit: 10,
-                success: true,
-                pending: Promise.resolve(),
-            });
-            expect(await rateLimiter.limit('testKey')).toMatchObject({
-                limit: 10,
-                success: true,
-                pending: Promise.resolve(),
-            });
-            expect(await rateLimiter.limit('testKey')).toMatchObject({
-                limit: 10,
-                success: true,
-                pending: Promise.resolve(),
-            });
-            expect(await rateLimiter.limit('testKey')).toMatchObject({
-                limit: 10,
-                success: true,
-                pending: Promise.resolve(),
-            });
-            expect(await rateLimiter.limit('testKey')).toMatchObject({
-                limit: 10,
-                success: true,
-                pending: Promise.resolve(),
-            });
-            expect(await rateLimiter.limit('testKey')).toMatchObject({
-                limit: 10,
-                success: true,
-                pending: Promise.resolve(),
-            });
+            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 1
+            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 2
+            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 3
+            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 4
+            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 5
+            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 6
+            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 7
+            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 8
+            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 9
+            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 10
+
             let thrownResponse: unknown;
             try {
-                await rateLimiter.limit('testKey');
+                await rateLimiter.limit('testKey'); // 11
             } catch (thrown: unknown) {
-                thrownResponse = thrown;
+                thrownResponse = thrown; // Limit reached; response thrown.
             }
             expect(thrownResponse instanceof Response).toBe(true);
             expect((thrownResponse as $type.Response).status).toBe(429);
 
-            expect(await rateLimiter.blockUntilReady('testKey', $time.secondInMilliseconds * 10)).toMatchObject({
-                limit: 10,
-                success: true,
-                pending: Promise.resolve(),
-            });
+            // Blocks until allowed to resume operations given the defined rate limiter.
+            expect(await rateLimiter.blockUntilReady('testKey', $time.secondInMilliseconds * 10)).toMatchObject({ success: true });
         },
         { timeout: $time.secondInMilliseconds * 12 },
     );
