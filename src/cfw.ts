@@ -44,6 +44,7 @@ export type StdContext = Readonly<
     >
 >;
 export type StdEnvironment = Readonly<{
+    UT?: $type.cf.Fetcher;
     D1?: $type.cf.D1Database;
     R2?: $type.cf.R2Bucket;
     KV?: $type.cf.KVNamespace;
