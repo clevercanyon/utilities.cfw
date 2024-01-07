@@ -96,7 +96,7 @@ const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> =>
         (baseConsentLogger = new Logger({ endpointToken: $env.get('APP_CONSENT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) }));
 
     void baseAuditLogger
-        .withContext({}, { cfwContext: ctx, request }) //
+        .withContext({ colo: request.cf?.colo || '' }, { cfwContext: ctx, request }) //
         .info('Worker initialized.', { ifeData });
 };
 
