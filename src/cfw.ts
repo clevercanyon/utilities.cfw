@@ -20,7 +20,7 @@ export type Environment = Readonly<{
 }>;
 export type Context = $type.cf.ExecutionContext;
 
-export type Route = (x: FetchEventData) => Promise<$type.cf.Response>;
+export type Route = (feData: FetchEventData) => Promise<$type.cf.Response>;
 export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
 
 export type FetchEventData = Readonly<{
@@ -75,7 +75,7 @@ const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> =>
         (baseConsentLogger = new Logger({ endpointToken: $env.get('APP_CONSENT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) }));
 
     void baseAuditLogger
-        .withContext({}, { request, cfwExecutionContext: ctx }) //
+        .withContext({}, { request, cfwContext: ctx }) //
         .info('Worker initialized.', { ifeData });
 };
 
@@ -91,12 +91,20 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
     let { request } = ifeData; // Rewritable.
 
     await maybeInitialize(ifeData); // Initializes worker.
-    const auditLogger = baseAuditLogger.withContext({}, { request, cfwExecutionContext: ctx }),
-        consentLogger = baseConsentLogger.withContext({}, { request, cfwExecutionContext: ctx });
+
+    // Initializes audit logger early so it’s available for any errors below.
+    // However, `request` is potentially rewritten, so reinitialize if it changes.
+    let auditLogger = baseAuditLogger.withContext({}, { request, cfwContext: ctx });
 
     try {
+        let originalRequest = request; // Potentially rewritten.
         request = $http.prepareRequest(request, {}) as $type.cf.Request;
+
+        if (request !== originalRequest /* Reinitializes using rewritten request. */) {
+            auditLogger = baseAuditLogger.withContext({}, { request, cfwContext: ctx });
+        }
         const url = $url.parse(request.url) as $type.cf.URL,
+            consentLogger = baseConsentLogger.withContext({}, { request, cfwContext: ctx }),
             feData = $obj.freeze({ request, env, ctx, routes, url, auditLogger, consentLogger });
 
         // This is somewhat in reverse of how we would normally serve requests.
@@ -117,7 +125,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
             return thrown as unknown as $type.cf.Response;
         }
         const message = $error.safeMessageFrom(thrown, { default: '9eMw8Ave' });
-        void auditLogger.warn('500: ' + message, { thrown });
+        void auditLogger.error('500: ' + message, { thrown });
 
         return $http.prepareResponse(request, {
             status: 500, // Failed status in this scenario.

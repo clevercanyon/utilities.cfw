@@ -3,7 +3,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "1.0.153",
+    "version": "1.0.154",
     "license": "GPL-3.0-or-later",
     "name": "@clevercanyon/utilities.cfw",
     "description": "Utilities for JavaScript apps running in a Cloudflare Worker environment.",
@@ -34,6 +34,11 @@
             "types": "./dist/types/cfw.d.ts",
             "import": "./dist/cfw.js",
             "default": "./dist/cfw.js"
+        },
+        "./redis": {
+            "types": "./dist/types/redis.d.ts",
+            "import": "./dist/redis.js",
+            "default": "./dist/redis.js"
         }
     },
     "sideEffects": ["**/*.{css,scss,less}", "./src/resources/initialize.ts"],
@@ -49,14 +54,16 @@
     },
     "dependencies": {},
     "peerDependencies": {
-        "@clevercanyon/utilities": "^1.0.681",
-        "@cloudflare/kv-asset-handler": "0.2.0"
+        "@clevercanyon/utilities": "^1.0.688",
+        "@cloudflare/kv-asset-handler": "0.2.0",
+        "@upstash/ratelimit": "1.0.0",
+        "@upstash/redis": "1.28.0"
     },
     "peerDependenciesMeta": {},
     "optionalDependencies": {},
     "bundleDependencies": [],
     "devDependencies": {
-        "@clevercanyon/dev-deps": "^1.0.317"
+        "@clevercanyon/dev-deps": "^1.0.318"
     },
     "overrides": {},
     "cpu": ["x64", "arm64"],
@@ -90,7 +97,7 @@
                     },
                     "labels": {},
                     "configVersion": "1.0.9",
-                    "envsVersion": ""
+                    "envsVersion": "1.0.9"
                 },
                 "npmjs": {
                     "configVersions": "1.0.9,1.0.9"
