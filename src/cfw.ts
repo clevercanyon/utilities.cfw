@@ -10,7 +10,7 @@ import * as cfKVA from '@cloudflare/kv-asset-handler';
 /**
  * Defines types.
  */
-export type Context = $type.cf.ExecutionContext;
+export type Context = Readonly<$type.cf.ExecutionContext>;
 export type Environment = StdEnvironment &
     Readonly<{
         __STATIC_CONTENT?: $type.cf.KVNamespace;
