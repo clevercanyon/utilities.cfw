@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $app, $class, $env, $error, $http, $json, $mime, $mm, $obj, $str, $url, type $type } from '@clevercanyon/utilities';
+import { $app, $class, $env, $error, $http, $is, $json, $mime, $mm, $obj, $str, $url, type $type } from '@clevercanyon/utilities';
 import * as cfKVA from '@cloudflare/kv-asset-handler';
 
 /**
@@ -142,7 +142,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         return handleFetchCache(handleFetchDynamics, feData);
         //
     } catch (thrown) {
-        if (thrown instanceof Response) {
+        if ($is.response(thrown)) {
             void auditLogger.info(String(thrown.status) + ': Response thrown.', { thrown });
             return thrown as unknown as $type.cf.Response;
         }
