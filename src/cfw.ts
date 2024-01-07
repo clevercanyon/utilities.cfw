@@ -157,6 +157,19 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
     }
 };
 
+// ---
+// Misc exports.
+
+/**
+ * Easy access to `hop-gdn-utilities` worker.
+ *
+ * @returns Service binding; {@see StdEnvironment['UT']}.
+ */
+export const $ = (): StdEnvironment['UT'] => $env.get('UT', { require: true }) as StdEnvironment['UT'];
+
+// ---
+// Misc utilities.
+
 /**
  * Handles fetch caching.
  *
@@ -165,7 +178,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
  *
  * @returns        Response promise.
  */
-export const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$type.cf.Response> => {
+const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$type.cf.Response> => {
     let key, cachedResponse; // Initialize.
     const { ctx, url, request } = feData;
 
@@ -216,7 +229,7 @@ export const handleFetchCache = async (route: Route, feData: FetchEventData): Pr
  *
  * @returns        Response promise.
  */
-export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cf.Response> => {
+const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cf.Response> => {
     const { url, request, routes } = feData;
 
     for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
@@ -242,7 +255,7 @@ export const handleFetchDynamics = async (feData: FetchEventData): Promise<$type
  *
  * @returns        Response promise.
  */
-export const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$type.cf.Response> => {
+const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$type.cf.Response> => {
     const { ctx, request } = feData;
 
     try {

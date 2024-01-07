@@ -59,7 +59,7 @@ export default async () => {
 
         defaultWorkerName: pkgSlug.replace(/^workers-/iu, ''),
         defaultWorkerShortName: pkgSlug.replace(/^workers-hop-gdn-/iu, ''),
-        defaultWorkerStageShortName: pkgSlug.replace(/^workers-hop-gdn-/iu, '') + '-stage',
+        defaultWorkerStageShortName: 'stage.' + pkgSlug.replace(/^workers-hop-gdn-/iu, ''),
 
         osDir: path.resolve(os.homedir(), './.wrangler'),
         projDir: path.resolve(projDir, './.wrangler'),
