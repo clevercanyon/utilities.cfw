@@ -17,13 +17,15 @@ describe('$redis', async () => {
         flush: async () => true,
     };
     const mockStdFetchEventData = {
-        request: new Request('https://x.tld/') as unknown as $type.cf.Request,
-        env: {},
         ctx: {
             waitUntil: (): void => undefined,
             passThroughOnException: (): void => undefined,
         },
+        env: {}, // None at this time.
+
         url: new URL('https://x.tld/'),
+        request: new Request('https://x.tld/') as unknown as $type.cf.Request,
+
         auditLogger: mockLoggerInterface,
         consentLogger: mockLoggerInterface,
     };

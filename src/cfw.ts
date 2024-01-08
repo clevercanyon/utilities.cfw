@@ -165,7 +165,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
  *
  * @returns Service binding; {@see StdEnvironment['UT']}.
  */
-export const $ = (): StdEnvironment['UT'] => $env.get('UT', { require: true }) as StdEnvironment['UT'];
+export const utilities = (): $type.cf.Fetcher => $env.get('UT', { require: true }) as $type.cf.Fetcher;
 
 // ---
 // Misc utilities.
