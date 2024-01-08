@@ -5,7 +5,7 @@
 import '#@initialize.ts';
 
 import { type StdFetchEventData } from '#cfw.ts';
-import { $class, $env, $fn, $http, $is, $mime, $obj } from '@clevercanyon/utilities';
+import { $class, $env, $fn, $http, $is, $json, $mime, $obj, $url } from '@clevercanyon/utilities';
 import { Ratelimit as RateLimiterCore } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis/cloudflare';
 
@@ -119,7 +119,7 @@ export const instance = $fn.memo(
  * @returns {@see RateLimiter}         Instance.
  */
 export const rateLimiter = (feData: StdFetchEventData, options?: RateLimiterOptions): RateLimiter => {
-    const { auditLogger, request, ctx } = feData,
+    const { ctx, url, request, auditLogger } = feData,
         limiter = rateLimiterCore(options);
 
     return {
@@ -132,16 +132,27 @@ export const rateLimiter = (feData: StdFetchEventData, options?: RateLimiterOpti
                 ctx.waitUntil(limiterResponse.pending); // e.g., Analytics, multiregion sync.
             }
             if (!limiterResponse.success) {
-                void auditLogger.info('429: ' + $http.responseStatusText('429'), {
+                void auditLogger.info('429: ' + $http.responseStatusText(429), {
                     rateLimiter: limiter,
                     rateLimiterMethod: 'limit',
                     rateLimiterResponse: limiterResponse,
                 });
-                throw $http.prepareResponse(request, {
-                    status: 429, // Too many requests in this scenario.
-                    headers: { 'content-type': $mime.contentType('.txt') },
-                    body: $http.responseStatusText('429'), // Too many requests.
-                });
+                if (
+                    /\b(?:application\/json)\b/iu.test(request.headers.get('accept') || '') || //
+                    /^\/(?:api)(?:$|\/)/iu.test($url.removeAppBasePath(url).pathname)
+                ) {
+                    throw $http.prepareResponse(request, {
+                        status: 429, // Too many requests.
+                        headers: { 'content-type': $json.contentType() },
+                        body: $json.stringify({ ok: false, error: { message: $http.responseStatusText(429) } }, { pretty: true }),
+                    });
+                } else {
+                    throw $http.prepareResponse(request, {
+                        status: 429, // Too many requests.
+                        headers: { 'content-type': $mime.contentType('.txt') },
+                        body: $http.responseStatusText(429),
+                    });
+                }
             }
             return limiterResponse;
         },
@@ -152,16 +163,27 @@ export const rateLimiter = (feData: StdFetchEventData, options?: RateLimiterOpti
                 ctx.waitUntil(limiterResponse.pending); // e.g., Analytics, multiregion sync.
             }
             if (!limiterResponse.success) {
-                void auditLogger.info('429: ' + $http.responseStatusText('429'), {
+                void auditLogger.info('429: ' + $http.responseStatusText(429), {
                     rateLimiter: limiter,
                     rateLimiterMethod: 'blockUntilReady',
                     rateLimiterResponse: limiterResponse,
                 });
-                throw $http.prepareResponse(request, {
-                    status: 429, // Too many requests in this scenario.
-                    headers: { 'content-type': $mime.contentType('.txt') },
-                    body: $http.responseStatusText('429'), // Too many requests.
-                });
+                if (
+                    /\b(?:application\/json)\b/iu.test(request.headers.get('accept') || '') || //
+                    /^\/(?:api)(?:$|\/)/iu.test($url.removeAppBasePath(url).pathname)
+                ) {
+                    throw $http.prepareResponse(request, {
+                        status: 429, // Too many requests.
+                        headers: { 'content-type': $json.contentType() },
+                        body: $json.stringify({ ok: false, error: { message: $http.responseStatusText(429) } }, { pretty: true }),
+                    });
+                } else {
+                    throw $http.prepareResponse(request, {
+                        status: 429, // Too many requests.
+                        headers: { 'content-type': $mime.contentType('.txt') },
+                        body: $http.responseStatusText(429),
+                    });
+                }
             }
             return limiterResponse;
         },
