@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $app, $class, $env, $error, $http, $is, $json, $mime, $mm, $obj, $str, $url, type $type } from '@clevercanyon/utilities';
+import { $app, $class, $env, $error, $http, $is, $json, $mime, $mm, $obj, $str, $url, $user, type $type } from '@clevercanyon/utilities';
 import * as cfKVA from '@cloudflare/kv-asset-handler';
 
 /**
@@ -166,6 +166,26 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
  * @returns Service binding; {@see StdEnvironment['UT']}.
  */
 export const utilities = (): $type.cf.Fetcher => $env.get('UT', { require: true }) as $type.cf.Fetcher;
+
+/**
+ * Creates a service binding request.
+ *
+ * @param   feData      Fetch event data; {@see StdFetchEventData}.
+ * @param   requestInfo New request info; {@see $type.cf.RequestInfo}.
+ * @param   requestInit New request init; {@see $type.cf.RequestInit}.
+ *
+ * @returns             Promise of a {@see $type.cf.Request}.
+ */
+export const serviceBindingRequest = async (feData: StdFetchEventData, requestInfo: $type.cf.RequestInfo, requestInit?: $type.cf.RequestInit): Promise<$type.cf.Request> => {
+    const importantParentRequestInit = {
+        headers: { 'cf-connecting-ip': await $user.ip(feData.request) },
+        cf: $obj.omit($obj.cloneDeep(await $user.ipGeoData(feData.request)), ['ip']),
+    };
+    return new Request(
+        requestInfo as RequestInfo, // e.g., Service binding URL.
+        $obj.mergeDeep(importantParentRequestInit, requestInit) as RequestInit,
+    ) as unknown as $type.cf.Request;
+};
 
 // ---
 // Misc utilities.
