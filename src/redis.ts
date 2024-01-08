@@ -66,7 +66,7 @@ export const instance = $fn.memo(
         deep: true,
         maxSize: 64, // Upper limit purely as a safeguard against craziness.
         // To maintain proper memoization of this utility we may transform cache keys.
-        // Ensures no args or empty `options: {}` is the same as passing `options: undefined`.
+        // Ensures no args, or `options: {}`, are each the same as passing `options: undefined`.
         transformKey: (args: unknown[]): unknown[] => (args.length && $is.notEmpty(args[0]) ? args : [undefined]),
     },
     (options?: InstanceOptions): Redis => {
@@ -183,8 +183,8 @@ const rateLimiterCore = $fn.memo(
         deep: true,
         maxSize: 64, // Upper limit purely as a safeguard against craziness.
         // To maintain proper memoization of this utility we may transform cache keys.
-        // Ensures no args or empty `options: {}` is the same as passing `options: undefined`.
-        transformKey: (args: unknown[]): unknown[] => (args.length && $is.notEmpty(args[0]) ? args : [undefined]),
+        // Ensures no args, `options: {} | { slidingWindow: [10, '10s'] }`, is the same as passing `options: undefined`.
+        transformKey: (args: unknown[]): unknown[] => (args.length && $is.notEmpty(args[0]) && !$is.deepEqual(args[0], { slidingWindow: [10, '10s'] }) ? args : [undefined]),
     },
     (options?: RateLimiterOptions): RateLimiterCore => {
         const instanceOpts = $obj.defaults({}, $obj.pick(options || {}, instanceOptionKeys), {
