@@ -5,7 +5,7 @@
 import '#@initialize.ts';
 
 import { type StdFetchEventData } from '#cfw.ts';
-import { $class, $env, $fn, $http, $is, $json, $mime, $obj, $url } from '@clevercanyon/utilities';
+import { $class, $env, $fn, $http, $is, $json, $mime, $obj } from '@clevercanyon/utilities';
 import { Ratelimit as RateLimiterCore } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis/cloudflare';
 
@@ -122,7 +122,7 @@ export const rateLimiter = (feData: StdFetchEventData, options?: RateLimiterOpti
     const { ctx, url, request, auditLogger } = feData,
         limiter = rateLimiterCore(options);
 
-    return {
+    return $obj.freeze({
         limiter, // RateLimiterCore.
 
         async limit(...args: Parameters<RateLimiterCore['limit']>): ReturnType<RateLimiterCore['limit']> {
@@ -137,10 +137,7 @@ export const rateLimiter = (feData: StdFetchEventData, options?: RateLimiterOpti
                     rateLimiterMethod: 'limit',
                     rateLimiterResponse: limiterResponse,
                 });
-                if (
-                    /\b(?:application\/json)\b/iu.test(request.headers.get('accept') || '') || //
-                    /^\/(?:api)(?:$|\/)/iu.test($url.removeAppBasePath(url).pathname)
-                ) {
+                if ($http.requestExpectsJSON(request, url)) {
                     throw $http.prepareResponse(request, {
                         status: 429, // Too many requests.
                         headers: { 'content-type': $json.contentType() },
@@ -168,10 +165,7 @@ export const rateLimiter = (feData: StdFetchEventData, options?: RateLimiterOpti
                     rateLimiterMethod: 'blockUntilReady',
                     rateLimiterResponse: limiterResponse,
                 });
-                if (
-                    /\b(?:application\/json)\b/iu.test(request.headers.get('accept') || '') || //
-                    /^\/(?:api)(?:$|\/)/iu.test($url.removeAppBasePath(url).pathname)
-                ) {
+                if ($http.requestExpectsJSON(request, url)) {
                     throw $http.prepareResponse(request, {
                         status: 429, // Too many requests.
                         headers: { 'content-type': $json.contentType() },
@@ -187,7 +181,7 @@ export const rateLimiter = (feData: StdFetchEventData, options?: RateLimiterOpti
             }
             return limiterResponse;
         },
-    };
+    });
 };
 
 // ---
