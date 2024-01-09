@@ -96,9 +96,8 @@ const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> =>
     (baseAuditLogger = new Logger({ endpointToken: $env.get('APP_AUDIT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) })),
         (baseConsentLogger = new Logger({ endpointToken: $env.get('APP_CONSENT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) }));
 
-    void baseAuditLogger
-        .withContext({ colo: request.cf?.colo || '' }, { cfwContext: ctx, request }) //
-        .info('Worker initialized.', { ifeData });
+    const colo = String(request.cf?.colo || ''); // Three-letter IATA airport code of the data center.
+    void baseAuditLogger.withContext({ colo }, { cfwContext: ctx, request }).info('Worker initialized: ' + colo + '.', { ifeData });
 };
 
 /**
