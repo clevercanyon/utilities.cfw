@@ -88,16 +88,13 @@ const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> =>
     if (initialized) return;
     initialized = true;
 
-    const Logger = $class.getLogger();
-    const { ctx, env, request } = ifeData;
+    const { env } = ifeData,
+        Logger = $class.getLogger();
 
     $env.capture('@global', env); // Captures environment variables.
 
     (baseAuditLogger = new Logger({ endpointToken: $env.get('APP_AUDIT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) })),
         (baseConsentLogger = new Logger({ endpointToken: $env.get('APP_CONSENT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) }));
-
-    const colo = String(request.cf?.colo || ''); // Three-letter IATA airport code of the data center.
-    void baseAuditLogger.withContext({ colo }, { cfwContext: ctx, request }).info('Worker initialized: ' + colo + '.', { ifeData });
 };
 
 /**
@@ -142,7 +139,6 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         //
     } catch (thrown) {
         if ($is.response(thrown)) {
-            void auditLogger.info(String(thrown.status) + ': Response thrown.', { thrown });
             return thrown as unknown as $type.cf.Response;
         }
         const message = $error.safeMessageFrom(thrown, { default: '9eMw8Ave' });
