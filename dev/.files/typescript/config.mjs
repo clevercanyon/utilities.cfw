@@ -95,6 +95,12 @@ export default async () => {
                 'vite/client', //
                 '@types/mdx',
                 'unplugin-icons/types/preact',
+                'dayjs/plugin/advancedFormat',
+                'dayjs/plugin/customParseFormat',
+                'dayjs/plugin/localizedFormat',
+                'dayjs/plugin/timezone',
+                'dayjs/plugin/toObject',
+                'dayjs/plugin/utc',
             ],
             jsx: 'react-jsx',
             jsxImportSource: 'preact',

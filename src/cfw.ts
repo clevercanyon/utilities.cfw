@@ -44,11 +44,11 @@ export type StdContext = Readonly<
     >
 >;
 export type StdEnvironment = Readonly<{
-    UT?: $type.cf.Fetcher;
-    D1?: $type.cf.D1Database;
-    R2?: $type.cf.R2Bucket;
-    KV?: $type.cf.KVNamespace;
-    DO?: $type.cf.DurableObjectNamespace;
+    UT: $type.cf.Fetcher;
+    D1: $type.cf.D1Database;
+    R2: $type.cf.R2Bucket;
+    KV: $type.cf.KVNamespace;
+    DO: $type.cf.DurableObjectNamespace;
 }>;
 export type StdFetchEventData = Readonly<{
     ctx: StdContext;

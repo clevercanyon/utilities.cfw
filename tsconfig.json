@@ -7,7 +7,7 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./tsconfig.mjs`.
  *
- * Last generated using `./tsconfig.mjs` Jan 13, 2024 12:06 PM UTC.
+ * Last generated using `./tsconfig.mjs` Jan 15, 2024 3:10 AM UTC.
  */
 {
     "include": ["./src/**/*", "./dev-types.d.ts"],
@@ -108,7 +108,17 @@
         "skipLibCheck": true,
         "target": "es2022",
         "lib": ["es2022", "webworker"],
-        "types": ["vite/client", "@types/mdx", "unplugin-icons/types/preact"],
+        "types": [
+            "vite/client",
+            "@types/mdx",
+            "unplugin-icons/types/preact",
+            "dayjs/plugin/advancedFormat",
+            "dayjs/plugin/customParseFormat",
+            "dayjs/plugin/localizedFormat",
+            "dayjs/plugin/timezone",
+            "dayjs/plugin/toObject",
+            "dayjs/plugin/utc"
+        ],
         "jsx": "react-jsx",
         "jsxImportSource": "preact",
         "module": "node16",
