@@ -79,6 +79,9 @@ export const instance = $fn.memo(
                 100, // The Upstash free plan via Digital Ocean allows up to 100 concurrent connections.
         }) as Required<InstanceOptions>;
 
+        if (!opts.restURL || !opts.restToken) {
+            throw Error('3MtyvPsc'); // Missing options.
+        }
         return new Redis(
             {
                 url: opts.restURL,
@@ -221,6 +224,9 @@ const rateLimiterCore = $fn.memo(
                 timeout: 0, // If network issues arise, we allow requests in after this delay, when greater than `0`.
             }) as unknown as Required<Omit<RateLimiterOptions, keyof InstanceOptions>>;
 
+        if (!instanceOpts.restURL || !instanceOpts.restToken) {
+            throw Error('AnExu6Nx'); // Missing options.
+        }
         if (!opts.prefix /* Automatic key prefix using sliding window. */) {
             opts.prefix = 'rate-limit:' + String(opts.slidingWindow[0]) + ':' + opts.slidingWindow[1];
         }

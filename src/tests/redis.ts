@@ -23,11 +23,16 @@ describe('$redis', async () => {
         },
         env: {} as $cfw.StdEnvironment, // None at this time.
 
-        url: new URL('https://x.tld/'),
+        url: new URL('https://x.tld/') as unknown as $type.cf.URL,
         request: new Request('https://x.tld/') as unknown as $type.cf.Request,
 
         auditLogger: mockLoggerInterface,
         consentLogger: mockLoggerInterface,
+
+        URL: URL as unknown as typeof $type.cf.URL,
+        fetch: fetch as unknown as typeof $type.cf.fetch,
+        Request: Request as unknown as typeof $type.cf.Request,
+        Response: Response as unknown as typeof $type.cf.Response,
     };
     const redis = $redis.instance();
 

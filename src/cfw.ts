@@ -59,6 +59,11 @@ export type StdFetchEventData = Readonly<{
 
     auditLogger: $type.LoggerInterface;
     consentLogger: $type.LoggerInterface;
+
+    URL: typeof $type.cf.URL;
+    fetch: typeof $type.cf.fetch;
+    Request: typeof $type.cf.Request;
+    Response: typeof $type.cf.Response;
 }>;
 
 /**
@@ -123,8 +128,22 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         }
         const url = $url.parse(request.url) as $type.cf.URL,
             consentLogger = baseConsentLogger.withContext({}, { cfwContext: ctx, request }),
-            feData = $obj.freeze({ ctx, env, routes, url, request, auditLogger, consentLogger }) as FetchEventData;
+            feData = $obj.freeze({
+                ctx,
+                env,
+                routes,
 
+                url,
+                request,
+
+                auditLogger,
+                consentLogger,
+
+                URL: URL as unknown as typeof $type.cf.URL,
+                fetch: fetch as unknown as typeof $type.cf.fetch,
+                Request: Request as unknown as typeof $type.cf.Request,
+                Response: Response as unknown as typeof $type.cf.Response,
+            });
         // This is somewhat in reverse of how we would normally serve requests.
         // Typically, we would first check if it’s potentially dynamic, and then fall back on assets.
         // We still do that, but in the case of a worker site, if it’s in `/assets` it can only be static.
@@ -172,14 +191,16 @@ export const utilities = (): $type.cf.Fetcher => $env.get('UT', { require: true 
  * @returns             Promise of a {@see $type.cf.Request}.
  */
 export const serviceBindingRequest = async (feData: StdFetchEventData, requestInfo: $type.cf.RequestInfo, requestInit?: $type.cf.RequestInit): Promise<$type.cf.Request> => {
+    const { Request } = feData;
+
     const importantParentRequestInit = {
         headers: { 'cf-connecting-ip': await $user.ip(feData.request) },
         cf: $obj.omit($obj.cloneDeep(await $user.ipGeoData(feData.request)), ['ip']),
     };
     return new Request(
-        requestInfo as RequestInfo, // e.g., Service binding URL.
-        $obj.mergeDeep(importantParentRequestInit, requestInit) as RequestInit,
-    ) as unknown as $type.cf.Request;
+        requestInfo, // e.g., Service binding URL.
+        $obj.mergeDeep(importantParentRequestInit, requestInit) as $type.cf.RequestInit,
+    );
 };
 
 // ---
@@ -195,7 +216,7 @@ export const serviceBindingRequest = async (feData: StdFetchEventData, requestIn
  */
 const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$type.cf.Response> => {
     let key, cachedResponse; // Initialize.
-    const { ctx, url, request } = feData;
+    const { ctx, url, request, Request, Response } = feData;
 
     // Populates cache key.
 
@@ -205,7 +226,7 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
     }
     const keyURL = $url.removeCSOQueryVars(url); // e.g., `ut[mx]_`, `_ck`, etc.
     keyURL.searchParams.set('_ck', key), keyURL.searchParams.sort(); // Optimizes cache.
-    const keyRequest = new Request(keyURL.toString(), request as unknown as Request) as unknown as $type.cf.Request;
+    const keyRequest = new Request(keyURL.toString(), request);
 
     // Checks if request is cacheable.
 
@@ -216,7 +237,7 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
 
     if ((cachedResponse = await cache.match(keyRequest, { ignoreMethod: true }))) {
         if (!$http.requestNeedsContentBody(keyRequest, cachedResponse.status)) {
-            cachedResponse = new Response(null, cachedResponse) as unknown as $type.cf.Response;
+            cachedResponse = new Response(null, cachedResponse);
         }
         return cachedResponse;
     }
