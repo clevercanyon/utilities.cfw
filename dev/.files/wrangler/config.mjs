@@ -22,7 +22,7 @@
 
 import path from 'node:path';
 import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $obp, $path } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $obp } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import extensions from '../bin/includes/extensions.mjs';
 import u from '../bin/includes/utilities.mjs';
 import wranglerSettings from './settings.mjs';
@@ -165,14 +165,17 @@ export default async () => {
                                 command: 'npx @clevercanyon/madrun build --mode=prod',
                             },
                             // Worker sites; i.e., bucket configuration.
+                            // Disabled by default and not necessary any longer.
+                            // Prefer using R2 for any static files used by workers.
+                            // Or, build a Cloudflare Pages site instead of just a worker.
+                            // site: {
+                            //     bucket: './' + path.relative(projDir, './dist/assets'),
+                            //     exclude: [
+                            //         ...$path.defaultNPMIgnores(),
+                            //         '/a16s', // A16s (top-level only).
+                            //     ],
+                            // },
 
-                            site: {
-                                bucket: './' + path.relative(projDir, './dist/assets'),
-                                exclude: [
-                                    ...$path.defaultNPMIgnores(),
-                                    '/a16s', // A16s (top-level only).
-                                ],
-                            },
                             // Worker route configuration.
 
                             route: {
