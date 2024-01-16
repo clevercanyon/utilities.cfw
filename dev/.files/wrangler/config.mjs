@@ -67,6 +67,10 @@ export default async () => {
 
                   account_id: settings.defaultAccountId,
 
+                  // Enables logpush for worker trace events.
+
+                  logpush: true, // Requires workers paid plan.
+
                   ...(['spa', 'mpa'].includes(appType)
                       ? // Cloudflare pages site.
                         {

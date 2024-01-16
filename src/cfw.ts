@@ -144,8 +144,8 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         // Typically, we would first check if it’s potentially dynamic, and then fall back on assets.
         // We still do that, but in the case of a worker site, if it’s in `/assets` it can only be static.
         if (
+            env.__STATIC_CONTENT && // Worker site?
             $http.requestPathIsStatic(request, url) && //
-            $env.get('__STATIC_CONTENT' /* Worker site? */) &&
             $mm.test(url.pathname, $url.pathFromAppBase('./assets/') + '**')
         ) {
             return handleFetchCache(handleFetchStaticAssets, feData);
@@ -259,7 +259,7 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
  * @returns        Response promise.
  */
 const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cf.Response> => {
-    const { url, request, routes } = feData;
+    const { env, url, request, routes } = feData;
 
     for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
         if ($mm.test(url.pathname, $url.pathFromAppBase('./') + routeSubpathGlob)) {
@@ -269,7 +269,7 @@ const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cf.Res
     // Falls back on static assets, when applicable. Remember, it *might* have been dynamic. We now know it wasn’t.
     // e.g., In the case of {@see $http.requestPathIsStatic()} having returned false above for a potentially-dynamic path.
     if (
-        $env.get('__STATIC_CONTENT' /* Worker site? */) && //
+        env.__STATIC_CONTENT && // Worker site?
         $mm.test(url.pathname, $url.pathFromAppBase('./assets/') + '**')
     ) {
         return handleFetchStaticAssets(feData);
@@ -285,7 +285,7 @@ const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cf.Res
  * @returns        Response promise.
  */
 const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$type.cf.Response> => {
-    const { ctx, request } = feData;
+    const { ctx, env, request } = feData;
 
     try {
         const kvAssetEventData = {
@@ -295,8 +295,9 @@ const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$type.cf
             },
         };
         const response = await cfKVA.getAssetFromKV(kvAssetEventData, {
-            ASSET_NAMESPACE: $env.get('__STATIC_CONTENT', { type: 'string', require: true }),
-            // @ts-ignore: This is dynamically resolved by Cloudflare.
+            ASSET_NAMESPACE: env.__STATIC_CONTENT, // Worker site KV namespace.
+
+            // @ts-ignore: This particular import is dynamically resolved by Cloudflare.
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- manifest ok.
             ASSET_MANIFEST: $json.parse(await import('__STATIC_CONTENT_MANIFEST')) as { [x: string]: string },
 
