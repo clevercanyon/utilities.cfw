@@ -95,11 +95,17 @@ export const instance = $fn.memo(
                     retries: 5,
                     backoff: (retryAttempts: number) => Math.exp(retryAttempts) * 50,
                     /**
+                     * Regarding retry attempts and timeouts.
+                     *
                      * - Math.exp(1) * 50 = 135.91409142295225.
                      * - Math.exp(2) * 50 = 369.4528049465325.
                      * - Math.exp(3) * 50 = 1004.2768461593834.
                      * - Math.exp(4) * 50 = 2729.907501657212.
                      * - Math.exp(5) * 50 = 7420.65795512883.
+                     *
+                     * A Cloudflare worker attempts to wait on all promises to finish resolving via `ctx.waitUntil()`.
+                     * Therefore, total retry time must be well under 30 seconds for Cloudflare compatibility. That is
+                     * all the time that a single worker request is allowed to take via `ctx.waitUntil()` promises.
                      */
                 },
                 signal: undefined, // Not used at this time.
