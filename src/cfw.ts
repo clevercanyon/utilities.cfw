@@ -62,44 +62,35 @@ export type StdFetchEventData = Readonly<{
 
     URL: typeof $type.cf.URL;
     fetch: typeof $type.cf.fetch;
+    caches: typeof $type.cf.caches;
     Request: typeof $type.cf.Request;
     Response: typeof $type.cf.Response;
 }>;
 
 /**
- * Tracks initialization.
+ * Tracks global init.
  */
-let initialized = false;
-
-/**
- * Defines global base loggers.
- */
-let baseAuditLogger: $type.Logger, //
-    baseConsentLogger: $type.Logger;
-
-/**
- * Defines global cache to use for HTTP requests.
- */
-const cache = (caches as unknown as $type.cf.CacheStorage).default;
+let initializedGlobals = false;
 
 /**
  * Initializes worker globals.
  *
- * @param   ifeData Initial fetch event data.
- *
- * @returns         Void promise.
+ * @param ifeData Initial fetch event data.
  */
-const maybeInitialize = async (ifeData: InitialFetchEventData): Promise<void> => {
-    if (initialized) return;
-    initialized = true;
+const maybeInitializeGlobals = async (ifeData: InitialFetchEventData): Promise<void> => {
+    if (initializedGlobals) return;
+    initializedGlobals = true;
 
-    const { env } = ifeData,
-        Logger = $class.getLogger();
-
-    $env.capture('@global', env); // Captures environment variables.
-
-    (baseAuditLogger = new Logger({ endpointToken: $env.get('APP_AUDIT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) })),
-        (baseConsentLogger = new Logger({ endpointToken: $env.get('APP_CONSENT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) }));
+    $env.capture(
+        '@global', // Captures primitive environment variables.
+        Object.fromEntries(
+            Object.entries(ifeData.env).filter(([, value]): boolean => {
+                // Anything that is not a primitive value; e.g., KV, D1, or other bindings,
+                // must be accessed in a request-specific way using {@see FetchEventData}.
+                return $is.primitive(value);
+            }),
+        ),
+    );
 };
 
 /**
@@ -113,7 +104,11 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
     const { ctx, env, routes } = ifeData;
     let { request } = ifeData; // Rewritable.
 
-    await maybeInitialize(ifeData); // Initializes worker.
+    await maybeInitializeGlobals(ifeData); // Initializes worker globals.
+
+    const Logger = $class.getLogger(), // Initializes base audit and consent loggers.
+        baseAuditLogger = new Logger({ endpointToken: $env.get('APP_AUDIT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) }),
+        baseConsentLogger = new Logger({ endpointToken: $env.get('APP_CONSENT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) });
 
     // Initializes audit logger early so it’s available for any errors below.
     // However, `request` is potentially rewritten, so reinitialize if it changes.
@@ -141,6 +136,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
 
                 URL: globalThis.URL as unknown as typeof $type.cf.URL,
                 fetch: globalThis.fetch as unknown as typeof $type.cf.fetch,
+                caches: globalThis.caches as unknown as typeof $type.cf.caches,
                 Request: globalThis.Request as unknown as typeof $type.cf.Request,
                 Response: globalThis.Response as unknown as typeof $type.cf.Response,
             });
@@ -175,14 +171,11 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
 // Misc exports.
 
 /**
- * Easy access to `hop-gdn-utilities` worker.
- *
- * @returns Service binding; {@see StdEnvironment['UT']}.
- */
-export const utilities = (): $type.cf.Fetcher => $env.get('UT', { require: true }) as $type.cf.Fetcher;
-
-/**
  * Creates a service binding request.
+ *
+ * The distinction here is simply that we forward IP address and geolocation data to service bindings. Cloudflare
+ * doesn’t do it by default, but our codebases assume IP and geolocation data will be available; i.e., for every
+ * request. Therefore, when issuing requests to a service binding, always use this utility to build a request.
  *
  * @param   feData      Fetch event data; {@see StdFetchEventData}.
  * @param   requestInfo New request info; {@see $type.cf.RequestInfo}.
@@ -215,8 +208,8 @@ export const serviceBindingRequest = async (feData: StdFetchEventData, requestIn
  * @returns        Response promise.
  */
 const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$type.cf.Response> => {
-    let key, cachedResponse; // Initialize.
-    const { ctx, url, request, Request, Response } = feData;
+    let key, cachedResponse; // Initializes writable vars.
+    const { ctx, url, request, caches, Request, Response } = feData;
 
     // Populates cache key.
 
@@ -235,7 +228,7 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
     }
     // Reads response for this request from HTTP cache.
 
-    if ((cachedResponse = await cache.match(keyRequest, { ignoreMethod: true }))) {
+    if ((cachedResponse = await caches.default.match(keyRequest, { ignoreMethod: true }))) {
         if (!$http.requestNeedsContentBody(keyRequest, cachedResponse.status)) {
             cachedResponse = new Response(null, cachedResponse);
         }
@@ -252,7 +245,7 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
         } else {
             // Cloudflare will not actually cache if response headers say not to cache.
             // For further details regarding `cache.put()`; {@see https://o5p.me/gMv7W2}.
-            ctx.waitUntil(cache.put(keyRequest, response.clone()));
+            ctx.waitUntil(caches.default.put(keyRequest, response.clone()));
         }
     }
     return response; // Potentially cached async.

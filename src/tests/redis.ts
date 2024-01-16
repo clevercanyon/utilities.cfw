@@ -31,6 +31,7 @@ describe('$redis', async () => {
 
         URL: globalThis.URL as unknown as typeof $type.cf.URL,
         fetch: globalThis.fetch as unknown as typeof $type.cf.fetch,
+        caches: globalThis.caches as unknown as typeof $type.cf.caches,
         Request: globalThis.Request as unknown as typeof $type.cf.Request,
         Response: globalThis.Response as unknown as typeof $type.cf.Response,
     };
