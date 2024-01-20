@@ -4,17 +4,13 @@
 
 import '#@initialize.ts';
 
-import { $app, $class, $env, $error, $http, $is, $json, $mime, $mm, $obj, $str, $url, $user, type $type } from '@clevercanyon/utilities';
-import * as cfKVA from '@cloudflare/kv-asset-handler';
+import { $app, $class, $env, $error, $http, $is, $mime, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
  */
 export type Context = Readonly<$type.cf.ExecutionContext>;
-export type Environment = StdEnvironment &
-    Readonly<{
-        __STATIC_CONTENT?: $type.cf.KVNamespace;
-    }>;
+export type Environment = StdEnvironment;
 export type Route = (feData: FetchEventData) => Promise<$type.cf.Response>;
 export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
 
@@ -140,17 +136,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
                 Request: globalThis.Request as unknown as typeof $type.cf.Request,
                 Response: globalThis.Response as unknown as typeof $type.cf.Response,
             });
-        // This is somewhat in reverse of how we would normally serve requests.
-        // Typically, we would first check if it’s potentially dynamic, and then fall back on assets.
-        // We still do that, but in the case of a worker site, if it’s in `/assets` it can only be static.
-        if (
-            env.__STATIC_CONTENT && // Worker site?
-            $http.requestPathIsStatic(request, url) && //
-            $mm.test(url.pathname, $url.pathFromAppBase('./assets/') + '**')
-        ) {
-            return handleFetchCache(handleFetchStaticAssets, feData);
-        }
-        return handleFetchCache(handleFetchDynamics, feData);
+        return handleFetchCache(handleFetchRoute, feData);
         //
     } catch (thrown) {
         if ($is.response(thrown)) {
@@ -200,6 +186,24 @@ export const serviceBindingRequest = async (feData: StdFetchEventData, requestIn
 // Misc utilities.
 
 /**
+ * Fetches route.
+ *
+ * @param   feData Fetch event data.
+ *
+ * @returns        Response promise.
+ */
+const handleFetchRoute = async (feData: FetchEventData): Promise<$type.cf.Response> => {
+    const { url, request, routes } = feData;
+
+    for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
+        if ($mm.test(url.pathname, $url.pathFromAppBase('./') + routeSubpathGlob)) {
+            return routeSubpathHandler(feData);
+        }
+    }
+    return $http.prepareResponse(request, { status: 404 }) as $type.cf.Response;
+};
+
+/**
  * Handles fetch caching.
  *
  * @param   route  Route handler.
@@ -209,9 +213,12 @@ export const serviceBindingRequest = async (feData: StdFetchEventData, requestIn
  */
 const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$type.cf.Response> => {
     let key, cachedResponse; // Initializes writable vars.
-    const { ctx, url, request, caches, Request, Response } = feData;
+    const { ctx, url, request, caches, Request, auditLogger } = feData;
 
     // Populates cache key.
+
+    // @review There is no reason to shard the cache if `enableCORs` is not `true`,
+    // because in such a case, we don’t send back any headers that would actually vary.
 
     key = 'v=' + $app.buildTime().unix().toString();
     if (request.headers.has('origin') /* Possibly empty. */) {
@@ -229,10 +236,8 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
     // Reads response for this request from HTTP cache.
 
     if ((cachedResponse = await caches.default.match(keyRequest, { ignoreMethod: true }))) {
-        if (!$http.requestNeedsContentBody(keyRequest, cachedResponse.status)) {
-            cachedResponse = new Response(null, cachedResponse);
-        }
-        return cachedResponse;
+        void auditLogger.log('Serving response from cache.', { cachedResponse });
+        return $http.prepareCachedResponse(keyRequest, cachedResponse) as unknown as $type.cf.Response;
     }
     // Routes request and writes response to HTTP cache.
 
@@ -240,89 +245,18 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
 
     if ('GET' === keyRequest.method && 206 !== response.status && '*' !== response.headers.get('vary') && !response.webSocket) {
         if ($env.isCFWViaMiniflare() && 'no-store' === response.headers.get('cdn-cache-control')) {
-            // Miniflare doesn’t currently support `cdn-cache-control`, so we implement basic support for it here.
+            // Miniflare doesn’t support `cdn-cache-control`, so we implement basic support here.
             response.headers.set('cf-cache-status', 'c10n.miniflare.cdn-cache-control.BYPASS');
         } else {
-            // Cloudflare will not actually cache if response headers say not to cache.
-            // For further details regarding `cache.put()`; {@see https://o5p.me/gMv7W2}.
-            ctx.waitUntil(caches.default.put(keyRequest, response.clone()));
+            ctx.waitUntil(
+                (async (/* Caching occurs in background via `waitUntil()` */): Promise<void> => {
+                    // Cloudflare will not actually cache if response headers say not to cache; {@see https://o5p.me/gMv7W2}.
+                    const responseForCache = (await $http.prepareResponseForCache(keyRequest, response)) as unknown as $type.cf.Response;
+                    void auditLogger.log('Caching response server-side.', { responseForCache });
+                    return caches.default.put(keyRequest, responseForCache); // We `waitUntil()` this completes.
+                })(),
+            );
         }
     }
     return response; // Potentially cached async.
-};
-
-/**
- * Fetches dynamics.
- *
- * @param   feData Fetch event data.
- *
- * @returns        Response promise.
- */
-const handleFetchDynamics = async (feData: FetchEventData): Promise<$type.cf.Response> => {
-    const { env, url, request, routes } = feData;
-
-    for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
-        if ($mm.test(url.pathname, $url.pathFromAppBase('./') + routeSubpathGlob)) {
-            return routeSubpathHandler(feData);
-        }
-    }
-    // Falls back on static assets, when applicable. Remember, it *might* have been dynamic. We now know it wasn’t.
-    // e.g., In the case of {@see $http.requestPathIsStatic()} having returned false above for a potentially-dynamic path.
-    if (
-        env.__STATIC_CONTENT && // Worker site?
-        $mm.test(url.pathname, $url.pathFromAppBase('./assets/') + '**')
-    ) {
-        return handleFetchStaticAssets(feData);
-    }
-    return $http.prepareResponse(request, { status: 404 }) as $type.cf.Response;
-};
-
-/**
- * Fetches static assets.
- *
- * @param   feData Fetch event data.
- *
- * @returns        Response promise.
- */
-const handleFetchStaticAssets = async (feData: FetchEventData): Promise<$type.cf.Response> => {
-    const { ctx, env, request } = feData;
-
-    try {
-        const kvAssetEventData = {
-            request: request as unknown as Request,
-            waitUntil(promise: Promise<void>): void {
-                ctx.waitUntil(promise);
-            },
-        };
-        const response = await cfKVA.getAssetFromKV(kvAssetEventData, {
-            ASSET_NAMESPACE: env.__STATIC_CONTENT, // Worker site KV namespace.
-
-            // @ts-ignore: This particular import is dynamically resolved by Cloudflare.
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- manifest ok.
-            ASSET_MANIFEST: $json.parse(await import('__STATIC_CONTENT_MANIFEST')) as { [x: string]: string },
-
-            defaultDocument: 'index.html',
-            defaultMimeType: 'application/octet-stream',
-            cacheControl: { edgeTTL: 31536000, browserTTL: 31536000 },
-
-            mapRequestToAsset: (request: Request): Request => {
-                const url = new URL(request.url); // URL is rewritten below.
-
-                const regExp = new RegExp('^' + $str.escRegExp($url.pathFromAppBase('./assets/')), 'u');
-                url.pathname = url.pathname.replace(regExp, '/'); // Removes `/assets` prefix.
-
-                return cfKVA.mapRequestToAsset(new Request(url, request));
-            },
-        });
-        return $http.prepareResponse(request, { ...response }) as $type.cf.Response;
-        //
-    } catch (thrown) {
-        if (thrown instanceof cfKVA.NotFoundError) {
-            return $http.prepareResponse(request, { status: 404 }) as $type.cf.Response;
-        }
-        if (thrown instanceof cfKVA.MethodNotAllowedError) {
-            return $http.prepareResponse(request, { status: 405 }) as $type.cf.Response;
-        }
-        throw thrown; // Re-throw, allowing our default error handler to catch.
-    }
 };
