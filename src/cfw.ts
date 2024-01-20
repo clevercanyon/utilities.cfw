@@ -28,9 +28,7 @@ export type FetchEventData = StdFetchEventData &
     }>;
 
 /**
- * Defines standard types.
- *
- * @note Common across CFW/CFP.
+ * Defines common types across CFW/CFP.
  */
 export type StdContext = Readonly<
     Pick<
@@ -112,7 +110,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
 
     try {
         let originalRequest = request; // Potentially rewritten.
-        request = $http.prepareRequest(request, {}) as $type.cf.Request;
+        request = (await $http.prepareRequest(request, {})) as $type.cf.Request;
 
         if (request !== originalRequest /* Reinitializes using rewritten request. */) {
             auditLogger = baseAuditLogger.withContext({}, { cfwContext: ctx, request });
@@ -140,7 +138,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
         //
     } catch (thrown) {
         if ($is.response(thrown)) {
-            return thrown as unknown as $type.cf.Response;
+            return thrown as $type.cf.Response;
         }
         const message = $error.safeMessageFrom(thrown, { default: '9eMw8Ave' });
         void auditLogger.error('500: ' + message, { thrown });
@@ -149,7 +147,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
             status: 500, // Failed status in this scenario.
             headers: { 'content-type': $mime.contentType('.txt') },
             body: message, // Safe message from whatever was thrown.
-        }) as $type.cf.Response;
+        }) as Promise<$type.cf.Response>;
     }
 };
 
@@ -200,7 +198,7 @@ const handleFetchRoute = async (feData: FetchEventData): Promise<$type.cf.Respon
             return routeSubpathHandler(feData);
         }
     }
-    return $http.prepareResponse(request, { status: 404 }) as $type.cf.Response;
+    return $http.prepareResponse(request, { status: 404 }) as Promise<$type.cf.Response>;
 };
 
 /**
@@ -237,26 +235,24 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
 
     if ((cachedResponse = await caches.default.match(keyRequest, { ignoreMethod: true }))) {
         void auditLogger.log('Serving response from cache.', { cachedResponse });
-        return $http.prepareCachedResponse(keyRequest, cachedResponse) as unknown as $type.cf.Response;
+        return $http.prepareCachedResponse(keyRequest, cachedResponse) as Promise<$type.cf.Response>;
     }
     // Routes request and writes response to HTTP cache.
 
     const response = await route(feData); // Awaits response so we can cache.
 
-    if ('GET' === keyRequest.method && 206 !== response.status && '*' !== response.headers.get('vary') && !response.webSocket) {
+    if ('GET' === keyRequest.method && 206 !== response.status && '*' !== response.headers.get('vary') && !response.webSocket)
         if ($env.isCFWViaMiniflare() && 'no-store' === response.headers.get('cdn-cache-control')) {
-            // Miniflare doesn’t support `cdn-cache-control`, so we implement basic support here.
+            // Miniflare doesn’t support `cdn-cache-control` so we implement basic support here.
             response.headers.set('cf-cache-status', 'c10n.miniflare.cdn-cache-control.BYPASS');
-        } else {
+        } else
             ctx.waitUntil(
-                (async (/* Caching occurs in background via `waitUntil()` */): Promise<void> => {
-                    // Cloudflare will not actually cache if response headers say not to cache; {@see https://o5p.me/gMv7W2}.
-                    const responseForCache = (await $http.prepareResponseForCache(keyRequest, response)) as unknown as $type.cf.Response;
+                (async (/* Caching occurs in background via `waitUntil()`. */): Promise<void> => {
+                    // Cloudflare will not actually cache if headers say not to; {@see https://o5p.me/gMv7W2}.
+                    const responseForCache = (await $http.prepareResponseForCache(keyRequest, response)) as $type.cf.Response;
                     void auditLogger.log('Caching response server-side.', { responseForCache });
-                    return caches.default.put(keyRequest, responseForCache); // We `waitUntil()` this completes.
+                    return caches.default.put(keyRequest, responseForCache);
                 })(),
             );
-        }
-    }
-    return response; // Potentially cached async.
+    return response; // Potentially cached async via `waitUntil()`.
 };

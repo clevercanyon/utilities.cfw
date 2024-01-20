@@ -147,13 +147,13 @@ export const rateLimiter = (feData: StdFetchEventData, options?: RateLimiterOpti
                     rateLimiterResponse: limiterResponse,
                 });
                 if ($http.requestExpectsJSON(request, url)) {
-                    throw $http.prepareResponse(request, {
+                    throw await $http.prepareResponse(request, {
                         status: 429, // Too many requests.
                         headers: { 'content-type': $json.contentType() },
                         body: $json.stringify({ ok: false, error: { message: $http.responseStatusText(429) } }, { pretty: true }),
                     });
                 } else {
-                    throw $http.prepareResponse(request, {
+                    throw await $http.prepareResponse(request, {
                         status: 429, // Too many requests.
                         headers: { 'content-type': $mime.contentType('.txt') },
                         body: $http.responseStatusText(429),
@@ -175,13 +175,13 @@ export const rateLimiter = (feData: StdFetchEventData, options?: RateLimiterOpti
                     rateLimiterResponse: limiterResponse,
                 });
                 if ($http.requestExpectsJSON(request, url)) {
-                    throw $http.prepareResponse(request, {
+                    throw await $http.prepareResponse(request, {
                         status: 429, // Too many requests.
                         headers: { 'content-type': $json.contentType() },
                         body: $json.stringify({ ok: false, error: { message: $http.responseStatusText(429) } }, { pretty: true }),
                     });
                 } else {
-                    throw $http.prepareResponse(request, {
+                    throw await $http.prepareResponse(request, {
                         status: 429, // Too many requests.
                         headers: { 'content-type': $mime.contentType('.txt') },
                         body: $http.responseStatusText(429),
