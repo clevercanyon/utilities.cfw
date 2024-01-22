@@ -22,7 +22,7 @@
 
 import path from 'node:path';
 import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $obp } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import { $obp, $time } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import extensions from '../bin/includes/extensions.mjs';
 import u from '../bin/includes/utilities.mjs';
 import wranglerSettings from './settings.mjs';
@@ -63,35 +63,29 @@ export default async () => {
 
         ...(['cma', 'spa', 'mpa'].includes(appType) && ['cfw', 'cfp'].includes(targetEnv)
             ? {
-                  // Worker account ID.
-
-                  account_id: settings.defaultAccountId,
-
-                  // Enables logpush for worker trace events.
-
-                  logpush: true, // Requires workers paid plan.
-
                   ...(['spa', 'mpa'].includes(appType)
                       ? // Cloudflare pages site.
                         {
-                            // Nothing more for now.
+                            // CF UI is source of truth.
                         }
-                      : // Cloudflare worker.
+                      : // Cloudflare worker configuration.
                         {
-                            // We don’t use.
+                            // Worker account ID.
+                            account_id: settings.defaultAccountId,
 
-                            workers_dev: false,
+                            // Enables logpush for worker trace events.
+                            logpush: true, // Requires workers paid plan.
+
+                            // Sets a default upper limit on CPU time.
+                            limits: { cpu_ms: $time.secondInMilliseconds * 5 },
 
                             // Worker name.
-
                             name: settings.defaultWorkerName,
 
                             // App main entry configuration.
-
                             main: './' + path.relative(projDir, './dist/index.js'),
 
                             // Bundling configuration; {@see <https://o5p.me/JRHxfC>}.
-
                             rules: [
                                 {
                                     type: 'ESModule',
@@ -161,27 +155,15 @@ export default async () => {
                                 },
                                 { type: 'CompiledWasm', globs: extensions.asNoBraceGlobstars([...extensions.byCanonical.wasm]), fallthrough: false },
                             ],
-                            // Custom build configuration.
 
+                            // Custom build configuration.
                             build: {
                                 cwd: './' + path.relative(projDir, './'),
                                 watch_dir: './' + path.relative(projDir, './src'),
                                 command: 'npx @clevercanyon/madrun build --mode=prod',
                             },
-                            // Worker sites; i.e., bucket configuration.
-                            // Disabled by default and not necessary any longer.
-                            // Prefer using R2 for any static files used by workers.
-                            // Or, build a Cloudflare Pages site instead of just a worker.
-                            // site: {
-                            //     bucket: './' + path.relative(projDir, './dist/assets'),
-                            //     exclude: [
-                            //         ...$path.defaultNPMIgnores(),
-                            //         '/a16s', // A16s (top-level only).
-                            //     ],
-                            // },
 
-                            // Worker route configuration.
-
+                            // Route configuration.
                             route: {
                                 zone_name: settings.defaultWorkerZoneName,
                                 pattern: settings.defaultWorkersDomain + '/' + settings.defaultWorkerShortName + '/*',
@@ -195,6 +177,7 @@ export default async () => {
                             },
 
                             // Environments used by this worker.
+                            workers_dev: false, // We don’t use `*workers.dev`.
                             env: {
                                 // `$ madrun wrangler dev` environment, for local testing.
                                 dev: {
