@@ -11,7 +11,9 @@ import { $app, $class, $env, $error, $http, $is, $mime, $mm, $obj, $url, $user, 
  */
 export type Context = Readonly<$type.cf.ExecutionContext>;
 export type Environment = StdEnvironment;
-export type Route = (feData: FetchEventData) => Promise<$type.cf.Response>;
+export type Route = ((feData: FetchEventData) => Promise<$type.cf.Response>) & {
+    config?: Required<$http.RouteConfig>;
+};
 export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
 
 export type InitialFetchEventData = Readonly<{
@@ -134,7 +136,11 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
                 Request: globalThis.Request as unknown as typeof $type.cf.Request,
                 Response: globalThis.Response as unknown as typeof $type.cf.Response,
             });
-        return handleFetchCache(handleFetchRoute, feData);
+        for (const [subpathGlob, route] of Object.entries(routes.subpathGlobs))
+            if ($mm.test(url.pathname, $url.pathFromAppBase('./') + subpathGlob)) {
+                return handleFetchCache(route, feData);
+            }
+        return $http.prepareResponse(request, { status: 404 }) as Promise<$type.cf.Response>;
         //
     } catch (thrown) {
         if ($is.response(thrown)) {
@@ -184,24 +190,6 @@ export const serviceBindingRequest = async (feData: StdFetchEventData, requestIn
 // Misc utilities.
 
 /**
- * Fetches route.
- *
- * @param   feData Fetch event data.
- *
- * @returns        Response promise.
- */
-const handleFetchRoute = async (feData: FetchEventData): Promise<$type.cf.Response> => {
-    const { url, request, routes } = feData;
-
-    for (const [routeSubpathGlob, routeSubpathHandler] of Object.entries(routes.subpathGlobs)) {
-        if ($mm.test(url.pathname, $url.pathFromAppBase('./') + routeSubpathGlob)) {
-            return routeSubpathHandler(feData);
-        }
-    }
-    return $http.prepareResponse(request, { status: 404 }) as Promise<$type.cf.Response>;
-};
-
-/**
  * Handles fetch caching.
  *
  * @param   route  Route handler.
@@ -215,13 +203,16 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
 
     // Populates cache key.
 
-    // @review There is no reason to shard the cache if `enableCORs` is not `true`,
-    // because in such a case, we don’t send back any headers that would actually vary.
+    const varyOn = new Set(route.config?.varyOn || []);
+    for (const v of varyOn) if (!request.headers.has(v)) varyOn.delete(v);
 
-    key = 'v=' + $app.buildTime().unix().toString();
-    if (request.headers.has('origin') /* Possibly empty. */) {
-        key += '&origin=' + (request.headers.get('origin') || '');
-    }
+    if ((!route.config || route.config.enableCORs) && request.headers.has('origin')) {
+        varyOn.add('origin'); // CORs requires us to vary on origin.
+    } else varyOn.delete('origin'); // Must not vary on origin.
+
+    key = 'v=' + $app.buildTime().toStamp().toString();
+    for (const v of varyOn) key += '&' + v + '=' + (request.headers.get(v) || '');
+
     const keyURL = $url.removeCSOQueryVars(url); // e.g., `ut[mx]_`, `_ck`, etc.
     keyURL.searchParams.set('_ck', key), keyURL.searchParams.sort(); // Optimizes cache.
     const keyRequest = new Request(keyURL.toString(), request);
