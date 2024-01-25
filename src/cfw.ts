@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $app, $class, $env, $error, $http, $is, $mime, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
+import { $app, $class, $env, $error, $fsize, $http, $is, $mime, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -231,19 +231,28 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
     // Routes request and writes response to HTTP cache.
 
     const response = await route(feData); // Awaits response so we can cache.
+    if (
+        !response.webSocket &&
+        206 !== response.status &&
+        'GET' === keyRequest.method &&
+        '*' !== response.headers.get('vary') &&
+        'no-store' !== response.headers.get('cdn-cache-control') &&
+        // We have 128M of memory to work with. So let’s not go over that limit when caching.
+        // Cloudflare allows up to 512M per cached object, but we can’t really leverage that here.
+        Number(response.headers.get('content-length') || 0) <= $fsize.bytesInMegabyte * 25
+    ) {
+        ctx.waitUntil(
+            (async (/* Caching occurs in background via `waitUntil()`. */): Promise<void> => {
+                // Cloudflare will not actually cache if headers say not to; {@see https://o5p.me/gMv7W2}.
+                const responseForCache = (await $http.prepareResponseForCache(keyRequest, response)) as $type.cf.Response,
+                    cachePutResponse = await caches.default.put(keyRequest, responseForCache);
+                void auditLogger.log('Caching response server-side.', { responseForCache, cachePutResponse });
+                console.log({ responseForCache, cachePutResponse });
+            })(),
+        );
+        response.headers.set('x-cache-status', 'miss'); // i.e., Cache miss.
+        //
+    } else response.headers.set('x-cache-status', 'dynamic'); // i.e., Not cacheable.
 
-    if ('GET' === keyRequest.method && 206 !== response.status && '*' !== response.headers.get('vary') && !response.webSocket)
-        if ($env.isCFWViaMiniflare() && 'no-store' === response.headers.get('cdn-cache-control')) {
-            // Miniflare doesn’t support `cdn-cache-control` so we implement basic support here.
-            response.headers.set('cf-cache-status', 'c10n.miniflare.cdn-cache-control.BYPASS');
-        } else
-            ctx.waitUntil(
-                (async (/* Caching occurs in background via `waitUntil()`. */): Promise<void> => {
-                    // Cloudflare will not actually cache if headers say not to; {@see https://o5p.me/gMv7W2}.
-                    const responseForCache = (await $http.prepareResponseForCache(keyRequest, response)) as $type.cf.Response;
-                    void auditLogger.log('Caching response server-side.', { responseForCache });
-                    return caches.default.put(keyRequest, responseForCache);
-                })(),
-            );
     return response; // Potentially cached async via `waitUntil()`.
 };
