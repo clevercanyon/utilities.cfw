@@ -235,11 +235,13 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
         !response.webSocket &&
         206 !== response.status &&
         'GET' === keyRequest.method &&
+        //
         '*' !== response.headers.get('vary') &&
-        'no-store' !== response.headers.get('cdn-cache-control') &&
-        // We have 128M of memory to work with. So let’s not go over that limit when caching.
-        // Cloudflare allows up to 512M per cached object, but we can’t really leverage that here.
-        Number(response.headers.get('content-length') || 0) <= $fsize.bytesInMegabyte * 25
+        !(response.headers.get('cdn-cache-control') || '')
+            .toLowerCase().split(/,\s*/u).includes('no-store') &&
+        //
+        response.headers.has('content-length') && // Our own limit is 25 MiB max.
+        Number(response.headers.get('content-length')) <= $fsize.bytesInMebibyte * 25 // prettier-ignore
     ) {
         ctx.waitUntil(
             (async (/* Caching occurs in background via `waitUntil()`. */): Promise<void> => {
