@@ -61,6 +61,7 @@ export type StdFetchEventData = Readonly<{
     caches: typeof $type.cf.caches;
     Request: typeof $type.cf.Request;
     Response: typeof $type.cf.Response;
+    AbortSignal: typeof $type.cf.AbortSignal;
 }>;
 
 /**
@@ -135,6 +136,7 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
                 caches: globalThis.caches as unknown as typeof $type.cf.caches,
                 Request: globalThis.Request as unknown as typeof $type.cf.Request,
                 Response: globalThis.Response as unknown as typeof $type.cf.Response,
+                AbortSignal: globalThis.AbortSignal as unknown as typeof $type.cf.AbortSignal,
             });
         for (const [subpathGlob, route] of Object.entries(routes.subpathGlobs))
             if ($mm.test(url.pathname, $url.pathFromAppBase('./') + subpathGlob)) {

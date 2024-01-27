@@ -34,6 +34,7 @@ describe('$redis', async () => {
         caches: globalThis.caches as unknown as typeof $type.cf.caches,
         Request: globalThis.Request as unknown as typeof $type.cf.Request,
         Response: globalThis.Response as unknown as typeof $type.cf.Response,
+        AbortSignal: globalThis.AbortSignal as unknown as typeof $type.cf.AbortSignal,
     };
     const redis = $redis.instance();
 
