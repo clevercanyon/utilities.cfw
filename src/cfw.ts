@@ -249,8 +249,6 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
             })(),
         );
         response.headers.set('x-cache-status', 'miss'); // i.e., Cache miss.
-        //
-    } else response.headers.set('x-cache-status', 'dynamic'); // i.e., Not cacheable.
-
+    }
     return response; // Potentially cached async via `waitUntil()`.
 };
