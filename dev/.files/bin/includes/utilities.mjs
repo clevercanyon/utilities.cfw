@@ -1249,13 +1249,13 @@ export default class u {
 
             u.log($chalk.gray('Adding `' + team + '` team to npmjs package with `' + permission + '` permission.'));
             if (!opts.dryRun) {
-                await u.spawn('npm', ['access', 'grant', permission, org + ':' + team], { quiet: true });
+                await u.spawn('npm', ['access', 'grant', permission, org + ':' + team, pkgName], { quiet: true });
             }
         }
         for (const [team] of Object.entries(teamsToDelete)) {
             u.log($chalk.gray('Deleting `' + team + '` (unused) from npmjs package.'));
             if (!opts.dryRun) {
-                await u.spawn('npm', ['access', 'revoke', org + ':' + team], { quiet: true }).catch(() => null);
+                await u.spawn('npm', ['access', 'revoke', org + ':' + team, pkgName], { quiet: true }).catch(() => null);
             }
         }
         if (!opts.dryRun) {

@@ -211,7 +211,7 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
         varyOn.add('origin'); // CORs requires us to vary on origin.
     } else varyOn.delete('origin'); // Must not vary on origin.
 
-    key = 'v=' + $app.buildTime().toStamp().toString();
+    key = 'v=' + (route.config?.cacheVersion || $app.buildTime().toStamp()).toString();
     for (const v of varyOn) key += '&' + v + '=' + (request.headers.get(v) || '');
 
     const keyURL = $url.removeCSOQueryVars(url); // e.g., `ut[mx]_`, `_ck`, etc.

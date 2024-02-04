@@ -71,8 +71,6 @@
     input::placeholder,
     textarea::placeholder,
     select:has(> :checked[data-placeholder]) {
-        @apply italic;
-
         color: rgb(from rgb(var(--colors-color-basic-fg)) r g b / calc(alpha - 0.5));
     }
 
