@@ -225,6 +225,9 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
 
                         const cfpDefaultAllowRobotsTxt = $cfpꓺhttp.prepareDefaultRobotsTxt({ appType, baseURL, brand, isC10n, allow: true });
                         fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_ALLOW_ROBOTS_TXT__$$', cfpDefaultAllowRobotsTxt);
+
+                        const cfpDefaultSitemapsForRobotsTxt = $cfpꓺhttp.prepareDefaultSitemapsForRobotsTxt({ appType, baseURL, brand, isC10n });
+                        fileContents = fileContents.replace('$$__APP_CFP_DEFAULT_SITEMAPS_FOR_ROBOTS_TXT__$$', cfpDefaultSitemapsForRobotsTxt);
                         //
                     } else if (['404.html'].includes(fileRelPath)) {
                         const cfpDefault404 = '<!doctype html>' + $preact.ssr.renderToString($preact.create(StandAlone404));

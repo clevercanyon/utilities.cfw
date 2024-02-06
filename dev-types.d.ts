@@ -42,6 +42,11 @@ interface FormData {
     entries(): IterableIterator<[key: string, value: string | Blob]>;
 }
 
+/**
+ * Declares PWA install event, which we implement for SPAs.
+ */
+declare var pwaInstallEvent: Event & { prompt: () => void };
+
 /*
  * Customizations.
  *

@@ -45,7 +45,7 @@ const githubConfigVersion = '1.0.9'; // Bump when config changes in routines bel
 const githubEnvsVersion = '1.0.9'; // Bump when environments change in routines below.
 const npmjsConfigVersion = '1.0.9'; // Bump when config changes in routines below.
 
-const c10nLogo = path.resolve(__dirname, '../../assets/brands/c10n/logo.png');
+const c10nLogo = path.resolve(__dirname, '../../assets/brands/clevercanyon/logo-on-dark-bg.png');
 
 /**
  * Utilities.
