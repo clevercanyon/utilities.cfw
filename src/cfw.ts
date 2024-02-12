@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $app, $class, $env, $error, $fsize, $http, $is, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
+import { $app, $class, $crypto, $env, $error, $fsize, $http, $is, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -138,11 +138,24 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
                 Response: globalThis.Response as unknown as typeof $type.cf.Response,
                 AbortSignal: globalThis.AbortSignal as unknown as typeof $type.cf.AbortSignal,
             });
+        let response: Promise<$type.cf.Response>; // Initialize.
+
         for (const [subpathGlob, route] of Object.entries(routes.subpathGlobs))
             if ($mm.test(url.pathname, $url.pathFromAppBase('./') + subpathGlob)) {
-                return handleFetchCache(route, feData);
+                response = handleFetchCache(route, feData);
+                break; // Route found; stop here.
             }
-        return $http.prepareResponse(request, { status: 404 }) as Promise<$type.cf.Response>;
+        response ??= $http.prepareResponse(request, { status: 404 }) as Promise<$type.cf.Response>;
+
+        if (url.searchParams.has('utx_audit_log')) {
+            const token = url.searchParams.get('utx_audit_log') || '',
+                validToken = $env.get('APP_AUDIT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }).split(' ', 2)[1] || '';
+
+            if (token && validToken && $crypto.safeEqual(token, validToken)) {
+                void auditLogger.log(url.toString(), { response: await response });
+            }
+        }
+        return response;
         //
     } catch (thrown) {
         if ($is.response(thrown)) {
