@@ -6,6 +6,8 @@
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  */
 
+// @todo: Ditch this in favor of https://nodejs.org/api/cli.html#--disable-warningcode-or-type in latest Node.
+
 // We only want to apply the following once.
 if (!process.env.C10N_SKELETON_MADRUN_NODE_INCLUDE_DONE) {
     // i.e., We are including now, and we only do this once.

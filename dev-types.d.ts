@@ -28,11 +28,24 @@ declare const $$__APP_BASE_URL_RESOLVED_NTS__$$: string;
 declare var __PREFRESH__: object;
 
 /**
+ * Declares PWA install event, which we implement for SPAs.
+ */
+declare var pwaInstallEvent: Event & { prompt: () => void };
+
+/**
  * Declares virtual brand config file.
  */
 declare module 'virtual:brand/config' {
     import { $type } from '@clevercanyon/utilities';
     export default {} as Partial<$type.BrandRawProps>;
+}
+
+/**
+ * Declares virtual Cloudflare runtime modules.
+ */
+declare module 'cloudflare:sockets' {
+    import type * as cf from '@cloudflare/workers-types/experimental';
+    export function connect(address: string | cf.SocketAddress, options?: cf.SocketOptions): cf.Socket;
 }
 
 /**
@@ -43,9 +56,11 @@ interface FormData {
 }
 
 /**
- * Declares PWA install event, which we implement for SPAs.
+ * Defines missing `entries()` on Headers.
  */
-declare var pwaInstallEvent: Event & { prompt: () => void };
+interface Headers {
+    entries(): IterableIterator<[key: string, value: string]>;
+}
 
 /*
  * Customizations.

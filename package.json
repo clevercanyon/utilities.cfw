@@ -3,7 +3,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "1.0.215",
+    "version": "1.0.217",
     "license": "GPL-3.0-or-later",
     "name": "@clevercanyon/utilities.cfw",
     "description": "Utilities for JavaScript apps running in a Cloudflare Worker environment.",
@@ -35,6 +35,11 @@
             "import": "./dist/cfw.js",
             "default": "./dist/cfw.js"
         },
+        "./proxy": {
+            "types": "./dist/types/proxy.d.ts",
+            "import": "./dist/proxy.js",
+            "default": "./dist/proxy.js"
+        },
         "./redis": {
             "types": "./dist/types/redis.d.ts",
             "import": "./dist/redis.js",
@@ -54,7 +59,7 @@
     },
     "dependencies": {},
     "peerDependencies": {
-        "@clevercanyon/utilities": "^1.0.820",
+        "@clevercanyon/utilities": "^1.0.822",
         "@upstash/ratelimit": "1.0.0",
         "@upstash/redis": "1.28.0"
     },
@@ -62,7 +67,7 @@
     "optionalDependencies": {},
     "bundleDependencies": [],
     "devDependencies": {
-        "@clevercanyon/dev-deps": "^1.0.355"
+        "@clevercanyon/dev-deps": "^1.0.356"
     },
     "overrides": {},
     "cpu": ["x64", "arm64"],

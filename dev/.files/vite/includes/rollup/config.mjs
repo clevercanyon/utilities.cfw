@@ -43,7 +43,7 @@ export default async ({ projDir, srcDir, distDir, a16sDir, appType, appEntries, 
         external: [
             ...(['lib'].includes(appType) ? [/^(?![./~#]|file:|data:|virtual:).*$/iu] : []),
             ...peerDepKeys.map((pkgName) => new RegExp('^' + $str.escRegExp(pkgName) + '(?:$|[/?])', 'u')),
-            ...[/^__STATIC_CONTENT_MANIFEST(?:$|[/?])/u], // Cloudflare worker sites use this for static assets.
+            /^(?:cloudflare:).*$/iu,
         ],
         output: {
             interop: 'auto', // Matches TypeScript configuration.
