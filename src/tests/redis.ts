@@ -79,7 +79,7 @@ describe('$redis', async () => {
                 thrownResponse = thrown; // Limit reached; response thrown.
             }
             expect(thrownResponse instanceof Response).toBe(true);
-            expect((thrownResponse as $type.cf.Response).status).toBe(429);
+            expect((thrownResponse as $type.cfw.Response).status).toBe(429);
 
             // Blocks until allowed to resume operations given the defined rate limiter.
             expect(await rateLimiter.blockUntilReady('testKey', $time.secondInMilliseconds * 10)).toMatchObject({ success: true });

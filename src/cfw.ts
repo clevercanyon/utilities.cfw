@@ -9,10 +9,10 @@ import { $app, $class, $crypto, $env, $error, $fsize, $http, $is, $mm, $obj, $ur
 /**
  * Defines types.
  */
-export type ExecutionContext = Readonly<$type.cf.ExecutionContext>;
+export type ExecutionContext = Readonly<$type.cfw.ExecutionContext>;
 export type Environment = StdEnvironment;
 
-export type Route = ((rcData: RequestContextData) => Promise<$type.cf.Response>) & {
+export type Route = ((rcData: RequestContextData) => Promise<$type.cfw.Response>) & {
     config?: Required<$http.RouteConfig>;
 };
 export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
@@ -20,7 +20,7 @@ export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
 export type InitialRequestContextData = Readonly<{
     ctx: ExecutionContext;
     env: Environment;
-    request: $type.cf.Request;
+    request: $type.cfw.Request;
     routes: Routes;
 }>;
 export type RequestContextData = StdRequestContextData &
@@ -35,24 +35,24 @@ export type RequestContextData = StdRequestContextData &
  */
 export type StdExecutionContext = Readonly<
     Pick<
-        $type.cf.ExecutionContext | Parameters<$type.cf.PagesFunction>[0],
+        $type.cfw.ExecutionContext | Parameters<$type.cfw.PagesFunction>[0],
         // These are the two required keys.
         'waitUntil' | 'passThroughOnException'
     >
 >;
 export type StdEnvironment = Readonly<{
-    UT: $type.cf.Fetcher;
-    D1: $type.cf.D1Database;
-    R2: $type.cf.R2Bucket;
-    KV: $type.cf.KVNamespace;
-    DO: $type.cf.DurableObjectNamespace;
+    UT: $type.cfw.Fetcher;
+    D1: $type.cfw.D1Database;
+    R2: $type.cfw.R2Bucket;
+    KV: $type.cfw.KVNamespace;
+    DO: $type.cfw.DurableObjectNamespace;
 }>;
 export type StdRequestContextData = Readonly<{
     ctx: StdExecutionContext;
     env: StdEnvironment;
 
-    url: $type.cf.URL;
-    request: $type.cf.Request;
+    url: $type.cfw.URL;
+    request: $type.cfw.Request;
 
     auditLogger: $type.LoggerInterface;
     consentLogger: $type.LoggerInterface;
@@ -66,7 +66,7 @@ let initializedGlobals = false;
 /**
  * Cloudflare worker global scope.
  */
-export const cfw = globalThis as unknown as $type.cf.ServiceWorkerGlobalScope;
+export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope;
 
 /**
  * Initializes worker globals.
@@ -96,7 +96,7 @@ const maybeInitializeGlobals = async (ircData: InitialRequestContextData): Promi
  *
  * @returns         Response promise.
  */
-export const handleFetchEvent = async (ircData: InitialRequestContextData): Promise<$type.cf.Response> => {
+export const handleFetchEvent = async (ircData: InitialRequestContextData): Promise<$type.cfw.Response> => {
     const { ctx, env, routes } = ircData;
     let { request } = ircData; // Rewritable.
 
@@ -112,12 +112,12 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
     try {
         let originalRequest = request; // Potentially rewritten.
-        request = (await $http.prepareRequest(request, {})) as $type.cf.Request;
+        request = (await $http.prepareRequest(request, {})) as $type.cfw.Request;
 
         if (request !== originalRequest /* Reinitializes using rewritten request. */) {
             auditLogger = baseAuditLogger.withContext({}, { cfw: { ctx }, request });
         }
-        const url = $url.parse(request.url) as $type.cf.URL,
+        const url = $url.parse(request.url) as $type.cfw.URL,
             consentLogger = baseConsentLogger.withContext({}, { cfw: { ctx }, request }),
             rcData = $obj.freeze({
                 ctx,
@@ -130,14 +130,14 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
                 auditLogger,
                 consentLogger,
             });
-        let response: Promise<$type.cf.Response>; // Initialize.
+        let response: Promise<$type.cfw.Response>; // Initialize.
 
         for (const [subpathGlob, route] of Object.entries(routes.subpathGlobs))
             if ($mm.test(url.pathname, $url.pathFromAppBase('./') + subpathGlob)) {
                 response = handleFetchCache(rcData, route);
                 break; // Route found; stop here.
             }
-        response ??= $http.prepareResponse(request, { status: 404 }) as Promise<$type.cf.Response>;
+        response ??= $http.prepareResponse(request, { status: 404 }) as Promise<$type.cfw.Response>;
 
         if (url.searchParams.has('utx_audit_log')) {
             const token = url.searchParams.get('utx_audit_log') || '',
@@ -151,7 +151,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
         //
     } catch (thrown) {
         if ($is.response(thrown)) {
-            return thrown as $type.cf.Response;
+            return thrown as $type.cfw.Response;
         }
         const message = $error.safeMessageFrom(thrown, { default: '9eMw8Ave' });
         void auditLogger.error('500: ' + message, { thrown });
@@ -159,7 +159,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
         return $http.prepareResponse(request, {
             status: 500, // Failed status in this scenario.
             body: message, // Safe message from whatever was thrown.
-        }) as Promise<$type.cf.Response>;
+        }) as Promise<$type.cfw.Response>;
     }
 };
 
@@ -174,12 +174,12 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
  * request. Therefore, when issuing requests to a service binding, always use this utility to build a request.
  *
  * @param   rcData      Request context data; {@see StdRequestContextData}.
- * @param   requestInfo New request info; {@see $type.cf.RequestInfo}.
- * @param   requestInit New request init; {@see $type.cf.RequestInit}.
+ * @param   requestInfo New request info; {@see $type.cfw.RequestInfo}.
+ * @param   requestInit New request init; {@see $type.cfw.RequestInit}.
  *
- * @returns             Promise of a {@see $type.cf.Request}.
+ * @returns             Promise of a {@see $type.cfw.Request}.
  */
-export const serviceBindingRequest = async (rcData: StdRequestContextData, requestInfo: $type.cf.RequestInfo, requestInit?: $type.cf.RequestInit): Promise<$type.cf.Request> => {
+export const serviceBindingRequest = async (rcData: StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Request> => {
     const { Request } = cfw,
         { request: originalRequest } = rcData;
 
@@ -189,7 +189,7 @@ export const serviceBindingRequest = async (rcData: StdRequestContextData, reque
     };
     return new Request(
         requestInfo, // e.g., Service binding URL.
-        $obj.mergeDeep(importantParentRequestInit, requestInit) as $type.cf.RequestInit,
+        $obj.mergeDeep(importantParentRequestInit, requestInit) as $type.cfw.RequestInit,
     );
 };
 
@@ -204,7 +204,7 @@ export const serviceBindingRequest = async (rcData: StdRequestContextData, reque
  *
  * @returns        Response promise.
  */
-const handleFetchCache = async (rcData: RequestContextData, route: Route): Promise<$type.cf.Response> => {
+const handleFetchCache = async (rcData: RequestContextData, route: Route): Promise<$type.cfw.Response> => {
     const { caches, Request } = cfw,
         { ctx, url, request } = rcData;
 
@@ -234,7 +234,7 @@ const handleFetchCache = async (rcData: RequestContextData, route: Route): Promi
     // Reads response for this request from HTTP cache.
 
     if ((cachedResponse = await caches.default.match(keyRequest, { ignoreMethod: true }))) {
-        return $http.prepareCachedResponse(keyRequest, cachedResponse) as Promise<$type.cf.Response>;
+        return $http.prepareCachedResponse(keyRequest, cachedResponse) as Promise<$type.cfw.Response>;
     }
     // Routes request and writes response to HTTP cache.
 
@@ -254,7 +254,7 @@ const handleFetchCache = async (rcData: RequestContextData, route: Route): Promi
         ctx.waitUntil(
             (async (/* Caching occurs in background via `waitUntil()`. */): Promise<void> => {
                 // Cloudflare will not actually cache if headers say not to; {@see https://o5p.me/gMv7W2}.
-                const responseForCache = (await $http.prepareResponseForCache(keyRequest, response)) as $type.cf.Response;
+                const responseForCache = (await $http.prepareResponseForCache(keyRequest, response)) as $type.cfw.Response;
                 await caches.default.put(keyRequest, responseForCache);
             })(),
         );

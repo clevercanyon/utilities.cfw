@@ -17,7 +17,7 @@ export type FetchOptions = {
         username?: string;
         password?: string;
     };
-    headers?: $type.cf.Headers | { [x: string]: string };
+    headers?: $type.cfw.Headers | { [x: string]: string };
     timeout?: number; // In milliseconds.
 };
 
@@ -32,7 +32,7 @@ export type FetchOptions = {
  *
  * @returns         Promise of HTTP response.
  */
-export const fetch = async (rcData: StdRequestContextData, parseable: $type.cf.URL | string, options?: FetchOptions): Promise<$type.cf.Response> => {
+export const fetch = async (rcData: StdRequestContextData, parseable: $type.cfw.URL | string, options?: FetchOptions): Promise<$type.cfw.Response> => {
     const { Response } = cfw,
         url = $url.tryParse(parseable),
         opts = $obj.defaults({}, options || {}, {
@@ -61,7 +61,7 @@ export const fetch = async (rcData: StdRequestContextData, parseable: $type.cf.U
  *
  * @returns         Timeout promise suitable for a race.
  */
-const fetchꓺwaitTimeout = async (rcData: StdRequestContextData, opts: Required<FetchOptions>): Promise<$type.cf.Response> => {
+const fetchꓺwaitTimeout = async (rcData: StdRequestContextData, opts: Required<FetchOptions>): Promise<$type.cfw.Response> => {
     const { Response } = cfw;
 
     return new Promise((resolve): void => {
@@ -86,7 +86,7 @@ const fetchꓺwaitTimeout = async (rcData: StdRequestContextData, opts: Required
  *
  * @returns         Promise of HTTP response.
  */
-const fetchꓺviaSocket = async (rcData: StdRequestContextData, url: $type.cf.URL, opts: Required<FetchOptions>): Promise<$type.cf.Response> => {
+const fetchꓺviaSocket = async (rcData: StdRequestContextData, url: $type.cfw.URL, opts: Required<FetchOptions>): Promise<$type.cfw.Response> => {
     const { Response } = cfw,
         sockets = await import('cloudflare:sockets');
 
@@ -122,7 +122,7 @@ const fetchꓺviaSocket = async (rcData: StdRequestContextData, url: $type.cf.UR
             rawHTTPResponseBody = rawHTTPResponse.slice(rawHTTPResponseCRLFIndex + 4).trim();
 
         const responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/1\.0\s+([0-9]+)/iu)?.[1] || 0),
-            responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cf.Headers,
+            responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cfw.Headers,
             responseBody = rawHTTPResponseBody;
 
         return new Response(responseBody, {
