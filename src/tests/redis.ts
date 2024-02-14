@@ -2,8 +2,7 @@
  * Test suite.
  */
 
-import { cfw } from '#cfw.ts';
-import { $cfw, $redis } from '#index.ts';
+import { $cfw, $redis, cfw } from '#index.ts';
 import { $time, type $type } from '@clevercanyon/utilities';
 import { describe, expect, test } from 'vitest';
 
