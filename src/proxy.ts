@@ -6,7 +6,6 @@ import '#@initialize.ts';
 
 import { type StdFetchEventData } from '#cfw.ts';
 import { $crypto, $http, $mime, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
-import { connect } from 'cloudflare:sockets';
 
 /**
  * Defines types.
@@ -89,9 +88,10 @@ const fetchꓺwaitTimeout = async (feData: StdFetchEventData, opts: Required<Fet
  */
 const fetchꓺviaSocket = async (feData: StdFetchEventData, url: $type.URL, opts: Required<FetchOptions>): Promise<$type.cf.Response> => {
     const { Response } = feData;
+    const sockets = await import('cloudflare:sockets');
 
     try {
-        const socket = connect({ hostname: opts.proxy.host, port: opts.proxy.port }),
+        const socket = sockets.connect({ hostname: opts.proxy.host, port: opts.proxy.port }),
             { readable, writable } = socket,
             writer = writable.getWriter(),
             headers: Set<string> = new Set();
