@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { type StdFetchEventData } from '#cfw.ts';
+import { cfw, type StdRequestContextData } from '#cfw.ts';
 import { $crypto, $http, $mime, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
 
 /**
@@ -17,7 +17,7 @@ export type FetchOptions = {
         username?: string;
         password?: string;
     };
-    headers?: Headers | { [x: string]: string };
+    headers?: $type.cf.Headers | { [x: string]: string };
     timeout?: number; // In milliseconds.
 };
 
@@ -26,14 +26,14 @@ export type FetchOptions = {
  *
  * Note: Only `GET` method is supported at this time.
  *
- * @param   feData  Fetch event data; {@see StdFetchEventData}.
+ * @param   rcData  Request context data; {@see StdRequestContextData}.
  * @param   url     Parseable URL; i.e., string or URL instance.
  * @param   options Some required; {@see FetchOptions}.
  *
  * @returns         Promise of HTTP response.
  */
-export const fetch = async (feData: StdFetchEventData, parseable: $type.URL | string, options?: FetchOptions): Promise<$type.cf.Response> => {
-    const { Response } = feData,
+export const fetch = async (rcData: StdRequestContextData, parseable: $type.cf.URL | string, options?: FetchOptions): Promise<$type.cf.Response> => {
+    const { Response } = cfw,
         url = $url.tryParse(parseable),
         opts = $obj.defaults({}, options || {}, {
             headers: {},
@@ -50,19 +50,19 @@ export const fetch = async (feData: StdFetchEventData, parseable: $type.URL | st
     if (!opts.proxy || !opts.proxy.host || !opts.proxy.port) {
         throw Error('AzwqQc85'); // Missing required options.
     }
-    return await Promise.race([fetchꓺwaitTimeout(feData, opts), fetchꓺviaSocket(feData, url, opts)]);
+    return await Promise.race([fetchꓺwaitTimeout(rcData, opts), fetchꓺviaSocket(rcData, url, opts)]);
 };
 
 /**
  * Creates a timeout promise.
  *
- * @param   feData  Fetch event data; {@see StdFetchEventData}.
+ * @param   rcData  Request context data; {@see StdRequestContextData}.
  * @param   options Required options; {@see Required<FetchOptions>}.
  *
  * @returns         Timeout promise suitable for a race.
  */
-const fetchꓺwaitTimeout = async (feData: StdFetchEventData, opts: Required<FetchOptions>): Promise<$type.cf.Response> => {
-    const { Response } = feData;
+const fetchꓺwaitTimeout = async (rcData: StdRequestContextData, opts: Required<FetchOptions>): Promise<$type.cf.Response> => {
+    const { Response } = cfw;
 
     return new Promise((resolve): void => {
         setTimeout((): void => {
@@ -80,15 +80,15 @@ const fetchꓺwaitTimeout = async (feData: StdFetchEventData, opts: Required<Fet
 /**
  * Performs an HTTP fetch using a proxy.
  *
- * @param   feData  Fetch event data; {@see StdFetchEventData}.
+ * @param   rcData  Request context data; {@see StdRequestContextData}.
  * @param   url     Parseable URL; i.e., string or URL instance.
  * @param   options Required options; {@see Required<FetchOptions>}.
  *
  * @returns         Promise of HTTP response.
  */
-const fetchꓺviaSocket = async (feData: StdFetchEventData, url: $type.URL, opts: Required<FetchOptions>): Promise<$type.cf.Response> => {
-    const { Response } = feData;
-    const sockets = await import('cloudflare:sockets');
+const fetchꓺviaSocket = async (rcData: StdRequestContextData, url: $type.cf.URL, opts: Required<FetchOptions>): Promise<$type.cf.Response> => {
+    const { Response } = cfw,
+        sockets = await import('cloudflare:sockets');
 
     try {
         const socket = sockets.connect({ hostname: opts.proxy.host, port: opts.proxy.port }),

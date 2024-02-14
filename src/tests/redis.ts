@@ -2,41 +2,37 @@
  * Test suite.
  */
 
+import { cfw } from '#cfw.ts';
 import { $cfw, $redis } from '#index.ts';
 import { $time, type $type } from '@clevercanyon/utilities';
 import { describe, expect, test } from 'vitest';
 
 describe('$redis', async () => {
-    const mockLoggerInterface: $type.LoggerInterface = {
-        withContext: () => mockLoggerInterface,
-        log: async () => true,
-        debug: async () => true,
-        info: async () => true,
-        warn: async () => true,
-        error: async () => true,
-        flush: async () => true,
-    };
-    const mockStdFetchEventData = {
-        ctx: {
-            waitUntil: (): void => undefined,
-            passThroughOnException: (): void => undefined,
+    const { URL, Request, Response } = cfw,
+        //
+        mockLoggerInterface: $type.LoggerInterface = {
+            withContext: () => mockLoggerInterface,
+            log: async () => true,
+            debug: async () => true,
+            info: async () => true,
+            warn: async () => true,
+            error: async () => true,
+            flush: async () => true,
         },
-        env: {} as $cfw.StdEnvironment, // None at this time.
+        mockStdRequestContextData = {
+            ctx: {
+                waitUntil: (): void => undefined,
+                passThroughOnException: (): void => undefined,
+            },
+            env: {} as $cfw.StdEnvironment,
 
-        url: new URL('https://x.tld/') as unknown as $type.cf.URL,
-        request: new Request('https://x.tld/') as unknown as $type.cf.Request,
+            url: new URL('https://x.tld/'),
+            request: new Request('https://x.tld/'),
 
-        auditLogger: mockLoggerInterface,
-        consentLogger: mockLoggerInterface,
-
-        URL: globalThis.URL as unknown as typeof $type.cf.URL,
-        fetch: globalThis.fetch as unknown as typeof $type.cf.fetch,
-        caches: globalThis.caches as unknown as typeof $type.cf.caches,
-        Request: globalThis.Request as unknown as typeof $type.cf.Request,
-        Response: globalThis.Response as unknown as typeof $type.cf.Response,
-        AbortSignal: globalThis.AbortSignal as unknown as typeof $type.cf.AbortSignal,
-    };
-    const redis = $redis.instance();
+            auditLogger: mockLoggerInterface,
+            consentLogger: mockLoggerInterface,
+        },
+        redis = $redis.instance();
 
     test('.set(), .get()', async () => {
         await redis.set('testKey', 'testValue');
@@ -63,7 +59,7 @@ describe('$redis', async () => {
     test(
         '.rateLimiter()',
         async () => {
-            const rateLimiter = $redis.rateLimiter(mockStdFetchEventData, {
+            const rateLimiter = $redis.rateLimiter(mockStdRequestContextData, {
                 slidingWindow: [10, '10s'], // 10 every 10 seconds.
             });
             expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 1
@@ -84,7 +80,7 @@ describe('$redis', async () => {
                 thrownResponse = thrown; // Limit reached; response thrown.
             }
             expect(thrownResponse instanceof Response).toBe(true);
-            expect((thrownResponse as $type.Response).status).toBe(429);
+            expect((thrownResponse as $type.cf.Response).status).toBe(429);
 
             // Blocks until allowed to resume operations given the defined rate limiter.
             expect(await rateLimiter.blockUntilReady('testKey', $time.secondInMilliseconds * 10)).toMatchObject({ success: true });

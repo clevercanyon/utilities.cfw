@@ -9,22 +9,23 @@ import { $app, $class, $crypto, $env, $error, $fsize, $http, $is, $mm, $obj, $ur
 /**
  * Defines types.
  */
-export type Context = Readonly<$type.cf.ExecutionContext>;
+export type ExecutionContext = Readonly<$type.cf.ExecutionContext>;
 export type Environment = StdEnvironment;
-export type Route = ((feData: FetchEventData) => Promise<$type.cf.Response>) & {
+
+export type Route = ((rcData: RequestContextData) => Promise<$type.cf.Response>) & {
     config?: Required<$http.RouteConfig>;
 };
 export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
 
-export type InitialFetchEventData = Readonly<{
-    ctx: Context;
+export type InitialRequestContextData = Readonly<{
+    ctx: ExecutionContext;
     env: Environment;
     request: $type.cf.Request;
     routes: Routes;
 }>;
-export type FetchEventData = StdFetchEventData &
+export type RequestContextData = StdRequestContextData &
     Readonly<{
-        ctx: Context;
+        ctx: ExecutionContext;
         env: Environment;
         routes: Routes;
     }>;
@@ -32,7 +33,7 @@ export type FetchEventData = StdFetchEventData &
 /**
  * Defines common types across CFW/CFP.
  */
-export type StdContext = Readonly<
+export type StdExecutionContext = Readonly<
     Pick<
         $type.cf.ExecutionContext | Parameters<$type.cf.PagesFunction>[0],
         // These are the two required keys.
@@ -46,8 +47,8 @@ export type StdEnvironment = Readonly<{
     KV: $type.cf.KVNamespace;
     DO: $type.cf.DurableObjectNamespace;
 }>;
-export type StdFetchEventData = Readonly<{
-    ctx: StdContext;
+export type StdRequestContextData = Readonly<{
+    ctx: StdExecutionContext;
     env: StdEnvironment;
 
     url: $type.cf.URL;
@@ -55,13 +56,6 @@ export type StdFetchEventData = Readonly<{
 
     auditLogger: $type.LoggerInterface;
     consentLogger: $type.LoggerInterface;
-
-    URL: typeof $type.cf.URL;
-    fetch: typeof $type.cf.fetch;
-    caches: typeof $type.cf.caches;
-    Request: typeof $type.cf.Request;
-    Response: typeof $type.cf.Response;
-    AbortSignal: typeof $type.cf.AbortSignal;
 }>;
 
 /**
@@ -70,20 +64,25 @@ export type StdFetchEventData = Readonly<{
 let initializedGlobals = false;
 
 /**
+ * Cloudflare worker global scope.
+ */
+export const cfw = globalThis as unknown as $type.cf.ServiceWorkerGlobalScope;
+
+/**
  * Initializes worker globals.
  *
- * @param ifeData Initial fetch event data.
+ * @param ircData Initial request context data.
  */
-const maybeInitializeGlobals = async (ifeData: InitialFetchEventData): Promise<void> => {
+const maybeInitializeGlobals = async (ircData: InitialRequestContextData): Promise<void> => {
     if (initializedGlobals) return;
     initializedGlobals = true;
 
     $env.capture(
         '@global', // Captures primitive environment variables.
         Object.fromEntries(
-            Object.entries(ifeData.env).filter(([, value]): boolean => {
+            Object.entries(ircData.env).filter(([, value]): boolean => {
                 // Anything that is not a primitive value; e.g., KV, D1, or other bindings,
-                // must be accessed in a request-specific way using {@see FetchEventData}.
+                // must be accessed in a request-specific way using {@see RequestContextData}.
                 return $is.primitive(value);
             }),
         ),
@@ -93,15 +92,15 @@ const maybeInitializeGlobals = async (ifeData: InitialFetchEventData): Promise<v
 /**
  * Handles fetch events.
  *
- * @param   ifeData Initial fetch event data.
+ * @param   ircData Initial request context data.
  *
  * @returns         Response promise.
  */
-export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<$type.cf.Response> => {
-    const { ctx, env, routes } = ifeData;
-    let { request } = ifeData; // Rewritable.
+export const handleFetchEvent = async (ircData: InitialRequestContextData): Promise<$type.cf.Response> => {
+    const { ctx, env, routes } = ircData;
+    let { request } = ircData; // Rewritable.
 
-    await maybeInitializeGlobals(ifeData); // Initializes worker globals.
+    await maybeInitializeGlobals(ircData); // Initializes worker globals.
 
     const Logger = $class.getLogger(), // Initializes base audit and consent loggers.
         baseAuditLogger = new Logger({ endpointToken: $env.get('APP_AUDIT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) }),
@@ -109,18 +108,18 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
 
     // Initializes audit logger early so it’s available for any errors below.
     // However, `request` is potentially rewritten, so reinitialize if it changes.
-    let auditLogger = baseAuditLogger.withContext({}, { cfwContext: ctx, request });
+    let auditLogger = baseAuditLogger.withContext({}, { cfw: { ctx }, request });
 
     try {
         let originalRequest = request; // Potentially rewritten.
         request = (await $http.prepareRequest(request, {})) as $type.cf.Request;
 
         if (request !== originalRequest /* Reinitializes using rewritten request. */) {
-            auditLogger = baseAuditLogger.withContext({}, { cfwContext: ctx, request });
+            auditLogger = baseAuditLogger.withContext({}, { cfw: { ctx }, request });
         }
         const url = $url.parse(request.url) as $type.cf.URL,
-            consentLogger = baseConsentLogger.withContext({}, { cfwContext: ctx, request }),
-            feData = $obj.freeze({
+            consentLogger = baseConsentLogger.withContext({}, { cfw: { ctx }, request }),
+            rcData = $obj.freeze({
                 ctx,
                 env,
                 routes,
@@ -130,19 +129,12 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
 
                 auditLogger,
                 consentLogger,
-
-                URL: globalThis.URL as unknown as typeof $type.cf.URL,
-                fetch: globalThis.fetch as unknown as typeof $type.cf.fetch,
-                caches: globalThis.caches as unknown as typeof $type.cf.caches,
-                Request: globalThis.Request as unknown as typeof $type.cf.Request,
-                Response: globalThis.Response as unknown as typeof $type.cf.Response,
-                AbortSignal: globalThis.AbortSignal as unknown as typeof $type.cf.AbortSignal,
             });
         let response: Promise<$type.cf.Response>; // Initialize.
 
         for (const [subpathGlob, route] of Object.entries(routes.subpathGlobs))
             if ($mm.test(url.pathname, $url.pathFromAppBase('./') + subpathGlob)) {
-                response = handleFetchCache(route, feData);
+                response = handleFetchCache(rcData, route);
                 break; // Route found; stop here.
             }
         response ??= $http.prepareResponse(request, { status: 404 }) as Promise<$type.cf.Response>;
@@ -181,18 +173,19 @@ export const handleFetchEvent = async (ifeData: InitialFetchEventData): Promise<
  * doesn’t do it by default, but our codebases assume IP and geolocation data will be available; i.e., for every
  * request. Therefore, when issuing requests to a service binding, always use this utility to build a request.
  *
- * @param   feData      Fetch event data; {@see StdFetchEventData}.
+ * @param   rcData      Request context data; {@see StdRequestContextData}.
  * @param   requestInfo New request info; {@see $type.cf.RequestInfo}.
  * @param   requestInit New request init; {@see $type.cf.RequestInit}.
  *
  * @returns             Promise of a {@see $type.cf.Request}.
  */
-export const serviceBindingRequest = async (feData: StdFetchEventData, requestInfo: $type.cf.RequestInfo, requestInit?: $type.cf.RequestInit): Promise<$type.cf.Request> => {
-    const { Request } = feData;
+export const serviceBindingRequest = async (rcData: StdRequestContextData, requestInfo: $type.cf.RequestInfo, requestInit?: $type.cf.RequestInit): Promise<$type.cf.Request> => {
+    const { Request } = cfw,
+        { request: originalRequest } = rcData;
 
     const importantParentRequestInit = {
-        headers: { 'cf-connecting-ip': await $user.ip(feData.request) },
-        cf: $obj.omit($obj.cloneDeep(await $user.ipGeoData(feData.request)), ['ip']),
+        headers: { 'cf-connecting-ip': await $user.ip(originalRequest) },
+        cf: $obj.omit($obj.cloneDeep(await $user.ipGeoData(originalRequest)), ['ip']),
     };
     return new Request(
         requestInfo, // e.g., Service binding URL.
@@ -206,16 +199,18 @@ export const serviceBindingRequest = async (feData: StdFetchEventData, requestIn
 /**
  * Handles fetch caching.
  *
+ * @param   rcData Request context data.
  * @param   route  Route handler.
- * @param   feData Fetch event data.
  *
  * @returns        Response promise.
  */
-const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$type.cf.Response> => {
-    let key, cachedResponse; // Initializes writable vars.
-    const { ctx, url, request, caches, Request } = feData;
+const handleFetchCache = async (rcData: RequestContextData, route: Route): Promise<$type.cf.Response> => {
+    const { caches, Request } = cfw,
+        { ctx, url, request } = rcData;
 
     // Populates cache key.
+
+    let key, cachedResponse; // Initialize.
 
     const varyOn = new Set(route.config?.varyOn || []);
     for (const v of varyOn) if (!request.headers.has(v)) varyOn.delete(v);
@@ -234,7 +229,7 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
     // Checks if request is cacheable.
 
     if (!['HEAD', 'GET'].includes(keyRequest.method) || !$http.requestHasCacheableMethod(keyRequest)) {
-        return route(feData); // Not cacheable; use async route.
+        return route(rcData); // Not cacheable; use async route.
     }
     // Reads response for this request from HTTP cache.
 
@@ -243,7 +238,7 @@ const handleFetchCache = async (route: Route, feData: FetchEventData): Promise<$
     }
     // Routes request and writes response to HTTP cache.
 
-    const response = await route(feData); // Awaits response so we can cache.
+    const response = await route(rcData); // Awaits response so we can cache.
     if (
         !response.webSocket &&
         206 !== response.status &&
