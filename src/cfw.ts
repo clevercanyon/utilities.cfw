@@ -68,11 +68,10 @@ let initializedGlobals = false;
  */
 export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope & {
     fetch(
-        this: $type.cfw.ServiceWorkerGlobalScope, //
+        this: void, // {@see https://typescript-eslint.io/rules/unbound-method/}.
         ...args: Parameters<$type.cfw.ServiceWorkerGlobalScope['fetch']>
     ): ReturnType<$type.cfw.ServiceWorkerGlobalScope['fetch']>;
 };
-cfw.fetch = cfw.fetch.bind(cfw); // Avoids us calling an unbound function.
 
 /**
  * Initializes worker globals.
