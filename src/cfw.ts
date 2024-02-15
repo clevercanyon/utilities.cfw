@@ -66,7 +66,13 @@ let initializedGlobals = false;
 /**
  * Cloudflare worker global scope.
  */
-export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope;
+export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope & {
+    fetch(
+        this: $type.cfw.ServiceWorkerGlobalScope, //
+        ...args: Parameters<$type.cfw.ServiceWorkerGlobalScope['fetch']>
+    ): ReturnType<$type.cfw.ServiceWorkerGlobalScope['fetch']>;
+};
+cfw.fetch = cfw.fetch.bind(cfw); // Avoids us calling an unbound function.
 
 /**
  * Initializes worker globals.

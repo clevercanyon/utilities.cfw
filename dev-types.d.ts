@@ -41,11 +41,11 @@ declare module 'virtual:brand/config' {
 }
 
 /**
- * Declares virtual Cloudflare runtime modules.
+ * Declares Cloudflare runtime modules.
  */
 declare module 'cloudflare:sockets' {
-    import type * as cf from '@cloudflare/workers-types/experimental';
-    export function connect(address: string | cf.SocketAddress, options?: cf.SocketOptions): cf.Socket;
+    import { $type } from '@clevercanyon/utilities';
+    export function connect(address: string | $type.cfw.SocketAddress, options?: $type.cfw.SocketOptions): $type.cfw.Socket;
 }
 
 /**
