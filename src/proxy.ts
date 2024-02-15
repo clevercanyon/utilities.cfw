@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { cfw, type StdRequestContextData } from '#cfw.ts';
+import { $cfw, cfw } from '#index.ts';
 import { $crypto, $http, $mime, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
 
 /**
@@ -26,13 +26,13 @@ export type FetchOptions = {
  *
  * Note: Only `GET` method is supported at this time.
  *
- * @param   rcData  Request context data; {@see StdRequestContextData}.
+ * @param   rcData  Request context data; {@see $cfw.StdRequestContextData}.
  * @param   url     Parseable URL; i.e., string or URL instance.
  * @param   options Some required; {@see FetchOptions}.
  *
  * @returns         Promise of HTTP response.
  */
-export const fetch = async (rcData: StdRequestContextData, parseable: $type.cfw.URL | string, options?: FetchOptions): Promise<$type.cfw.Response> => {
+export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type.cfw.URL | string, options?: FetchOptions): Promise<$type.cfw.Response> => {
     const { Response } = cfw,
         url = $url.tryParse(parseable),
         opts = $obj.defaults({}, options || {}, {
@@ -56,12 +56,12 @@ export const fetch = async (rcData: StdRequestContextData, parseable: $type.cfw.
 /**
  * Creates a timeout promise.
  *
- * @param   rcData  Request context data; {@see StdRequestContextData}.
+ * @param   rcData  Request context data; {@see $cfw.StdRequestContextData}.
  * @param   options Required options; {@see Required<FetchOptions>}.
  *
  * @returns         Timeout promise suitable for a race.
  */
-const fetchꓺwaitTimeout = async (rcData: StdRequestContextData, opts: Required<FetchOptions>): Promise<$type.cfw.Response> => {
+const fetchꓺwaitTimeout = async (rcData: $cfw.StdRequestContextData, opts: Required<FetchOptions>): Promise<$type.cfw.Response> => {
     const { Response } = cfw;
 
     return new Promise((resolve): void => {
@@ -80,13 +80,13 @@ const fetchꓺwaitTimeout = async (rcData: StdRequestContextData, opts: Required
 /**
  * Performs an HTTP fetch using a proxy.
  *
- * @param   rcData  Request context data; {@see StdRequestContextData}.
+ * @param   rcData  Request context data; {@see $cfw.StdRequestContextData}.
  * @param   url     Parseable URL; i.e., string or URL instance.
  * @param   options Required options; {@see Required<FetchOptions>}.
  *
  * @returns         Promise of HTTP response.
  */
-const fetchꓺviaSocket = async (rcData: StdRequestContextData, url: $type.cfw.URL, opts: Required<FetchOptions>): Promise<$type.cfw.Response> => {
+const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.cfw.URL, opts: Required<FetchOptions>): Promise<$type.cfw.Response> => {
     const { Response } = cfw,
         sockets = await import('cloudflare:sockets');
 

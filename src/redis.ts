@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { type StdRequestContextData } from '#cfw.ts';
+import { $cfw } from '#index.ts';
 import { $class, $env, $fn, $http, $is, $json, $mime, $obj } from '@clevercanyon/utilities';
 import { Ratelimit as RateLimiterCore } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis/cloudflare';
@@ -122,12 +122,12 @@ export const instance = $fn.memo(
  * - Using rate limiter; {@see https://o5p.me/8ZIrm1}.
  * - Other rate limit features; {@see https://o5p.me/gJmt6n}.
  *
- * @param   rcData                   Request context data; {@see StdRequestContextData}.
+ * @param   rcData                   Request context data; {@see $cfw.StdRequestContextData}.
  * @param   options                  Options (all optional); {@see RateLimiterOptions}.
  *
  * @returns {@see RateLimiter}         Instance.
  */
-export const rateLimiter = (rcData: StdRequestContextData, options?: RateLimiterOptions): RateLimiter => {
+export const rateLimiter = (rcData: $cfw.StdRequestContextData, options?: RateLimiterOptions): RateLimiter => {
     const { ctx, url, request, auditLogger } = rcData,
         limiter = rateLimiterCore(options);
 
