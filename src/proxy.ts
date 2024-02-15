@@ -104,7 +104,12 @@ const fetchꓺviaSocket = async (rcData: StdRequestContextData, url: $type.cfw.U
         for (const [name, value] of $http.parseHeaders(opts.headers).entries()) {
             headers.add(`${name}: ${value}`);
         }
-        await writer.write($str.textEncoder.encode(`GET ${url.toString()} HTTP/1.0\r\n${[...headers].join('\r\n')}\r\n\r\n`));
+        await writer.write(
+            $str.textEncoder.encode(
+                `GET ${url.toString()} HTTP/1.0` + '\r\n' +
+                `${[...headers].join('\r\n')}` + '\r\n\r\n',
+            ), // prettier-ignore
+        );
         await writer.close(); // Close writable stream.
 
         const rawHTTPResponse = await new Response(readable, { headers: { 'content-type': $mime.contentType('.txt') } }).text();
