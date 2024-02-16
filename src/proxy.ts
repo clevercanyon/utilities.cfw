@@ -17,6 +17,7 @@ export type FetchOptions = {
         username?: string;
         password?: string;
     };
+    method?: 'HEAD' | 'GET';
     headers?: $type.cfw.Headers | { [x: string]: string };
     timeout?: number; // In milliseconds.
 };
@@ -24,7 +25,7 @@ export type FetchOptions = {
 /**
  * Performs an HTTP fetch using a proxy.
  *
- * Note: Only `GET` method is supported at this time.
+ * Note: Only `HEAD`, `GET` methods supported at this time.
  *
  * @param   rcData  Request context data; {@see $cfw.StdRequestContextData}.
  * @param   url     Parseable URL; i.e., string or URL instance.
@@ -36,6 +37,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
     const { Response } = cfw,
         url = $url.tryParse(parseable),
         opts = $obj.defaults({}, options || {}, {
+            method: 'GET',
             headers: {},
             timeout: $time.secondInMilliseconds * 15,
         }) as Required<FetchOptions>;
@@ -47,7 +49,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
             headers: { 'content-type': $mime.contentType('.txt') },
         });
     }
-    if (!opts.proxy || !opts.proxy.host || !opts.proxy.port) {
+    if (!opts.method || !opts.proxy || !opts.proxy.host || !opts.proxy.port || !opts.timeout) {
         throw Error('AzwqQc85'); // Missing required options.
     }
     return await Promise.race([fetchꓺwaitTimeout(rcData, opts), fetchꓺviaSocket(rcData, url, opts)]);
@@ -106,25 +108,24 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
         }
         await writer.write(
             $str.textEncoder.encode(
-                `GET ${url.toString()} HTTP/1.0` + '\r\n' +
+                `${opts.method} ${url.toString()} HTTP/1.0` + '\r\n' +
                 `${[...headers].join('\r\n')}` + '\r\n\r\n',
             ), // prettier-ignore
         );
-        await writer.close(); // Close writable stream.
-
+        await writer.close(); // Closes writable stream.
         const rawHTTPResponse = await new Response(readable, { headers: { 'content-type': $mime.contentType('.txt') } }).text();
-        await socket.close(); // We can go ahead and close the socket now.
+        await socket.close(); // Closes socket now; i.e., not needed any longer.
 
-        const rawHTTPResponseCRLFIndex = rawHTTPResponse.indexOf('\r\n\r\n');
-        if (!rawHTTPResponse || rawHTTPResponseCRLFIndex === -1) {
+        if (!rawHTTPResponse /* Must at least contain headers. */) {
             return new Response(null, {
                 status: 421,
                 statusText: $http.responseStatusText(421),
                 headers: { 'content-type': $mime.contentType('.txt') },
             });
         }
-        const rawHTTPResponseHeaders = rawHTTPResponse.slice(0, rawHTTPResponseCRLFIndex).trim(),
-            rawHTTPResponseBody = rawHTTPResponse.slice(rawHTTPResponseCRLFIndex + 4).trim();
+        const rawHTTPResponseCRLFIndex = rawHTTPResponse.indexOf('\r\n\r\n'), // Potentially `-1`; i.e., no response body.
+            rawHTTPResponseHeaders = rawHTTPResponseCRLFIndex === -1 ? rawHTTPResponse : rawHTTPResponse.slice(0, rawHTTPResponseCRLFIndex).trim(),
+            rawHTTPResponseBody = rawHTTPResponseCRLFIndex === -1 ? '' : rawHTTPResponse.slice(rawHTTPResponseCRLFIndex + 4).trim();
 
         const responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/1\.0\s+([0-9]+)/iu)?.[1] || 0),
             responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cfw.Headers,
