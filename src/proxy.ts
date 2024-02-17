@@ -137,9 +137,12 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
         // Socket setup.
 
         const socket = sockets.connect({
-            hostname: opts.proxy.host,
-            port: opts.proxy.port,
-        });
+                hostname: opts.proxy.host,
+                port: opts.proxy.port,
+            }),
+            writer = socket.writable.getWriter() as $type.cfw.WritableStreamDefaultWriter<Uint8Array>,
+            reader = socket.readable.getReader() as $type.cfw.ReadableStreamDefaultReader<Uint8Array>;
+
         // ---
         // Request routines.
 
@@ -153,8 +156,8 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
         for (const [name, value] of opts.headers.entries()) {
             headers.add(`${name}: ${value}`);
         }
-        await socket.writable.getWriter().write(
-            $str.textEncoder.encode(
+        await writer.write(
+            $str.textEncode(
                 opts.method + ' ' + url.toString() + ' HTTP/1.0\r\n' +
                 [...headers].join('\r\n') + '\r\n\r\n',
             ), // prettier-ignore
@@ -163,9 +166,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
         // Response routines.
 
         let rawHTTPResponse = ''; // Initialize.
-
-        const textDecoder = new TextDecoder(), // Initialize.
-            reader = socket.readable.getReader() as $type.cfw.ReadableStreamDefaultReader<Uint8Array>;
+        const textDecoder = new TextDecoder(); // Initialize.
 
         while (reader) {
             const { done, value: chunk } = await reader.read();
