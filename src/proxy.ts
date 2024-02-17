@@ -79,6 +79,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
         }) as RequiredFetchOptions;
 
     opts.headers = $http.parseHeaders(opts.headers) as $type.cfw.Headers;
+
     if (!opts.headers.has('user-agent'))
         for (const [name, value] of Object.entries(await fetchꓺfakeUAHeaders(rcData))) {
             opts.headers.set(name, value);
@@ -132,6 +133,9 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
         sockets = await import('cloudflare:sockets');
 
     try {
+        // ---
+        // Socket setup.
+
         const socket = sockets.connect({
             hostname: opts.proxy.host,
             port: opts.proxy.port,
@@ -160,7 +164,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
 
         let rawHTTPResponse = ''; // Initialize.
 
-        const textDecoder = new TextDecoder(),
+        const textDecoder = new TextDecoder(), // Initialize.
             reader = socket.readable.getReader() as $type.cfw.ReadableStreamDefaultReader<Uint8Array>;
 
         while (reader) {
@@ -183,9 +187,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
             rawHTTPResponseHeaders = rawHTTPResponseCRLFIndex === -1 ? rawHTTPResponse : rawHTTPResponse.slice(0, rawHTTPResponseCRLFIndex).trim(),
             rawHTTPResponseBody = rawHTTPResponseCRLFIndex === -1 ? '' : rawHTTPResponse.slice(rawHTTPResponseCRLFIndex + 4).trim();
 
-        void auditLogger.debug('fetchꓺviaSocket:', { rawHTTPResponseHeaders, rawHTTPResponseBody });
-
-        const responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/1\.0\s+([0-9]+)/iu)?.[1] || 0),
+        const responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1] || 0),
             responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cfw.Headers,
             responseBody = rawHTTPResponseBody;
 
@@ -199,7 +201,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
             headers: responseHeaders,
         });
     } catch (thrown) {
-        void auditLogger.warn('500: Fetch failure.', { thrown });
+        void auditLogger.warn('Proxied fetch failure.', { thrown });
         return new Response(null, {
             status: 500,
             statusText: $http.responseStatusText(500),
