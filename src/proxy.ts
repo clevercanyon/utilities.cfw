@@ -112,9 +112,9 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
                 `${[...headers].join('\r\n')}` + '\r\n\r\n',
             ), // prettier-ignore
         );
-        await writer.close(); // Closes writable stream.
         const rawHTTPResponse = await new Response(readable, { headers: { 'content-type': $mime.contentType('.txt') } }).text();
-        await socket.close(); // Closes socket now; i.e., not needed any longer.
+        await writer.close(); // Closes writable stream.
+        await socket.close(); // Closes socket.
 
         if (!rawHTTPResponse /* Must at least contain headers. */) {
             return new Response(null, {
