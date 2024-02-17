@@ -169,6 +169,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
             rawHTTPResponseHeaders = rawHTTPResponseCRLFIndex === -1 ? rawHTTPResponse : rawHTTPResponse.slice(0, rawHTTPResponseCRLFIndex).trim(),
             rawHTTPResponseBody = rawHTTPResponseCRLFIndex === -1 ? '' : rawHTTPResponse.slice(rawHTTPResponseCRLFIndex + 4).trim();
 
+        console.log({ rawHTTPResponseHeaders });
         const responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/1\.0\s+([0-9]+)/iu)?.[1] || 0),
             responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cfw.Headers,
             responseBody = rawHTTPResponseBody;
