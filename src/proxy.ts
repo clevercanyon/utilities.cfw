@@ -128,6 +128,7 @@ const fetchꓺwaitTimeout = async (rcData: $cfw.StdRequestContextData, opts: Req
  */
 const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.cfw.URL, opts: RequiredFetchOptions, redirects: number = 0): Promise<$type.cfw.Response> => {
     const { Response } = cfw,
+        { auditLogger } = rcData,
         sockets = await import('cloudflare:sockets');
 
     try {
@@ -182,6 +183,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
             headers: responseHeaders,
         });
     } catch (thrown) {
+        void auditLogger.warn('500: Fetch failure.', { thrown });
         return new Response(null, {
             status: 500,
             statusText: $http.responseStatusText(500),
