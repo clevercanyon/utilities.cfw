@@ -133,10 +133,13 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
 
     try {
         const socket = sockets.connect({
-                hostname: opts.proxy.host,
-                port: opts.proxy.port,
-            }),
-            headers: Set<string> = new Set();
+            hostname: opts.proxy.host,
+            port: opts.proxy.port,
+        });
+        // ---
+        // Request routines.
+
+        const headers: Set<string> = new Set();
 
         headers.add(`host: ${url.hostname}`);
 
@@ -152,11 +155,23 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
                 [...headers].join('\r\n') + '\r\n\r\n',
             ), // prettier-ignore
         );
+        // ---
+        // Response routines.
+
         let rawHTTPResponse = ''; // Initialize.
-        for await (const chunk of socket.readable) {
-            rawHTTPResponse += $str.textDecoder.decode(chunk as Uint8Array);
+
+        const textDecoder = new TextDecoder(),
+            reader = socket.readable.getReader() as $type.cfw.ReadableStreamDefaultReader<Uint8Array>;
+
+        while (reader) {
+            const { done, value: chunk } = await reader.read();
+            if (done) {
+                rawHTTPResponse += textDecoder.decode(chunk);
+                break; // Last chunk.
+            }
+            rawHTTPResponse += textDecoder.decode(chunk, { stream: true });
         }
-        await socket.close(); // Closes socket also.
+        await socket.close(); // Closes socket and streams.
 
         if (!rawHTTPResponse /* Must at least contain headers. */)
             return new Response(null, {
