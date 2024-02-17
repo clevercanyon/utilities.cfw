@@ -188,13 +188,17 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
             rawHTTPResponseHeaders = rawHTTPResponseCRLFIndex === -1 ? rawHTTPResponse : rawHTTPResponse.slice(0, rawHTTPResponseCRLFIndex).trim(),
             rawHTTPResponseBody = rawHTTPResponseCRLFIndex === -1 ? '' : rawHTTPResponse.slice(rawHTTPResponseCRLFIndex + 4).trim();
 
-        const responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1] || 0),
+        const responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1] || 500),
             responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cfw.Headers,
             responseBody = rawHTTPResponseBody;
 
         if ([301, 302].includes(responseStatus) && responseHeaders.has('location') && redirects + 1 <= opts.maxRedirects) {
             const redirectURL = $url.tryParse(responseHeaders.get('location') || '');
-            if (redirectURL) return fetchꓺviaSocket(rcData, redirectURL, opts, redirects + 1);
+            // Follows redirects, but only when the URL actually changes.
+
+            if (redirectURL && redirectURL.toString() !== url.toString()) {
+                return fetchꓺviaSocket(rcData, redirectURL, opts, redirects + 1);
+            }
         }
         return new Response(responseBody, {
             status: responseStatus,
