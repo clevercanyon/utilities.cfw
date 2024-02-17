@@ -151,8 +151,8 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
         }
         await writer.write(
             $str.textEncoder.encode(
-                `${opts.method} ${url.toString()} HTTP/1.0` + '\r\n' +
-                `${[...headers].join('\r\n')}` + '\r\n\r\n',
+                opts.method + ' ' + url.toString() + ' HTTP/1.0\r\n' +
+                [...headers].join('\r\n') + '\r\n\r\n',
             ), // prettier-ignore
         );
         const rawHTTPResponse = await new Response(readable, { headers: { 'content-type': $mime.contentType('.txt') } }).text();
@@ -169,7 +169,9 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
             rawHTTPResponseHeaders = rawHTTPResponseCRLFIndex === -1 ? rawHTTPResponse : rawHTTPResponse.slice(0, rawHTTPResponseCRLFIndex).trim(),
             rawHTTPResponseBody = rawHTTPResponseCRLFIndex === -1 ? '' : rawHTTPResponse.slice(rawHTTPResponseCRLFIndex + 4).trim();
 
-        console.log({ rawHTTPResponseHeaders });
+        console.log({ rawHTTPResponse, rawHTTPResponseHeaders, rawHTTPResponseBody });
+        void auditLogger.warn('Fetch debug.', { rawHTTPResponse, rawHTTPResponseHeaders, rawHTTPResponseBody });
+
         const responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/1\.0\s+([0-9]+)/iu)?.[1] || 0),
             responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cfw.Headers,
             responseBody = rawHTTPResponseBody;
