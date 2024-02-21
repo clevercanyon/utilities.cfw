@@ -198,12 +198,15 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
             responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cfw.Headers,
             responseBody = rawHTTPResponseBody;
 
+        console.log({ responseStatus, url: url.toString() });
         if ([301, 302].includes(responseStatus) && responseHeaders.has('location') && redirects + 1 <= opts.maxRedirects) {
             const location = responseHeaders.get('location') || '',
                 redirectURL = location ? $url.tryParse(location, url) : undefined;
 
+            console.log({ location, redirectURL: redirectURL?.toString() });
             // Follows redirects, but only when URL actually changes.
             if (redirectURL && redirectURL.toString() !== url.toString()) {
+                console.log('Redirecting.');
                 return fetchꓺviaSocket(rcData, redirectURL, opts, redirects + 1);
             }
         }
