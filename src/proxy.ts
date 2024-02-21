@@ -134,7 +134,7 @@ const fetchꓺwaitTimeout = async (rcData: $cfw.StdRequestContextData, opts: Req
  * @returns           Promise of HTTP response.
  */
 const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.cfw.URL, opts: RequiredFetchOptions, redirects: number = 0): Promise<$type.cfw.Response> => {
-    const { Response } = cfw,
+    const { Blob, Response } = cfw,
         { auditLogger } = rcData,
         sockets = await import('cloudflare:sockets');
 
@@ -171,52 +171,83 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
         // ---
         // Response routines.
 
-        let rawHTTPResponse = ''; // Initialize.
-        const textDecoder = new TextDecoder(); // Initialize.
+        const crlf = '\r\n\r\n',
+            crlfLength = crlf.length,
+            textDecoder = new TextDecoder();
 
-        while (reader) {
+        let rawHTTPResponse = '',
+            responseStatus: undefined | number,
+            responseHeaders: undefined | $type.cfw.Headers,
+            responseBodyBinaryChunks: undefined | Uint8Array[],
+            responseBody: undefined | string | $type.cfw.Blob;
+
+        while (reader /* Stops when `done`. */) {
             const { done, value: chunk } = await reader.read();
-            if (done) {
-                rawHTTPResponse += textDecoder.decode(chunk);
-                break; // Last chunk.
+
+            if (chunk && !responseHeaders) {
+                rawHTTPResponse += textDecoder.decode(chunk, { stream: !done });
+                const endOfHeadersIndex = rawHTTPResponse.indexOf(crlf);
+
+                if (-1 !== endOfHeadersIndex) {
+                    let rawResponseHeaders = rawHTTPResponse.slice(0, endOfHeadersIndex).trim();
+                    responseStatus = Number(rawResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1] || 500);
+                    responseHeaders = $http.parseHeaders(rawResponseHeaders) as $type.cfw.Headers;
+
+                    if ($mime.typeIsBinary(responseHeaders.get('content-type') || '')) {
+                        let bodyBytesIndex = $str.textEncode(rawHTTPResponse.slice(endOfHeadersIndex + crlfLength)).length;
+                        responseBodyBinaryChunks = [new Uint8Array(chunk.subarray(bodyBytesIndex))];
+                    } else {
+                        responseBody = rawHTTPResponse.slice(endOfHeadersIndex + crlfLength);
+                    }
+                    rawHTTPResponse = ''; // Discard; i.e., now that we have `responseHeaders`.
+                }
+            } else if (chunk && responseBodyBinaryChunks) {
+                responseBodyBinaryChunks.push(chunk); // No decoding; we want bytes.
+                //
+            } else if (chunk) {
+                responseBody += textDecoder.decode(chunk, { stream: !done });
             }
-            rawHTTPResponse += textDecoder.decode(chunk, { stream: true });
+            if (done) {
+                if (!responseHeaders) {
+                    let rawResponseHeaders = rawHTTPResponse.trim();
+                    responseStatus = Number(rawResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1] || 500);
+                    responseHeaders = $http.parseHeaders(rawResponseHeaders) as $type.cfw.Headers;
+                }
+                if (responseBodyBinaryChunks) {
+                    responseBody = new Blob(responseBodyBinaryChunks, { type: responseHeaders.get('content-type') || '' });
+                    responseBodyBinaryChunks = []; // Free memory.
+                }
+                textDecoder.decode(); // Ends decoding stream.
+                break; // Breaks while loop when reaching last chunk.
+            }
         }
         await socket.close(); // Closes socket and streams.
 
-        if (!rawHTTPResponse /* Must at least contain headers. */)
+        if (!responseStatus || !responseHeaders)
             return new Response(null, {
                 status: 421,
                 statusText: $http.responseStatusText(421),
                 headers: { 'content-type': $mime.contentType('.txt') },
             });
-        const rawHTTPResponseCRLFIndex = rawHTTPResponse.indexOf('\r\n\r\n'), // Potentially `-1`; i.e., no response body.
-            rawHTTPResponseHeaders = rawHTTPResponseCRLFIndex === -1 ? rawHTTPResponse.trim() : rawHTTPResponse.slice(0, rawHTTPResponseCRLFIndex).trim(),
-            rawHTTPResponseBody = rawHTTPResponseCRLFIndex === -1 ? '' : rawHTTPResponse.slice(rawHTTPResponseCRLFIndex + 4).trim();
+        if ([301, 302].includes(responseStatus) && ['HEAD', 'GET'].includes(opts.method))
+            if (responseHeaders.has('location') && redirects + 1 <= opts.maxRedirects) {
+                const location = responseHeaders.get('location') || '',
+                    redirectURL = location ? $url.tryParse(location, url) : undefined;
 
-        const responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1] || 500),
-            responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cfw.Headers,
-            responseBody = rawHTTPResponseBody;
-
-        console.log({ responseStatus, url: url.toString() });
-        if ([301, 302].includes(responseStatus) && responseHeaders.has('location') && redirects + 1 <= opts.maxRedirects) {
-            const location = responseHeaders.get('location') || '',
-                redirectURL = location ? $url.tryParse(location, url) : undefined;
-
-            console.log({ location, redirectURL: redirectURL?.toString() });
-            // Follows redirects, but only when URL actually changes.
-            if (redirectURL && redirectURL.toString() !== url.toString()) {
-                console.log('Redirecting.');
-                return fetchꓺviaSocket(rcData, redirectURL, opts, redirects + 1);
+                // Follows redirects, but only when URL actually changes.
+                if (redirectURL && redirectURL.toString() !== url.toString()) {
+                    return fetchꓺviaSocket(rcData, redirectURL, opts, redirects + 1);
+                }
             }
-        }
         return new Response(responseBody, {
             status: responseStatus,
             statusText: $http.responseStatusText(responseStatus),
             headers: responseHeaders,
         });
     } catch (thrown) {
+        // Record error for debugging purposes.
         void auditLogger.warn('Proxied fetch failure.', { thrown });
+
         return new Response(null, {
             status: 500,
             statusText: $http.responseStatusText(500),
