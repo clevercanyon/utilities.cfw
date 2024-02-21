@@ -20,6 +20,7 @@ export type FetchOptions = {
     method?: 'HEAD' | 'GET';
     headers?: $type.cfw.HeadersInit;
 
+    uaBotAppend?: string;
     maxRedirects?: number;
     timeout?: number; // In milliseconds.
 };
@@ -74,6 +75,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
             method: 'GET',
             headers: {},
 
+            uaBotAppend: '',
             maxRedirects: 2,
             timeout: $time.secondInMilliseconds * 15,
         }) as RequiredFetchOptions;
@@ -84,6 +86,10 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
         for (const [name, value] of Object.entries(await fetchꓺfakeUAHeaders(rcData))) {
             opts.headers.set(name, value);
         }
+    if (opts.uaBotAppend && opts.headers.has('user-agent')) {
+        const currentUA = opts.headers.get('user-agent') || ''; // Current user-agent header.
+        opts.headers.set('user-agent', $str.trim(currentUA + ' ' + $str.trim(opts.uaBotAppend)));
+    }
     if (!url || !opts.proxy?.host || !opts.proxy?.port || !opts.method || !opts.timeout)
         return new Response(null, {
             status: 400,
