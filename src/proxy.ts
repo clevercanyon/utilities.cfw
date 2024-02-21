@@ -191,7 +191,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
                 headers: { 'content-type': $mime.contentType('.txt') },
             });
         const rawHTTPResponseCRLFIndex = rawHTTPResponse.indexOf('\r\n\r\n'), // Potentially `-1`; i.e., no response body.
-            rawHTTPResponseHeaders = rawHTTPResponseCRLFIndex === -1 ? rawHTTPResponse : rawHTTPResponse.slice(0, rawHTTPResponseCRLFIndex).trim(),
+            rawHTTPResponseHeaders = rawHTTPResponseCRLFIndex === -1 ? rawHTTPResponse.trim() : rawHTTPResponse.slice(0, rawHTTPResponseCRLFIndex).trim(),
             rawHTTPResponseBody = rawHTTPResponseCRLFIndex === -1 ? '' : rawHTTPResponse.slice(rawHTTPResponseCRLFIndex + 4).trim();
 
         const responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1] || 500),
@@ -199,9 +199,10 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
             responseBody = rawHTTPResponseBody;
 
         if ([301, 302].includes(responseStatus) && responseHeaders.has('location') && redirects + 1 <= opts.maxRedirects) {
-            const redirectURL = $url.tryParse(responseHeaders.get('location') || '');
-            // Follows redirects, but only when the URL actually changes.
+            const location = responseHeaders.get('location') || '',
+                redirectURL = location ? $url.tryParse(location, url) : undefined;
 
+            // Follows redirects, but only when URL actually changes.
             if (redirectURL && redirectURL.toString() !== url.toString()) {
                 return fetchꓺviaSocket(rcData, redirectURL, opts, redirects + 1);
             }
