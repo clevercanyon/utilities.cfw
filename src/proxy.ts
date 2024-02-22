@@ -212,7 +212,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
                 statusText: $http.responseStatusText(421),
                 headers: { 'content-type': $mime.contentType('.txt') },
             });
-        if ([301, 302].includes(responseStatus) && ['HEAD', 'GET'].includes(opts.method))
+        if ([301, 302, 303, 307, 308].includes(responseStatus) && ['HEAD', 'GET'].includes(opts.method))
             if (responseHeaders.has('location') && redirects + 1 <= opts.maxRedirects) {
                 const location = responseHeaders.get('location') || '',
                     redirectURL = location ? $url.tryParse(location, url) : undefined;
