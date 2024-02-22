@@ -5,7 +5,7 @@
 import '#@initialize.ts';
 
 import { $cfw, cfw } from '#index.ts';
-import { $crypto, $env, $http, $is, $mime, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
+import { $arr, $crypto, $env, $http, $is, $mime, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -172,54 +172,37 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
         // Response routines.
 
         const crlf = '\r\n\r\n',
-            crlfLength = crlf.length,
-            textDecoder = new TextDecoder();
+            crlfBytes = $str.textEncode(crlf);
 
-        let rawHTTPResponse = '',
+        let rawHTTPResponseChunks: Uint8Array[] = [],
+            rawHTTPResponseBytes: Uint8Array,
+            rawHTTPResponseCRLFByteIndex: number,
+            rawHTTPResponseHeaders: string,
+            //
             responseStatus: undefined | number,
             responseHeaders: undefined | $type.cfw.Headers,
-            responseBodyBinaryChunks: undefined | Uint8Array[],
             responseBody: undefined | string | $type.cfw.Blob;
 
         while (reader /* Stops when `done`. */) {
             const { done, value: chunk } = await reader.read();
+            if (chunk) rawHTTPResponseChunks.push(chunk);
+            if (done) break; // Stops on last chunk.
+        }
+        rawHTTPResponseBytes = new Uint8Array(await new Blob(rawHTTPResponseChunks).arrayBuffer());
+        rawHTTPResponseCRLFByteIndex = $arr.indexOfSequence(rawHTTPResponseBytes, crlfBytes);
 
-            if (chunk && !responseHeaders) {
-                rawHTTPResponse += textDecoder.decode(chunk, { stream: !done });
-                const endOfHeadersIndex = rawHTTPResponse.indexOf(crlf);
+        if (-1 !== rawHTTPResponseCRLFByteIndex) {
+            rawHTTPResponseHeaders = $str.textDecode(rawHTTPResponseBytes.slice(0, rawHTTPResponseCRLFByteIndex));
+        } else rawHTTPResponseHeaders = $str.textDecode(rawHTTPResponseBytes); // Only headers; e.g., `HEAD` request type.
 
-                if (-1 !== endOfHeadersIndex) {
-                    let rawResponseHeaders = rawHTTPResponse.slice(0, endOfHeadersIndex).trim();
-                    responseStatus = Number(rawResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1] || 500);
-                    responseHeaders = $http.parseHeaders(rawResponseHeaders) as $type.cfw.Headers;
+        responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1] || 500);
+        responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cfw.Headers;
 
-                    if ($mime.typeIsBinary(responseHeaders.get('content-type') || '')) {
-                        let bodyBytesIndex = $str.textEncode(rawHTTPResponse.slice(endOfHeadersIndex + crlfLength)).length;
-                        responseBodyBinaryChunks = [new Uint8Array(chunk.subarray(bodyBytesIndex))];
-                    } else {
-                        responseBody = rawHTTPResponse.slice(endOfHeadersIndex + crlfLength);
-                    }
-                    rawHTTPResponse = ''; // Discard; i.e., now that we have `responseHeaders`.
-                }
-            } else if (chunk && responseBodyBinaryChunks) {
-                responseBodyBinaryChunks.push(chunk); // No decoding; we want bytes.
-                //
-            } else if (chunk) {
-                responseBody += textDecoder.decode(chunk, { stream: !done });
-            }
-            if (done) {
-                if (!responseHeaders) {
-                    let rawResponseHeaders = rawHTTPResponse.trim();
-                    responseStatus = Number(rawResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1] || 500);
-                    responseHeaders = $http.parseHeaders(rawResponseHeaders) as $type.cfw.Headers;
-                }
-                if (responseBodyBinaryChunks) {
-                    responseBody = new Blob(responseBodyBinaryChunks, { type: responseHeaders.get('content-type') || '' });
-                    responseBodyBinaryChunks = []; // Free memory.
-                }
-                textDecoder.decode(); // Ends decoding stream.
-                break; // Breaks while loop when reaching last chunk.
-            }
+        if (-1 !== rawHTTPResponseCRLFByteIndex && $mime.typeIsBinary(responseHeaders.get('content-type') || '')) {
+            responseBody = new Blob([rawHTTPResponseBytes.slice(rawHTTPResponseCRLFByteIndex + crlfBytes.length)]);
+            //
+        } else if (-1 !== rawHTTPResponseCRLFByteIndex) {
+            responseBody = $str.textDecode(rawHTTPResponseBytes.slice(rawHTTPResponseCRLFByteIndex + crlfBytes.length));
         }
         await socket.close(); // Closes socket and streams.
 
