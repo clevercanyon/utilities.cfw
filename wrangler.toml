@@ -7,9 +7,9 @@
 # @note This entire file will be updated automatically.
 # @note Instead of editing here, please review `./wrangler.mjs`.
 #
-# Last generated using `./wrangler.mjs` Feb 23, 2024 8:48 AM UTC.
+# Last generated using `./wrangler.mjs` Feb 23, 2024 10:51 PM UTC.
 ##
 
 send_metrics = false
-compatibility_date = "2023-08-15"
+compatibility_date = "2023-12-01"
 compatibility_flags = [ ]

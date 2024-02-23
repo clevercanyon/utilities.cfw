@@ -188,14 +188,14 @@ export const serviceBindingRequest = async (rcData: StdRequestContextData, reque
     const { Request } = cfw,
         { request: originalRequest } = rcData;
 
-    const importantParentRequestInit = {
-        headers: { 'cf-connecting-ip': await $user.ip(originalRequest) },
-        cf: $obj.omit($obj.cloneDeep(await $user.ipGeoData(originalRequest)), ['ip']),
-    };
-    return new Request(
-        requestInfo, // e.g., Service binding URL.
-        $obj.mergeDeep(importantParentRequestInit, requestInit) as $type.cfw.RequestInit,
-    );
+    requestInit ??= {}; // Initialize.
+    requestInit.cf ??= {}; // Initialize.
+    requestInit.headers = $http.parseHeaders(requestInit.headers || {}) as $type.cfw.Headers;
+
+    (requestInit.headers as $type.cfw.Headers).set('cf-connecting-ip', await $user.ip(originalRequest));
+    $obj.updateDeep(requestInit.cf, $obj.omit($obj.cloneDeep(await $user.ipGeoData(originalRequest)), ['ip']));
+
+    return new Request(requestInfo, requestInit);
 };
 
 // ---

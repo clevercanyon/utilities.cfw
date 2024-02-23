@@ -30,7 +30,7 @@ export default async () => {
         // This is Clever Canyon’s account ID. ↓
         defaultAccountId: 'f1176464a976947aa5665d989814a4b1',
 
-        compatibilityDate: '2023-08-15',
+        compatibilityDate: '2023-12-01',
         compatibilityFlags: [], // None, for now.
 
         defaultLocalIP: '0.0.0.0',
