@@ -232,9 +232,12 @@ const handleFetchCache = async (rcData: RequestContextData, route: Route): Promi
     const keyRequest = new Request(keyURL.toString(), request);
 
     // Checks if request is cacheable.
-
-    if (!['HEAD', 'GET'].includes(keyRequest.method) || !$http.requestHasCacheableMethod(keyRequest)) {
-        return route(rcData); // Not cacheable; use async route.
+    if (
+        !['HEAD', 'GET'].includes(keyRequest.method) || //
+        !$http.requestHasCacheableMethod(keyRequest) ||
+        'none' === route.config?.cacheVersion // Explicitly uncacheable.
+    ) {
+        return route(rcData); // Not cacheable.
     }
     // Reads response for this request from HTTP cache.
 

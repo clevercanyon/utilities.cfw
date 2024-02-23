@@ -5,7 +5,7 @@
 import '#@initialize.ts';
 
 import { $cfw, cfw } from '#index.ts';
-import { $arr, $crypto, $env, $http, $is, $mime, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
+import { $arr, $crypto, $env, $http, $is, $mime, $obj, $str, $time, $to, $url, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -86,7 +86,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
         for (const [name, value] of Object.entries(await fetchꓺfakeUAHeaders(rcData))) {
             opts.headers.set(name, value);
         }
-    if (opts.uaBotAppend && opts.headers.has('user-agent')) {
+    if (opts.uaBotAppend /* e.g., `SomeCoolBot/1.0.0` */) {
         const currentUA = opts.headers.get('user-agent') || ''; // Current user-agent header.
         opts.headers.set('user-agent', $str.trim(currentUA + ' ' + $str.trim(opts.uaBotAppend)));
     }
@@ -280,7 +280,7 @@ const fetchꓺfakeUAHeaders = async (rcData: $cfw.StdRequestContextData): Promis
             'https://workers.hop.gdn/utilities/api/fake-ua-headers/v1',
         ),
     )
-        .then((response) => response.json() as unknown as FakeUAHeadersResponsePayload)
+        .then(async (response) => $to.plainObject(await response.json()) as FakeUAHeadersResponsePayload)
         .catch(() => ({ ok: false, error: { message: 'a8cvwGmQ' } }) as FakeUAHeadersResponsePayload);
 
     if (!payload?.ok || !$is.plainObject(payload.data)) {
