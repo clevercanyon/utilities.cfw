@@ -9,6 +9,7 @@ import { $app, $class, $crypto, $env, $error, $fsize, $http, $is, $mm, $obj, $st
 /**
  * Defines types.
  */
+export type ScheduledEvent = $type.cfw.FetcherScheduledOptions;
 export type ExecutionContext = Readonly<$type.cfw.ExecutionContext>;
 export type Environment = StdEnvironment;
 
@@ -18,7 +19,7 @@ export type Route = ((rcData: RequestContextData) => Promise<$type.cfw.Response>
 export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
 
 export type InitialRequestContextData = Readonly<{
-    scheduledEvent?: $type.cfw.FetcherScheduledOptions;
+    scheduledEvent?: StdScheduledEvent;
     ctx: ExecutionContext;
     env: Environment;
     request: $type.cfw.Request;
@@ -26,7 +27,7 @@ export type InitialRequestContextData = Readonly<{
 }>;
 export type RequestContextData = StdRequestContextData &
     Readonly<{
-        scheduledEvent?: $type.cfw.FetcherScheduledOptions;
+        scheduledEvent?: StdScheduledEvent;
         ctx: ExecutionContext;
         env: Environment;
         routes: Routes;
@@ -59,6 +60,7 @@ export type StdRequestContextData = Readonly<{
     auditLogger: $type.LoggerInterface;
     consentLogger: $type.LoggerInterface;
 }>;
+export type StdScheduledEvent = $type.cfw.FetcherScheduledOptions;
 
 /**
  * Tracks global init.
@@ -197,15 +199,18 @@ export const is = (rcData: StdRequestContextData, workerRoute: string): boolean 
  * Cloudflare doesn’t do it by default, but our codebases assume IP and geolocation data will be available; i.e., for
  * every request. Therefore, when fetching scheduled event routes always use this utility to build a request.
  *
- * @param   rcData      Request context data; {@see StdRequestContextData}.
- * @param   requestInfo New request info; {@see $type.cfw.RequestInfo}.
- * @param   requestInit New request init; {@see $type.cfw.RequestInit}.
+ * @param   scheduledEvent Scheduled event; {@see StdScheduledEvent}.
+ * @param   requestInfo    New request info; {@see $type.cfw.RequestInfo}.
+ * @param   requestInit    New request init; {@see $type.cfw.RequestInit}.
  *
- * @returns             Promise of a {@see $type.cfw.Request}.
+ * @returns                Promise of a {@see $type.cfw.Request}.
  */
-export const scheduledEventRequest = async (rcData: StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Request> => {
-    const { Request } = cfw,
-        { request: parentRequest } = rcData;
+export const scheduledEventRequest = async (
+    scheduledEvent: StdScheduledEvent, //
+    requestInfo: $type.cfw.RequestInfo,
+    requestInit?: $type.cfw.RequestInit,
+): Promise<$type.cfw.Request> => {
+    const { Request } = cfw;
 
     requestInit ??= {}; // Initialize.
     requestInit.cf ??= {}; // Initialize.
@@ -213,33 +218,31 @@ export const scheduledEventRequest = async (rcData: StdRequestContextData, reque
     const headers = $http.parseHeaders(requestInit.headers || {}) as $type.cfw.Headers;
     requestInit.headers = headers; // As a reference to our typed `headers`.
 
-    let userIP = await $user.ip(parentRequest),
-        userIPGeoData = $obj.cloneDeep(
-            await $user.ipGeoData(parentRequest), // Writable now.
-        ) as $type.WritableDeep<Awaited<ReturnType<typeof $user.ipGeoData>>>;
-
-    if (!userIP && (rcData as RequestContextData).scheduledEvent?.cron) {
-        // Scheduled event requests get a default IP and geolocation.
-        userIP = userIPGeoData.ip = '127.13.249.56'; // Random private IPv4.
+    if (scheduledEvent.cron /* Only scheduled CRON event requests. */) {
+        // Scheduled CRON event requests get a default IP and geolocation.
+        const userIP = '127.13.249.56'; // Random private IPv4.
 
         // Default geolocation data.
-        userIPGeoData.city = 'Madawaska';
-        userIPGeoData.region = 'Maine';
-        userIPGeoData.regionCode = 'ME';
-        userIPGeoData.postalCode = '04756';
-        userIPGeoData.continent = 'NA';
-        userIPGeoData.country = 'US';
+        const userIPGeoData: $user.IPGeoData = {
+            ip: userIP,
 
-        userIPGeoData.colo = 'EWR';
-        userIPGeoData.metroCode = '552';
-        userIPGeoData.latitude = '47.33320';
-        userIPGeoData.longitude = '-68.33160';
-        userIPGeoData.timezone = 'America/New_York';
+            city: 'Madawaska',
+            region: 'Maine',
+            regionCode: 'ME',
+            postalCode: '04756',
+            continent: 'NA',
+            country: 'US',
+
+            colo: 'EWR',
+            metroCode: '552',
+            latitude: '47.33320',
+            longitude: '-68.33160',
+            timezone: 'America/New_York',
+        };
+        headers.set('x-real-ip', userIP);
+        headers.set('cf-connecting-ip', userIP);
+        $obj.updateDeep(requestInit.cf, $obj.omit(userIPGeoData, ['ip']));
     }
-    headers.set('x-real-ip', userIP);
-    headers.set('cf-connecting-ip', userIP);
-    $obj.updateDeep(requestInit.cf, $obj.omit(userIPGeoData, ['ip']));
-
     return new Request(requestInfo, requestInit);
 };
 
@@ -256,7 +259,11 @@ export const scheduledEventRequest = async (rcData: StdRequestContextData, reque
  *
  * @returns             Promise of a {@see $type.cfw.Request}.
  */
-export const serviceBindingRequest = async (rcData: StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Request> => {
+export const serviceBindingRequest = async (
+    rcData: StdRequestContextData, //
+    requestInfo: $type.cfw.RequestInfo,
+    requestInit?: $type.cfw.RequestInit,
+): Promise<$type.cfw.Request> => {
     const { Request } = cfw,
         { request: parentRequest } = rcData;
 
