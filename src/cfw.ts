@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $app, $class, $crypto, $env, $error, $fsize, $http, $is, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
+import { $app, $class, $crypto, $env, $error, $fsize, $http, $is, $mm, $obj, $str, $url, $user, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -170,6 +170,18 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
 // ---
 // Misc exports.
+
+/**
+ * Detects if current worker is a specific route.
+ *
+ * @param   rcData      Request context data; {@see StdRequestContextData}.
+ * @param   workerRoute Worker route to consider; e.g., `/utilities`.
+ *
+ * @returns             True if current worker is a specific route.
+ */
+export const is = (rcData: StdRequestContextData, workerRoute: string): boolean => {
+    return rcData.url.toString().startsWith('https://workers.hop.gdn/' + $str.trim(workerRoute, '/') + '/');
+};
 
 /**
  * Creates a service binding request.

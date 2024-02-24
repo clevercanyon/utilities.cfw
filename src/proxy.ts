@@ -247,8 +247,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
  * @returns        Promise of fake UA headers.
  */
 const fetchꓺfakeUAHeaders = async (rcData: $cfw.StdRequestContextData): Promise<FakeUAHeaders> => {
-    const { fetch } = cfw,
-        { auditLogger } = rcData,
+    const { env: { UT: ut }, auditLogger } = rcData, // prettier-ignore
         defaultUAHeaders = {
             'upgrade-insecure-requests': '1',
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
@@ -262,31 +261,39 @@ const fetchꓺfakeUAHeaders = async (rcData: $cfw.StdRequestContextData): Promis
             'accept-encoding': 'gzip, deflate',
             'accept-language': 'en-US,en;q=0.9',
         };
-    if (rcData.url.toString().startsWith('https://workers.hop.gdn/utilities/')) {
+    if ($cfw.is(rcData, '/utilities')) {
         const { env: { KV: kv } } = rcData, // prettier-ignore
             kvKey = 'fakeUAHeaders:' + String($crypto.randomNumber(1, 100)),
             uaHeaders = (await kv.get(kvKey, { type: 'json' })) as FakeUAHeaders;
 
         if (!$is.plainObject(uaHeaders)) {
-            const error = Error('q9UTub4N');
-            void auditLogger.warn('Fake UA headers failure.', { error });
+            void auditLogger.warn('Fake UA headers failure.', { uaHeaders, error: Error('q9UTub4N') });
             return defaultUAHeaders;
         }
         return uaHeaders;
     }
-    const payload = await fetch(
-        $url.addQueryVars(
-            { randomIndex: String($crypto.randomNumber(1, 100)) }, //
-            'https://workers.hop.gdn/utilities/api/fake-ua-headers/v1',
-        ),
-    )
-        .then(async (response) => $to.plainObject(await response.json()) as FakeUAHeadersResponsePayload)
-        .catch(() => ({ ok: false, error: { message: 'a8cvwGmQ' } }) as FakeUAHeadersResponsePayload);
-
-    if (!payload?.ok || !$is.plainObject(payload.data)) {
-        const error = Error('DkkbNUJr');
-        void auditLogger.warn('Fake UA headers failure.', { error });
-        return defaultUAHeaders;
+    if (ut /* Utilities worker service binding exists? */) {
+        const payload = await ut
+            .fetch(
+                await $cfw.serviceBindingRequest(
+                    rcData,
+                    $url.addQueryVars(
+                        { randomIndex: String($crypto.randomNumber(1, 100)) }, //
+                        'https://workers.hop.gdn/utilities/api/fake-ua-headers/v1',
+                    ),
+                ),
+            )
+            .then(async (response): Promise<FakeUAHeadersResponsePayload> => {
+                return $to.plainObject(await response.json()) as FakeUAHeadersResponsePayload;
+            })
+            .catch((thrown: unknown): void => {
+                void auditLogger.warn('Fake UA headers error thrown.', { thrown });
+            });
+        if (!payload?.ok || !$is.plainObject(payload.data)) {
+            void auditLogger.warn('Fake UA headers failure.', { payload, error: Error('DkkbNUJr') });
+            return defaultUAHeaders;
+        }
+        return payload.data;
     }
-    return payload.data;
+    return defaultUAHeaders;
 };
