@@ -36,7 +36,7 @@ export type RequestContextData = StdRequestContextData &
 /**
  * Defines common types across CFW/CFP.
  */
-export type StdScheduledEvent = $type.cfw.FetcherScheduledOptions;
+export type StdScheduledEvent = Readonly<$type.cfw.FetcherScheduledOptions>;
 export type StdExecutionContext = Readonly<
     Pick<
         $type.cfw.ExecutionContext | Parameters<$type.cfw.PagesFunction>[0],
