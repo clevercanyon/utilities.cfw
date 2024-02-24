@@ -9,7 +9,7 @@ import { $app, $class, $crypto, $env, $error, $fsize, $http, $is, $mm, $obj, $st
 /**
  * Defines types.
  */
-export type ScheduledEvent = $type.cfw.FetcherScheduledOptions;
+export type ScheduledEvent = StdScheduledEvent;
 export type ExecutionContext = Readonly<$type.cfw.ExecutionContext>;
 export type Environment = StdEnvironment;
 
@@ -36,6 +36,7 @@ export type RequestContextData = StdRequestContextData &
 /**
  * Defines common types across CFW/CFP.
  */
+export type StdScheduledEvent = $type.cfw.FetcherScheduledOptions;
 export type StdExecutionContext = Readonly<
     Pick<
         $type.cfw.ExecutionContext | Parameters<$type.cfw.PagesFunction>[0],
@@ -60,7 +61,6 @@ export type StdRequestContextData = Readonly<{
     auditLogger: $type.LoggerInterface;
     consentLogger: $type.LoggerInterface;
 }>;
-export type StdScheduledEvent = $type.cfw.FetcherScheduledOptions;
 
 /**
  * Tracks global init.
