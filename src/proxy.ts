@@ -5,7 +5,7 @@
 import '#@initialize.ts';
 
 import { $cfw, cfw } from '#index.ts';
-import { $arr, $crypto, $env, $http, $is, $mime, $obj, $str, $time, $to, $url, type $type } from '@clevercanyon/utilities';
+import { $app, $arr, $crypto, $env, $http, $is, $mime, $obj, $str, $time, $to, $url, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -247,7 +247,13 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
  * @returns        Promise of fake UA headers.
  */
 const fetchꓺfakeUAHeaders = async (rcData: $cfw.StdRequestContextData): Promise<FakeUAHeaders> => {
-    const { env: { UT: ut }, auditLogger } = rcData, // prettier-ignore
+    const { fetch } = cfw,
+        { url, env, auditLogger } = rcData,
+        //
+        uaHeadersAPIRoute = $url.addQueryVars(
+            { randomIndex: String($crypto.randomNumber(1, 100)) }, //
+            'https://workers.hop.gdn/utilities/api/fake-ua-headers/v1',
+        ),
         defaultUAHeaders = {
             'upgrade-insecure-requests': '1',
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
@@ -261,10 +267,9 @@ const fetchꓺfakeUAHeaders = async (rcData: $cfw.StdRequestContextData): Promis
             'accept-encoding': 'gzip, deflate',
             'accept-language': 'en-US,en;q=0.9',
         };
-    if ($cfw.is(rcData, '/utilities')) {
-        const { env: { KV: kv } } = rcData, // prettier-ignore
-            kvKey = 'fakeUAHeaders:' + String($crypto.randomNumber(1, 100)),
-            uaHeaders = (await kv.get(kvKey, { type: 'json' })) as FakeUAHeaders;
+    if (env.UT_KV || ('@clevercanyon/workers.hop.gdn-utilities' === $app.pkgName() && env.KV)) {
+        const kvKey = 'fakeUAHeaders:' + String($crypto.randomNumber(1, 100)),
+            uaHeaders = (await (env.UT_KV || env.KV).get(kvKey, { type: 'json' })) as FakeUAHeaders;
 
         if (!$is.plainObject(uaHeaders)) {
             void auditLogger.warn('Fake UA headers failure.', { uaHeaders, error: Error('q9UTub4N') });
@@ -272,17 +277,8 @@ const fetchꓺfakeUAHeaders = async (rcData: $cfw.StdRequestContextData): Promis
         }
         return uaHeaders;
     }
-    if (ut /* Utilities worker service binding exists? */) {
-        const payload = await ut
-            .fetch(
-                await $cfw.serviceBindingRequest(
-                    rcData,
-                    $url.addQueryVars(
-                        { randomIndex: String($crypto.randomNumber(1, 100)) }, //
-                        'https://workers.hop.gdn/utilities/api/fake-ua-headers/v1',
-                    ),
-                ),
-            )
+    if (env.UT /* Utilities worker service binding exists? */) {
+        const payload = await env.UT.fetch(await $cfw.serviceBindingRequest(rcData, uaHeadersAPIRoute))
             .then(async (response): Promise<FakeUAHeadersResponsePayload> => {
                 return $to.plainObject(await response.json()) as FakeUAHeadersResponsePayload;
             })
@@ -291,6 +287,20 @@ const fetchꓺfakeUAHeaders = async (rcData: $cfw.StdRequestContextData): Promis
             });
         if (!payload?.ok || !$is.plainObject(payload.data)) {
             void auditLogger.warn('Fake UA headers failure.', { payload, error: Error('DkkbNUJr') });
+            return defaultUAHeaders;
+        }
+        return payload.data;
+    }
+    if ('workers.hop.gdn' !== url.hostname /* Worker-to-worker possible? */) {
+        const payload = await fetch(uaHeadersAPIRoute)
+            .then(async (response): Promise<FakeUAHeadersResponsePayload> => {
+                return $to.plainObject(await response.json()) as FakeUAHeadersResponsePayload;
+            })
+            .catch((thrown: unknown): void => {
+                void auditLogger.warn('Fake UA headers error thrown.', { thrown });
+            });
+        if (!payload?.ok || !$is.plainObject(payload.data)) {
+            void auditLogger.warn('Fake UA headers failure.', { payload, error: Error('hMG9q7P5') });
             return defaultUAHeaders;
         }
         return payload.data;

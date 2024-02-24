@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $app, $class, $crypto, $env, $error, $fsize, $http, $is, $mm, $obj, $str, $url, $user, type $type } from '@clevercanyon/utilities';
+import { $app, $class, $crypto, $env, $error, $fsize, $http, $is, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -46,6 +46,7 @@ export type StdExecutionContext = Readonly<
 >;
 export type StdEnvironment = Readonly<{
     UT: $type.cfw.Fetcher;
+    UT_KV: $type.cfw.KVNamespace;
     D1: $type.cfw.D1Database;
     R2: $type.cfw.R2Bucket;
     KV: $type.cfw.KVNamespace;
@@ -176,21 +177,6 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
 // ---
 // Misc exports.
-
-/**
- * Detects if current worker is a specific route.
- *
- * @param   rcData      Request context data; {@see StdRequestContextData}.
- * @param   workerRoute Worker route to consider; e.g., `/utilities`.
- *
- * @returns             True if current worker is a specific route.
- *
- * @review Can we get rid of this hardcoded hostname?
- * @review Should there be a call to `$env.isCFW()` here?
- */
-export const is = (rcData: StdRequestContextData, workerRoute: string): boolean => {
-    return rcData.url.toString().startsWith('https://workers.hop.gdn/' + $str.trim(workerRoute, '/') + '/');
-};
 
 /**
  * Creates a scheduled event request.
