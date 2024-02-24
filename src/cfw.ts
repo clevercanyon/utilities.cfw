@@ -198,14 +198,22 @@ export const is = (rcData: StdRequestContextData, workerRoute: string): boolean 
  */
 export const serviceBindingRequest = async (rcData: StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Request> => {
     const { Request } = cfw,
-        { request: originalRequest } = rcData;
+        { request: parentRequest } = rcData;
 
     requestInit ??= {}; // Initialize.
     requestInit.cf ??= {}; // Initialize.
-    requestInit.headers = $http.parseHeaders(requestInit.headers || {}) as $type.cfw.Headers;
 
-    (requestInit.headers as $type.cfw.Headers).set('cf-connecting-ip', await $user.ip(originalRequest));
-    $obj.updateDeep(requestInit.cf, $obj.omit($obj.cloneDeep(await $user.ipGeoData(originalRequest)), ['ip']));
+    const headers = $http.parseHeaders(requestInit.headers || {}) as $type.cfw.Headers;
+    requestInit.headers = headers; // As a reference to our typed `headers`.
+
+    const userIP = await $user.ip(parentRequest),
+        userIPGeoData = await $user.ipGeoData(parentRequest);
+
+    headers.set('x-real-ip', userIP);
+    headers.set('cf-connecting-ip', userIP);
+
+    // Populates `cf` request init property with matching IP geolocation data.
+    $obj.updateDeep(requestInit.cf, $obj.omit($obj.cloneDeep(userIPGeoData), ['ip']));
 
     return new Request(requestInfo, requestInit);
 };
