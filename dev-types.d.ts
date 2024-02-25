@@ -39,7 +39,7 @@ declare namespace globalThis {
     /**
      * Declares PWA install event, which we implement for SPAs.
      */
-    let pwaInstallEvent: Event & { prompt: () => void };
+    var pwaInstallEvent: Event & { prompt: () => void };
 
     /**
      * Defines missing `entries()` on FormData.

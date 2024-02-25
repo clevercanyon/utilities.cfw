@@ -12,11 +12,11 @@
 export default {
     previous: '20.5.0',
     current: '20.9.0',
-    forwardCompat: [],
+    forwardCompat: ['21.6.2'],
 
     npm: {
         previous: '9.8.0',
         current: '10.1.0',
-        forwardCompat: [],
+        forwardCompat: ['10.2.4'],
     },
 };

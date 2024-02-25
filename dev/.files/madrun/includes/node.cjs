@@ -5,33 +5,3 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review <https://github.com/clevercanyon/skeleton>.
  */
-
-// @todo: Ditch this in favor of https://nodejs.org/api/cli.html#--disable-warningcode-or-type in latest Node.
-
-// We only want to apply the following once.
-if (!process.env.C10N_SKELETON_MADRUN_NODE_INCLUDE_DONE) {
-    // i.e., We are including now, and we only do this once.
-    process.env.C10N_SKELETON_MADRUN_NODE_INCLUDE_DONE = true;
-
-    // Saves original emitter.
-    const originalEmitter = process.emit;
-
-    // Filters Node-emitted warnings.
-    process.emit = (event, error) => {
-        if (
-            'warning' === event && //
-            error instanceof Error &&
-            'ExperimentalWarning' === error.name &&
-            error.message
-        ) {
-            if (
-                error.message.includes('Web Crypto API algorithm is an experimental feature') ||
-                error.message.includes('Import assertions are not a stable feature') || //
-                error.message.includes('Importing JSON modules is an experimental feature')
-            ) {
-                return false; // OK to suppress.
-            }
-        }
-        return originalEmitter.apply(process, [event, error]);
-    };
-}

@@ -25,7 +25,14 @@ const projDir = path.resolve(__dirname, '../../..');
 const distDir = path.resolve(__dirname, '../../../dist');
 
 const nodeIncludeFile = path.resolve(__dirname, './includes/node.cjs');
-const nodeEnvVars = { NODE_OPTIONS: $cmd.quote([`--require ${$cmd.esc(nodeIncludeFile)}`].join(' ')) };
+const nodeEnvVars = {
+    NODE_OPTIONS: $cmd.quote(
+        [
+            // `--disable-warning ExperimentalWarning`, // v21.3.0+; {@see https://o5p.me/ZKO1Cq}.
+            `--require ${$cmd.esc(nodeIncludeFile)}`, // Currently empty, but for future use.
+        ].join(' '),
+    ),
+};
 const cloudflareEnvVars = { CLOUDFLARE_API_TOKEN: process.env.USER_CLOUDFLARE_TOKEN || '' };
 
 /**
