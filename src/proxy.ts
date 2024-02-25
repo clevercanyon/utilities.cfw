@@ -28,7 +28,7 @@ type RequiredFetchOptions = Required<FetchOptions> & {
     proxy: Required<FetchOptions['proxy']>;
     headers: $type.cfw.Headers;
 };
-type FakeUAHeaders = $type.ReadonlyDeep<{
+type UAHeaders = $type.ReadonlyDeep<{
     'user-agent': string;
 
     'accept': string;
@@ -44,10 +44,10 @@ type FakeUAHeaders = $type.ReadonlyDeep<{
 
     'upgrade-insecure-requests': string;
 }>;
-type FakeUAHeadersResponsePayload = $type.ReadonlyDeep<{
+type UAHeadersResponsePayload = $type.ReadonlyDeep<{
     ok: boolean;
     error?: { message: string };
-    data?: FakeUAHeaders; // When `ok` is true.
+    data?: UAHeaders;
 }>;
 
 /**
@@ -83,7 +83,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
     opts.headers = $http.parseHeaders(opts.headers) as $type.cfw.Headers;
 
     if (!opts.headers.has('user-agent'))
-        for (const [name, value] of Object.entries(await fetchꓺfakeUAHeaders(rcData))) {
+        for (const [name, value] of Object.entries(await fetchꓺuaHeaders(rcData))) {
             opts.headers.set(name, value);
         }
     if (opts.uaBotAppend /* e.g., `SomeCoolBot/1.0.0` */) {
@@ -240,21 +240,21 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
 };
 
 /**
- * Gets fake UA headers.
+ * Fetches UA headers.
  *
  * @param   rcData Request context data; {@see $cfw.StdRequestContextData}.
  *
- * @returns        Promise of fake UA headers.
+ * @returns        Promise of UA headers.
  */
-const fetchꓺfakeUAHeaders = async (rcData: $cfw.StdRequestContextData): Promise<FakeUAHeaders> => {
+const fetchꓺuaHeaders = async (rcData: $cfw.StdRequestContextData): Promise<UAHeaders> => {
     const { fetch } = cfw,
         { url, env, auditLogger } = rcData,
         //
-        uaHeadersAPIRoute = $url.addQueryVars(
+        apiRoute = $url.addQueryVars(
             { randomIndex: String($crypto.randomNumber(1, 100)) }, //
-            'https://workers.hop.gdn/utilities/api/fake-ua-headers/v1',
+            'https://workers.hop.gdn/utilities/api/ua-headers/v1',
         ),
-        defaultUAHeaders = {
+        defaultHeaders = {
             'upgrade-insecure-requests': '1',
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -268,42 +268,42 @@ const fetchꓺfakeUAHeaders = async (rcData: $cfw.StdRequestContextData): Promis
             'accept-language': 'en-US,en;q=0.9',
         };
     if (env.UT_KV || ('@clevercanyon/workers.hop.gdn-utilities' === $app.pkgName() && env.KV)) {
-        const kvKey = 'fakeUAHeaders:' + String($crypto.randomNumber(1, 100)),
-            uaHeaders = (await (env.UT_KV || env.KV).get(kvKey, { type: 'json' })) as FakeUAHeaders;
+        const kvKey = 'uaHeaders:' + String($crypto.randomNumber(1, 100)),
+            headers = (await (env.UT_KV || env.KV).get(kvKey, { type: 'json' })) as UAHeaders;
 
-        if (!$is.plainObject(uaHeaders)) {
-            void auditLogger.warn('Fake UA headers failure.', { uaHeaders, error: Error('q9UTub4N') });
-            return defaultUAHeaders;
+        if (!$is.plainObject(headers)) {
+            void auditLogger.warn('UA headers failure.', { headers, error: Error('q9UTub4N') });
+            return defaultHeaders;
         }
-        return uaHeaders;
+        return headers;
     }
     if (env.UT /* Utilities worker service binding exists? */) {
-        const payload = await env.UT.fetch(await $cfw.serviceBindingRequest(rcData, uaHeadersAPIRoute))
-            .then(async (response): Promise<FakeUAHeadersResponsePayload> => {
-                return $to.plainObject(await response.json()) as FakeUAHeadersResponsePayload;
+        const payload = await env.UT.fetch(await $cfw.serviceBindingRequest(rcData, apiRoute))
+            .then(async (response): Promise<UAHeadersResponsePayload> => {
+                return $to.plainObject(await response.json()) as UAHeadersResponsePayload;
             })
             .catch((thrown: unknown): void => {
-                void auditLogger.warn('Fake UA headers error thrown.', { thrown });
+                void auditLogger.warn('UA headers error thrown.', { thrown });
             });
         if (!payload?.ok || !$is.plainObject(payload.data)) {
-            void auditLogger.warn('Fake UA headers failure.', { payload, error: Error('DkkbNUJr') });
-            return defaultUAHeaders;
+            void auditLogger.warn('UA headers failure.', { payload, error: Error('DkkbNUJr') });
+            return defaultHeaders;
         }
         return payload.data;
     }
     if ('workers.hop.gdn' !== url.hostname /* Worker-to-worker possible? */) {
-        const payload = await fetch(uaHeadersAPIRoute)
-            .then(async (response): Promise<FakeUAHeadersResponsePayload> => {
-                return $to.plainObject(await response.json()) as FakeUAHeadersResponsePayload;
+        const payload = await fetch(apiRoute)
+            .then(async (response): Promise<UAHeadersResponsePayload> => {
+                return $to.plainObject(await response.json()) as UAHeadersResponsePayload;
             })
             .catch((thrown: unknown): void => {
-                void auditLogger.warn('Fake UA headers error thrown.', { thrown });
+                void auditLogger.warn('UA headers error thrown.', { thrown });
             });
         if (!payload?.ok || !$is.plainObject(payload.data)) {
-            void auditLogger.warn('Fake UA headers failure.', { payload, error: Error('hMG9q7P5') });
-            return defaultUAHeaders;
+            void auditLogger.warn('UA headers failure.', { payload, error: Error('hMG9q7P5') });
+            return defaultHeaders;
         }
         return payload.data;
     }
-    return defaultUAHeaders;
+    return defaultHeaders;
 };
