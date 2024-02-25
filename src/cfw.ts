@@ -327,7 +327,7 @@ const handleFetchCache = async (rcData: RequestContextData, route: Route): Promi
         //
         '*' !== response.headers.get('vary') &&
         !(response.headers.get('cdn-cache-control') || '')
-            .toLowerCase().split(/,\s*/u).includes('no-store') &&
+            .toLowerCase().split(/\s*,\s*/u).includes('no-store') &&
         //
         response.headers.has('content-length') && // Our own limit is 25 MiB max.
         Number(response.headers.get('content-length')) <= $fsize.bytesInMebibyte * 25 // prettier-ignore
