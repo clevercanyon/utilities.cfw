@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $app, $class, $crypto, $env, $error, $fsize, $http, $is, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
+import { $app, $bytes, $class, $crypto, $env, $error, $http, $is, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -330,7 +330,7 @@ const handleFetchCache = async (rcData: RequestContextData, route: Route): Promi
             .toLowerCase().split(/\s*,\s*/u).includes('no-store') &&
         //
         response.headers.has('content-length') && // Our own limit is 25 MiB max.
-        Number(response.headers.get('content-length')) <= $fsize.bytesInMebibyte * 25 // prettier-ignore
+        Number(response.headers.get('content-length')) <= $bytes.inMebibyte * 25 // prettier-ignore
     ) {
         ctx.waitUntil(
             (async (/* Caching occurs in background via `waitUntil()`. */): Promise<void> => {

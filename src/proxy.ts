@@ -76,7 +76,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
             headers: {},
 
             uaBotAppend: '',
-            maxRedirects: 2,
+            maxRedirects: 3,
             timeout: $time.secondInMilliseconds * 15,
         }) as RequiredFetchOptions;
 
