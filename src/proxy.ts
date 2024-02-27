@@ -251,7 +251,7 @@ const fetchꓺuaHeaders = async (rcData: $cfw.StdRequestContextData): Promise<UA
         { url, env, auditLogger } = rcData,
         //
         apiRoute = $url.addQueryVars(
-            { randomIndex: String($crypto.randomNumber(1, 100)) }, //
+            { random_index: String($crypto.randomNumber(1, 100)) }, //
             'https://workers.hop.gdn/utilities/api/ua-headers/v1',
         ),
         defaultHeaders = {
@@ -268,7 +268,7 @@ const fetchꓺuaHeaders = async (rcData: $cfw.StdRequestContextData): Promise<UA
             'accept-language': 'en-US,en;q=0.9',
         };
     if (env.UT_KV || ('@clevercanyon/workers.hop.gdn-utilities' === $app.pkgName() && env.KV)) {
-        const kvKey = 'uaHeaders:' + String($crypto.randomNumber(1, 100)),
+        const kvKey = 'ua-headers:' + String($crypto.randomNumber(1, 100)),
             headers = (await (env.UT_KV || env.KV).get(kvKey, { type: 'json' })) as UAHeaders;
 
         if (!$is.plainObject(headers)) {
