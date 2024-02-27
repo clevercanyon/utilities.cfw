@@ -195,7 +195,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
             rawHTTPResponseHeaders = $str.textDecode(rawHTTPResponseBytes.slice(0, rawHTTPResponseCRLFByteIndex));
         } else rawHTTPResponseHeaders = $str.textDecode(rawHTTPResponseBytes); // Only headers; e.g., `HEAD` request type.
 
-        responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1] || 500);
+        responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1]) || 500;
         responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cfw.Headers;
 
         if (-1 !== rawHTTPResponseCRLFByteIndex && $mime.typeIsBinary(responseHeaders.get('content-type') || '')) {
