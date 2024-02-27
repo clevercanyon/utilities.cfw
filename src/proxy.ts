@@ -5,7 +5,7 @@
 import '#@initialize.ts';
 
 import { $cfw, cfw } from '#index.ts';
-import { $app, $arr, $crypto, $env, $http, $is, $mime, $obj, $str, $time, $to, $url, type $type } from '@clevercanyon/utilities';
+import { $app, $arr, $crypto, $env, $gzip, $http, $is, $mime, $obj, $str, $time, $to, $url, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -181,7 +181,8 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
             //
             responseStatus: undefined | number,
             responseHeaders: undefined | $type.cfw.Headers,
-            responseBody: undefined | string | $type.cfw.Blob;
+            responseBody: undefined | string | $type.cfw.Blob,
+            responseBodyDecodingError: undefined | Error;
 
         while (reader /* Stops when `done`. */) {
             const { done, value: chunk } = await reader.read();
@@ -198,15 +199,33 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
         responseStatus = Number(rawHTTPResponseHeaders.match(/^HTTP\/[0-9.]+\s+([0-9]+)/iu)?.[1]) || 500;
         responseHeaders = $http.parseHeaders(rawHTTPResponseHeaders) as $type.cfw.Headers;
 
-        if (-1 !== rawHTTPResponseCRLFByteIndex && $mime.typeIsBinary(responseHeaders.get('content-type') || '')) {
-            responseBody = new Blob([rawHTTPResponseBytes.slice(rawHTTPResponseCRLFByteIndex + crlfBytes.length)]);
-            //
-        } else if (-1 !== rawHTTPResponseCRLFByteIndex) {
-            responseBody = $str.textDecode(rawHTTPResponseBytes.slice(rawHTTPResponseCRLFByteIndex + crlfBytes.length));
+        if (-1 !== rawHTTPResponseCRLFByteIndex) {
+            const rawResponseBodyBytes = rawHTTPResponseBytes.slice(rawHTTPResponseCRLFByteIndex + crlfBytes.length);
+
+            if ($http.contentIsBinary(responseHeaders)) {
+                responseBody = new Blob([rawResponseBodyBytes]);
+                //
+            } else if ($http.contentIsEncoded(responseHeaders)) {
+                switch (responseHeaders.get('content-encoding')?.toLowerCase()) {
+                    case 'gzip': {
+                        responseBody = await $gzip.decode(rawResponseBodyBytes);
+                        break;
+                    }
+                    case 'deflate': {
+                        responseBody = await $gzip.decode(rawResponseBodyBytes, { deflate: true });
+                        break;
+                    }
+                    default: {
+                        responseBodyDecodingError = Error('Unknown encoding.');
+                    }
+                }
+            } else {
+                responseBody = $str.textDecode(rawResponseBodyBytes);
+            }
         }
         await socket.close(); // Closes socket and streams.
 
-        if (!responseStatus || !responseHeaders)
+        if (!responseStatus || !responseHeaders || responseBodyDecodingError)
             return new Response(null, {
                 status: 421,
                 statusText: $http.responseStatusText(421),

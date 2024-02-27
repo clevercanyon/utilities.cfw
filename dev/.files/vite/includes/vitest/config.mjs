@@ -152,6 +152,8 @@ export default async ({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable
 			: ['node', 'any'].includes(targetEnv) ? 'node' // <https://o5p.me/Gf9Cy5>.
 			: /* fallback */ 'node', // prettier-ignore
 
+        ...(['cfp', 'cfw'].includes(targetEnv) ? { environmentOptions: { kvNamespaces: ['KV'] } } : {}),
+
         // See: <https://o5p.me/8Pjw1d> for `environment`, `environmentMatchGlobs` precedence.
         environmentMatchGlobs: [
             ['**/*.{cfp,web}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), 'jsdom'],
