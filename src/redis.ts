@@ -7,7 +7,7 @@ import '#@initialize.ts';
 import { $cfw } from '#index.ts';
 import { $class, $env, $fn, $http, $is, $json, $mime, $obj } from '@clevercanyon/utilities';
 import { Ratelimit as RateLimiterCore } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis/cloudflare';
+import { Redis } from '@upstash/redis/cloudflare.mjs';
 
 /**
  * LRU Map class.
