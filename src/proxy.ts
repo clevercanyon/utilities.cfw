@@ -28,7 +28,7 @@ type RequiredFetchOptions = Required<FetchOptions> & {
     proxy: Required<FetchOptions['proxy']>;
     headers: $type.cfw.Headers;
 };
-type UAHeaders = $type.ReadonlyDeep<{
+export type UAHeaders = $type.ReadonlyDeep<{
     'user-agent': string;
 
     'accept': string;
