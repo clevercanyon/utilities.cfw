@@ -83,7 +83,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
     opts.headers = $http.parseHeaders(opts.headers) as $type.cfw.Headers;
 
     if (!opts.headers.has('user-agent'))
-        for (const [name, value] of Object.entries(await fetchꓺuaHeaders(rcData))) {
+        for (const [name, value] of Object.entries(await uaHeaders(rcData))) {
             opts.headers.set(name, value);
         }
     if (opts.uaBotAppend /* e.g., `SomeCoolBot/1.0.0` */) {
@@ -265,7 +265,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
  *
  * @returns        Promise of UA headers.
  */
-const fetchꓺuaHeaders = async (rcData: $cfw.StdRequestContextData): Promise<UAHeaders> => {
+export const uaHeaders = async (rcData: $cfw.StdRequestContextData): Promise<UAHeaders> => {
     const { fetch } = cfw,
         { url, env, auditLogger } = rcData,
         //
