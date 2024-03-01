@@ -204,6 +204,9 @@ export const scheduledEventRequest = async (
     const headers = $http.parseHeaders(requestInit.headers || {}) as $type.cfw.Headers;
     requestInit.headers = headers; // As a reference to our typed `headers`.
 
+    // @review: 'scheduled' === scheduledEvent.type ?
+    console.log(scheduledEvent);
+
     if (scheduledEvent.cron /* Only scheduled CRON event requests. */) {
         // Scheduled CRON event requests get a default IP and geolocation.
         const userIP = '127.13.249.56'; // Random private IPv4.
