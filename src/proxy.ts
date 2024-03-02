@@ -28,6 +28,9 @@ type RequiredFetchOptions = Required<FetchOptions> & {
     proxy: Required<FetchOptions['proxy']>;
     headers: $type.cfw.Headers;
 };
+export type UAHeaderOptions = {
+    randomIndex?: number;
+};
 export type UAHeaders = $type.ReadonlyDeep<{
     'user-agent': string;
 
@@ -261,17 +264,22 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
 /**
  * Fetches UA headers.
  *
- * @param   rcData Request context data; {@see $cfw.StdRequestContextData}.
+ * @param   rcData  Request context data; {@see $cfw.StdRequestContextData}.
+ * @param   options All optional; {@see UAHeaderOptions}.
  *
- * @returns        Promise of UA headers.
+ * @returns         Promise of UA headers.
  */
-export const uaHeaders = async (rcData: $cfw.StdRequestContextData): Promise<UAHeaders> => {
+export const uaHeaders = async (rcData: $cfw.StdRequestContextData, options?: UAHeaderOptions): Promise<UAHeaders> => {
     const { fetch } = cfw,
         { url, env, auditLogger } = rcData,
         //
+        opts = $obj.defaults({}, options || {}, {
+            randomIndex: $crypto.randomNumber(1, 100),
+        }) as Required<UAHeaderOptions>,
+        //
         apiRoute = $url.addQueryVars(
-            { random_index: String($crypto.randomNumber(1, 100)) }, //
-            'https://workers.hop.gdn/utilities/api/ua-headers/v1',
+            { random_index: String(opts.randomIndex) }, //
+            new URL('https://workers.hop.gdn/api/ua-headers/v1'),
         ),
         defaultHeaders = {
             'upgrade-insecure-requests': '1',
@@ -286,9 +294,9 @@ export const uaHeaders = async (rcData: $cfw.StdRequestContextData): Promise<UAH
             'accept-encoding': 'gzip, deflate',
             'accept-language': 'en-US,en;q=0.9',
         };
-    if (env.UT_KV || ('@clevercanyon/workers.hop.gdn-utilities' === $app.pkgName() && env.KV)) {
-        const kvKey = 'ua-headers:' + String($crypto.randomNumber(1, 100)),
-            headers = (await (env.UT_KV || env.KV).get(kvKey, { type: 'json' })) as UAHeaders;
+    if (env.RT_KV || ('@clevercanyon/workers.hop.gdn' === $app.pkgName() && env.KV)) {
+        const kvKey = 'ua-headers:' + String(opts.randomIndex),
+            headers = (await (env.RT_KV || env.KV).get(kvKey, { type: 'json' })) as UAHeaders;
 
         if (!$is.plainObject(headers)) {
             void auditLogger.warn('UA headers failure.', { headers, error: Error('q9UTub4N') });
@@ -296,8 +304,8 @@ export const uaHeaders = async (rcData: $cfw.StdRequestContextData): Promise<UAH
         }
         return headers;
     }
-    if (env.UT /* Utilities worker service binding exists? */) {
-        const payload = await env.UT.fetch(await $cfw.serviceBindingRequest(rcData, apiRoute))
+    if (env.RT /* Root worker service binding exists? */) {
+        const payload = await env.RT.fetch(await $cfw.serviceBindingRequest(rcData, apiRoute))
             .then(async (response): Promise<UAHeadersResponsePayload> => {
                 return $to.plainObject(await response.json()) as UAHeadersResponsePayload;
             })
@@ -310,7 +318,7 @@ export const uaHeaders = async (rcData: $cfw.StdRequestContextData): Promise<UAH
         }
         return payload.data;
     }
-    if ('workers.hop.gdn' !== url.hostname /* Worker-to-worker possible? */) {
+    if (url.hostname !== apiRoute.hostname /* Worker-to-worker possible? */) {
         const payload = await fetch(apiRoute)
             .then(async (response): Promise<UAHeadersResponsePayload> => {
                 return $to.plainObject(await response.json()) as UAHeadersResponsePayload;
@@ -326,3 +334,4 @@ export const uaHeaders = async (rcData: $cfw.StdRequestContextData): Promise<UAH
     }
     return defaultHeaders;
 };
+uaHeaders.urlSafeOptionKeys = ['randomIndex'] as string[];

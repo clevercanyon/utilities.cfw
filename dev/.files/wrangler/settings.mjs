@@ -57,7 +57,7 @@ export default async () => {
         defaultWorkersDevZoneName: 'c10n.workers.dev',
         defaultWorkersDomain: 'workers.' + hop.hostname,
 
-        defaultWorkerName: pkgSlug.replace(/^workers-/iu, ''),
+        defaultWorkerName: pkgSlug, // e.g., `workers-hop-gdn-utilities`.
         defaultWorkerShortName: pkgSlug.replace(/^workers-hop-gdn-/iu, ''),
         defaultWorkerStageShortName: 'stage.' + pkgSlug.replace(/^workers-hop-gdn-/iu, ''),
 

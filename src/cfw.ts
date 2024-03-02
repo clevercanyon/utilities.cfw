@@ -45,8 +45,8 @@ export type StdExecutionContext = Readonly<
     >
 >;
 export type StdEnvironment = Readonly<{
-    UT: $type.cfw.Fetcher;
-    UT_KV: $type.cfw.KVNamespace;
+    RT: $type.cfw.Fetcher;
+    RT_KV: $type.cfw.KVNamespace;
     D1: $type.cfw.D1Database;
     R2: $type.cfw.R2Bucket;
     KV: $type.cfw.KVNamespace;
