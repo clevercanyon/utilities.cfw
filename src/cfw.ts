@@ -6,6 +6,10 @@ import '#@initialize.ts';
 
 import { $app, $bytes, $class, $crypto, $env, $error, $http, $is, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
 
+// @ts-ignore -- Broken types.
+import { Ai as AiWithBrokenTypes } from '@cloudflare/ai';
+import type { Ai as AiClass } from '@cloudflare/ai/dist/ai.d.ts';
+
 /**
  * Defines types.
  */
@@ -47,7 +51,7 @@ export type StdExecutionContext = Readonly<
 export type StdEnvironment = Readonly<{
     RT: $type.cfw.Fetcher;
     RT_KV: $type.cfw.KVNamespace;
-    AI: unknown; // Not yet available.
+    AI: $type.cfw.Fetcher;
     D1: $type.cfw.D1Database;
     R2: $type.cfw.R2Bucket;
     KV: $type.cfw.KVNamespace;
@@ -178,6 +182,8 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
 // ---
 // Misc exports.
+
+export const Ai = AiWithBrokenTypes as new (AI: $type.cfw.Fetcher) => AiClass;
 
 /**
  * Creates a scheduled event request.
