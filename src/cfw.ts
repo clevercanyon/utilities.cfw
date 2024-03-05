@@ -215,7 +215,7 @@ export const scheduledEventRequest = async (
     requestInit.headers = headers; // As a reference to our typed `headers`.
 
     // @review: 'scheduled' === scheduledEvent.type ?
-    console.log(scheduledEvent);
+    console.log(JSON.stringify(scheduledEvent, null, 4));
 
     if (scheduledEvent.cron /* Only scheduled CRON event requests. */) {
         // Scheduled CRON event requests get a default IP and geolocation.

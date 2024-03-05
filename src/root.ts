@@ -26,6 +26,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, requestInfo: $ty
         rt = env.RT;
 
     if (!rt) throw Error('Root service binding unavailable.');
+
     return rt.fetch(await $cfw.serviceBindingRequest(rcData, requestInfo, requestInit));
 };
 fetch.isAvailable = (rcData: $cfw.StdRequestContextData): boolean => {
