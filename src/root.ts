@@ -21,11 +21,7 @@ const rootPkgName = '@clevercanyon/workers.hop.gdn';
  *
  * @returns             Promise of response from root service binding.
  */
-export const fetch = async (
-    rcData: $cfw.StdRequestContextData, //
-    requestInfo: $type.cfw.RequestInfo,
-    requestInit?: $type.cfw.RequestInit,
-): Promise<$type.cfw.Response> => {
+export const fetch = async (rcData: $cfw.StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
     const { env } = rcData,
         rt = env.RT;
 
@@ -122,7 +118,7 @@ kv.isAvailable = (rcData: $cfw.StdRequestContextData): boolean => {
 export const counter = async (rcData: $cfw.StdRequestContextData, key: string): Promise<number> => {
     return ((await d1(rcData).prepare('SELECT `value` FROM `counters` WHERE `key` = ?1 LIMIT 1').bind(key).first('value')) as number) || 0;
 };
-counter.isAvailable = d1.isAvailable;
+counter.isAvailable = d1.isAvailable; // Powered by root D1 database.
 
 /**
  * Bumps counter value.
