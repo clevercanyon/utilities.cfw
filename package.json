@@ -3,7 +3,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "1.0.270",
+    "version": "1.0.271",
     "license": "GPL-3.0-or-later",
     "name": "@clevercanyon/utilities.cfw",
     "description": "Utilities for JavaScript apps running in a Cloudflare Worker environment.",
@@ -44,6 +44,11 @@
             "types": "./dist/types/redis.d.ts",
             "import": "./dist/redis.js",
             "default": "./dist/redis.js"
+        },
+        "./root": {
+            "types": "./dist/types/root.d.ts",
+            "import": "./dist/root.js",
+            "default": "./dist/root.js"
         }
     },
     "sideEffects": ["**/*.{css,scss,less}", "./src/resources/initialize.ts"],
@@ -59,7 +64,7 @@
     },
     "dependencies": {},
     "peerDependencies": {
-        "@clevercanyon/utilities": "^1.0.882",
+        "@clevercanyon/utilities": "^1.0.884",
         "@cloudflare/ai": "1.0.53",
         "@upstash/ratelimit": "1.0.0",
         "@upstash/redis": "1.28.0"

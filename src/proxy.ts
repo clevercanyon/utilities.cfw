@@ -4,8 +4,8 @@
 
 import '#@initialize.ts';
 
-import { $cfw, cfw } from '#index.ts';
-import { $app, $arr, $crypto, $env, $gzip, $http, $is, $mime, $obj, $str, $time, $to, $url, type $type } from '@clevercanyon/utilities';
+import { $cfw, $root, cfw } from '#index.ts';
+import { $arr, $crypto, $env, $gzip, $http, $is, $mime, $obj, $str, $time, $to, $url, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -271,7 +271,7 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
  */
 export const uaHeaders = async (rcData: $cfw.StdRequestContextData, options?: UAHeaderOptions): Promise<UAHeaders> => {
     const { fetch } = cfw,
-        { url, env, auditLogger } = rcData,
+        { url, auditLogger } = rcData,
         //
         opts = $obj.defaults({}, options || {}, {
             randomIndex: $crypto.randomNumber(1, 100),
@@ -294,9 +294,9 @@ export const uaHeaders = async (rcData: $cfw.StdRequestContextData, options?: UA
             'accept-encoding': 'gzip, deflate',
             'accept-language': 'en-US,en;q=0.9',
         };
-    if (env.RT_KV || ('@clevercanyon/workers.hop.gdn' === $app.pkgName() && env.KV)) {
+    if ($root.kv.isAvailable(rcData)) {
         const kvKey = 'ua-headers:' + String(opts.randomIndex),
-            headers = (await (env.RT_KV || env.KV).get(kvKey, { type: 'json' })) as UAHeaders;
+            headers = (await $root.kv(rcData).get(kvKey, { type: 'json' })) as UAHeaders;
 
         if (!$is.plainObject(headers)) {
             void auditLogger.warn('UA headers failure.', { headers, error: Error('q9UTub4N') });
@@ -304,30 +304,35 @@ export const uaHeaders = async (rcData: $cfw.StdRequestContextData, options?: UA
         }
         return headers;
     }
-    if (env.RT /* Root worker service binding exists? */) {
-        const payload = await env.RT.fetch(await $cfw.serviceBindingRequest(rcData, apiRoute))
+    if ($root.fetch.isAvailable(rcData)) {
+        let thrown: unknown;
+
+        const payload = await $root
+            .fetch(rcData, apiRoute)
             .then(async (response): Promise<UAHeadersResponsePayload> => {
                 return $to.plainObject(await response.json()) as UAHeadersResponsePayload;
             })
-            .catch((thrown: unknown): void => {
-                void auditLogger.warn('UA headers error thrown.', { thrown });
+            .catch((unknownThrown: unknown): void => {
+                thrown = unknownThrown;
             });
-        if (!payload?.ok || !$is.plainObject(payload.data)) {
-            void auditLogger.warn('UA headers failure.', { payload, error: Error('DkkbNUJr') });
+        if (!payload?.ok || !$is.plainObject(payload.data) || thrown) {
+            void auditLogger.warn('UA headers failure.', { payload, error: Error('DkkbNUJr'), thrown });
             return defaultHeaders;
         }
         return payload.data;
     }
-    if (url.hostname !== apiRoute.hostname /* Worker-to-worker possible? */) {
+    if (url.hostname !== apiRoute.hostname) {
+        let thrown: unknown;
+
         const payload = await fetch(apiRoute)
             .then(async (response): Promise<UAHeadersResponsePayload> => {
                 return $to.plainObject(await response.json()) as UAHeadersResponsePayload;
             })
-            .catch((thrown: unknown): void => {
-                void auditLogger.warn('UA headers error thrown.', { thrown });
+            .catch((unknownThrown: unknown): void => {
+                thrown = unknownThrown;
             });
-        if (!payload?.ok || !$is.plainObject(payload.data)) {
-            void auditLogger.warn('UA headers failure.', { payload, error: Error('hMG9q7P5') });
+        if (!payload?.ok || !$is.plainObject(payload.data) || thrown) {
+            void auditLogger.warn('UA headers failure.', { payload, error: Error('hMG9q7P5'), thrown });
             return defaultHeaders;
         }
         return payload.data;
