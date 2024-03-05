@@ -37,6 +37,25 @@ fetch.isAvailable = (rcData: $cfw.StdRequestContextData): boolean => {
 };
 
 /**
+ * Gets root AI binding.
+ *
+ * @param   rcData Request context data; {@see $cfw.StdRequestContextData}.
+ *
+ * @returns        Root AI binding.
+ */
+export const ai = (rcData: $cfw.StdRequestContextData): $type.cfw.Fetcher => {
+    const { env } = rcData,
+        ai = env.RT_AI || (rootPkgName === $app.pkgName() && env.AI);
+
+    if (!ai) throw Error('Root AI binding unavailable.');
+
+    return ai;
+};
+ai.isAvailable = (rcData: $cfw.StdRequestContextData): boolean => {
+    return rcData.env.RT_AI || (rootPkgName === $app.pkgName() && rcData.env.AI) ? true : false;
+};
+
+/**
  * Gets root D1 binding.
  *
  * @param   rcData Request context data; {@see $cfw.StdRequestContextData}.
