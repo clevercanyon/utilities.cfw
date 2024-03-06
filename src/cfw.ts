@@ -240,7 +240,7 @@ export const scheduledEventRequest = async (
         };
         headers.set('x-real-ip', userIP);
         headers.set('cf-connecting-ip', userIP);
-        $obj.updateDeep(requestInit.cf, $obj.omit(userIPGeoData, ['ip']));
+        $obj.patchDeep(requestInit.cf, $obj.omit(userIPGeoData, ['ip']));
     }
     return new Request(requestInfo, requestInit);
 };
@@ -279,7 +279,7 @@ export const serviceBindingRequest = async (
 
     headers.set('x-real-ip', userIP);
     headers.set('cf-connecting-ip', userIP);
-    $obj.updateDeep(requestInit.cf, $obj.omit(userIPGeoData, ['ip']));
+    $obj.patchDeep(requestInit.cf, $obj.omit(userIPGeoData, ['ip']));
 
     return new Request(requestInfo, requestInit);
 };

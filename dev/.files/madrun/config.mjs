@@ -16,6 +16,7 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import url from 'node:url';
 import { $chalk, $cmd } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $version } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import u from '../bin/includes/utilities.mjs';
 import wranglerSettings from '../wrangler/settings.mjs';
 import events from './includes/events.mjs';
@@ -29,6 +30,7 @@ const nodeEnvVars = {
     NODE_OPTIONS: $cmd.quote(
         [
             // `--disable-warning ExperimentalWarning`, // v21.3.0+; {@see https://o5p.me/ZKO1Cq}.
+            ...($version.compare(process.versions.node, '>=', '21.3.0') ? ['--disable-warning ExperimentalWarning'] : []),
             `--require ${$cmd.esc(nodeIncludeFile)}`, // Currently empty, but for future use.
         ].join(' '),
     ),
