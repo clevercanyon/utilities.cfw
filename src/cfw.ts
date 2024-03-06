@@ -87,6 +87,11 @@ export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope &
 };
 
 /**
+ * Cloudflare Worker AI class definition.
+ */
+export const Ai = AiWithBrokenTypes as new (AI: $type.cfw.Fetcher) => AiClass;
+
+/**
  * Initializes worker globals.
  *
  * @param ircData Initial request context data.
@@ -186,8 +191,6 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 // ---
 // Misc exports.
 
-export const Ai = AiWithBrokenTypes as new (AI: $type.cfw.Fetcher) => AiClass;
-
 /**
  * Creates a scheduled event request.
  *
@@ -213,9 +216,6 @@ export const scheduledEventRequest = async (
 
     const headers = $http.parseHeaders(requestInit.headers || {}) as $type.cfw.Headers;
     requestInit.headers = headers; // As a reference to our typed `headers`.
-
-    // @review: 'scheduled' === scheduledEvent.type ?
-    console.log(JSON.stringify(scheduledEvent, null, 4));
 
     if (scheduledEvent.cron /* Only scheduled CRON event requests. */) {
         // Scheduled CRON event requests get a default IP and geolocation.
