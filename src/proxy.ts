@@ -112,13 +112,14 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
  * @returns             Promise of response from worker using another worker as a proxy.
  */
 export const fetchWorker = async (rcData: $cfw.StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
-    const { fetch, Request } = cfw;
+    const { fetch, Request } = cfw,
+        proxyRoute = 'https://worker-proxy.c10n.workers.dev/';
 
     if ($is.string(requestInfo) || $is.url(requestInfo)) {
-        requestInfo = 'https://worker-proxy.c10n.workers.dev/?url=' + $url.encode(requestInfo.toString());
+        requestInfo = $url.addQueryVar('url', requestInfo.toString(), proxyRoute);
         //
     } else if (requestInfo instanceof Request) {
-        requestInfo = new Request('https://worker-proxy.c10n.workers.dev/?url=' + $url.encode(requestInfo.url), requestInfo);
+        requestInfo = new Request($url.addQueryVar('url', requestInfo.url, proxyRoute), requestInfo);
     }
     return fetch(requestInfo, requestInit);
 };
