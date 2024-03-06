@@ -7,8 +7,8 @@ import '#@initialize.ts';
 import { $app, $bytes, $class, $crypto, $env, $error, $http, $is, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
 
 // @ts-ignore -- Broken types.
-import { Ai as AiWithBrokenTypes } from '@cloudflare/ai';
-import type { Ai as AiClass } from '@cloudflare/ai/dist/ai.d.ts';
+import { Ai as AiClass } from '@cloudflare/ai';
+import type { Ai as AiInstance } from '@cloudflare/ai/dist/ai.d.ts';
 
 /**
  * Defines types.
@@ -75,21 +75,6 @@ export type StdRequestContextData = Readonly<{
  * Tracks global init.
  */
 let initializedGlobals = false;
-
-/**
- * Cloudflare worker global scope.
- */
-export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope & {
-    fetch(
-        this: void, // {@see https://typescript-eslint.io/rules/unbound-method/}.
-        ...args: Parameters<$type.cfw.ServiceWorkerGlobalScope['fetch']>
-    ): ReturnType<$type.cfw.ServiceWorkerGlobalScope['fetch']>;
-};
-
-/**
- * Cloudflare Worker AI class definition.
- */
-export const Ai = AiWithBrokenTypes as new (AI: $type.cfw.Fetcher) => AiClass;
 
 /**
  * Initializes worker globals.
@@ -190,6 +175,21 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
 // ---
 // Misc exports.
+
+/**
+ * Cloudflare worker global scope.
+ */
+export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope & {
+    fetch(
+        this: void, // {@see https://typescript-eslint.io/rules/unbound-method/}.
+        ...args: Parameters<$type.cfw.ServiceWorkerGlobalScope['fetch']>
+    ): ReturnType<$type.cfw.ServiceWorkerGlobalScope['fetch']>;
+};
+
+/**
+ * Cloudflare Worker AI class definition.
+ */
+export const Ai = AiClass as new (AI: $type.cfw.Fetcher) => AiInstance;
 
 /**
  * Creates a scheduled event request.
