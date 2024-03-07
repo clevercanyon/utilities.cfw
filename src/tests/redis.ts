@@ -30,6 +30,7 @@ describe('$redis', async () => {
 
             auditLogger: mockLoggerInterface,
             consentLogger: mockLoggerInterface,
+            subrequestCounter: { value: 0 },
         },
         redis = $redis.instance();
 

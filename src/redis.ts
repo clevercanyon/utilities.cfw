@@ -92,7 +92,7 @@ export const instance = $fn.memo(
                 enableTelemetry: false, // Just for good measure. The environment variable is what’s important.
 
                 retry: {
-                    retries: 5,
+                    retries: 5, // Maximum upstash retry attempts.
                     backoff: (retryAttempts: number) => Math.exp(retryAttempts) * 50,
                     /**
                      * Regarding retry attempts and timeouts.
@@ -110,7 +110,6 @@ export const instance = $fn.memo(
                 },
                 signal: undefined, // Not used at this time.
             },
-            // Constructor always reads env variable for this specific setting.
             { UPSTASH_DISABLE_TELEMETRY: '1' }, // Don’t report back to Upstash.
         );
     },
@@ -135,9 +134,11 @@ export const rateLimiter = (rcData: $cfw.StdRequestContextData, options?: RateLi
         limiter, // RateLimiterCore.
 
         async limit(...args: Parameters<RateLimiterCore['limit']>): ReturnType<RateLimiterCore['limit']> {
+            rcData.subrequestCounter.value += 2; // Possible read and write requests.
             const limiterResponse = await limiter.limit(...args);
 
             if ($is.promise(limiterResponse.pending)) {
+                rcData.subrequestCounter.value++; // Adds additional pending request to counter.
                 ctx.waitUntil(limiterResponse.pending); // e.g., Analytics, multiregion sync.
             }
             if (!limiterResponse.success) {
@@ -163,9 +164,11 @@ export const rateLimiter = (rcData: $cfw.StdRequestContextData, options?: RateLi
             return limiterResponse;
         },
         async blockUntilReady(...args: Parameters<RateLimiterCore['blockUntilReady']>): ReturnType<RateLimiterCore['blockUntilReady']> {
+            rcData.subrequestCounter.value += 2; // Possible read and write requests.
             const limiterResponse = await limiter.blockUntilReady(...args);
 
             if ($is.promise(limiterResponse.pending)) {
+                rcData.subrequestCounter.value++; // Adds additional pending request to counter.
                 ctx.waitUntil(limiterResponse.pending); // e.g., Analytics, multiregion sync.
             }
             if (!limiterResponse.success) {

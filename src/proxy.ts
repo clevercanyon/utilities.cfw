@@ -97,6 +97,7 @@ export const worker = async (rcData: $cfw.StdRequestContextData, requestInfo: $t
     } else if (requestInfo instanceof Request) {
         requestInfo = new Request($url.addQueryVar('url', requestInfo.url, proxyRoute), requestInfo);
     }
+    rcData.subrequestCounter.value++;
     return fetch(requestInfo, requestInit);
 };
 
@@ -145,6 +146,8 @@ const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.
     try {
         // ---
         // Socket setup.
+
+        rcData.subrequestCounter.value++;
 
         const socket = sockets.connect({
                 hostname: opts.proxy.host,

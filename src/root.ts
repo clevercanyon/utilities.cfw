@@ -53,6 +53,7 @@ export const service = async (rcData: $cfw.StdRequestContextData, requestInfo: $
 
     if (!rt) throw Error('Root service binding unavailable.');
 
+    rcData.subrequestCounter.value++;
     return rt.fetch(await $cfw.serviceBindingRequest(rcData, requestInfo, requestInit));
 };
 service.isAvailable = (rcData: $cfw.StdRequestContextData): boolean => {
@@ -147,6 +148,8 @@ kv.isAvailable = (rcData: $cfw.StdRequestContextData): boolean => {
  * @returns         Promise of root UA headers.
  */
 export const uaHeaders = async (rcData: $cfw.StdRequestContextData, options?: UAHeaderOptions): Promise<UAHeaders> => {
+    rcData.subrequestCounter.value++;
+
     const opts = $obj.defaults({}, options || {}, { randomIndex: $crypto.randomNumber(1, 100) }) as Required<UAHeaderOptions>,
         kvKey = 'ua-headers:' + String($to.integerBetween(opts.randomIndex, 1, 100)),
         headers = (await kv(rcData).get(kvKey, { type: 'json' })) as UAHeaders;
@@ -170,20 +173,8 @@ uaHeaders.isAvailable = kv.isAvailable;
  * @returns     Promise of root counter value.
  */
 export const counter = async (rcData: $cfw.StdRequestContextData, key: string): Promise<number> => {
-    return (
-        ((await d1(rcData)
-            .prepare(
-                'SELECT `value`' +
-                    ' FROM `counters`' +
-                    //
-                    ' WHERE' +
-                    ' `key` = ?1' +
-                    //
-                    ' LIMIT 1',
-            )
-            .bind(key)
-            .first('value')) as number) || 0
-    );
+    rcData.subrequestCounter.value++;
+    return ((await d1(rcData).prepare('SELECT `value` FROM `counters` WHERE `key` = ?1 LIMIT 1').bind(key).first('value')) as number) || 0;
 };
 counter.isAvailable = d1.isAvailable; // Powered by root D1 database.
 
@@ -194,14 +185,6 @@ counter.isAvailable = d1.isAvailable; // Powered by root D1 database.
  * @param by  By; default is `1`.
  */
 export const bumpCounter = async (rcData: $cfw.StdRequestContextData, key: string, by: number = 1): Promise<void> => {
-    await d1(rcData)
-        .prepare(
-            'INSERT INTO `counters` (`key`, `value`)' +
-                ' VALUES(?1, ?2)' +
-                //
-                ' ON CONFLICT(`key`) DO UPDATE' +
-                ' SET `value` = `value` + ?2',
-        )
-        .bind(key, by)
-        .run();
+    rcData.subrequestCounter.value++;
+    await d1(rcData).prepare('INSERT INTO `counters` (`key`, `value`) VALUES(?1, ?2) ON CONFLICT(`key`) DO UPDATE SET `value` = `value` + ?2').bind(key, by).run();
 };

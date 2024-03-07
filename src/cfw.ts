@@ -69,6 +69,7 @@ export type StdRequestContextData = Readonly<{
 
     auditLogger: $type.LoggerInterface;
     consentLogger: $type.LoggerInterface;
+    subrequestCounter: { value: number };
 }>;
 
 /**
@@ -139,6 +140,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
                 auditLogger,
                 consentLogger,
+                subrequestCounter: { value: 0 },
             });
         let response: Promise<$type.cfw.Response>; // Initialize.
 
@@ -327,6 +329,7 @@ const handleFetchCache = async (rcData: RequestContextData, route: Route): Promi
     }
     // Reads response for this request from HTTP cache.
 
+    rcData.subrequestCounter.value++;
     if ((cachedResponse = await caches.default.match(keyRequest, { ignoreMethod: true }))) {
         return $http.prepareCachedResponse(keyRequest, cachedResponse) as Promise<$type.cfw.Response>;
     }
@@ -350,6 +353,7 @@ const handleFetchCache = async (rcData: RequestContextData, route: Route): Promi
                 // Cloudflare will not actually cache if headers say not to; {@see https://o5p.me/gMv7W2}.
                 const responseForCache = (await $http.prepareResponseForCache(keyRequest, response)) as $type.cfw.Response;
                 await caches.default.put(keyRequest, responseForCache);
+                rcData.subrequestCounter.value++;
             })(),
         );
         response.headers.set('x-cache-status', 'miss'); // i.e., Cache miss.
