@@ -5,7 +5,7 @@
 import '#@initialize.ts';
 
 import { $cfw, $root, cfw } from '#index.ts';
-import { $arr, $crypto, $env, $gzip, $http, $is, $mime, $obj, $str, $time, $to, $url, type $type } from '@clevercanyon/utilities';
+import { $arr, $crypto, $env, $gzip, $http, $is, $mime, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -28,30 +28,6 @@ type RequiredFetchOptions = Required<FetchOptions> & {
     proxy: Required<FetchOptions['proxy']>;
     headers: $type.cfw.Headers;
 };
-export type UAHeaderOptions = {
-    randomIndex?: number;
-};
-export type UAHeaders = $type.ReadonlyDeep<{
-    'user-agent': string;
-
-    'accept': string;
-    'accept-encoding': string;
-    'accept-language': string;
-
-    'sec-ch-ua': string;
-    'sec-ch-ua-mobile': string;
-    'sec-ch-ua-platform': string;
-    'sec-fetch-site': string;
-    'sec-fetch-mod': string;
-    'sec-fetch-user': string;
-
-    'upgrade-insecure-requests': string;
-}>;
-type UAHeadersResponsePayload = $type.ReadonlyDeep<{
-    ok: boolean;
-    error?: { message: string };
-    data?: UAHeaders;
-}>;
 
 /**
  * Performs an HTTP fetch using a proxy.
@@ -86,7 +62,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
     opts.headers = $http.parseHeaders(opts.headers) as $type.cfw.Headers;
 
     if (!opts.headers.has('user-agent'))
-        for (const [name, value] of Object.entries(await uaHeaders(rcData))) {
+        for (const [name, value] of Object.entries(await $root.uaHeaders(rcData))) {
             opts.headers.set(name, value);
         }
     if (opts.uaBotAppend /* e.g., `SomeCoolBot/1.0.0` */) {
@@ -111,9 +87,9 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
  *
  * @returns             Promise of response from worker using another worker as a proxy.
  */
-export const fetchWorker = async (rcData: $cfw.StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
+export const worker = async (rcData: $cfw.StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
     const { fetch, Request } = cfw,
-        proxyRoute = 'https://workers.o5p.me/worker-proxy/';
+        proxyRoute = 'https://proxy.c11n.workers.dev/';
 
     if ($is.string(requestInfo) || $is.url(requestInfo)) {
         requestInfo = $url.addQueryVar('url', requestInfo.toString(), proxyRoute);
@@ -123,89 +99,6 @@ export const fetchWorker = async (rcData: $cfw.StdRequestContextData, requestInf
     }
     return fetch(requestInfo, requestInit);
 };
-
-// ---
-// Misc exports.
-
-/**
- * Fetches UA headers.
- *
- * @param   rcData  Request context data; {@see $cfw.StdRequestContextData}.
- * @param   options All optional; {@see UAHeaderOptions}.
- *
- * @returns         Promise of UA headers.
- */
-export const uaHeaders = async (rcData: $cfw.StdRequestContextData, options?: UAHeaderOptions): Promise<UAHeaders> => {
-    const { fetch } = cfw,
-        { url, auditLogger } = rcData,
-        //
-        opts = $obj.defaults({}, options || {}, {
-            randomIndex: $crypto.randomNumber(1, 100),
-        }) as Required<UAHeaderOptions>,
-        //
-        apiRoute = $url.addQueryVars(
-            { random_index: String(opts.randomIndex) }, //
-            new URL('https://workers.hop.gdn/api/ua-headers/v1'),
-        ),
-        defaultHeaders = {
-            'upgrade-insecure-requests': '1',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'sec-ch-ua': 'Google Chrome;v="80", "Chromium";v="80", ";Not A Brand";v="99"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': 'Windows',
-            'sec-fetch-site': 'none',
-            'sec-fetch-mod': '',
-            'sec-fetch-user': '?1',
-            'accept-encoding': 'gzip, deflate',
-            'accept-language': 'en-US,en;q=0.9',
-        };
-    if ($root.kv.isAvailable(rcData)) {
-        const kvKey = 'ua-headers:' + String(opts.randomIndex),
-            headers = (await $root.kv(rcData).get(kvKey, { type: 'json' })) as UAHeaders;
-
-        if (!$is.plainObject(headers)) {
-            void auditLogger.warn('UA headers failure.', { headers, error: Error('q9UTub4N') });
-            return defaultHeaders;
-        }
-        return headers;
-    }
-    if ($root.fetch.isAvailable(rcData)) {
-        let thrown: unknown;
-
-        const payload = await $root
-            .fetch(rcData, apiRoute)
-            .then(async (response): Promise<UAHeadersResponsePayload> => {
-                return $to.plainObject(await response.json()) as UAHeadersResponsePayload;
-            })
-            .catch((unknownThrown: unknown): void => {
-                thrown = unknownThrown;
-            });
-        if (!payload?.ok || !$is.plainObject(payload.data) || thrown) {
-            void auditLogger.warn('UA headers failure.', { payload, error: Error('DkkbNUJr'), thrown });
-            return defaultHeaders;
-        }
-        return payload.data;
-    }
-    if (url.hostname !== apiRoute.hostname) {
-        let thrown: unknown;
-
-        const payload = await fetch(apiRoute)
-            .then(async (response): Promise<UAHeadersResponsePayload> => {
-                return $to.plainObject(await response.json()) as UAHeadersResponsePayload;
-            })
-            .catch((unknownThrown: unknown): void => {
-                thrown = unknownThrown;
-            });
-        if (!payload?.ok || !$is.plainObject(payload.data) || thrown) {
-            void auditLogger.warn('UA headers failure.', { payload, error: Error('hMG9q7P5'), thrown });
-            return defaultHeaders;
-        }
-        return payload.data;
-    }
-    return defaultHeaders;
-};
-uaHeaders.urlSafeOptionKeys = ['randomIndex'] as string[];
 
 // ---
 // Misc utilities.

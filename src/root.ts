@@ -5,12 +5,38 @@
 import '#@initialize.ts';
 
 import { $cfw } from '#index.ts';
-import { $app, type $type } from '@clevercanyon/utilities';
+import { $app, $crypto, $is, $obj, $to, type $type } from '@clevercanyon/utilities';
+
+/**
+ * Defines types.
+ */
+export type UAHeaderOptions = {
+    randomIndex?: number;
+};
+export type UAHeaders = $type.ReadonlyDeep<{
+    'user-agent': string;
+
+    'accept': string;
+    'accept-encoding': string;
+    'accept-language': string;
+
+    'sec-ch-ua': string;
+    'sec-ch-ua-mobile': string;
+    'sec-ch-ua-platform': string;
+    'sec-fetch-site': string;
+    'sec-fetch-mod': string;
+    'sec-fetch-user': string;
+
+    'upgrade-insecure-requests': string;
+}>;
 
 /**
  * Defines root package name.
  */
 const rootPkgName = '@clevercanyon/workers.hop.gdn';
+
+// ---
+// Binding utilities.
 
 /**
  * Fetches using root service binding.
@@ -21,7 +47,7 @@ const rootPkgName = '@clevercanyon/workers.hop.gdn';
  *
  * @returns             Promise of response from root service binding.
  */
-export const fetch = async (rcData: $cfw.StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
+export const service = async (rcData: $cfw.StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
     const { env } = rcData,
         rt = env.RT;
 
@@ -29,7 +55,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, requestInfo: $ty
 
     return rt.fetch(await $cfw.serviceBindingRequest(rcData, requestInfo, requestInit));
 };
-fetch.isAvailable = (rcData: $cfw.StdRequestContextData): boolean => {
+service.isAvailable = (rcData: $cfw.StdRequestContextData): boolean => {
     return rcData.env.RT ? true : false;
 };
 
@@ -109,24 +135,73 @@ kv.isAvailable = (rcData: $cfw.StdRequestContextData): boolean => {
     return rcData.env.RT_KV || (rootPkgName === $app.pkgName() && rcData.env.KV) ? true : false;
 };
 
+// ---
+// UA header utilities.
+
 /**
- * Gets counter value.
+ * Fetches root UA headers.
+ *
+ * @param   rcData  Request context data; {@see $cfw.StdRequestContextData}.
+ * @param   options All optional; {@see UAHeaderOptions}.
+ *
+ * @returns         Promise of root UA headers.
+ */
+export const uaHeaders = async (rcData: $cfw.StdRequestContextData, options?: UAHeaderOptions): Promise<UAHeaders> => {
+    const opts = $obj.defaults({}, options || {}, { randomIndex: $crypto.randomNumber(1, 100) }) as Required<UAHeaderOptions>,
+        kvKey = 'ua-headers:' + String($to.integerBetween(opts.randomIndex, 1, 100)),
+        headers = (await kv(rcData).get(kvKey, { type: 'json' })) as UAHeaders;
+
+    if (!$is.plainObject(headers)) {
+        throw Error('UA headers failure.');
+    }
+    return headers;
+};
+uaHeaders.urlSafeOptionKeys = ['randomIndex'] as string[];
+uaHeaders.isAvailable = kv.isAvailable;
+
+// ---
+// Counter utilities.
+
+/**
+ * Gets root counter value.
  *
  * @param   key Counter key.
  *
- * @returns     Promise of counter value.
+ * @returns     Promise of root counter value.
  */
 export const counter = async (rcData: $cfw.StdRequestContextData, key: string): Promise<number> => {
-    return ((await d1(rcData).prepare('SELECT `value` FROM `counters` WHERE `key` = ?1 LIMIT 1').bind(key).first('value')) as number) || 0;
+    return (
+        ((await d1(rcData)
+            .prepare(
+                'SELECT `value`' +
+                    ' FROM `counters`' +
+                    //
+                    ' WHERE' +
+                    ' `key` = ?1' +
+                    //
+                    ' LIMIT 1',
+            )
+            .bind(key)
+            .first('value')) as number) || 0
+    );
 };
 counter.isAvailable = d1.isAvailable; // Powered by root D1 database.
 
 /**
- * Bumps counter value.
+ * Bumps root counter value.
  *
  * @param key Counter key.
  * @param by  By; default is `1`.
  */
 export const bumpCounter = async (rcData: $cfw.StdRequestContextData, key: string, by: number = 1): Promise<void> => {
-    await d1(rcData).prepare('INSERT INTO `counters` (`key`, `value`) VALUES(?1, ?2) ON CONFLICT(`key`) DO UPDATE SET `value` = `value` + ?2').bind(key, by).run();
+    await d1(rcData)
+        .prepare(
+            'INSERT INTO `counters` (`key`, `value`)' +
+                ' VALUES(?1, ?2)' +
+                //
+                ' ON CONFLICT(`key`) DO UPDATE' +
+                ' SET `value` = `value` + ?2',
+        )
+        .bind(key, by)
+        .run();
 };
