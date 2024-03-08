@@ -106,7 +106,8 @@ const maybeInitializeGlobals = async (ircData: InitialRequestContextData): Promi
  * @returns         Response promise.
  */
 export const handleFetchEvent = async (ircData: InitialRequestContextData): Promise<$type.cfw.Response> => {
-    let { request } = ircData; // Extracts writable data.
+    let { request } = ircData;
+
     const { scheduledEvent, ctx, env, routes } = ircData,
         subrequestCounter = { value: 0 };
 
@@ -126,7 +127,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
         let originalRequest = request; // Potentially rewritten.
         request = (await $http.prepareRequest(request, {})) as $type.cfw.Request;
 
-        if (request !== originalRequest /* Reinitializes using rewritten request. */) {
+        if (request !== originalRequest /* Reinitializes audit logger. */) {
             auditLogger = baseAuditLogger.withContext({}, { request });
         }
         const url = $url.parse(request.url) as $type.cfw.URL,
