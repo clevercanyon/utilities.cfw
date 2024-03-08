@@ -157,7 +157,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
         if (url.searchParams.has('utx_audit_log')) {
             const token = url.searchParams.get('utx_audit_log') || '',
-                validToken = $env.get('APP_AUDIT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }).split(' ', 2)[1] || '';
+                validToken = auditLoggerBearerToken.split(' ', 2)[1] || '';
 
             if (token && validToken && $crypto.safeEqual(token, validToken)) {
                 void auditLogger.log(url.toString(), { response: await response });
