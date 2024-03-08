@@ -106,28 +106,31 @@ const maybeInitializeGlobals = async (ircData: InitialRequestContextData): Promi
  * @returns         Response promise.
  */
 export const handleFetchEvent = async (ircData: InitialRequestContextData): Promise<$type.cfw.Response> => {
-    const { scheduledEvent, ctx, env, routes } = ircData;
-    let { request } = ircData; // Extracts wwritable irc data.
+    let { request } = ircData; // Extracts writable data.
+    const { scheduledEvent, ctx, env, routes } = ircData,
+        subrequestCounter = { value: 0 };
 
     await maybeInitializeGlobals(ircData); // Initializes worker globals.
 
     const Logger = $class.getLogger(), // Initializes base audit and consent loggers.
-        baseAuditLogger = new Logger({ endpointToken: $env.get('APP_AUDIT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) }),
-        baseConsentLogger = new Logger({ endpointToken: $env.get('APP_CONSENT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }) });
+        //
+        auditLoggerBearerToken = $env.get('APP_AUDIT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }),
+        consentLoggerBearerToken = $env.get('APP_CONSENT_LOGGER_BEARER_TOKEN', { type: 'string', require: true }),
+        //
+        baseAuditLogger = new Logger({ cfw: { ctx, subrequestCounter }, endpointToken: auditLoggerBearerToken }),
+        baseConsentLogger = new Logger({ cfw: { ctx, subrequestCounter }, endpointToken: consentLoggerBearerToken });
 
-    // Initializes audit logger early so it’s available for any errors below.
-    // However, `request` is potentially rewritten, so reinitialize if it changes.
-    let auditLogger = baseAuditLogger.withContext({}, { cfw: { ctx }, request });
+    let auditLogger = baseAuditLogger.withContext({}, { request });
 
     try {
         let originalRequest = request; // Potentially rewritten.
         request = (await $http.prepareRequest(request, {})) as $type.cfw.Request;
 
         if (request !== originalRequest /* Reinitializes using rewritten request. */) {
-            auditLogger = baseAuditLogger.withContext({}, { cfw: { ctx }, request });
+            auditLogger = baseAuditLogger.withContext({}, { request });
         }
         const url = $url.parse(request.url) as $type.cfw.URL,
-            consentLogger = baseConsentLogger.withContext({}, { cfw: { ctx }, request }),
+            consentLogger = baseConsentLogger.withContext({}, { request }),
             rcData = $obj.freeze({
                 scheduledEvent,
 
@@ -140,7 +143,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
                 auditLogger,
                 consentLogger,
-                subrequestCounter: { value: 0 },
+                subrequestCounter,
             });
         let response: Promise<$type.cfw.Response>; // Initialize.
 
