@@ -131,6 +131,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
             auditLogger = baseAuditLogger.withContext({}, { request });
         }
         const url = $url.parse(request.url) as $type.cfw.URL,
+            originalURL = $url.parse(originalRequest.url) as $type.cfw.URL,
             consentLogger = baseConsentLogger.withContext({}, { request }),
             rcData = $obj.freeze({
                 scheduledEvent,
@@ -155,8 +156,8 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
             }
         response ??= $http.prepareResponse(request, { status: 404 }) as Promise<$type.cfw.Response>;
 
-        if (url.searchParams.has('utx_audit_log')) {
-            const token = url.searchParams.get('utx_audit_log') || '',
+        if (originalURL.searchParams.has('utx_audit_log')) {
+            const token = originalURL.searchParams.get('utx_audit_log') || '',
                 validToken = auditLoggerBearerToken.split(' ', 2)[1] || '';
 
             if (token && validToken && $crypto.safeEqual(token, validToken)) {
