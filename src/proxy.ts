@@ -89,7 +89,7 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
  */
 export const worker = async (rcData: $cfw.StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
     const { fetch, Request } = cfw,
-        proxyRoute = 'https://proxy.c11n.workers.dev/';
+        proxyRoute = 'https://worker-proxy.hop.gdn/';
 
     if ($is.string(requestInfo) || $is.url(requestInfo)) {
         requestInfo = $url.addQueryVar('url', requestInfo.toString(), proxyRoute);
