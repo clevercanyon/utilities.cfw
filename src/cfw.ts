@@ -298,7 +298,7 @@ export const serviceBindingRequest = async (
  * @param id     Heartbeat ID; e.g., `JGndBRX5LXN79q5q1GkpsmaQ`.
  */
 export const heartbeat = async (rcData: $type.$cfw.RequestContextData, id: string): Promise<void> => {
-    await $http.heartbeat(id, { cfw: rcData });
+    await $http.heartbeat(id, { cfw: rcData }); // Uses `ctx.waitUntil()`.
 };
 
 // ---
