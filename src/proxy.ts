@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $cfw, $root, cfw } from '#index.ts';
+import { $root, cfw } from '#index.ts';
 import { $arr, $crypto, $env, $gzip, $http, $is, $mime, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
 
 /**
@@ -34,13 +34,13 @@ type RequiredFetchOptions = Required<FetchOptions> & {
  *
  * Note: Only `HEAD`, `GET` methods supported at this time.
  *
- * @param   rcData  Request context data; {@see $cfw.StdRequestContextData}.
+ * @param   rcData  Request context data.
  * @param   url     Parseable URL; i.e., string or URL instance.
  * @param   options Some required; {@see FetchOptions}.
  *
  * @returns         Promise of HTTP response.
  */
-export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type.cfw.URL | string, options?: FetchOptions): Promise<$type.cfw.Response> => {
+export const fetch = async (rcData: $type.$cfw.RequestContextData, parseable: $type.cfw.URL | string, options?: FetchOptions): Promise<$type.cfw.Response> => {
     const { Response } = cfw,
         url = $url.tryParse(parseable),
         opts = $obj.defaults({}, options || {}, {
@@ -81,14 +81,15 @@ export const fetch = async (rcData: $cfw.StdRequestContextData, parseable: $type
 /**
  * Fetches worker using another worker as a proxy.
  *
- * @param   rcData      Request context data; {@see $cfw.StdRequestContextData}.
- * @param   requestInfo New request info; {@see $type.cfw.RequestInfo}.
- * @param   requestInit New request init; {@see $type.cfw.RequestInit}.
+ * @param   rcData      Request context data.
+ * @param   requestInfo New request info.
+ * @param   requestInit New request init.
  *
- * @returns             Promise of response from worker using another worker as a proxy.
+ * @returns             Promise of a {@see $type.cfw.Response}.
  */
-export const worker = async (rcData: $cfw.StdRequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
-    const { fetch, Request } = cfw,
+export const worker = async (rcData: $type.$cfw.RequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
+    const { Request } = cfw,
+        { fetch } = rcData,
         proxyRoute = 'https://worker-proxy.hop.gdn/';
 
     if ($is.string(requestInfo) || $is.url(requestInfo)) {
@@ -97,7 +98,6 @@ export const worker = async (rcData: $cfw.StdRequestContextData, requestInfo: $t
     } else if (requestInfo instanceof Request) {
         requestInfo = new Request($url.addQueryVar('url', requestInfo.url, proxyRoute), requestInfo);
     }
-    rcData.subrequestCounter.value++;
     return fetch(requestInfo, requestInit);
 };
 
@@ -107,12 +107,12 @@ export const worker = async (rcData: $cfw.StdRequestContextData, requestInfo: $t
 /**
  * Creates a timeout promise.
  *
- * @param   rcData  Request context data; {@see $cfw.StdRequestContextData}.
- * @param   options Required options; {@see RequiredFetchOptions}.
+ * @param   rcData  Request context data.
+ * @param   options Required; {@see RequiredFetchOptions}.
  *
- * @returns         Timeout promise suitable for a race.
+ * @returns         Promise of a {@see $type.cfw.Response} suitable for a race.
  */
-const fetchꓺwaitTimeout = async (rcData: $cfw.StdRequestContextData, opts: RequiredFetchOptions): Promise<$type.cfw.Response> => {
+const fetchꓺwaitTimeout = async (rcData: $type.$cfw.RequestContextData, opts: RequiredFetchOptions): Promise<$type.cfw.Response> => {
     const { Response } = cfw;
 
     return new Promise((resolve): void => {
@@ -131,23 +131,23 @@ const fetchꓺwaitTimeout = async (rcData: $cfw.StdRequestContextData, opts: Req
 /**
  * Performs an HTTP fetch using a proxy.
  *
- * @param   rcData    Request context data; {@see $cfw.StdRequestContextData}.
+ * @param   rcData    Request context data.
  * @param   url       Parseable URL; i.e., string or URL instance.
- * @param   options   Required options; {@see RequiredFetchOptions}.
+ * @param   options   Required; {@see RequiredFetchOptions}.
  * @param   redirects Do not pass. Internal use only.
  *
  * @returns           Promise of HTTP response.
  */
-const fetchꓺviaSocket = async (rcData: $cfw.StdRequestContextData, url: $type.cfw.URL, opts: RequiredFetchOptions, redirects: number = 0): Promise<$type.cfw.Response> => {
+const fetchꓺviaSocket = async (rcData: $type.$cfw.RequestContextData, url: $type.cfw.URL, opts: RequiredFetchOptions, redirects: number = 0): Promise<$type.cfw.Response> => {
     const { Blob, Response } = cfw,
-        { auditLogger } = rcData,
+        { auditLogger, subrequestCounter } = rcData,
         sockets = await import('cloudflare:sockets');
 
     try {
         // ---
         // Socket setup.
 
-        rcData.subrequestCounter.value++;
+        subrequestCounter.value++;
 
         const socket = sockets.connect({
                 hostname: opts.proxy.host,

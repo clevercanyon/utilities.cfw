@@ -2,7 +2,7 @@
  * Test suite.
  */
 
-import { $cfw, $redis, cfw } from '#index.ts';
+import { $redis, cfw } from '#index.ts';
 import { $time, type $type } from '@clevercanyon/utilities';
 import { describe, expect, test } from 'vitest';
 
@@ -23,10 +23,13 @@ describe('$redis', async () => {
                 waitUntil: (): void => undefined,
                 passThroughOnException: (): void => undefined,
             },
-            env: {} as $cfw.StdEnvironment,
+            env: {} as $type.$cfw.Environment,
 
             url: new URL('https://x.tld/'),
             request: new Request('https://x.tld/'),
+
+            fetch: cfw.fetch,
+            caches: cfw.caches,
 
             auditLogger: mockLoggerInterface,
             consentLogger: mockLoggerInterface,

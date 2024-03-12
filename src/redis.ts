@@ -4,15 +4,9 @@
 
 import '#@initialize.ts';
 
-import { $cfw } from '#index.ts';
-import { $class, $env, $fn, $http, $is, $json, $mime, $obj } from '@clevercanyon/utilities';
+import { $class, $env, $fn, $http, $is, $json, $mime, $obj, type $type } from '@clevercanyon/utilities';
 import { Ratelimit as RateLimiterCore } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis/cloudflare.mjs';
-
-/**
- * LRU Map class.
- */
-const LRUMap = $class.getLRUMap();
 
 /**
  * Defines types.
@@ -49,6 +43,11 @@ const instanceOptionKeys = [
     'restToken',
     'maxConcurrentConnections',
 ];
+
+/**
+ * LRU Map class.
+ */
+const LRUMap = $class.getLRUMap();
 
 /**
  * Gets instance.
@@ -121,12 +120,12 @@ export const instance = $fn.memo(
  * - Using rate limiter; {@see https://o5p.me/8ZIrm1}.
  * - Other rate limit features; {@see https://o5p.me/gJmt6n}.
  *
- * @param   rcData                   Request context data; {@see $cfw.StdRequestContextData}.
- * @param   options                  Options (all optional); {@see RateLimiterOptions}.
+ * @param   rcData  Request context data.
+ * @param   options All optional; {@see RateLimiterOptions}.
  *
- * @returns {@see RateLimiter}         Instance.
+ * @returns         Instance of {@see RateLimiter}.
  */
-export const rateLimiter = (rcData: $cfw.StdRequestContextData, options?: RateLimiterOptions): RateLimiter => {
+export const rateLimiter = (rcData: $type.$cfw.RequestContextData, options?: RateLimiterOptions): RateLimiter => {
     const { ctx, url, request, auditLogger } = rcData,
         limiter = rateLimiterCore(options);
 
@@ -202,9 +201,9 @@ export const rateLimiter = (rcData: $cfw.StdRequestContextData, options?: RateLi
 /**
  * Gets rate limiter core.
  *
- * @param   options                      Options (all optional); {@see RateLimiterOptions}.
+ * @param   options All optional; {@see RateLimiterOptions}.
  *
- * @returns {@see RateLimiterCore}         Instance.
+ * @returns         Instance of {@see RateLimiterCore}.
  */
 const rateLimiterCore = $fn.memo(
     {

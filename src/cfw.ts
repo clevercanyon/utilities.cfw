@@ -9,13 +9,14 @@ import { $app, $bytes, $class, $crypto, $env, $error, $http, $is, $mm, $obj, $ur
 // @ts-ignore -- Broken types.
 import { Ai as AiClass } from '@cloudflare/ai';
 import type { Ai as AiInstance } from '@cloudflare/ai/dist/ai.d.ts';
+import type { SessionOptions as AiSessionOptions } from '@cloudflare/ai/dist/session.d.ts';
 
 /**
  * Defines types.
  */
-export type ScheduledEvent = StdScheduledEvent;
-export type ExecutionContext = Readonly<$type.cfw.ExecutionContext>;
-export type Environment = StdEnvironment;
+export type ScheduledEvent = $type.$cfw.ScheduledEvent & Readonly<{}>;
+export type ExecutionContext = $type.$cfw.ExecutionContext & Readonly<$type.cfw.ExecutionContext>;
+export type Environment = $type.$cfw.Environment & Readonly<{}>;
 
 export type Route = ((rcData: RequestContextData) => Promise<$type.cfw.Response>) & {
     config?: Required<$http.RouteConfig>;
@@ -23,54 +24,20 @@ export type Route = ((rcData: RequestContextData) => Promise<$type.cfw.Response>
 export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
 
 export type InitialRequestContextData = Readonly<{
-    scheduledEvent?: StdScheduledEvent;
+    scheduledEvent?: ScheduledEvent;
     ctx: ExecutionContext;
     env: Environment;
+
     request: $type.cfw.Request;
     routes: Routes;
 }>;
-export type RequestContextData = StdRequestContextData &
+export type RequestContextData = $type.$cfw.RequestContextData &
     Readonly<{
-        scheduledEvent?: StdScheduledEvent;
+        scheduledEvent?: ScheduledEvent;
         ctx: ExecutionContext;
         env: Environment;
         routes: Routes;
     }>;
-
-/**
- * Defines common types across CFW/CFP.
- */
-export type StdScheduledEvent = Readonly<$type.cfw.FetcherScheduledOptions>;
-export type StdExecutionContext = Readonly<
-    Pick<
-        $type.cfw.ExecutionContext | Parameters<$type.cfw.PagesFunction>[0],
-        // These are the two required keys.
-        'waitUntil' | 'passThroughOnException'
-    >
->;
-export type StdEnvironment = Readonly<{
-    RT: $type.cfw.Fetcher;
-    RT_AI: $type.cfw.Fetcher;
-    RT_D1: $type.cfw.D1Database;
-    RT_R2: $type.cfw.R2Bucket;
-    RT_KV: $type.cfw.KVNamespace;
-
-    AI: $type.cfw.Fetcher;
-    D1: $type.cfw.D1Database;
-    R2: $type.cfw.R2Bucket;
-    KV: $type.cfw.KVNamespace;
-}>;
-export type StdRequestContextData = Readonly<{
-    ctx: StdExecutionContext;
-    env: StdEnvironment;
-
-    url: $type.cfw.URL;
-    request: $type.cfw.Request;
-
-    auditLogger: $type.LoggerInterface;
-    consentLogger: $type.LoggerInterface;
-    subrequestCounter: { value: number };
-}>;
 
 /**
  * Tracks global init.
@@ -103,12 +70,13 @@ const maybeInitializeGlobals = async (ircData: InitialRequestContextData): Promi
  *
  * @param   ircData Initial request context data.
  *
- * @returns         Response promise.
+ * @returns         Promise of a {@see $type.cfw.Response}.
  */
 export const handleFetchEvent = async (ircData: InitialRequestContextData): Promise<$type.cfw.Response> => {
     let { request } = ircData;
 
-    const { scheduledEvent, ctx, env, routes } = ircData,
+    const { fetch, caches } = cfw,
+        { scheduledEvent, ctx, env, routes } = ircData,
         subrequestCounter = { value: 0 };
 
     await maybeInitializeGlobals(ircData); // Initializes worker globals.
@@ -133,15 +101,18 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
         const url = $url.parse(request.url) as $type.cfw.URL,
             originalURL = $url.parse(originalRequest.url) as $type.cfw.URL,
             consentLogger = baseConsentLogger.withContext({}, { request }),
-            rcData = $obj.freeze({
+            rcData = rcDataPrepare({
                 scheduledEvent,
 
                 ctx,
                 env,
-                routes,
 
                 url,
                 request,
+                routes,
+
+                fetch,
+                caches,
 
                 auditLogger,
                 consentLogger,
@@ -184,7 +155,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 // Misc exports.
 
 /**
- * Cloudflare worker global scope.
+ * Defines Cloudflare worker global scope.
  */
 export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope & {
     fetch(
@@ -194,9 +165,39 @@ export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope &
 };
 
 /**
- * Cloudflare Worker AI class definition.
+ * Defines Cloudflare worker AI class.
  */
-export const Ai = AiClass as new (AI: $type.cfw.Fetcher) => AiInstance;
+export const Ai = AiClass as new (
+    binding: $type.$cfw.Environment['AI'],
+    options?: {
+        debug?: boolean;
+        apiGateway?: boolean;
+        apiAccount?: string;
+        apiToken?: string;
+        sessionOptions?: AiSessionOptions;
+    },
+) => AiInstance;
+
+/**
+ * Prepares request context data.
+ *
+ * @param   rcData Writable request context data to prepare.
+ *
+ * @returns        Readable request context data after having been prepared by this utility.
+ */
+export const rcDataPrepare = <Type extends $type.Writable<$type.$cfw.RequestContextData>>(rcData: Type): Readonly<Type> => {
+    const { subrequestCounter } = rcData;
+
+    rcData.fetch = subrequestCounterProxy(rcData.fetch, subrequestCounter);
+    rcData.caches = subrequestCounterProxy(rcData.caches, subrequestCounter);
+
+    rcData.env = { ...rcData.env }; // Shallow clone.
+    for (const [key, value] of Object.entries(rcData.env))
+        if (/(?:^RT$|^(?:RT_)?(?:AI|D1|R2|KV|QE)(?:_.+)?$)/iu.test(key) && $is.object(value)) {
+            (rcData.env as $type.StrKeyable)[key] = subrequestCounterProxy(value, subrequestCounter);
+        }
+    return $obj.freeze(rcData) as Type;
+};
 
 /**
  * Creates a scheduled event request.
@@ -205,14 +206,14 @@ export const Ai = AiClass as new (AI: $type.cfw.Fetcher) => AiInstance;
  * Cloudflare doesn’t do it by default, but our codebases assume IP and geolocation data will be available; i.e., for
  * every request. Therefore, when fetching scheduled event routes always use this utility to build a request.
  *
- * @param   scheduledEvent Scheduled event; {@see StdScheduledEvent}.
- * @param   requestInfo    New request info; {@see $type.cfw.RequestInfo}.
- * @param   requestInit    New request init; {@see $type.cfw.RequestInit}.
+ * @param   scheduledEvent Scheduled event.
+ * @param   requestInfo    New request info.
+ * @param   requestInit    New request init.
  *
  * @returns                Promise of a {@see $type.cfw.Request}.
  */
 export const scheduledEventRequest = async (
-    scheduledEvent: StdScheduledEvent, //
+    scheduledEvent: $type.$cfw.ScheduledEvent,
     requestInfo: $type.cfw.RequestInfo,
     requestInit?: $type.cfw.RequestInit,
 ): Promise<$type.cfw.Request> => {
@@ -226,25 +227,26 @@ export const scheduledEventRequest = async (
 
     if (scheduledEvent.cron /* Only scheduled CRON event requests. */) {
         // Scheduled CRON event requests get a default IP and geolocation.
-        const userIP = '127.13.249.56'; // Random private IPv4.
+        const userIP = '127.13.249.56', // Random private IPv4.
+            //
+            // Must be in the US such that consent state will allow audit logging.
+            // i.e., Non-essential audit logging is only allowed by default in the US.
+            userIPGeoData: $user.IPGeoData = {
+                ip: userIP,
 
-        // Default geolocation data.
-        const userIPGeoData: $user.IPGeoData = {
-            ip: userIP,
+                city: 'Madawaska',
+                region: 'Maine',
+                regionCode: 'ME',
+                postalCode: '04756',
+                continent: 'NA',
+                country: 'US',
 
-            city: 'Madawaska',
-            region: 'Maine',
-            regionCode: 'ME',
-            postalCode: '04756',
-            continent: 'NA',
-            country: 'US',
-
-            colo: 'EWR',
-            metroCode: '552',
-            latitude: '47.33320',
-            longitude: '-68.33160',
-            timezone: 'America/New_York',
-        };
+                colo: 'EWR',
+                metroCode: '552',
+                latitude: '47.33320',
+                longitude: '-68.33160',
+                timezone: 'America/New_York',
+            };
         headers.set('x-real-ip', userIP);
         headers.set('cf-connecting-ip', userIP);
         $obj.patchDeep(requestInit.cf, $obj.omit(userIPGeoData, ['ip']));
@@ -259,14 +261,14 @@ export const scheduledEventRequest = async (
  * doesn’t do it by default, but our codebases assume IP and geolocation data will be available; i.e., for every
  * request. Therefore, when fetching from a service binding always use this utility to build a request.
  *
- * @param   rcData      Request context data; {@see StdRequestContextData}.
- * @param   requestInfo New request info; {@see $type.cfw.RequestInfo}.
- * @param   requestInit New request init; {@see $type.cfw.RequestInit}.
+ * @param   rcData      Request context data.
+ * @param   requestInfo New request info.
+ * @param   requestInit New request init.
  *
  * @returns             Promise of a {@see $type.cfw.Request}.
  */
 export const serviceBindingRequest = async (
-    rcData: StdRequestContextData, //
+    rcData: $type.$cfw.RequestContextData,
     requestInfo: $type.cfw.RequestInfo,
     requestInit?: $type.cfw.RequestInit,
 ): Promise<$type.cfw.Request> => {
@@ -280,9 +282,7 @@ export const serviceBindingRequest = async (
     requestInit.headers = headers; // As a reference to our typed `headers`.
 
     const userIP = await $user.ip(parentRequest),
-        userIPGeoData = $obj.cloneDeep(
-            await $user.ipGeoData(parentRequest), // Writable now.
-        ) as $type.WritableDeep<Awaited<ReturnType<typeof $user.ipGeoData>>>;
+        userIPGeoData = await $user.ipGeoData(parentRequest);
 
     headers.set('x-real-ip', userIP);
     headers.set('cf-connecting-ip', userIP);
@@ -295,12 +295,110 @@ export const serviceBindingRequest = async (
 // Misc utilities.
 
 /**
+ * Proxies a resource binding for the purpose of counting subrequests.
+ *
+ * @param   target            A target object.
+ * @param   subrequestCounter Subrequest counter.
+ *
+ * @returns                   A proxied target object of {@see Type}.
+ *
+ * @throws                    If input `target` is not a supported object type.
+ */
+const subrequestCounterProxy = <Type extends object>(target: Type, subrequestCounter: $type.$cfw.SubrequestCounter): Type => {
+    const targetC9rName = $obj.c9r(target)?.name || '';
+
+    if (target === cfw.fetch) {
+        const cfwFetch = cfw.fetch.bind(cfw);
+        return ((...args: Parameters<typeof cfw.fetch>): ReturnType<typeof cfw.fetch> => {
+            subrequestCounter.value++;
+            return cfwFetch(...args);
+        }) as Type;
+    }
+    if (!['CacheStorage', 'Fetcher', 'D1Database', 'D1PreparedStatement', 'R2Bucket', 'R2MultipartUpload', 'KvNamespace', 'WorkerQueue'].includes(targetC9rName)) {
+        throw Error('3V2Rw38X'); // Unexpected object type.
+    }
+    return new Proxy(target, {
+        get(target: Type, property: $type.ObjectKey, receiver: unknown): unknown {
+            const value = (target as $type.Keyable)[property];
+            if (!$is.function(value)) return value;
+
+            return function (this: unknown, ...args: unknown[]): unknown {
+                const fn = value; // For the sake of added clarity.
+                let fnRtnValue = fn.apply(this === receiver ? target : this, args);
+
+                if ($is.object(fnRtnValue)) {
+                    if (
+                        ('CacheStorage' === targetC9rName && 'Cache' === $obj.c9r(fnRtnValue)?.name) ||
+                        (['D1Database', 'D1PreparedStatement'].includes(targetC9rName) && 'D1PreparedStatement' === $obj.c9r(fnRtnValue)?.name) ||
+                        ('R2Bucket' === targetC9rName && 'R2MultipartUpload' === $obj.c9r(fnRtnValue)?.name)
+                    ) {
+                        return subrequestCounterProxy(fnRtnValue, subrequestCounter);
+                    }
+                }
+                if ($is.string(property))
+                    switch (targetC9rName) {
+                        case 'Cache': {
+                            if (['put', 'match', 'delete'].includes(property)) {
+                                subrequestCounter.value++;
+                            }
+                            break;
+                        }
+                        case 'Fetcher': {
+                            if (['fetch'].includes(property)) {
+                                subrequestCounter.value++;
+                            }
+                            break;
+                        }
+                        case 'D1Database': {
+                            if (['dump', 'exec', 'batch'].includes(property)) {
+                                subrequestCounter.value++;
+                            }
+                            break;
+                        }
+                        case 'D1PreparedStatement': {
+                            if (['all', 'raw', 'first', 'run'].includes(property)) {
+                                subrequestCounter.value++;
+                            }
+                            break;
+                        }
+                        case 'R2Bucket': {
+                            if (['head', 'get', 'put', 'delete', 'list'].includes(property)) {
+                                subrequestCounter.value++;
+                            }
+                            break;
+                        }
+                        case 'R2MultipartUpload': {
+                            if (['uploadPart', 'complete'].includes(property)) {
+                                subrequestCounter.value++;
+                            }
+                            break;
+                        }
+                        case 'KvNamespace': {
+                            if (['get', 'getWithMetadata', 'list', 'put', 'delete'].includes(property)) {
+                                subrequestCounter.value++;
+                            }
+                            break;
+                        }
+                        case 'WorkerQueue': {
+                            if (['send', 'sendBatch'].includes(property)) {
+                                subrequestCounter.value++;
+                            }
+                            break;
+                        }
+                    }
+                return fnRtnValue;
+            };
+        },
+    });
+};
+
+/**
  * Handles fetch caching.
  *
  * @param   rcData Request context data.
  * @param   route  Route handler.
  *
- * @returns        Response promise.
+ * @returns        Promise of a {@see $type.cfw.Response}.
  */
 const handleFetchCache = async (rcData: RequestContextData, route: Route): Promise<$type.cfw.Response> => {
     const { caches, Request } = cfw,
@@ -334,7 +432,6 @@ const handleFetchCache = async (rcData: RequestContextData, route: Route): Promi
     }
     // Reads response for this request from HTTP cache.
 
-    rcData.subrequestCounter.value++;
     if ((cachedResponse = await caches.default.match(keyRequest, { ignoreMethod: true }))) {
         return $http.prepareCachedResponse(keyRequest, cachedResponse) as Promise<$type.cfw.Response>;
     }
@@ -358,7 +455,6 @@ const handleFetchCache = async (rcData: RequestContextData, route: Route): Promi
                 // Cloudflare will not actually cache if headers say not to; {@see https://o5p.me/gMv7W2}.
                 const responseForCache = (await $http.prepareResponseForCache(keyRequest, response)) as $type.cfw.Response;
                 await caches.default.put(keyRequest, responseForCache);
-                rcData.subrequestCounter.value++;
             })(),
         );
         response.headers.set('x-cache-status', 'miss'); // i.e., Cache miss.
