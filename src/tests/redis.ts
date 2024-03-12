@@ -2,7 +2,7 @@
  * Test suite.
  */
 
-import { $redis, cfw } from '#index.ts';
+import { $cfw, $redis, cfw } from '#index.ts';
 import { $time, type $type } from '@clevercanyon/utilities';
 import { describe, expect, test } from 'vitest';
 
@@ -18,7 +18,7 @@ describe('$redis', async () => {
             error: async () => true,
             flush: async () => true,
         },
-        mockStdRequestContextData = {
+        mockRequestContextData = $cfw.rcDataPrepare({
             ctx: {
                 waitUntil: (): void => undefined,
                 passThroughOnException: (): void => undefined,
@@ -34,7 +34,7 @@ describe('$redis', async () => {
             auditLogger: mockLoggerInterface,
             consentLogger: mockLoggerInterface,
             subrequestCounter: { value: 0 },
-        },
+        }),
         redis = $redis.instance();
 
     test('.set(), .get()', async () => {
@@ -62,7 +62,7 @@ describe('$redis', async () => {
     test(
         '.rateLimiter()',
         async () => {
-            const rateLimiter = $redis.rateLimiter(mockStdRequestContextData, {
+            const rateLimiter = $redis.rateLimiter(mockRequestContextData, {
                 slidingWindow: [10, '10s'], // 10 every 10 seconds.
             });
             expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 1
@@ -76,14 +76,14 @@ describe('$redis', async () => {
             expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 9
             expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 10
 
-            let thrownResponse: unknown;
+            let thrown: unknown; // Initialize.
             try {
                 await rateLimiter.limit('testKey'); // 11
-            } catch (thrown: unknown) {
-                thrownResponse = thrown; // Limit reached; response thrown.
+            } catch (unknownThrown: unknown) {
+                thrown = unknownThrown; // Limit reached; response thrown.
             }
-            expect(thrownResponse instanceof Response).toBe(true);
-            expect((thrownResponse as $type.cfw.Response).status).toBe(429);
+            expect(thrown instanceof Response).toBe(true);
+            expect((thrown as $type.cfw.Response).status).toBe(429);
 
             // Blocks until allowed to resume operations given the defined rate limiter.
             expect(await rateLimiter.blockUntilReady('testKey', $time.secondInMilliseconds * 10)).toMatchObject({ success: true });

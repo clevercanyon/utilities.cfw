@@ -291,6 +291,16 @@ export const serviceBindingRequest = async (
     return new Request(requestInfo, requestInit);
 };
 
+/**
+ * Logs a heartbeat for monitoring purposes.
+ *
+ * @param rcData Request context data.
+ * @param id     Heartbeat ID; e.g., `JGndBRX5LXN79q5q1GkpsmaQ`.
+ */
+export const heartbeat = async (rcData: $type.$cfw.RequestContextData, id: string): Promise<void> => {
+    await $http.heartbeat(id, { cfw: rcData });
+};
+
 // ---
 // Misc utilities.
 
@@ -401,8 +411,8 @@ const subrequestCounterProxy = <Type extends object>(target: Type, subrequestCou
  * @returns        Promise of a {@see $type.cfw.Response}.
  */
 const handleFetchCache = async (rcData: RequestContextData, route: Route): Promise<$type.cfw.Response> => {
-    const { caches, Request } = cfw,
-        { ctx, url, request } = rcData;
+    const { Request } = cfw,
+        { ctx, url, request, caches } = rcData;
 
     // Populates cache key.
 
