@@ -374,26 +374,18 @@ const subrequestCounterProxy = <Type extends object>(target: Type, subrequestCou
     if (target === cfw.fetch) {
         return subrequestCountryProxyꓺfetch(subrequestCounter) as Type;
     }
-    const targetC9rName = $obj.c9r(target)?.name,
-        supportedTargetC9rNames = [
-            'CacheStorage', //
-            'Cache',
-            'Fetcher',
-            'D1Database',
-            'D1PreparedStatement',
-            'R2Bucket',
-            'R2MultipartUpload',
-            'KvNamespace',
-            'WorkerQueue',
-        ];
+    const targetC9rName = $obj.c9r(target)?.name?.toLowerCase(),
+        supportedTargetC9rNames = ['cachestorage', 'cache', 'fetcher', 'd1database', 'd1preparedstatement', 'r2bucket', 'r2multipartupload', 'kvnamespace', 'workerqueue'];
+
     if (!targetC9rName || !supportedTargetC9rNames.includes(targetC9rName)) {
         throw Error('QGySmpVX'); // Unexpected object type.
     }
     return new Proxy(target, {
         get(target: Type, property: $type.ObjectKey, receiver: unknown): unknown {
-            const value = (target as $type.Keyable)[property];
+            const value = (target as $type.Keyable)[property],
+                valueC9rName = $obj.c9r(value)?.name?.toLowerCase();
 
-            if ('CacheStorage' === targetC9rName && 'Cache' === $obj.c9r(value)?.name) {
+            if ('cachestorage' === targetC9rName && 'cache' === valueC9rName) {
                 return subrequestCounterProxy(value as object, subrequestCounter);
             }
             if ($is.function(value))
@@ -487,60 +479,60 @@ const subrequestCountryProxyꓺfetch = <Type extends typeof cfw.fetch>(subreques
  */
 const subrequestCounterProxyꓺfnRtnValue = (targetC9rName: string, fnProperty: $type.ObjectKey, fnRtnValue: unknown, subrequestCounter: $type.$cfw.SubrequestCounter): unknown => {
     if ($is.object(fnRtnValue)) {
-        const fnRtnValueC9rName = $obj.c9r(fnRtnValue)?.name;
+        const fnRtnValueC9rName = $obj.c9r(fnRtnValue)?.name?.toLowerCase();
         if (
-            ('CacheStorage' === targetC9rName && 'Cache' === fnRtnValueC9rName) ||
-            (['D1Database', 'D1PreparedStatement'].includes(targetC9rName) && 'D1PreparedStatement' === fnRtnValueC9rName) ||
-            ('R2Bucket' === targetC9rName && 'R2MultipartUpload' === fnRtnValueC9rName)
+            ('cachestorage' === targetC9rName && 'cache' === fnRtnValueC9rName) ||
+            (['d1database', 'd1preparedstatement'].includes(targetC9rName) && 'd1preparedstatement' === fnRtnValueC9rName) ||
+            ('r2bucket' === targetC9rName && 'r2multipartupload' === fnRtnValueC9rName)
         ) {
             return subrequestCounterProxy(fnRtnValue, subrequestCounter);
         }
     }
     if ($is.string(fnProperty))
         switch (targetC9rName) {
-            case 'Cache': {
+            case 'cache': {
                 if (['put', 'match', 'delete'].includes(fnProperty)) {
                     subrequestCounter.value++;
                 }
                 break;
             }
-            case 'Fetcher': {
+            case 'fetcher': {
                 if (['fetch'].includes(fnProperty)) {
                     subrequestCounter.value++;
                 }
                 break;
             }
-            case 'D1Database': {
+            case 'd1database': {
                 if (['dump', 'exec', 'batch'].includes(fnProperty)) {
                     subrequestCounter.value++;
                 }
                 break;
             }
-            case 'D1PreparedStatement': {
+            case 'd1preparedstatement': {
                 if (['all', 'raw', 'first', 'run'].includes(fnProperty)) {
                     subrequestCounter.value++;
                 }
                 break;
             }
-            case 'R2Bucket': {
+            case 'r2bucket': {
                 if (['head', 'get', 'put', 'delete', 'list'].includes(fnProperty)) {
                     subrequestCounter.value++;
                 }
                 break;
             }
-            case 'R2MultipartUpload': {
+            case 'r2multipartupload': {
                 if (['uploadPart', 'complete'].includes(fnProperty)) {
                     subrequestCounter.value++;
                 }
                 break;
             }
-            case 'KvNamespace': {
+            case 'kvnamespace': {
                 if (['get', 'getWithMetadata', 'list', 'put', 'delete'].includes(fnProperty)) {
                     subrequestCounter.value++;
                 }
                 break;
             }
-            case 'WorkerQueue': {
+            case 'workerqueue': {
                 if (['send', 'sendBatch'].includes(fnProperty)) {
                     subrequestCounter.value++;
                 }
