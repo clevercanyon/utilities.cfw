@@ -59,7 +59,7 @@ export const fetch = async (rcData: $type.$cfw.RequestContextData, parseable: $t
 
             uaBotAppend: '',
             redirect: 'follow',
-            maxRedirects: 3,
+            maxRedirects: 20,
             timeout: $time.secondInMilliseconds * 15,
         }) as RequiredFetchOptions;
 
