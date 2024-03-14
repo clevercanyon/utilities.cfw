@@ -15,19 +15,17 @@ import type { SessionOptions as AiSessionOptions } from '@cloudflare/ai/dist/ses
  * Defines types.
  */
 export type ScheduledEvent = $type.$cfw.ScheduledEvent & Readonly<{}>;
+
 export type ExecutionContext = $type.$cfw.ExecutionContext & Readonly<$type.cfw.ExecutionContext>;
 export type Environment = $type.$cfw.Environment & Readonly<{}>;
 
-export type Route = ((rcData: RequestContextData) => Promise<$type.cfw.Response>) & {
-    config?: Required<$http.RouteConfig>;
-};
+export type Route = $type.$cfw.Route<RequestContextData>;
 export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
 
 export type InitialRequestContextData = Readonly<{
     scheduledEvent?: ScheduledEvent;
     ctx: ExecutionContext;
     env: Environment;
-
     request: $type.cfw.Request;
     routes: Routes;
 }>;
@@ -103,7 +101,6 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
             consentLogger = baseConsentLogger.withContext({}, { request }),
             rcData = rcDataPrepare({
                 scheduledEvent,
-
                 ctx,
                 env,
 
@@ -113,7 +110,6 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
                 fetch,
                 caches,
-
                 auditLogger,
                 consentLogger,
                 subrequestCounter,
@@ -122,7 +118,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
         for (const [subpathGlob, route] of Object.entries(routes.subpathGlobs))
             if ($mm.test(url.pathname, $url.pathFromAppBase('./') + subpathGlob)) {
-                response = handleFetchCache(rcData, route);
+                response = handleRouteCache(rcData, route);
                 break; // Route found; stop here.
             }
         response ??= $http.prepareResponse(request, { status: 404 }) as Promise<$type.cfw.Response>;
@@ -292,125 +288,14 @@ export const serviceBindingRequest = async (
 };
 
 /**
- * Logs a heartbeat for monitoring purposes.
- *
- * @param rcData Request context data.
- * @param id     Heartbeat ID; e.g., `JGndBRX5LXN79q5q1GkpsmaQ`.
- */
-export const heartbeat = async (rcData: $type.$cfw.RequestContextData, id: string): Promise<void> => {
-    await $http.heartbeat(id, { cfw: rcData }); // Uses `ctx.waitUntil()`.
-};
-
-// ---
-// Misc utilities.
-
-/**
- * Proxies a resource binding for the purpose of counting subrequests.
- *
- * @param   target            A target object.
- * @param   subrequestCounter Subrequest counter.
- *
- * @returns                   A proxied target object of {@see Type}.
- *
- * @throws                    If input `target` is not a supported object type.
- */
-const subrequestCounterProxy = <Type extends object>(target: Type, subrequestCounter: $type.$cfw.SubrequestCounter): Type => {
-    const targetC9rName = $obj.c9r(target)?.name || '';
-
-    if (target === cfw.fetch) {
-        const cfwFetch = cfw.fetch.bind(cfw);
-        return ((...args: Parameters<typeof cfw.fetch>): ReturnType<typeof cfw.fetch> => {
-            subrequestCounter.value++;
-            return cfwFetch(...args);
-        }) as Type;
-    }
-    if (!['CacheStorage', 'Fetcher', 'D1Database', 'D1PreparedStatement', 'R2Bucket', 'R2MultipartUpload', 'KvNamespace', 'WorkerQueue'].includes(targetC9rName)) {
-        throw Error('3V2Rw38X'); // Unexpected object type.
-    }
-    return new Proxy(target, {
-        get(target: Type, property: $type.ObjectKey, receiver: unknown): unknown {
-            const value = (target as $type.Keyable)[property];
-            if (!$is.function(value)) return value;
-
-            return function (this: unknown, ...args: unknown[]): unknown {
-                const fn = value; // For the sake of added clarity.
-                let fnRtnValue = fn.apply(this === receiver ? target : this, args);
-
-                if ($is.object(fnRtnValue)) {
-                    if (
-                        ('CacheStorage' === targetC9rName && 'Cache' === $obj.c9r(fnRtnValue)?.name) ||
-                        (['D1Database', 'D1PreparedStatement'].includes(targetC9rName) && 'D1PreparedStatement' === $obj.c9r(fnRtnValue)?.name) ||
-                        ('R2Bucket' === targetC9rName && 'R2MultipartUpload' === $obj.c9r(fnRtnValue)?.name)
-                    ) {
-                        return subrequestCounterProxy(fnRtnValue, subrequestCounter);
-                    }
-                }
-                if ($is.string(property))
-                    switch (targetC9rName) {
-                        case 'Cache': {
-                            if (['put', 'match', 'delete'].includes(property)) {
-                                subrequestCounter.value++;
-                            }
-                            break;
-                        }
-                        case 'Fetcher': {
-                            if (['fetch'].includes(property)) {
-                                subrequestCounter.value++;
-                            }
-                            break;
-                        }
-                        case 'D1Database': {
-                            if (['dump', 'exec', 'batch'].includes(property)) {
-                                subrequestCounter.value++;
-                            }
-                            break;
-                        }
-                        case 'D1PreparedStatement': {
-                            if (['all', 'raw', 'first', 'run'].includes(property)) {
-                                subrequestCounter.value++;
-                            }
-                            break;
-                        }
-                        case 'R2Bucket': {
-                            if (['head', 'get', 'put', 'delete', 'list'].includes(property)) {
-                                subrequestCounter.value++;
-                            }
-                            break;
-                        }
-                        case 'R2MultipartUpload': {
-                            if (['uploadPart', 'complete'].includes(property)) {
-                                subrequestCounter.value++;
-                            }
-                            break;
-                        }
-                        case 'KvNamespace': {
-                            if (['get', 'getWithMetadata', 'list', 'put', 'delete'].includes(property)) {
-                                subrequestCounter.value++;
-                            }
-                            break;
-                        }
-                        case 'WorkerQueue': {
-                            if (['send', 'sendBatch'].includes(property)) {
-                                subrequestCounter.value++;
-                            }
-                            break;
-                        }
-                    }
-                return fnRtnValue;
-            };
-        },
-    });
-};
-
-/**
- * Handles fetch caching.
+ * Handles route caching.
  *
  * @param   rcData Request context data.
- * @param   route  Route handler.
+ * @param   route  Route; {@see $type.$cfw.Route}.
  *
  * @returns        Promise of a {@see $type.cfw.Response}.
  */
-const handleFetchCache = async (rcData: RequestContextData, route: Route): Promise<$type.cfw.Response> => {
+export const handleRouteCache = async <Type extends $type.$cfw.RequestContextData>(rcData: Type, route: $type.$cfw.Route<Type>): Promise<$type.cfw.Response> => {
     const { Request } = cfw,
         { ctx, url, request, caches } = rcData;
 
@@ -470,4 +355,197 @@ const handleFetchCache = async (rcData: RequestContextData, route: Route): Promi
         response.headers.set('x-cache-status', 'miss'); // i.e., Cache miss.
     }
     return response; // Potentially cached async via `waitUntil()`.
+};
+
+// ---
+// Misc utilities.
+
+/**
+ * Proxies {@see cfw.fetch()} and/or a resource binding.
+ *
+ * @param   target            {@see cfw.fetch()} or a resource binding.
+ * @param   subrequestCounter Subrequest counter; {@see $type.$cfw.SubrequestCounter}.
+ *
+ * @returns                   A proxied {@see cfw.fetch()} function, or a proxied resource binding.
+ *
+ * @throws                    If `target` object type is not supported; i.e., as detected using constructor names.
+ */
+const subrequestCounterProxy = <Type extends object>(target: Type, subrequestCounter: $type.$cfw.SubrequestCounter): Type => {
+    if (target === cfw.fetch) {
+        return subrequestCountryProxyꓺfetch(subrequestCounter) as Type;
+    }
+    const targetC9rName = $obj.c9r(target)?.name,
+        supportedTargetC9rNames = [
+            'CacheStorage', //
+            'Cache',
+            'Fetcher',
+            'D1Database',
+            'D1PreparedStatement',
+            'R2Bucket',
+            'R2MultipartUpload',
+            'KvNamespace',
+            'WorkerQueue',
+        ];
+    if (!targetC9rName || !supportedTargetC9rNames.includes(targetC9rName)) {
+        throw Error('QGySmpVX'); // Unexpected object type.
+    }
+    return new Proxy(target, {
+        get(target: Type, property: $type.ObjectKey, receiver: unknown): unknown {
+            const value = (target as $type.Keyable)[property];
+
+            if ('CacheStorage' === targetC9rName && 'Cache' === $obj.c9r(value)?.name) {
+                return subrequestCounterProxy(value as object, subrequestCounter);
+            }
+            if ($is.function(value))
+                return function (this: unknown, ...args: unknown[]): unknown {
+                    const fn = value, // For the sake of added clarity.
+                        fnRtnValue = fn.apply(this === receiver ? target : this, args);
+
+                    if ($is.promise(fnRtnValue)) {
+                        return fnRtnValue.then((fnRtnValue: unknown): unknown => {
+                            return subrequestCounterProxyꓺfnRtnValue(targetC9rName, property, fnRtnValue, subrequestCounter);
+                        });
+                    }
+                    return subrequestCounterProxyꓺfnRtnValue(targetC9rName, property, fnRtnValue, subrequestCounter);
+                };
+            return value;
+        },
+    });
+};
+
+/**
+ * Helps proxy {@see cfw.fetch()} for the purpose of counting subrequests.
+ *
+ * @param   subrequestCounter Subrequest counter; {@see $type.$cfw.SubrequestCounter}.
+ *
+ * @returns                   Proxied {@see cfw.fetch()} function.
+ */
+const subrequestCountryProxyꓺfetch = <Type extends typeof cfw.fetch>(subrequestCounter: $type.$cfw.SubrequestCounter): Type => {
+    const { fetch, Request } = cfw;
+
+    return new Proxy(fetch.bind(cfw) as Type, {
+        apply(target, thisArg, args: Parameters<Type>) {
+            const maxRedirects = 20,
+                redirectCounter = { value: 0 };
+
+            let request = new Request(args[0], args[1]),
+                url = $url.tryParse(request.url);
+
+            const redirect = request.redirect || 'follow';
+
+            if ('manual' !== request.redirect) {
+                request = new Request(request, { redirect: 'manual' });
+            }
+            subrequestCounter.value++; // Increments counter on initial fetch.
+
+            return target.apply(thisArg, [request]).then((response): $type.cfw.Response | Promise<$type.cfw.Response> => {
+                if (url && [301, 302, 303, 307, 308].includes(response.status) && 'follow' === redirect) {
+                    if (response.headers.has('location') && redirectCounter.value + 1 <= maxRedirects) {
+                        const location = response.headers.get('location') || '',
+                            redirectURL = location ? $url.tryParse(location, url) : undefined;
+
+                        if (redirectURL && redirectURL.toString() !== url.toString()) {
+                            let redirectRequest = new Request(redirectURL, request);
+
+                            if (url.protocol !== redirectURL.protocol || $url.rootHost(url) !== $url.rootHost(redirectURL))
+                                for (const protectedCrossDomainHeader of $http.protectedCrossDomainHeaderNames()) {
+                                    redirectRequest.headers.delete(protectedCrossDomainHeader);
+                                }
+                            if (([301, 302].includes(response.status) && 'POST' === request.method) || 303 === response.status) {
+                                redirectRequest = new Request(redirectRequest, { method: 'GET', body: null });
+                                redirectRequest.headers.delete('content-type');
+                                redirectRequest.headers.delete('content-length');
+                                redirectRequest.headers.delete('content-encoding');
+                                redirectRequest.headers.delete('transfer-encoding');
+                            }
+                            if (response.headers.get('referrer-policy')) {
+                                redirectRequest.headers.set('referrer-policy', response.headers.get('referrer-policy') as string);
+                            }
+                            $http.prepareRefererHeader(redirectRequest.headers, url, redirectURL);
+                            redirectCounter.value++, subrequestCounter.value++; // Increments counters.
+
+                            return target.apply(thisArg, [redirectRequest]);
+                        }
+                    }
+                }
+                return response;
+            });
+        },
+    });
+};
+
+/**
+ * Helps proxy a resource binding for the purpose of counting subrequests.
+ *
+ * @param   targetC9rName     The target object’s constructor name; i.e., object type.
+ * @param   fnProperty        Requested property on target object, that returned a function.
+ * @param   fnRtnValue        Resolved return value of requested property’s function invocation.
+ * @param   subrequestCounter Subrequest counter; {@see $type.$cfw.SubrequestCounter}.
+ *
+ * @returns                   Function return value, which is potentially another proxied subtarget; i.e., as a branch
+ *   of the original target. Prior to returning, this utility also handles subrequest counter incrementation.
+ */
+const subrequestCounterProxyꓺfnRtnValue = (targetC9rName: string, fnProperty: $type.ObjectKey, fnRtnValue: unknown, subrequestCounter: $type.$cfw.SubrequestCounter): unknown => {
+    if ($is.object(fnRtnValue)) {
+        const fnRtnValueC9rName = $obj.c9r(fnRtnValue)?.name;
+        if (
+            ('CacheStorage' === targetC9rName && 'Cache' === fnRtnValueC9rName) ||
+            (['D1Database', 'D1PreparedStatement'].includes(targetC9rName) && 'D1PreparedStatement' === fnRtnValueC9rName) ||
+            ('R2Bucket' === targetC9rName && 'R2MultipartUpload' === fnRtnValueC9rName)
+        ) {
+            return subrequestCounterProxy(fnRtnValue, subrequestCounter);
+        }
+    }
+    if ($is.string(fnProperty))
+        switch (targetC9rName) {
+            case 'Cache': {
+                if (['put', 'match', 'delete'].includes(fnProperty)) {
+                    subrequestCounter.value++;
+                }
+                break;
+            }
+            case 'Fetcher': {
+                if (['fetch'].includes(fnProperty)) {
+                    subrequestCounter.value++;
+                }
+                break;
+            }
+            case 'D1Database': {
+                if (['dump', 'exec', 'batch'].includes(fnProperty)) {
+                    subrequestCounter.value++;
+                }
+                break;
+            }
+            case 'D1PreparedStatement': {
+                if (['all', 'raw', 'first', 'run'].includes(fnProperty)) {
+                    subrequestCounter.value++;
+                }
+                break;
+            }
+            case 'R2Bucket': {
+                if (['head', 'get', 'put', 'delete', 'list'].includes(fnProperty)) {
+                    subrequestCounter.value++;
+                }
+                break;
+            }
+            case 'R2MultipartUpload': {
+                if (['uploadPart', 'complete'].includes(fnProperty)) {
+                    subrequestCounter.value++;
+                }
+                break;
+            }
+            case 'KvNamespace': {
+                if (['get', 'getWithMetadata', 'list', 'put', 'delete'].includes(fnProperty)) {
+                    subrequestCounter.value++;
+                }
+                break;
+            }
+            case 'WorkerQueue': {
+                if (['send', 'sendBatch'].includes(fnProperty)) {
+                    subrequestCounter.value++;
+                }
+                break;
+            }
+        }
+    return fnRtnValue;
 };

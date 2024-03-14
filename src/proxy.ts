@@ -17,10 +17,12 @@ export type FetchOptions = {
         username?: string;
         password?: string;
     };
-    method?: 'HEAD' | 'GET';
+    method?: 'OPTIONS' | 'HEAD' | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     headers?: $type.cfw.HeadersInit;
+    body?: string | null | undefined;
 
     uaBotAppend?: string;
+    redirect?: 'follow' | 'manual';
     maxRedirects?: number;
     timeout?: number; // In milliseconds.
 };
@@ -53,8 +55,10 @@ export const fetch = async (rcData: $type.$cfw.RequestContextData, parseable: $t
             },
             method: 'GET',
             headers: {},
+            body: null,
 
             uaBotAppend: '',
+            redirect: 'follow',
             maxRedirects: 3,
             timeout: $time.secondInMilliseconds * 15,
         }) as RequiredFetchOptions;
@@ -139,7 +143,7 @@ const fetchꓺwaitTimeout = async (rcData: $type.$cfw.RequestContextData, opts: 
  * @returns           Promise of HTTP response.
  */
 const fetchꓺviaSocket = async (rcData: $type.$cfw.RequestContextData, url: $type.cfw.URL, opts: RequiredFetchOptions, redirects: number = 0): Promise<$type.cfw.Response> => {
-    const { Blob, Response } = cfw,
+    const { Blob, Headers, Response } = cfw,
         { auditLogger, subrequestCounter } = rcData,
         sockets = await import('cloudflare:sockets');
 
@@ -172,7 +176,8 @@ const fetchꓺviaSocket = async (rcData: $type.$cfw.RequestContextData, url: $ty
         await writer.write(
             $str.textEncode(
                 opts.method + ' ' + url.toString() + ' HTTP/1.0\r\n' +
-                [...headers].join('\r\n') + '\r\n\r\n',
+                [...headers].join('\r\n') + '\r\n\r\n' +
+                (opts.body || ''),
             ), // prettier-ignore
         );
         // ---
@@ -238,16 +243,34 @@ const fetchꓺviaSocket = async (rcData: $type.$cfw.RequestContextData, url: $ty
                 statusText: $http.responseStatusText(421),
                 headers: { 'content-type': $mime.contentType('.txt') },
             });
-        if ([301, 302, 303, 307, 308].includes(responseStatus) && ['HEAD', 'GET'].includes(opts.method))
+        if ([301, 302, 303, 307, 308].includes(responseStatus) && 'follow' === opts.redirect) {
             if (responseHeaders.has('location') && redirects + 1 <= opts.maxRedirects) {
                 const location = responseHeaders.get('location') || '',
                     redirectURL = location ? $url.tryParse(location, url) : undefined;
 
-                // Follows redirects, but only when URL actually changes.
                 if (redirectURL && redirectURL.toString() !== url.toString()) {
-                    return fetchꓺviaSocket(rcData, redirectURL, opts, redirects + 1);
+                    const redirectOpts = { ...opts, headers: new Headers(opts.headers) };
+
+                    if (url.protocol !== redirectURL.protocol || $url.rootHost(url) !== $url.rootHost(redirectURL))
+                        for (const protectedCrossDomainHeader of $http.protectedCrossDomainHeaderNames()) {
+                            redirectOpts.headers.delete(protectedCrossDomainHeader);
+                        }
+                    if (([301, 302].includes(responseStatus) && 'POST' === opts.method) || 303 === responseStatus) {
+                        (redirectOpts.method = 'GET'), (redirectOpts.body = null);
+                        redirectOpts.headers.delete('content-type');
+                        redirectOpts.headers.delete('content-length');
+                        redirectOpts.headers.delete('content-encoding');
+                        redirectOpts.headers.delete('transfer-encoding');
+                    }
+                    if (responseHeaders.get('referrer-policy')) {
+                        redirectOpts.headers.set('referrer-policy', responseHeaders.get('referrer-policy') as string);
+                    }
+                    $http.prepareRefererHeader(redirectOpts.headers, url, redirectURL);
+
+                    return fetchꓺviaSocket(rcData, redirectURL, redirectOpts, redirects + 1);
                 }
             }
+        }
         return new Response(responseBody, {
             status: responseStatus,
             statusText: $http.responseStatusText(responseStatus),
