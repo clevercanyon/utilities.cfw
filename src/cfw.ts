@@ -75,7 +75,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
     const { fetch, caches } = cfw,
         { scheduledEvent, ctx, env, routes } = ircData,
-        subrequestCounter = { value: 0 };
+        subrequestCounter = request.c10n?.serviceBinding?.subrequestCounter || { value: 0 };
 
     await maybeInitializeGlobals(ircData); // Initializes worker globals.
 
@@ -245,7 +245,11 @@ export const scheduledEventRequest = async (
             };
         headers.set('x-real-ip', userIP);
         headers.set('cf-connecting-ip', userIP);
-        $obj.patchDeep(requestInit.cf, $obj.omit(userIPGeoData, ['ip']));
+
+        $obj.patchDeep(requestInit.cf, {
+            ...$obj.omit(userIPGeoData, ['ip']),
+            c10n: { scheduledEvent },
+        });
     }
     return new Request(requestInfo, requestInit);
 };
@@ -254,8 +258,11 @@ export const scheduledEventRequest = async (
  * Creates a service binding request.
  *
  * The distinction here is simply that we forward IP address and geolocation data to service bindings. Cloudflare
- * doesn’t do it by default, but our codebases assume IP and geolocation data will be available; i.e., for every
+ * doesn’t do it by default, but our codebase assumes IP and geolocation data will be available; i.e., for every
  * request. Therefore, when fetching from a service binding always use this utility to build a request.
+ *
+ * Additionally, this passes a parent subrequest counter to the service binding because requests made by a service
+ * binding must be added to a parent request’s subrequest counter; i.e, associated with top-level parent request.
  *
  * @param   rcData      Request context data.
  * @param   requestInfo New request info.
@@ -268,8 +275,8 @@ export const serviceBindingRequest = async (
     requestInfo: $type.cfw.RequestInfo,
     requestInit?: $type.cfw.RequestInit,
 ): Promise<$type.cfw.Request> => {
-    const { Request } = cfw,
-        { request: parentRequest } = rcData;
+    const { Request } = cfw, // Parent request, etc.
+        { request: parentRequest, subrequestCounter } = rcData;
 
     requestInit ??= {}; // Initialize.
     requestInit.cf ??= {}; // Initialize.
@@ -282,8 +289,11 @@ export const serviceBindingRequest = async (
 
     headers.set('x-real-ip', userIP);
     headers.set('cf-connecting-ip', userIP);
-    $obj.patchDeep(requestInit.cf, $obj.omit(userIPGeoData, ['ip']));
 
+    $obj.patchDeep(requestInit.cf, {
+        ...$obj.omit(userIPGeoData, ['ip']),
+        c10n: { serviceBinding: { subrequestCounter } },
+    });
     return new Request(requestInfo, requestInit);
 };
 
