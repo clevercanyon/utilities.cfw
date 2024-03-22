@@ -98,6 +98,7 @@ export default async () => {
                 'dayjs/plugin/advancedFormat',
                 'dayjs/plugin/customParseFormat',
                 'dayjs/plugin/localizedFormat',
+                'dayjs/plugin/relativeTime',
                 'dayjs/plugin/timezone',
                 'dayjs/plugin/toObject',
                 'dayjs/plugin/utc',

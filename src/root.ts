@@ -5,30 +5,7 @@
 import '#@initialize.ts';
 
 import { $cfw } from '#index.ts';
-import { $app, $crypto, $is, $obj, $to, type $type } from '@clevercanyon/utilities';
-
-/**
- * Defines types.
- */
-export type UAHeaderOptions = {
-    randomIndex?: number;
-};
-export type UAHeaders = $type.ReadonlyDeep<{
-    'user-agent': string;
-
-    'accept': string;
-    'accept-encoding': string;
-    'accept-language': string;
-
-    'sec-ch-ua': string;
-    'sec-ch-ua-mobile': string;
-    'sec-ch-ua-platform': string;
-    'sec-fetch-site': string;
-    'sec-fetch-mod': string;
-    'sec-fetch-user': string;
-
-    'upgrade-insecure-requests': string;
-}>;
+import { $app, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines root package name.
@@ -136,31 +113,8 @@ kv.isAvailable = (rcData: $type.$cfw.RequestContextData): boolean => {
 };
 
 // ---
-// UA header utilities.
-
-/**
- * Fetches root UA headers.
- *
- * @param   rcData  Request context data.
- * @param   options All optional; {@see UAHeaderOptions}.
- *
- * @returns         Promise of root UA headers.
- */
-export const uaHeaders = async (rcData: $type.$cfw.RequestContextData, options?: UAHeaderOptions): Promise<UAHeaders> => {
-    const opts = $obj.defaults({}, options || {}, { randomIndex: $crypto.randomNumber(1, 100) }) as Required<UAHeaderOptions>,
-        kvKey = 'ua-headers:' + String($to.integerBetween(opts.randomIndex, 1, 100)),
-        headers = (await kv(rcData).get(kvKey, { type: 'json' })) as UAHeaders;
-
-    if (!$is.plainObject(headers)) {
-        throw Error('UA headers failure.');
-    }
-    return headers;
-};
-uaHeaders.urlSafeOptionKeys = ['randomIndex'] as string[];
-uaHeaders.isAvailable = kv.isAvailable;
-
-// ---
 // Counter utilities.
+// @todo: Deprecate in favor of app-specific counters.
 
 /**
  * Gets root counter value.

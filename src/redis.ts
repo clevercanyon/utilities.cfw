@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $class, $env, $fn, $http, $is, $json, $mime, $obj, type $type } from '@clevercanyon/utilities';
+import { $class, $env, $fn, $http, $is, $json, $mime, $obj, $time, type $type } from '@clevercanyon/utilities';
 import { Ratelimit as RateLimiterCore } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis/cloudflare.mjs';
 
@@ -27,7 +27,7 @@ export type RateLimiterOptions = InstanceOptions & {
     ];
     ephemeralCacheMaxSize?: number;
     analytics?: boolean;
-    timeout?: number;
+    timeout?: number; // In milliseconds.
 };
 export type RateLimiter = {
     limiter: RateLimiterCore;
@@ -107,7 +107,7 @@ export const instance = $fn.memo(
                      * all the time that a single worker request is allowed to take via `ctx.waitUntil()` promises.
                      */
                 },
-                signal: undefined, // Not used at this time.
+                signal: AbortSignal.timeout($time.secondInMilliseconds * 5),
             },
             { UPSTASH_DISABLE_TELEMETRY: '1' }, // Don’t report back to Upstash.
         );

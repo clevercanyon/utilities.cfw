@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $root, cfw } from '#index.ts';
+import { cfw } from '#index.ts';
 import { $arr, $crypto, $env, $gzip, $http, $is, $mime, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
 
 /**
@@ -66,8 +66,8 @@ export const fetch = async (rcData: $type.$cfw.RequestContextData, parseable: $t
     opts.headers = $http.parseHeaders(opts.headers) as $type.cfw.Headers;
 
     if (!opts.headers.has('user-agent'))
-        for (const [name, value] of Object.entries(await $root.uaHeaders(rcData))) {
-            opts.headers.set(name, value);
+        for (const [name, value] of Object.entries($http.browserUAHeaders())) {
+            if (!opts.headers.has(name)) opts.headers.set(name, value);
         }
     if (opts.uaBotAppend /* e.g., `SomeCoolBot/1.0.0` */) {
         const currentUA = opts.headers.get('user-agent') || ''; // Current user-agent header.
