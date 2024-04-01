@@ -21,7 +21,7 @@ import extensions from '../../../bin/includes/extensions.mjs';
  *
  * @returns       Vitest configuration.
  */
-export default async ({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig }) => {
+export default async ({ srcDir, logsDir, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig }) => {
     const vitestExcludes = [
         ...new Set([
             ...exclusions.localIgnores,
@@ -168,9 +168,12 @@ export default async ({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable
             ['**/*.{node,any}.{test,tests,spec,specs}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), 'node'],
             ['**/{test,tests,spec,specs}/**/*.{node,any}.' + extensions.asBracedGlob([...extensions.byDevGroup.allJavaScript, ...extensions.byDevGroup.allTypeScript]), 'node'],
         ],
-        server: { deps: { inline: [], external: [...new Set([...exclusions.pkgIgnores].concat(rollupConfig.external))] } },
-        cache: { dir: path.resolve(projDir, './node_modules/.vitest') },
-
+        server: {
+            deps: {
+                inline: [], // {@see https://o5p.me/DHrjU4} for details.
+                external: [...new Set([...exclusions.pkgIgnores].concat(rollupConfig.external))],
+            },
+        },
         passWithNoTests: true, // Pass if there are no tests to run.
         allowOnly: true, // Allows `describe.only`, `test.only`, `bench.only`.
 

@@ -244,7 +244,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     /**
      * Configures tests for Vite.
      */
-    const vitestConfig = await viteVitestConfig({ projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig });
+    const vitestConfig = await viteVitestConfig({ srcDir, logsDir, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig });
 
     /**
      * Configures imported workers.

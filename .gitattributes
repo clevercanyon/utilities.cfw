@@ -17,7 +17,7 @@
 # Generated data.
 # <generated:start>
 
-# Last generated Mar 22, 2024 8:29 PM UTC.
+# Last generated Apr 1, 2024 4:30 PM UTC.
 
 # Default
 
@@ -199,6 +199,10 @@
 *.env text eol=lf
 *.props text eol=lf
 *.properties text eol=lf
+
+# Form
+
+*.form text eol=lf
 
 # Apache
 

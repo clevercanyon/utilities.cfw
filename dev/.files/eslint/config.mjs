@@ -437,6 +437,7 @@ export default async () => {
                 rules: {
                     'no-redeclare': ['off'], // Disable in favor of TypeScript rule below.
                     'no-unused-vars': ['off'], // Disable in favor of TypeScript rule below.
+                    'no-dupe-class-members': ['off'], // TypeScript allows duplicate signatures.
                     'no-undef': ['off'], // Already baked into TypeScript; {@see https://o5p.me/k9TDGC}.
 
                     '@typescript-eslint/no-redeclare': ['warn'],

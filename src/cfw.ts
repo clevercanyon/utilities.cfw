@@ -218,7 +218,7 @@ export const scheduledEventRequest = async (
     requestInit ??= {}; // Initialize.
     requestInit.cf ??= {}; // Initialize.
 
-    const headers = $http.parseHeaders(requestInit.headers || {}) as $type.cfw.Headers;
+    const headers = $http.parseHeaders(requestInit.headers || ($is.request(requestInfo) ? requestInfo.headers : {})) as $type.cfw.Headers;
     requestInit.headers = headers; // As a reference to our typed `headers`.
 
     if (scheduledEvent.cron /* Only scheduled CRON event requests. */) {
@@ -281,7 +281,7 @@ export const serviceBindingRequest = async (
     requestInit ??= {}; // Initialize.
     requestInit.cf ??= {}; // Initialize.
 
-    const headers = $http.parseHeaders(requestInit.headers || {}) as $type.cfw.Headers;
+    const headers = $http.parseHeaders(requestInit.headers || ($is.request(requestInfo) ? requestInfo.headers : {})) as $type.cfw.Headers;
     requestInit.headers = headers; // As a reference to our typed `headers`.
 
     const userIP = await $user.ip(parentRequest),
@@ -329,9 +329,10 @@ export const handleRouteCache = async <Type extends $type.$cfw.RequestContextDat
 
     // Checks if request is cacheable.
     if (
-        !['HEAD', 'GET'].includes(keyRequest.method) || //
+        'none' === route.config?.cacheVersion ||
         !$http.requestHasCacheableMethod(keyRequest) ||
-        'none' === route.config?.cacheVersion // Explicitly uncacheable.
+        $http.requestPathIsInAdmin(keyRequest, keyURL) ||
+        $http.requestIsFromUser(keyRequest)
     ) {
         return route(rcData); // Not cacheable.
     }

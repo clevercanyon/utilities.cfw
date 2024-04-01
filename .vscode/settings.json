@@ -7,7 +7,7 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./settings.mjs`.
  *
- * Last generated using `./settings.mjs` Mar 22, 2024 8:29 PM UTC.
+ * Last generated using `./settings.mjs` Apr 1, 2024 4:30 PM UTC.
  */
 {
     "editor.formatOnType": false,
@@ -28,7 +28,7 @@
     "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
     "files.associations": {
-        "**/*.{txt,text,hta,htc,tpl,csv,tsv,po,pot,ics,log,vtt,srt,yarnrc,inputrc,tsbuildinfo,gitchange,csr,crt,pem,asc}": "plaintext",
+        "**/*.{txt,text,hta,htc,tpl,csv,tsv,form,po,pot,ics,log,vtt,srt,yarnrc,inputrc,tsbuildinfo,gitchange,csr,crt,pem,asc}": "plaintext",
         "**/*.mdx": "mdx",
         "**/*.{md,markdown,mdown,mdwn,mkd,mdtxt,mdtext}": "markdown",
         "**/*.{rtx,rtf,pdf,wasm,class,mo,ai,bmp,eps,gif,heic,ico,jpg,jpeg,jpe,pict,png,apng,xcf,psd,pspimage,svgz,tiff,tif,webp,aac,flac,mid,midi,mka,mp3,m4a,m4b,ogg,oga,pls,ra,ram,wav,wax,wma,asf,avi,divx,flv,mkv,mov,qt,mp4,m4v,mpeg,mpg,mpe,ogv,webm,wm,wmv,wmx,otf,ttf,woff,woff2,eot,iso,dmg,tar,gtar,gz,tgz,gzip,rar,zip,7z,jar,node,phar,so,app,bin,com,dll,exe,blend,sketch,kmz,ps,fla,swf,key,numbers,pages,doc,docm,docx,dotm,dotx,mdb,mpp,one,onetoc,onetoc2,onepkg,oxps,ppt,pps,potm,potx,ppam,ppsm,ppsx,pptm,pptx,sldm,sldx,wri,xla,xls,xlt,xlw,xlam,xlsb,xlsm,xlsx,xltm,xltx,xps,odb,odc,odf,odg,odp,ods,odt,wpd,wp}": "code-text-binary",
