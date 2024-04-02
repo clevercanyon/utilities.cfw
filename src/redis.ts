@@ -226,7 +226,7 @@ const rateLimiterCore = $fn.memo(
             opts = $obj.defaults({}, $obj.omit(options || {}, instanceOptionKeys), {
                 prefix: '', // Default key prefix is set below, based on options.
                 slidingWindow: [10, '10s'], // e.g., `10` requests every `10s` periodicity.
-                ephemeralCacheMaxSize: 10240, // 1048576b = 1MB, x 5 = 5242880b, / ~512b per entry, = 10240.
+                ephemeralCacheMaxSize: 10240, // 1048576b = 1MB, x 5 = 5242880b, / ~512b per entry = 10240.
                 analytics: false, // Enabling analytics uses an additional 'command' per `.limit()` invocation, and persistent storage keys.
                 // We don’t use Upstash proper, we use it via Digital Ocean, which doesn’t support automatic eviction, so we shouldn’t enable analytics.
                 timeout: 0, // If network issues arise, we allow requests in after this delay, when greater than `0`.

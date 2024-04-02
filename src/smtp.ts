@@ -5,7 +5,7 @@
 import '#@initialize.ts';
 
 import { $root, cfw } from '#index.ts';
-import { $app, $env, $json, $obj, $str, $time, $to, type $type } from '@clevercanyon/utilities';
+import { $app, $env, $is, $json, $obj, $str, $time, $to, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -43,9 +43,9 @@ export type ResponsePayload = $type.ReadonlyDeep<{
  * @param   rcData  Request context data.
  * @param   options {@see SendOptions}.
  *
- * @returns         Promise of boolean `true` on success, else `false` on failure.
+ * @returns         Promise of {@see ResponsePayload}.
  */
-export const send = async (rcData: $type.$cfw.RequestContextData, options: SendOptions): Promise<boolean> => {
+export const send = async (rcData: $type.$cfw.RequestContextData, options: SendOptions): Promise<ResponsePayload> => {
     const { Request, AbortSignal } = cfw,
         { auditLogger } = rcData,
         //
@@ -54,7 +54,7 @@ export const send = async (rcData: $type.$cfw.RequestContextData, options: SendO
             from: brand ? $str.quote(brand.name, { type: 'double' }) + ' <' + brand.contacts.support.email + '>' : '',
         }) as SendOptions,
         //
-        request = new Request('https://workers.hop.gdn/api/smtp/v1', {
+        smtpRequest = new Request('https://workers.hop.gdn/api/smtp/v1', {
             method: 'POST',
             headers: {
                 'content-type': $json.contentType(),
@@ -65,13 +65,18 @@ export const send = async (rcData: $type.$cfw.RequestContextData, options: SendO
         });
     return (
         $root
-            .fetch(rcData, request)
+            .fetch(rcData, smtpRequest) // Via root API route; {@see ResponsePayload}.
             .then(async (response) => $to.plainObject(await response.json()) as ResponsePayload)
-            .then((payload): boolean => (payload.ok ? true : false))
             //
-            .catch((thrown: unknown): boolean => {
-                void auditLogger.warn('SMTP send error.', { request, thrown });
-                return false;
+            .catch((thrown: unknown): ResponsePayload => {
+                const auditLogMessage =
+                    'SMTP error' + // As verbose as possible.
+                    ($is.error(thrown) && thrown.message // Have message?
+                        ? ': ' + $str.rTrim(thrown.message, '.') + '.'
+                        : ' code: QXsH9kYC.');
+
+                void auditLogger.warn(auditLogMessage, { smtpRequest, thrown });
+                return { ok: false, error: { message: 'SMTP error code: QXsH9kYC.' } } as ResponsePayload;
             })
     );
 };
