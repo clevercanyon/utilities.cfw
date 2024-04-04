@@ -3,7 +3,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "1.0.305",
+    "version": "1.0.306",
     "license": "GPL-3.0-or-later",
     "name": "@clevercanyon/utilities.cfw",
     "description": "Utilities for JavaScript apps running in a Cloudflare Worker environment.",
@@ -29,6 +29,11 @@
             "types": "./dist/types/index.d.ts",
             "import": "./dist/index.js",
             "default": "./dist/index.js"
+        },
+        "./api": {
+            "types": "./dist/types/api.d.ts",
+            "import": "./dist/api.js",
+            "default": "./dist/api.js"
         },
         "./cfw": {
             "types": "./dist/types/cfw.d.ts",
@@ -74,7 +79,7 @@
     },
     "dependencies": {},
     "peerDependencies": {
-        "@clevercanyon/utilities": "^1.0.936",
+        "@clevercanyon/utilities": "^1.0.940",
         "@cloudflare/ai": "1.0.53",
         "@upstash/ratelimit": "1.0.0",
         "@upstash/redis": "1.28.0"
