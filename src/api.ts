@@ -26,14 +26,15 @@ export type CatchThrownOptions = {
  * Catches an error thrown by an API.
  *
  * @param rcData  Request context data.
+ * @param thrown  Thrown; e.g., error, response.
  * @param options {@see CatchThrownOptions}.
  */
-export const catchThrown = async (rcData: $type.$cfw.RequestContextData, options: CatchThrownOptions): Promise<void> => {
+export const catchThrown = async (rcData: $type.$cfw.RequestContextData, thrown: unknown, options: CatchThrownOptions): Promise<void> => {
+    if ($is.response(thrown)) throw thrown;
+
     const { auditLogger } = rcData,
         opts = $obj.defaults({}, options) as Required<CatchThrownOptions>,
-        { responseType, responseConfig, thrown, expectedCauses } = opts;
-
-    if ($is.response(thrown)) throw thrown;
+        { responseType, responseConfig, expectedCauses } = opts;
 
     const message = $error.safeMessageFrom(thrown, {
         expectedCauses,
