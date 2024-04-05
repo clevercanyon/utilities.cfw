@@ -17,7 +17,7 @@ export type JSONResponsePayload<Type extends object = object> = $type.ReadonlyDe
 }>;
 export type CatchThrownOptions = {
     thrown: unknown;
-    responseType: 'none' | 'json';
+    responseType: 'http' | 'json';
     responseConfig: $http.ResponseConfig;
     expectedCauses: string[];
 
