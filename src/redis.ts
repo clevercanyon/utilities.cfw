@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $class, $env, $fn, $http, $is, $json, $mime, $obj, $time, type $type } from '@clevercanyon/utilities';
+import { $class, $env, $fn, $http, $is, $obj, $time, type $type } from '@clevercanyon/utilities';
 import { Ratelimit as RateLimiterCore } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis/cloudflare.mjs';
 
@@ -70,8 +70,14 @@ export const instance = $fn.memo(
     },
     (options?: InstanceOptions): Redis => {
         const opts = $obj.defaults({}, options || {}, {
-            restURL: $env.get('SSR_APP_UPSTASH_REDIS_REST_URL', { type: 'string' }) || $env.get('APP_UPSTASH_REDIS_REST_URL', { type: 'string' }),
-            restToken: $env.get('SSR_APP_UPSTASH_REDIS_REST_TOKEN', { type: 'string' }) || $env.get('APP_UPSTASH_REDIS_REST_TOKEN', { type: 'string' }),
+            restURL:
+                $env.get('SSR_APP_UPSTASH_REDIS_REST_URL', { type: 'string' }) || //
+                $env.get('APP_UPSTASH_REDIS_REST_URL', { type: 'string' }),
+
+            restToken:
+                $env.get('SSR_APP_UPSTASH_REDIS_REST_TOKEN', { type: 'string' }) || //
+                $env.get('APP_UPSTASH_REDIS_REST_TOKEN', { type: 'string' }),
+
             maxConcurrentConnections:
                 $env.get('SSR_APP_UPSTASH_REDIS_MAX_CONCURRENT_CONNECTIONS', { type: 'number' }) || //
                 $env.get('APP_UPSTASH_REDIS_MAX_CONCURRENT_CONNECTIONS', { type: 'number' }) ||
@@ -126,7 +132,7 @@ export const instance = $fn.memo(
  * @returns         Instance of {@see RateLimiter}.
  */
 export const rateLimiter = (rcData: $type.$cfw.RequestContextData, options?: RateLimiterOptions): RateLimiter => {
-    const { ctx, url, request, auditLogger } = rcData,
+    const { ctx, request, auditLogger } = rcData,
         limiter = rateLimiterCore(options);
 
     return $obj.freeze({
@@ -146,19 +152,7 @@ export const rateLimiter = (rcData: $type.$cfw.RequestContextData, options?: Rat
                     rateLimiterMethod: 'limit',
                     rateLimiterResponse: limiterResponse,
                 });
-                if ($http.requestExpectsJSON(request, url)) {
-                    throw await $http.prepareResponse(request, {
-                        status: 429, // Too many requests.
-                        headers: { 'content-type': $json.contentType() },
-                        body: $json.stringify({ ok: false, error: { message: $http.responseStatusText(429) } }, { pretty: true }),
-                    });
-                } else {
-                    throw await $http.prepareResponse(request, {
-                        status: 429, // Too many requests.
-                        headers: { 'content-type': $mime.contentType('.txt') },
-                        body: $http.responseStatusText(429),
-                    });
-                }
+                throw await $http.prepareResponse(request, { status: 429 });
             }
             return limiterResponse;
         },
@@ -176,19 +170,7 @@ export const rateLimiter = (rcData: $type.$cfw.RequestContextData, options?: Rat
                     rateLimiterMethod: 'blockUntilReady',
                     rateLimiterResponse: limiterResponse,
                 });
-                if ($http.requestExpectsJSON(request, url)) {
-                    throw await $http.prepareResponse(request, {
-                        status: 429, // Too many requests.
-                        headers: { 'content-type': $json.contentType() },
-                        body: $json.stringify({ ok: false, error: { message: $http.responseStatusText(429) } }, { pretty: true }),
-                    });
-                } else {
-                    throw await $http.prepareResponse(request, {
-                        status: 429, // Too many requests.
-                        headers: { 'content-type': $mime.contentType('.txt') },
-                        body: $http.responseStatusText(429),
-                    });
-                }
+                throw await $http.prepareResponse(request, { status: 429 });
             }
             return limiterResponse;
         },
@@ -215,8 +197,14 @@ const rateLimiterCore = $fn.memo(
     },
     (options?: RateLimiterOptions): RateLimiterCore => {
         const instanceOpts = $obj.defaults({}, $obj.pick(options || {}, instanceOptionKeys), {
-                restURL: $env.get('SSR_APP_UPSTASH_RATE_LIMIT_REDIS_REST_URL', { type: 'string' }) || $env.get('APP_UPSTASH_RATE_LIMIT_REDIS_REST_URL', { type: 'string' }),
-                restToken: $env.get('SSR_APP_UPSTASH_RATE_LIMIT_REDIS_REST_TOKEN', { type: 'string' }) || $env.get('APP_UPSTASH_RATE_LIMIT_REDIS_REST_TOKEN', { type: 'string' }),
+                restURL:
+                    $env.get('SSR_APP_UPSTASH_RATE_LIMIT_REDIS_REST_URL', { type: 'string' }) || //
+                    $env.get('APP_UPSTASH_RATE_LIMIT_REDIS_REST_URL', { type: 'string' }),
+
+                restToken:
+                    $env.get('SSR_APP_UPSTASH_RATE_LIMIT_REDIS_REST_TOKEN', { type: 'string' }) || //
+                    $env.get('APP_UPSTASH_RATE_LIMIT_REDIS_REST_TOKEN', { type: 'string' }),
+
                 maxConcurrentConnections:
                     $env.get('SSR_APP_UPSTASH_RATE_LIMIT_REDIS_MAX_CONCURRENT_CONNECTIONS', { type: 'number' }) || //
                     $env.get('APP_UPSTASH_RATE_LIMIT_REDIS_MAX_CONCURRENT_CONNECTIONS', { type: 'number' }) ||
@@ -227,6 +215,7 @@ const rateLimiterCore = $fn.memo(
                 prefix: '', // Default key prefix is set below, based on options.
                 slidingWindow: [10, '10s'], // e.g., `10` requests every `10s` periodicity.
                 ephemeralCacheMaxSize: 10240, // 1048576b = 1MB, x 5 = 5242880b, / ~512b per entry = 10240.
+
                 analytics: false, // Enabling analytics uses an additional 'command' per `.limit()` invocation, and persistent storage keys.
                 // We don’t use Upstash proper, we use it via Digital Ocean, which doesn’t support automatic eviction, so we shouldn’t enable analytics.
                 timeout: 0, // If network issues arise, we allow requests in after this delay, when greater than `0`.
@@ -243,10 +232,12 @@ const rateLimiterCore = $fn.memo(
 
             prefix: opts.prefix,
             limiter: RateLimiterCore.slidingWindow(...opts.slidingWindow),
+
             ephemeralCache:
                 opts.ephemeralCacheMaxSize > 0 //
                     ? new LRUMap([], { maxSize: opts.ephemeralCacheMaxSize })
                     : false, // Explicitly no ephemeral cache.
+
             analytics: opts.analytics,
             timeout: opts.timeout,
         });

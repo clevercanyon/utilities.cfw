@@ -140,10 +140,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
         const message = $error.safeMessageFrom(thrown, { default: '9eMw8Ave' });
         void auditLogger.error('500: ' + message, { thrown });
 
-        return $http.prepareResponse(request, {
-            status: 500, // Failed status in this scenario.
-            body: message, // Safe message from whatever was thrown.
-        }) as Promise<$type.cfw.Response>;
+        return $http.prepareResponse(request, { status: 500 }) as Promise<$type.cfw.Response>;
     }
 };
 

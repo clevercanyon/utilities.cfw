@@ -5,7 +5,7 @@
 import '#@initialize.ts';
 
 import { cfw } from '#index.ts';
-import { $arr, $crypto, $env, $gzip, $http, $is, $mime, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
+import { $arr, $crypto, $env, $gzip, $http, $is, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -76,8 +76,7 @@ export const fetch = async (rcData: $type.$cfw.RequestContextData, parseable: $t
     if (!url || !opts.proxy?.host || !opts.proxy?.port || !opts.method || !opts.timeout)
         return new Response(null, {
             status: 400,
-            statusText: $http.responseStatusText(400),
-            headers: { 'content-type': $mime.contentType('.txt') },
+            statusText: $http.responseStatusText(400) + '; Invalid proxy fetch options.',
         });
     return await Promise.race([fetchꓺwaitTimeout(rcData, opts), fetchꓺviaSocket(rcData, url, opts)]);
 };
@@ -125,7 +124,6 @@ const fetchꓺwaitTimeout = async (rcData: $type.$cfw.RequestContextData, opts: 
                 new Response(null, {
                     status: 408,
                     statusText: $http.responseStatusText(408),
-                    headers: { 'content-type': $mime.contentType('.txt') },
                 }),
             );
         }, opts.timeout);
@@ -240,8 +238,7 @@ const fetchꓺviaSocket = async (rcData: $type.$cfw.RequestContextData, url: $ty
         if (!responseStatus || !responseHeaders || responseBodyDecodingError)
             return new Response(null, {
                 status: 421,
-                statusText: $http.responseStatusText(421),
-                headers: { 'content-type': $mime.contentType('.txt') },
+                statusText: $http.responseStatusText(421) + '; Failed to parse response.',
             });
         if ([301, 302, 303, 307, 308].includes(responseStatus) && 'follow' === opts.redirect) {
             if (responseHeaders.has('location') && redirects + 1 <= opts.maxRedirects) {
@@ -281,9 +278,8 @@ const fetchꓺviaSocket = async (rcData: $type.$cfw.RequestContextData, url: $ty
         void auditLogger.warn('Proxied fetch failure.', { thrown });
 
         return new Response(null, {
-            status: 500,
-            statusText: $http.responseStatusText(500),
-            headers: { 'content-type': $mime.contentType('.txt') },
+            status: 500, // Internal server error.
+            statusText: $http.responseStatusText(500) + '; Proxied fetch failure.',
         });
     }
 };
