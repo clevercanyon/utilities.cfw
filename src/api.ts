@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $error, $http, $is, $json, $obj, type $type } from '@clevercanyon/utilities';
+import { $error, $http, $is, $json, $obj, $str, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
@@ -20,6 +20,10 @@ export type CatchThrownOptions = {
     responseType: 'none' | 'json';
     responseConfig: $http.ResponseConfig;
     expectedCauses: string[];
+
+    readableResponseStream?: $type.cfw.ReadableStream;
+    writableResponseStreamWriter?: $type.cfw.WritableStreamDefaultWriter;
+    writableResponseProgress?: { complete: boolean };
 };
 
 /**
@@ -32,7 +36,9 @@ export type CatchThrownOptions = {
 export const catchThrown = async (rcData: $type.$cfw.RequestContextData, options: CatchThrownOptions): Promise<void> => {
     const { auditLogger } = rcData,
         opts = $obj.defaults({}, options) as Required<CatchThrownOptions>,
-        { thrown, responseType, responseConfig, expectedCauses } = opts;
+        //
+        { thrown, responseType, responseConfig, expectedCauses } = opts,
+        { readableResponseStream, writableResponseStreamWriter, writableResponseProgress } = opts;
 
     if ($is.response(thrown)) throw thrown;
 
@@ -59,7 +65,19 @@ export const catchThrown = async (rcData: $type.$cfw.RequestContextData, options
         case 'json': {
             responseConfig.status = 200;
             responseConfig.headers = { 'content-type': $json.contentType() };
-            responseConfig.body = $json.stringify({ ok: false, error: { message } } as JSONResponsePayload, { pretty: true });
+
+            const responseBody = $json.stringify({ ok: false, error: { message } } as JSONResponsePayload, { pretty: true });
+
+            if (readableResponseStream && writableResponseStreamWriter && writableResponseProgress) {
+                writableResponseProgress.complete = true; // Ends keep-alive chunks.
+
+                await writableResponseStreamWriter.write($str.toBytes('\n' + responseBody));
+                await writableResponseStreamWriter.close();
+
+                responseConfig.body = readableResponseStream;
+            } else {
+                responseConfig.body = responseBody;
+            }
             break;
         }
     }
