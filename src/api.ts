@@ -9,6 +9,7 @@ import { $error, $http, $is, $json, $obj, type $type } from '@clevercanyon/utili
 /**
  * Defines types.
  */
+export type JSONRequestPayload<Type extends object = object> = { data: Type };
 export type JSONResponsePayload<Type extends object = object> = $type.ReadonlyDeep<{
     ok: boolean;
     error?: { message: string };
