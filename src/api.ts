@@ -15,10 +15,9 @@ export type JSONResponsePayload<Type extends object = object> = $type.ReadonlyDe
     data?: Type;
 }>;
 export type CatchThrownOptions = {
+    thrown: unknown;
     responseType: 'none' | 'json';
     responseConfig: $http.ResponseConfig;
-
-    thrown: unknown;
     expectedCauses: string[];
 };
 
@@ -29,12 +28,12 @@ export type CatchThrownOptions = {
  * @param thrown  Thrown; e.g., error, response.
  * @param options {@see CatchThrownOptions}.
  */
-export const catchThrown = async (rcData: $type.$cfw.RequestContextData, thrown: unknown, options: CatchThrownOptions): Promise<void> => {
-    if ($is.response(thrown)) throw thrown;
-
+export const catchThrown = async (rcData: $type.$cfw.RequestContextData, options: CatchThrownOptions): Promise<void> => {
     const { auditLogger } = rcData,
         opts = $obj.defaults({}, options) as Required<CatchThrownOptions>,
-        { responseType, responseConfig, expectedCauses } = opts;
+        { thrown, responseType, responseConfig, expectedCauses } = opts;
+
+    if ($is.response(thrown)) throw thrown;
 
     const message = $error.safeMessageFrom(thrown, {
         expectedCauses,
@@ -48,9 +47,6 @@ export const catchThrown = async (rcData: $type.$cfw.RequestContextData, thrown:
     responseConfig.maxAge = 0;
     responseConfig.sMaxAge = 0;
     responseConfig.staleAge = 0;
-
-    responseConfig.cacheVersion = 'none';
-    responseConfig.varyOn = [];
 
     responseConfig.headers = {};
     responseConfig.appendHeaders = {};
