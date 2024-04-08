@@ -21,6 +21,7 @@ import importAliases from '../bin/includes/import-aliases.mjs';
 import u from '../bin/includes/utilities.mjs';
 import viteA16sDir from './includes/a16s/dir.mjs';
 import viteC10nBrandConfig from './includes/c10n/brand-config.mjs';
+import viteC10nCloudflareSockets from './includes/c10n/cloudflare-sockets.mjs';
 import viteC10nHTMLTransformsConfig from './includes/c10n/html-transforms.mjs';
 import viteC10nNoModulePreloadConfig from './includes/c10n/no-module-preload.mjs';
 import viteC10nPostProcessingConfig from './includes/c10n/post-processing.mjs';
@@ -210,6 +211,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
 
         await viteIconsConfig({}),
         await viteC10nBrandConfig({ mode, appBaseURL }),
+        await viteC10nCloudflareSockets({ mode, command }),
         //
         await viteMDXConfig({ projDir }),
         await viteEJSConfig({ mode, projDir, srcDir, pkg, env }),
