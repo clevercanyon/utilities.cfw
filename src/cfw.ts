@@ -329,7 +329,8 @@ export const handleRouteCache = async <Type extends $type.$cfw.RequestContextDat
         'none' === route.config?.cacheVersion ||
         !$http.requestHasCacheableMethod(keyRequest) ||
         $http.requestPathIsInAdmin(keyRequest, keyURL) ||
-        $http.requestIsFromUser(keyRequest)
+        $http.requestPathIsInAccount(keyRequest, keyURL) ||
+        (!route.config?.cacheUsers && $http.requestIsFromUser(keyRequest))
     ) {
         return route(rcData); // Not cacheable.
     }
