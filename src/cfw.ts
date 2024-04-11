@@ -384,7 +384,7 @@ const subrequestCounterProxy = <Type extends object>(target: Type, subrequestCou
         return subrequestCountryProxyꓺfetch(subrequestCounter) as Type;
     }
     const targetC9rName = $obj.c9r(target)?.name?.toLowerCase(),
-        supportedTargetC9rNames = ['cachestorage', 'cache', 'fetcher', 'd1database', 'd1preparedstatement', 'r2bucket', 'r2multipartupload', 'kvnamespace', 'workerqueue'];
+        supportedTargetC9rNames = ['cachestorage', 'cache', 'ai', 'fetcher', 'd1database', 'd1preparedstatement', 'r2bucket', 'r2multipartupload', 'kvnamespace', 'workerqueue'];
 
     if (!targetC9rName || !supportedTargetC9rNames.includes(targetC9rName)) {
         throw Error('Error code: HHRYyaEn. Unexpected object type: `' + $to.string(targetC9rName) + '`');
@@ -505,6 +505,7 @@ const subrequestCounterProxyꓺfnRtnValue = (targetC9rName: string, fnProperty: 
                 }
                 break;
             }
+            case 'ai':
             case 'fetcher': {
                 if (['fetch'].includes(fnProperty)) {
                     subrequestCounter.value++;
