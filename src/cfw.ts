@@ -4,7 +4,7 @@
 
 import '#@initialize.ts';
 
-import { $app, $bytes, $class, $crypto, $env, $error, $http, $is, $mm, $obj, $url, $user, type $type } from '@clevercanyon/utilities';
+import { $app, $bytes, $class, $crypto, $env, $error, $http, $is, $mm, $obj, $to, $url, $user, type $type } from '@clevercanyon/utilities';
 
 // @ts-ignore -- Broken types.
 import { Ai as AiClass } from '@cloudflare/ai';
@@ -387,7 +387,7 @@ const subrequestCounterProxy = <Type extends object>(target: Type, subrequestCou
         supportedTargetC9rNames = ['cachestorage', 'cache', 'fetcher', 'd1database', 'd1preparedstatement', 'r2bucket', 'r2multipartupload', 'kvnamespace', 'workerqueue'];
 
     if (!targetC9rName || !supportedTargetC9rNames.includes(targetC9rName)) {
-        throw Error('QGySmpVX'); // Unexpected object type.
+        throw Error('Error code: HHRYyaEn. Unexpected object type: `' + $to.string(targetC9rName) + '`');
     }
     return new Proxy(target, {
         get(target: Type, property: $type.ObjectKey, receiver: unknown): unknown {
