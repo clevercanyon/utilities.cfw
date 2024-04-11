@@ -304,20 +304,21 @@ export const serviceBindingRequest = async (
  */
 export const handleRouteCache = async <Type extends $type.$cfw.RequestContextData>(rcData: Type, route: $type.$cfw.Route<Type>): Promise<$type.cfw.Response> => {
     const { Request } = cfw,
-        { ctx, url, request, caches } = rcData;
+        { ctx, url, request, caches } = rcData,
+        routeConfig = $http.routeConfig(route.config);
 
     // Populates cache key.
 
     let key, cachedResponse; // Initialize.
 
-    const varyOn = new Set(route.config?.varyOn || []);
+    const varyOn = new Set(routeConfig.varyOn);
     for (const v of varyOn) if (!request.headers.has(v)) varyOn.delete(v);
 
-    if ((!route.config || route.config.enableCORs) && request.headers.has('origin')) {
+    if (routeConfig.enableCORs && request.headers.has('origin')) {
         varyOn.add('origin'); // CORs requires us to vary on origin.
     } else varyOn.delete('origin'); // Must not vary on origin.
 
-    key = 'v=' + (route.config?.cacheVersion || $app.buildTime().toStamp()).toString();
+    key = 'v=' + (routeConfig.cacheVersion || $app.buildTime().toStamp()).toString();
     for (const v of varyOn) key += '&' + v + '=' + (request.headers.get(v) || '');
 
     const keyURL = $url.removeCSOQueryVars(url); // e.g., `ut[mx]_`, `_ck`, etc.
@@ -326,33 +327,33 @@ export const handleRouteCache = async <Type extends $type.$cfw.RequestContextDat
 
     // Checks if request is cacheable.
     if (
-        'none' === route.config?.cacheVersion ||
+        'none' === routeConfig.cacheVersion ||
         !$http.requestHasCacheableMethod(keyRequest) ||
         $http.requestPathIsInAdmin(keyRequest, keyURL) ||
         $http.requestPathIsInAccount(keyRequest, keyURL) ||
-        (!route.config?.cacheUsers && $http.requestIsFromUser(keyRequest))
+        (!routeConfig.cacheUsers && $http.requestIsFromUser(keyRequest))
     ) {
         return route(rcData); // Not cacheable.
     }
-    // Reads response for this request from HTTP cache.
+    // Potentially reads response for this request from HTTP cache.
 
     if ((cachedResponse = await caches.default.match(keyRequest, { ignoreMethod: true }))) {
         return $http.prepareCachedResponse(keyRequest, cachedResponse) as Promise<$type.cfw.Response>;
     }
-    // Routes request and writes response to HTTP cache.
+    // Routes request and potentially writes response to HTTP cache.
 
     const response = await route(rcData); // Awaits response so we can cache.
     if (
         !response.webSocket &&
         206 !== response.status &&
         'GET' === keyRequest.method &&
-        //
         '*' !== response.headers.get('vary') &&
-        !(response.headers.get('cdn-cache-control') || '')
-            .toLowerCase().split(/\s*,\s*/u).includes('no-store') &&
         //
         response.headers.has('content-length') && // Our own limit is 25 MiB max.
-        Number(response.headers.get('content-length')) <= $bytes.inMebibyte * 25 // prettier-ignore
+        Number(response.headers.get('content-length')) <= $bytes.inMebibyte * 25 &&
+        //
+        !(response.headers.get('cdn-cache-control') || '').toLowerCase().split(/\s*,\s*/u)
+            .some((directive) => ['no-store', 'max-age=0'].includes(directive)) // prettier-ignore
     ) {
         ctx.waitUntil(
             (async (/* Caching occurs in background via `waitUntil()`. */): Promise<void> => {
