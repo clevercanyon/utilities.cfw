@@ -391,11 +391,17 @@ export default /* not async compatible */ ({ themesConfig } = {}) => {
                         from: { opacity: 1 },
                         to: { opacity: 0 },
                     },
+                    'blink': {
+                        '25%': { opacity: 0.5 },
+                        '50%': { opacity: 0 },
+                        '100%': { opacity: 0.5 },
+                    },
                 },
                 animation: {
                     'fade-in': 'fade-in 150ms linear',
-                    'fade-out': 'fade-out 150ms linear',
                     'subtle-fade-in': 'subtle-fade-in 150ms linear',
+                    'fade-out': 'fade-out 150ms linear',
+                    'blink': 'blink 1s linear',
                 },
             },
         },
