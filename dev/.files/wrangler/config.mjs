@@ -74,7 +74,7 @@ export default async () => {
                             account_id: settings.defaultAccountId,
 
                             // Enables logpush for worker trace events.
-                            logpush: true, // Requires workers paid plan.
+                            logpush: settings.defaultLogpush, // Requires paid plan.
 
                             // Sets a default upper limit on CPU time.
                             limits: { cpu_ms: $time.secondInMilliseconds * 5 },

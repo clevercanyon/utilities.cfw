@@ -36,7 +36,18 @@ extended_key_usages=$(
 	anyExtendedKeyUsage
 	ooo
 )
-subject=$(
+root_subject=$(
+    tr -d '\n' <<- 'ooo'
+	/L=Auburn
+	/ST=ME
+	/C=US
+	/O=Clever Canyon
+	/OU=Engineering
+	/CN=root.clevercanyon.com
+	/emailAddress=admin@clevercanyon.com
+	ooo
+)
+i10e_subject=$(
     tr -d '\n' <<- 'ooo'
 	/L=Auburn
 	/ST=ME
@@ -81,7 +92,10 @@ subject_alt_names=$(
 	DNS:*.clevercanyon.com,
 
 	DNS:hop.gdn,
-	DNS:*.hop.gdn
+	DNS:*.hop.gdn,
+
+	DNS:o5p.me,
+	DNS:*.o5p.me
 	ooo
 )
 # Start clean each time.
@@ -90,41 +104,51 @@ rm -f ./openssl/store/certs/*
 rm -f ./openssl/store/certs-db
 rm -f ./openssl/store/certs-db.*
 rm -f ./openssl/store/serial-db
+rm -f ./openssl/store/serial-db.*
 
 if [[ ! -d "${output_dir}" ]]; then mkdir -p "${output_dir}"; fi
 if [[ ! -d ./openssl/store/certs ]]; then mkdir -p ./openssl/store/certs; fi
 touch ./openssl/store/certs-db
 
-# Root & intermediate CA keys.
+# Root self-signed & intermediate CA keys.
 
 openssl genrsa -out "${output_dir}"/root-ca-key.pem 4096
 openssl genrsa -out "${output_dir}"/i10e-ca-key.pem 4096
 
-# Root CA certificate.
+# Root self-signed CA certificate.
 
-openssl req -config ./openssl/config.ini -extensions v3_ca \
+openssl req -config ./openssl/config.ini \
     -new \
-    -x509 \
     -nodes \
     -sha512 \
-    -days "${days}" \
     -key "${output_dir}"/root-ca-key.pem \
-    -out "${output_dir}"/root-ca-crt.pem \
-    -subj "${subject}" -addext 'subjectAltName = '"${subject_alt_names}" \
+    -out "${output_dir}"/root-ca-csr.pem \
+    -subj "${root_subject}" -addext 'subjectAltName = '"${subject_alt_names}" \
     -addext 'keyUsage = '"${key_usages}" -addext 'extendedKeyUsage = '"${extended_key_usages}"
+
+openssl ca -config ./openssl/config.ini -extensions v3_root_ca \
+    -selfsign \
+    -notext \
+    -batch \
+    -md sha512 \
+    -rand_serial \
+    -days "${days}" \
+    -keyfile "${output_dir}"/root-ca-key.pem \
+    -in "${output_dir}"/root-ca-csr.pem \
+    -out "${output_dir}"/root-ca-crt.pem
 
 # Intermediate CSR & CA certificate.
 
-openssl req -config ./openssl/config.ini -extensions v3_i10e \
+openssl req -config ./openssl/config.ini \
     -new \
     -nodes \
     -sha512 \
     -key "${output_dir}"/i10e-ca-key.pem \
     -out "${output_dir}"/i10e-ca-csr.pem \
-    -subj "${subject}" -addext 'subjectAltName = '"${subject_alt_names}" \
+    -subj "${i10e_subject}" -addext 'subjectAltName = '"${subject_alt_names}" \
     -addext 'keyUsage = '"${key_usages}" -addext 'extendedKeyUsage = '"${extended_key_usages}"
 
-openssl ca -config ./openssl/config.ini -extensions v3_ca \
+openssl ca -config ./openssl/config.ini -extensions v3_i10e_ca \
     -notext \
     -batch \
     -md sha512 \

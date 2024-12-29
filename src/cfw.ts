@@ -14,6 +14,7 @@ import type { SessionOptions as AiSessionOptions } from '@cloudflare/ai/dist/ses
 /**
  * Defines types.
  */
+export type EmailEvent = $type.$cfw.EmailEvent & Readonly<{}>;
 export type ScheduledEvent = $type.$cfw.ScheduledEvent & Readonly<{}>;
 
 export type ExecutionContext = $type.$cfw.ExecutionContext & Readonly<$type.cfw.ExecutionContext>;
@@ -23,17 +24,23 @@ export type Route = $type.$cfw.Route<RequestContextData>;
 export type Routes = Readonly<{ subpathGlobs: { [x: string]: Route } }>;
 
 export type InitialRequestContextData = Readonly<{
+    emailEvent?: EmailEvent;
     scheduledEvent?: ScheduledEvent;
+
     ctx: ExecutionContext;
     env: Environment;
+
     request: $type.cfw.Request;
     routes: Routes;
 }>;
 export type RequestContextData = $type.$cfw.RequestContextData &
     Readonly<{
+        emailEvent?: EmailEvent;
         scheduledEvent?: ScheduledEvent;
+
         ctx: ExecutionContext;
         env: Environment;
+
         routes: Routes;
     }>;
 
@@ -74,7 +81,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
     let { request } = ircData;
 
     const { fetch, caches } = cfw,
-        { scheduledEvent, ctx, env, routes } = ircData,
+        { emailEvent, scheduledEvent, ctx, env, routes } = ircData,
         subrequestCounter = request.c10n?.serviceBinding?.subrequestCounter || { value: 0 };
 
     await maybeInitializeGlobals(ircData); // Initializes worker globals.
@@ -100,7 +107,9 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
             originalURL = $url.parse(originalRequest.url) as $type.cfw.URL,
             consentLogger = baseConsentLogger.withContext({}, { request }),
             rcData = rcDataPrepare({
+                emailEvent,
                 scheduledEvent,
+
                 ctx,
                 env,
 
@@ -190,6 +199,61 @@ export const rcDataPrepare = <Type extends $type.Writable<$type.$cfw.RequestCont
             (rcData.env as $type.StrKeyable)[key] = subrequestCounterProxy(value, subrequestCounter);
         }
     return $obj.freeze(rcData) as Type;
+};
+
+/**
+ * Creates an email event request.
+ *
+ * The distinction here is simply that we use a default IP address and geolocation for email event requests. Cloudflare
+ * doesn’t do it by default, but our codebases assume IP and geolocation data will be available; i.e., for every
+ * request. Therefore, when fetching email event routes always use this utility to build a request.
+ *
+ * @param   emailEvent  Email event.
+ * @param   requestInfo New request info.
+ * @param   requestInit New request init.
+ *
+ * @returns             Promise of a {@see $type.cfw.Request}.
+ */
+export const emailEventRequest = async (emailEvent: $type.$cfw.EmailEvent, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Request> => {
+    const { Request } = cfw;
+
+    requestInit ??= {}; // Initialize.
+    requestInit.cf ??= {}; // Initialize.
+
+    const headers = $http.parseHeaders(requestInit.headers || ($is.request(requestInfo) ? requestInfo.headers : {})) as $type.cfw.Headers;
+    requestInit.headers = headers; // As a reference to our typed `headers`.
+
+    if (emailEvent.to /* Only "to" email event requests. */) {
+        // Email event requests get a default IP and geolocation.
+        const userIP = '127.13.249.56', // Random private IPv4.
+            //
+            // Must be in the US such that consent state will allow audit logging.
+            // i.e., Non-essential audit logging is only allowed by default in the US.
+            userIPGeoData: $user.IPGeoData = {
+                ip: userIP,
+
+                city: 'Madawaska',
+                region: 'Maine',
+                regionCode: 'ME',
+                postalCode: '04756',
+                continent: 'NA',
+                country: 'US',
+
+                colo: 'EWR',
+                metroCode: '552',
+                latitude: '47.33320',
+                longitude: '-68.33160',
+                timezone: 'America/New_York',
+            };
+        headers.set('x-real-ip', userIP);
+        headers.set('cf-connecting-ip', userIP);
+
+        $obj.patchDeep(requestInit.cf, {
+            ...$obj.omit(userIPGeoData, ['ip']),
+            c10n: { emailEvent },
+        });
+    }
+    return new Request(requestInfo, requestInit);
 };
 
 /**

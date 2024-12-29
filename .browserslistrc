@@ -17,18 +17,18 @@
 # Generated data.
 # <generated:start>
 
-# Last generated May 4, 2024 7:04 AM UTC.
+# Last generated Dec 29, 2024 6:40 AM UTC.
 
 [production]
 node >= 20.9.0
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
-android >= 123
+android >= 131
 edge >= 92
 samsung >= 16.0
-safari >= 15.4
-ios_saf >= 15.4
+safari >= 16.0
+ios_saf >= 16.0
 opera >= 78
 firefox >= 90
 unreleased and_chr versions
@@ -48,11 +48,11 @@ node >= 20.9.0
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
-android >= 123
+android >= 131
 edge >= 92
 samsung >= 16.0
-safari >= 15.4
-ios_saf >= 15.4
+safari >= 16.0
+ios_saf >= 16.0
 opera >= 78
 firefox >= 90
 unreleased and_chr versions
@@ -72,11 +72,11 @@ node >= 20.9.0
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
-android >= 123
+android >= 131
 edge >= 92
 samsung >= 16.0
-safari >= 15.4
-ios_saf >= 15.4
+safari >= 16.0
+ios_saf >= 16.0
 opera >= 78
 firefox >= 90
 unreleased and_chr versions
@@ -107,11 +107,11 @@ not dead
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
-android >= 123
+android >= 131
 edge >= 92
 samsung >= 16.0
-safari >= 15.4
-ios_saf >= 15.4
+safari >= 16.0
+ios_saf >= 16.0
 opera >= 78
 firefox >= 90
 unreleased and_chr versions
@@ -130,11 +130,11 @@ not dead
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
-android >= 123
+android >= 131
 edge >= 92
 samsung >= 16.0
-safari >= 15.4
-ios_saf >= 15.4
+safari >= 16.0
+ios_saf >= 16.0
 opera >= 78
 firefox >= 90
 unreleased and_chr versions

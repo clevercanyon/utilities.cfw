@@ -26,12 +26,23 @@ export default async () => {
     const pkgSlug = $app.pkgSlug(pkg.name);
     const hop = $brand.get('@clevercanyon/hop.gdn');
 
+    let brandHostname = hop.hostname;
+    let brandDevZoneHostname = hop.org.n7m + '.workers.dev';
+    let brandAccountId = 'f1176464a976947aa5665d989814a4b1';
+    let brandSupportsLogpush = true; // Requires paid plan.
+
+    if (/^workers-o5p-me(?:$|-)/u.test(pkgSlug)) {
+        brandHostname = 'o5p.me'; // O5p defaults.
+        brandDevZoneHostname = 'j5s' + '.workers.dev';
+        brandAccountId = '4cf0983a5f62681776b3bc8a8e35b104';
+        brandSupportsLogpush = false; // Requires paid plan.
+    }
     return {
-        // This is Clever Canyon’s account ID. ↓
-        defaultAccountId: 'f1176464a976947aa5665d989814a4b1',
+        defaultAccountId: brandAccountId,
+        defaultLogpush: brandSupportsLogpush,
 
         compatibilityDate: '2024-03-02',
-        compatibilityFlags: [], // None, for now.
+        compatibilityFlags: [],
 
         defaultLocalIP: '0.0.0.0',
         defaultLocalHostname: 'localhost',
@@ -42,24 +53,24 @@ export default async () => {
         miniflareEnvVarAsString: 'MINIFLARE=true',
         miniflareEnvVarAsObject: { MINIFLARE: 'true' },
 
-        defaultPagesZoneName: hop.hostname,
+        defaultPagesZoneName: brandHostname,
         defaultPagesDevZoneName: 'pages.dev',
 
         defaultPagesProjectName: pkgSlug,
         defaultPagesProjectShortName: pkgSlug //
-            .replace(/-(?:com|net|org|gdn|hop-gdn)$/iu, ''),
+            .replace(/-(?:hop-gdn|o5p-me|com|net|org|gdn|me)$/iu, ''),
 
         defaultPagesProductionBranch: 'production',
         defaultPagesProjectStageBranchName: 'stage',
         defaultPagesProductionEnvironment: 'production',
 
-        defaultWorkerZoneName: hop.hostname,
-        defaultWorkersDevZoneName: 'c10n.workers.dev',
-        defaultWorkersDomain: 'workers.' + hop.hostname,
+        defaultWorkerZoneName: brandHostname,
+        defaultWorkersDevZoneName: brandDevZoneHostname,
+        defaultWorkersDomain: 'workers.' + brandHostname,
 
         defaultWorkerName: pkgSlug, // e.g., `workers-hop-gdn-utilities`.
-        defaultWorkerShortName: pkgSlug.replace(/^workers-hop-gdn-/iu, ''),
-        defaultWorkerStageShortName: 'stage.' + pkgSlug.replace(/^workers-hop-gdn-/iu, ''),
+        defaultWorkerShortName: pkgSlug.replace(/^workers-(?:hop-gdn|o5p-me)-/iu, ''),
+        defaultWorkerStageShortName: 'stage.' + pkgSlug.replace(/^workers-(?:hop-gdn|o5p-me)-/iu, ''),
 
         osDir: path.resolve(os.homedir(), './.wrangler'),
         projDir: path.resolve(projDir, './.wrangler'),
