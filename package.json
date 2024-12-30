@@ -3,7 +3,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "1.0.331",
+    "version": "1.0.332",
     "license": "GPL-3.0-or-later",
     "name": "@clevercanyon/utilities.cfw",
     "description": "Utilities for JavaScript apps running in a Cloudflare Worker environment.",
@@ -90,10 +90,7 @@
     "devDependencies": {
         "@clevercanyon/dev-deps": "^1.0.385"
     },
-    "overrides": {
-        "@upstash/ratelimit": "1.1.1",
-        "@upstash/redis": "1.34.3"
-    },
+    "overrides": {},
     "cpu": ["x64", "arm64"],
     "os": ["darwin", "linux"],
     "engines": {
