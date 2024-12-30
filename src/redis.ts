@@ -92,6 +92,7 @@ export const instance = $fn.memo(
                 url: opts.restURL,
                 token: opts.restToken,
 
+                enableAutoPipelining: false, // Adds further complexity and potential issues.
                 responseEncoding: false, // Do not base64-encode response data, which adds network latency.
                 automaticDeserialization: true, // Yes, use JSON to encode/decode HTTP request/response data.
                 enableTelemetry: false, // Just for good measure. The environment variable is what’s important.
