@@ -323,7 +323,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
         optimizeDeps: {
             force: true, // Don’t use cache for optimized deps; recreate.
             esbuildOptions: {
-                external: ['cloudflare:sockets'],
+                external: ['cloudflare:email', 'cloudflare:sockets'],
                 plugins: [await viteMDXESBuildConfig({ projDir })],
             },
             // Preact is required by prefresh plugin; {@see https://o5p.me/WmuefH}.

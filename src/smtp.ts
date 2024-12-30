@@ -4,19 +4,15 @@
 
 import '#@initialize.ts';
 
-import { $root, cfw } from '#index.ts';
+import { $api, $root, cfw } from '#index.ts';
 import { $app, $env, $is, $json, $obj, $str, $time, $to, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
  */
 export type Data = {
-    stream?: 'outbound' | 'broadcast';
-    trackOpens?: boolean; // Requires `html` body.
-    trackLinks?: boolean; // Requires `html` body.
-
     headers?: { [x: string]: string };
-    tag?: string; // e.g., `contact-form`.
+    tags?: string[]; // e.g., `['contact-form']`.
 
     from: string; // `user@hostname` or `"Name" <user@hostname>`.
     replyTo?: string | string[]; // `user@hostname` or `"Name" <user@hostname>`.
@@ -31,11 +27,8 @@ export type Data = {
 };
 export type SendOptions = Omit<Data, 'from'> & { from?: string };
 
-export type RequestPayload = { data: Data };
-export type ResponsePayload = $type.ReadonlyDeep<{
-    ok: boolean;
-    error?: { message: string };
-}>;
+export type RequestPayload = $api.JSONRequestPayload<Data>;
+export type ResponsePayload = $api.JSONResponsePayload<{}>;
 
 /**
  * Sends an email message.

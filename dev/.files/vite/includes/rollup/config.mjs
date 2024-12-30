@@ -41,9 +41,9 @@ export default async ({ projDir, srcDir, distDir, a16sDir, appType, appEntries, 
             }, // {@see https://o5p.me/7YF2NU}.
         },
         external: [
+            /^(?:node:|cloudflare:).*$/iu,
             ...(['lib'].includes(appType) ? [/^(?![./~#]|file:|data:|virtual:).*$/iu] : []),
             ...peerDepKeys.map((pkgName) => new RegExp('^' + $str.escRegExp(pkgName) + '(?:$|[/?])', 'u')),
-            /^(?:cloudflare:).*$/iu,
         ],
         output: {
             interop: 'auto', // Matches TypeScript configuration.
