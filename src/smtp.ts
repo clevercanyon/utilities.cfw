@@ -15,7 +15,7 @@ export type Data = {
     tags?: string[]; // e.g., `['contact-form']`.
 
     from: string; // `user@hostname` or `"Name" <user@hostname>`.
-    replyTo?: string | string[]; // `user@hostname` or `"Name" <user@hostname>`.
+    replyTo?: string; // `user@hostname` or `"Name" <user@hostname>`.
 
     to: string | string[]; // `user@hostname` or `"Name" <user@hostname>`.
     cc?: string | string[]; // `user@hostname` or `"Name" <user@hostname>`.
