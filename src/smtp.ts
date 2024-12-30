@@ -51,7 +51,9 @@ export const send = async (rcData: $type.$cfw.RequestContextData, options: SendO
             method: 'POST',
             headers: {
                 'content-type': $json.contentType(),
-                'authorization': $env.get('SSR_APP_ROOT_API_BEARER_TOKEN', { type: 'string', require: true }),
+                'authorization':
+                    $env.get('SSR_APP_ROOT_API_BEARER_TOKEN', { type: 'string' }) || //
+                    $env.get('APP_ROOT_API_BEARER_TOKEN', { type: 'string', require: true }),
             },
             body: $json.stringify({ data: opts } as RequestPayload),
             signal: AbortSignal.timeout($time.secondInMilliseconds * 15),
