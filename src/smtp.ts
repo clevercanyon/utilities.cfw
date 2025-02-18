@@ -21,7 +21,7 @@ export type Data = {
     cc?: string | string[]; // `user@hostname` or `"Name" <user@hostname>`.
     bcc?: string | string[]; // `user@hostname` or `"Name" <user@hostname>`.
 
-    subject: string; // e.g., `Thanks for your purchase.`.
+    subject?: string; // e.g., `Thanks for your purchase.`.
     text?: string; // One or both of `text` & `html` body.
     html?: string; // One or both of `text` & `html` body.
 };

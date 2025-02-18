@@ -77,18 +77,19 @@ export default async ({ mode, wranglerMode, inProdLikeMode, command, isSSRBuild,
              * intend to enforce our standards. For further details {@see https://o5p.me/MuskgW}.
              */
             if ('build' === command && inProdLikeMode) {
-                const ignores = isSSRBuild
-                    ? exclusions.defaultNPMIgnores // See notes above regarding these exceptions.
-                          .concat(['!**/dist/node_modules/.cache/**', '!**/dist/node_modules/assets/a16s/**'])
-                    : exclusions.defaultNPMIgnores.concat(['!**/dist/node_modules/.cache/**']);
-
                 for (let globOpts = [{ onlyDirectories: true }, { onlyFiles: false }], i = 0; i < globOpts.length; i++) {
-                    for (const fileOrDir of await $glob.promise(ignores, { cwd: distDir, ignoreCase: true, ...globOpts[i] })) {
+                    for (const fileOrDir of await $glob.promise(exclusions.defaultNPMIgnores, { cwd: distDir, ignoreCase: true, ...globOpts[i] })) {
                         const projRelPath = path.relative(projDir, fileOrDir);
 
                         if (!fs.existsSync(fileOrDir)) {
                             continue; // Already pruned this in a previous iteration.
-                            // e.g., when we get directory parents first, then its leaves.
+                            // e.g., When we get directory parents first, then its leaves.
+                        }
+                        if ($mm.test(projRelPath, ['dist/node_modules', 'dist/node_modules/.cache/**'], { ignoreCase: true, dot: true })) {
+                            continue; // Bypasses `dist/node_modules/.cache`. See notes above.
+                        }
+                        if (isSSRBuild && $mm.test(projRelPath, ['dist/node_modules/assets', 'dist/node_modules/assets/a16s/**'], { ignoreCase: true, dot: true })) {
+                            continue; // Bypasses Cloudflare SSR-specific assets. See notes above.
                         }
                         if (
                             // These things we expect to prune regularly.
