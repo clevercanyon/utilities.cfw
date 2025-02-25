@@ -98,7 +98,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 
     try {
         let originalRequest = request; // Potentially rewritten.
-        request = (await $http.prepareRequest(request, {})) as $type.cfw.Request;
+        request = (await $http.prepareRequest(request, {})) as $type.cfw.Request<unknown, $type.cfw.IncomingRequestCfProperties>;
 
         if (request !== originalRequest /* Reinitializes audit logger. */) {
             auditLogger = baseAuditLogger.withContext({}, { request });
