@@ -5,27 +5,18 @@
 import '#@initialize.ts';
 
 import { cfw } from '#index.ts';
-import { $arr, $crypto, $env, $gzip, $http, $is, $obj, $str, $time, $url, type $type } from '@clevercanyon/utilities';
+import { $arr, $crypto, $env, $gzip, $http, $is, $str, $time, $url, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines types.
  */
-export type FetchOptions = {
-    proxy?: {
-        host?: string;
-        port?: number;
-        username?: string;
-        password?: string;
-    };
+type FetchOptions = {
     method?: 'OPTIONS' | 'HEAD' | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     headers?: $type.cfw.HeadersInit;
     body?: string | null | undefined;
-
-    uaBotAppend?: string;
     redirect?: 'follow' | 'manual';
-    maxRedirects?: number;
-    timeout?: number; // In milliseconds.
-};
+} & $type.RequestC10nProps['proxyOptions'];
+
 type RequiredFetchOptions = Required<FetchOptions> & {
     proxy: Required<FetchOptions['proxy']>;
     headers: $type.cfw.Headers;
@@ -36,32 +27,99 @@ type RequiredFetchOptions = Required<FetchOptions> & {
  *
  * Note: Only `HEAD`, `GET` methods supported at this time.
  *
- * @param   rcData  Request context data.
- * @param   url     Parseable URL; i.e., string or URL instance.
- * @param   options Some required; {@see FetchOptions}.
+ * @param   rcData      Request context data.
+ * @param   requestInfo New request info.
+ * @param   requestInit New request init.
  *
- * @returns         Promise of HTTP response.
+ * @returns             Promise of HTTP response.
+ *
+ * @todo: Remove type ` | ($type.cfw.RequestInit & FetchOptions)` from `requestInit`.
+ *        It exists only for backwards compatibility with a deprecated `FetchOptions` param.
+ *        The preferred method of passing options is via `(requestInfo|requestInit).c10n.proxyOptions`.
+ *        Others, such as `method`, `headers`, `body`, `redirect` should be passed via (requestInfo|requestInit).
  */
-export const fetch = async (rcData: $type.$cfw.RequestContextData, parseable: $type.cfw.URL | string, options?: FetchOptions): Promise<$type.cfw.Response> => {
-    const { Response } = cfw,
-        url = $url.tryParse(parseable),
-        opts = $obj.defaults({}, options || {}, {
-            proxy: {
-                host: $env.get('SSR_APP_ROTATING_PROXY_HOST', { type: 'string' }) || $env.get('APP_ROTATING_PROXY_HOST', { type: 'string' }),
-                port: $env.get('SSR_APP_ROTATING_PROXY_PORT', { type: 'number' }) || $env.get('APP_ROTATING_PROXY_PORT', { type: 'number' }) || 0,
+export const fetch = async (
+    rcData: $type.$cfw.RequestContextData,
+    requestInfo: $type.cfw.RequestInfo,
+    requestInit?: $type.cfw.RequestInit | ($type.cfw.RequestInit & FetchOptions),
+): Promise<$type.cfw.Response> => {
+    //
+    const { Request, Response } = cfw,
+        request = requestInfo instanceof Request ? requestInfo : undefined,
+        url = $url.tryParse(request ? request.url : (requestInfo as $type.cfw.URL | string));
 
-                username: $env.get('SSR_APP_ROTATING_PROXY_USERNAME', { type: 'string' }) || $env.get('APP_ROTATING_PROXY_USERNAME', { type: 'string' }),
-                password: $env.get('SSR_APP_ROTATING_PROXY_PASSWORD', { type: 'string' }) || $env.get('APP_ROTATING_PROXY_PASSWORD', { type: 'string' }),
-            },
-            method: 'GET',
-            headers: {},
-            body: null,
+    const opts = {
+        method:
+            requestInit?.method || //
+            request?.method ||
+            'GET', // Default value.
 
-            uaBotAppend: '',
-            redirect: 'follow',
-            maxRedirects: 20,
-            timeout: $time.secondInMilliseconds * 15,
-        }) as RequiredFetchOptions;
+        headers:
+            requestInit?.headers || //
+            request?.headers ||
+            {}, // Default value.
+
+        body:
+            ($is.string(requestInit?.body) ? requestInit.body : '') || //
+            (request?.body && !request.bodyUsed ? await request.text() : '') ||
+            null, // Default value.
+
+        redirect:
+            requestInit?.redirect || //
+            request?.redirect ||
+            'follow', // Default value.
+
+        proxy: {
+            host:
+                requestInit?.c10n?.proxyOptions?.proxy?.host || //
+                (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.host ||
+                request?.c10n?.proxyOptions?.proxy?.host ||
+                $env.get('SSR_APP_ROTATING_PROXY_HOST', { type: 'string' }) ||
+                $env.get('APP_ROTATING_PROXY_HOST', { type: 'string' }) ||
+                '', // Default value.
+
+            port:
+                requestInit?.c10n?.proxyOptions?.proxy?.port || //
+                (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.port ||
+                request?.c10n?.proxyOptions?.proxy?.port ||
+                $env.get('SSR_APP_ROTATING_PROXY_PORT', { type: 'number' }) ||
+                $env.get('APP_ROTATING_PROXY_PORT', { type: 'number' }) ||
+                80, // Default value.
+
+            username:
+                requestInit?.c10n?.proxyOptions?.proxy?.username || //
+                (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.username ||
+                request?.c10n?.proxyOptions?.proxy?.username ||
+                $env.get('SSR_APP_ROTATING_PROXY_USERNAME', { type: 'string' }) ||
+                $env.get('APP_ROTATING_PROXY_USERNAME', { type: 'string' }) ||
+                '', // Default value.
+
+            password:
+                requestInit?.c10n?.proxyOptions?.proxy?.password || //
+                (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.password ||
+                request?.c10n?.proxyOptions?.proxy?.password ||
+                $env.get('SSR_APP_ROTATING_PROXY_PASSWORD', { type: 'string' }) ||
+                $env.get('APP_ROTATING_PROXY_PASSWORD', { type: 'string' }) ||
+                '', // Default value.
+        },
+        uaBotAppend:
+            requestInit?.c10n?.proxyOptions?.uaBotAppend || //
+            (requestInit as $type.cfw.RequestInit & FetchOptions)?.uaBotAppend ||
+            request?.c10n?.proxyOptions?.uaBotAppend ||
+            '', // Default value.
+
+        maxRedirects:
+            requestInit?.c10n?.proxyOptions?.maxRedirects || //
+            (requestInit as $type.cfw.RequestInit & FetchOptions)?.maxRedirects ||
+            request?.c10n?.proxyOptions?.maxRedirects ||
+            20, // Default value.
+
+        timeout:
+            requestInit?.c10n?.proxyOptions?.timeout || //
+            (requestInit as $type.cfw.RequestInit & FetchOptions)?.timeout ||
+            request?.c10n?.proxyOptions?.timeout ||
+            $time.secondInMilliseconds * 15, // Default value.
+    } as RequiredFetchOptions;
 
     opts.headers = $http.parseHeaders(opts.headers) as $type.cfw.Headers;
 
@@ -73,11 +131,19 @@ export const fetch = async (rcData: $type.$cfw.RequestContextData, parseable: $t
         const currentUA = opts.headers.get('user-agent') || ''; // Current user-agent header.
         opts.headers.set('user-agent', $str.trim(currentUA + ' ' + $str.trim(opts.uaBotAppend)));
     }
-    if (!url || !opts.proxy?.host || !opts.proxy?.port || !opts.method || !opts.timeout)
+    if (
+        !url || // Options validation.
+        !['OPTIONS', 'HEAD', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(opts.method) ||
+        !['follow', 'manual'].includes(opts.redirect) ||
+        !opts.proxy.host ||
+        !opts.proxy.port ||
+        !opts.timeout
+    ) {
         return new Response(null, {
             status: 400,
             statusText: $http.responseStatusText(400) + '; Invalid proxy fetch options.',
         });
+    }
     return await Promise.race([fetchꓺwaitTimeout(rcData, opts), fetchꓺviaSocket(rcData, url, opts)]);
 };
 

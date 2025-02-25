@@ -70,114 +70,44 @@ export default async () => {
                         }
                       : // Cloudflare worker configuration.
                         {
-                            // Worker account ID.
-                            account_id: settings.defaultAccountId,
-
-                            // Enables logpush for worker trace events.
-                            logpush: settings.defaultLogpush, // Requires paid plan.
-
-                            // Sets a default upper limit on CPU time.
-                            limits: { cpu_ms: $time.secondInMilliseconds * 5 },
-
                             // Worker name.
                             name: settings.defaultWorkerName,
 
-                            // App main entry configuration.
+                            // Worker account ID.
+                            account_id: settings.defaultAccountId,
+
+                            // Worker logpush for trace events.
+                            logpush: settings.defaultLogpush, // Requires paid plan.
+
+                            // Worker upper limit on CPU time.
+                            limits: { cpu_ms: $time.secondInMilliseconds * 5 },
+
+                            // Worker main entry file path.
                             main: './' + path.relative(projDir, './dist/index.js'),
 
-                            // Bundling configuration; {@see <https://o5p.me/JRHxfC>}.
-                            rules: [
-                                {
-                                    type: 'ESModule',
-                                    globs: extensions.asNoBraceGlobstars([
-                                        ...extensions.byDevGroup.sJavaScript, //
-                                        ...extensions.byDevGroup.sJavaScriptReact,
-
-                                        ...extensions.byDevGroup.mJavaScript,
-                                        ...extensions.byDevGroup.mJavaScriptReact,
-                                    ]),
-                                    fallthrough: false,
-                                },
-                                {
-                                    type: 'CommonJS',
-                                    globs: extensions.asNoBraceGlobstars([
-                                        ...extensions.byDevGroup.cJavaScript, //
-                                        ...extensions.byDevGroup.cJavaScriptReact,
-                                    ]),
-                                    fallthrough: false,
-                                },
-                                {
-                                    type: 'Text',
-                                    globs: extensions.asNoBraceGlobstars(
-                                        [...extensions.byVSCodeLang.codeTextual].filter(
-                                            (ext) =>
-                                                ![
-                                                    ...extensions.byDevGroup.sJavaScript, //
-                                                    ...extensions.byDevGroup.sJavaScriptReact,
-
-                                                    ...extensions.byDevGroup.mJavaScript,
-                                                    ...extensions.byDevGroup.mJavaScriptReact,
-
-                                                    ...extensions.byDevGroup.cJavaScript,
-                                                    ...extensions.byDevGroup.cJavaScriptReact,
-
-                                                    ...extensions.byCanonical.wasm,
-                                                    ...extensions.byDevGroup.allTypeScript,
-                                                    // Omit TypeScript also, because it causes Wrangler to choke. Apparently, Wrangler’s build system incorporates TypeScript middleware files.
-                                                    // Therefore, we omit all TypeScript such that Wrangler’s build system can add TS files without them inadvertently being classified as text by our rules.
-                                                    // We don’t expect TypeScript to be present in our `./dist` anyway, so this is harmless, and probably a good idea in general to omit TypeScript here.
-                                                ].includes(ext),
-                                        ),
-                                    ),
-                                    fallthrough: false,
-                                },
-                                {
-                                    type: 'Data',
-                                    globs: extensions.asNoBraceGlobstars(
-                                        [...extensions.byVSCodeLang.codeTextBinary].filter(
-                                            (ext) =>
-                                                ![
-                                                    ...extensions.byDevGroup.sJavaScript, //
-                                                    ...extensions.byDevGroup.sJavaScriptReact,
-
-                                                    ...extensions.byDevGroup.mJavaScript,
-                                                    ...extensions.byDevGroup.mJavaScriptReact,
-
-                                                    ...extensions.byDevGroup.cJavaScript,
-                                                    ...extensions.byDevGroup.cJavaScriptReact,
-
-                                                    ...extensions.byCanonical.wasm,
-                                                    ...extensions.byDevGroup.allTypeScript,
-                                                ].includes(ext),
-                                        ),
-                                    ),
-                                    fallthrough: false,
-                                },
-                                { type: 'CompiledWasm', globs: extensions.asNoBraceGlobstars([...extensions.byCanonical.wasm]), fallthrough: false },
-                            ],
-
-                            // Custom build configuration.
+                            // Worker custom build configuration.
                             build: {
                                 cwd: './' + path.relative(projDir, './'),
                                 watch_dir: './' + path.relative(projDir, './src'),
                                 command: 'npx @clevercanyon/madrun build --mode=prod',
                             },
-
-                            // Route configuration.
-                            route: {
-                                zone_name: settings.defaultWorkerZoneName,
-                                pattern: settings.defaultWorkersDomain + '/' + settings.defaultWorkerShortName + '/*',
-                            },
-
-                            // `$ madrun wrangler dev` settings.
+                            // Worker `$ madrun wrangler dev` settings.
                             dev: {
                                 local_protocol: settings.defaultLocalProtocol,
                                 ip: settings.defaultLocalIP, // e.g., `0.0.0.0`.
                                 port: Number(settings.defaultLocalPort),
                             },
+                            // Worker subdomains; i.e., `*.workers.dev`.
 
-                            // Environments used by this worker.
-                            workers_dev: false, // We don’t use `*workers.dev`.
+                            workers_dev: false, // We don’t typically use this.
+                            preview_urls: false, // We don’t typically use.
+
+                            // Worker default route.
+                            route: {
+                                zone_name: settings.defaultWorkerZoneName,
+                                pattern: settings.defaultWorkersDomain + '/' + settings.defaultWorkerShortName + '/*',
+                            },
+                            // Worker environments.
                             env: {
                                 // `$ madrun wrangler dev` environment, for local testing.
                                 dev: {
@@ -205,6 +135,84 @@ export default async () => {
                                     },
                                 },
                             },
+                            // Worker bundling rules; {@see <https://o5p.me/JRHxfC>}.
+                            rules: [
+                                {
+                                    type: 'ESModule',
+                                    globs: extensions.asNoBraceGlobstars([
+                                        ...extensions.byDevGroup.sJavaScript, //
+                                        ...extensions.byDevGroup.sJavaScriptReact,
+
+                                        ...extensions.byDevGroup.mJavaScript,
+                                        ...extensions.byDevGroup.mJavaScriptReact,
+                                    ]),
+                                    fallthrough: false,
+                                },
+                                {
+                                    type: 'CommonJS',
+                                    globs: extensions.asNoBraceGlobstars([
+                                        ...extensions.byDevGroup.cJavaScript, //
+                                        ...extensions.byDevGroup.cJavaScriptReact,
+                                    ]),
+                                    fallthrough: false,
+                                },
+                                {
+                                    type: 'CompiledWasm', //
+                                    globs: extensions.asNoBraceGlobstars([
+                                        ...extensions.byCanonical.wasm, //
+                                    ]),
+                                    fallthrough: false,
+                                },
+                                {
+                                    type: 'Text',
+                                    globs: extensions.asNoBraceGlobstars(
+                                        [...extensions.byVSCodeLang.codeTextual].filter(
+                                            (ext) =>
+                                                ![
+                                                    ...extensions.byDevGroup.sJavaScript, //
+                                                    ...extensions.byDevGroup.sJavaScriptReact,
+
+                                                    ...extensions.byDevGroup.mJavaScript,
+                                                    ...extensions.byDevGroup.mJavaScriptReact,
+
+                                                    ...extensions.byDevGroup.cJavaScript,
+                                                    ...extensions.byDevGroup.cJavaScriptReact,
+
+                                                    ...extensions.byCanonical.wasm,
+
+                                                    ...extensions.byDevGroup.allTypeScript,
+                                                    // Omit TypeScript also, because it causes Wrangler to choke. Apparently, Wrangler’s build system incorporates TypeScript middleware files.
+                                                    // Therefore, we omit all TypeScript such that Wrangler’s build system can add TS files without them inadvertently being classified as text by our rules.
+                                                    // We don’t expect TypeScript to be present in our `./dist` anyway, so this is harmless, and probably a good idea in general to omit TypeScript here.
+                                                ].includes(ext),
+                                        ),
+                                    ),
+                                    fallthrough: false,
+                                },
+                                {
+                                    type: 'Data',
+                                    globs: extensions.asNoBraceGlobstars(
+                                        [...extensions.byVSCodeLang.codeTextBinary].filter(
+                                            (ext) =>
+                                                ![
+                                                    ...extensions.byDevGroup.sJavaScript, //
+                                                    ...extensions.byDevGroup.sJavaScriptReact,
+
+                                                    ...extensions.byDevGroup.mJavaScript,
+                                                    ...extensions.byDevGroup.mJavaScriptReact,
+
+                                                    ...extensions.byDevGroup.cJavaScript,
+                                                    ...extensions.byDevGroup.cJavaScriptReact,
+
+                                                    ...extensions.byCanonical.wasm,
+
+                                                    ...extensions.byDevGroup.allTypeScript,
+                                                ].includes(ext),
+                                        ),
+                                    ),
+                                    fallthrough: false,
+                                },
+                            ],
                         }),
               }
             : {}),

@@ -95,7 +95,10 @@ subject_alt_names=$(
 	DNS:*.hop.gdn,
 
 	DNS:o5p.me,
-	DNS:*.o5p.me
+	DNS:*.o5p.me,
+
+	DNS:o5p.org,
+	DNS:*.o5p.org
 	ooo
 )
 # Start clean each time.

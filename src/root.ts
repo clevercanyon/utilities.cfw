@@ -5,12 +5,33 @@
 import '#@initialize.ts';
 
 import { $cfw, $proxy, cfw } from '#index.ts';
-import { $app, type $type } from '@clevercanyon/utilities';
+import { $app, $fn, $http, $is, $json, $mime, $obj, $time, type $type } from '@clevercanyon/utilities';
 
 /**
  * Defines root package name.
  */
 const rootPkgName = '@clevercanyon/workers.hop.gdn';
+
+/**
+ * Defines types.
+ */
+type KVFetchCache = {
+    body: string | null;
+    init: {
+        status: number;
+        statusText: string;
+        headers: [string, string][];
+    };
+    error?: {
+        message: string;
+        cause: $type.ErrorCause;
+    };
+};
+type KVFetchCacheMetadata = {
+    lastModifiedTime: number;
+    retryAttempts: number;
+};
+type KVFetchOptions = $type.RequestC10nProps['kvOptions'];
 
 // ---
 // Conditional utilities.
@@ -21,31 +42,6 @@ const rootPkgName = '@clevercanyon/workers.hop.gdn';
  * @returns True if current worker is root worker.
  */
 export const isRoot = (): boolean => rootPkgName === $app.pkgName();
-
-// ---
-// Fetch utilities.
-
-/**
- * Fetches a root resource.
- *
- * @param   rcData      Request context data.
- * @param   requestInfo New request info.
- * @param   requestInit New request init.
- *
- * @returns             Promise of response.
- */
-export const fetch = async (rcData: $type.$cfw.RequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
-    const { Request } = cfw,
-        { fetch } = rcData;
-
-    if (isRoot()) {
-        return $proxy.worker(rcData, requestInfo, requestInit);
-    }
-    if (service.isAvailable(rcData)) {
-        return service(rcData, requestInfo, requestInit);
-    }
-    return fetch(new Request(requestInfo, requestInit));
-};
 
 // ---
 // Binding utilities.
@@ -148,8 +144,134 @@ kv.isAvailable = (rcData: $type.$cfw.RequestContextData): boolean => {
 };
 
 // ---
+// Fetch utilities.
+
+/**
+ * Fetches a root resource.
+ *
+ * @param   rcData      Request context data.
+ * @param   requestInfo New request info.
+ * @param   requestInit New request init.
+ *
+ * @returns             Promise of response.
+ */
+export const fetch = async (rcData: $type.$cfw.RequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
+    const { Request } = cfw,
+        { fetch } = rcData;
+
+    if (isRoot()) {
+        return $proxy.worker(rcData, requestInfo, requestInit);
+    }
+    if (service.isAvailable(rcData)) {
+        return service(rcData, requestInfo, requestInit);
+    }
+    return fetch(new Request(requestInfo, requestInit));
+};
+
+/**
+ * Fetches a resource using root KV as a cache.
+ *
+ * Using the root KV as a cache allows for global fetch response caching across datacenters, ensuring that a cached
+ * response can be retrieved by all callers, using KV storage, no matter which datacenter a worker is running from.
+ *
+ * @param   rcData      Request context data.
+ * @param   requestInfo New request info.
+ * @param   requestInit New request init.
+ *
+ * @returns             Promise of response.
+ */
+export const kvFetch = async (rcData: $type.$cfw.RequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
+    const fnSlug = 'rt-kv-fetch',
+        { Request, Response } = cfw,
+        { auditLogger, fetch } = rcData;
+
+    const request = new Request(requestInfo, requestInit),
+        options = request.c10n?.kvOptions,
+        opts = $obj.defaults({}, options || {}, {
+            cacheTtl: $time.yearInSeconds, // Cache storage expiration TTL, in seconds.
+            cacheMinTtl: $time.hourInSeconds, // Minimum time between retries, in seconds.
+            cacheMaxRetries: 5, // After `cacheMinTtl` expires.
+            fetch: options?.fetch
+                ? options.fetch.length >= 2 //
+                    ? $fn.curry(options.fetch, rcData)
+                    : options.fetch
+                : fetch,
+        }) as Required<KVFetchOptions & { fetch: typeof fetch }>;
+
+    if (!$http.requestTypeIsCacheable(request) || !kv.isAvailable(rcData)) {
+        return opts.fetch(request); // Not cacheable or KV unavailable.
+    }
+    const cacheKey = fnSlug + ':cache:response:' + (await $http.requestHash(request));
+
+    const {
+        value: cacheꓺvalue, //
+        metadata: cacheꓺmetadata,
+    } = await kv(rcData).getWithMetadata(cacheKey, { type: 'json' });
+
+    let cache: KVFetchCache | null | undefined = cacheꓺvalue as KVFetchCache,
+        cacheMetadata: KVFetchCacheMetadata | null | undefined = cacheꓺmetadata as KVFetchCacheMetadata,
+        cacheLastModifiedTime = $is.integer(cacheMetadata?.lastModifiedTime) ? cacheMetadata.lastModifiedTime : 0,
+        cacheRetryAttempts = $is.integer(cacheMetadata?.retryAttempts) ? cacheMetadata.retryAttempts : -1;
+
+    if (
+        $is.object(cache) && // and any of the following are true.
+        ($time.stamp() - cacheLastModifiedTime <= opts.cacheMinTtl || // Still within min TTL.
+            cache.init.status < 400 || // Cached response status code is not in an HTTP error status range.
+            (cacheRetryAttempts >= opts.cacheMaxRetries && ![404].includes(cache.init.status))) // Max retries.
+    ) {
+        return new Response(cache.body, cache.init);
+    }
+    let response: $type.cfw.Response, // Initialize.
+        responseBody: string | null = null,
+        error: Error | undefined;
+
+    try {
+        response = await opts.fetch(request);
+        //
+    } catch (thrown: unknown) {
+        response = new Response(null, {
+            status: 500, // Internal server error.
+            statusText: $http.responseStatusText(500) + ($is.error(thrown) ? '; ' + thrown.message : ''),
+        });
+        error ??= Error('Fetch error' + ($is.error(thrown) ? '; ' + thrown.message : '') + '.', { cause: fnSlug + ':try:catch' });
+    }
+    if (!$is.nul(response.body)) {
+        const responseContentType = response.headers.get('content-type') || '',
+            responseCleanContentType = $mime.typeClean(responseContentType);
+
+        if (!['text/plain', 'application/json', 'application/ld+json', 'application/xml', 'image/svg+xml', 'text/xml'].includes(responseCleanContentType)) {
+            error ??= Error('Uncacheable HTTP response type: ' + responseCleanContentType + '.', { cause: fnSlug + ':response:type' });
+        } else {
+            responseBody = await response.text(); // Textual response body.
+        }
+    }
+    if (error) {
+        void auditLogger.warn('KV fetch error.', { request, response, error });
+    }
+    await kv(rcData).put(
+        cacheKey,
+        $json.stringify({
+            body: responseBody,
+            init: {
+                status: response.status,
+                statusText: response.statusText,
+                headers: [...response.headers.entries()],
+            },
+            ...(error ? { error: { message: error.message, cause: String(error.cause) } } : {}),
+        }),
+        {
+            expirationTtl: opts.cacheTtl,
+            metadata: {
+                lastModifiedTime: $time.stamp(),
+                retryAttempts: error ? cacheRetryAttempts + 1 : 0,
+            },
+        },
+    );
+    return new Response(responseBody, response);
+};
+
+// ---
 // Counter utilities.
-// @todo: Deprecate in favor of app-specific counters.
 
 /**
  * Gets root counter value.

@@ -42,10 +42,21 @@ declare namespace globalThis {
     var pwaInstallEvent: Event & { prompt: () => void };
 
     /**
-     * Defines missing `entries()` on FormData.
+     * Defines `c10n` on Request.
      */
-    interface FormData {
-        entries(): IterableIterator<[key: string, value: string | Blob]>;
+    // If request changes, please review {$http.requestHash()}.
+    // If request changes, please review {$http.requestTypeIsCacheable()}.
+    var Request: {
+        prototype: Request;
+        new (info: Request | URL | string, init?: RequestInit): Request;
+    };
+    interface Request {
+        c10n?: $type.RequestC10nProps;
+    }
+    type RequestInfo = Request | URL | string;
+
+    interface RequestInit {
+        c10n?: $type.RequestC10nProps;
     }
 
     /**
@@ -53,6 +64,13 @@ declare namespace globalThis {
      */
     interface Headers {
         entries(): IterableIterator<[key: string, value: string]>;
+    }
+
+    /**
+     * Defines missing `entries()` on FormData.
+     */
+    interface FormData {
+        entries(): IterableIterator<[key: string, value: string | Blob]>;
     }
 
     /**

@@ -159,12 +159,7 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
 /**
  * Defines Cloudflare worker global scope.
  */
-export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope & {
-    fetch(
-        this: void, // {@see https://typescript-eslint.io/rules/unbound-method/}.
-        ...args: Parameters<$type.cfw.ServiceWorkerGlobalScope['fetch']>
-    ): ReturnType<$type.cfw.ServiceWorkerGlobalScope['fetch']>;
-};
+export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope;
 
 /**
  * Defines Cloudflare worker AI class.
@@ -392,7 +387,7 @@ export const handleRouteCache = async <Type extends $type.$cfw.RequestContextDat
     // Checks if request is cacheable.
     if (
         'none' === routeConfig.cacheVersion ||
-        !$http.requestHasCacheableMethod(keyRequest) ||
+        !$http.requestTypeIsCacheable(keyRequest) ||
         $http.requestPathIsInAccount(keyRequest, keyURL) ||
         $http.requestPathIsInAdmin(keyRequest, keyURL) ||
         (!routeConfig.cacheUsers && $http.requestIsFromUser(keyRequest))
@@ -487,10 +482,10 @@ const subrequestCounterProxy = <Type extends object>(target: Type, subrequestCou
  * @returns                   Proxied {@see cfw.fetch()} function.
  */
 const subrequestCountryProxyꓺfetch = <Type extends typeof cfw.fetch>(subrequestCounter: $type.$cfw.SubrequestCounter): Type => {
-    const { fetch, Request } = cfw;
+    const { Request } = cfw;
 
-    return new Proxy(fetch.bind(cfw) as Type, {
-        apply(target, thisArg, args: Parameters<Type>) {
+    return new Proxy(cfw.fetch as Type, {
+        apply(target, thisArg: void, args: Parameters<Type>) {
             const maxRedirects = 20,
                 redirectCounter = { value: 0 };
 
