@@ -17,7 +17,7 @@ import type { SessionOptions as AiSessionOptions } from '@cloudflare/ai/dist/ses
 export type EmailEvent = $type.$cfw.EmailEvent & Readonly<{}>;
 export type ScheduledEvent = $type.$cfw.ScheduledEvent & Readonly<{}>;
 
-export type ExecutionContext = $type.$cfw.ExecutionContext & Readonly<$type.cfw.ExecutionContext>;
+export type ExecutionContext = $type.$cfw.ExecutionContext & Readonly<{}>;
 export type Environment = $type.$cfw.Environment & Readonly<{}>;
 
 export type Route = $type.$cfw.Route<RequestContextData>;
