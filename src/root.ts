@@ -188,7 +188,7 @@ export const kvFetch = async (rcData: $type.$cfw.RequestContextData, requestInfo
     const request = new Request(requestInfo, requestInit),
         options = request.c10n?.kvOptions,
         opts = $obj.defaults({}, options || {}, {
-            cacheTtl: $time.yearInSeconds, // Cache storage expiration TTL, in seconds.
+            cacheTtl: request.cf?.cacheTtl || $time.yearInSeconds, // Cache expiration, in seconds.
             cacheMinTtl: $time.hourInSeconds, // Minimum time between retries, in seconds.
             cacheMaxRetries: 5, // After `cacheMinTtl` expires.
             fetch: options?.fetch
