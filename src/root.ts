@@ -181,15 +181,15 @@ export const fetch = async (rcData: $type.$cfw.RequestContextData, requestInfo: 
  * @returns             Promise of response.
  */
 export const kvFetch = async (rcData: $type.$cfw.RequestContextData, requestInfo: $type.cfw.RequestInfo, requestInit?: $type.cfw.RequestInit): Promise<$type.cfw.Response> => {
-    const fnSlug = 'rt-kv-fetch',
+    const slug = 'rt-kv-fetch',
         { Request, Response } = cfw,
         { auditLogger, fetch } = rcData;
 
     const request = new Request(requestInfo, requestInit),
         options = request.c10n?.kvOptions,
         opts = $obj.defaults({}, options || {}, {
-            cacheTtl: request.cf?.cacheTtl || $time.yearInSeconds, // Cache expiration, in seconds.
-            cacheMinTtl: $time.hourInSeconds, // Minimum time between retries, in seconds.
+            cacheMinAge: $time.hourInSeconds, // Minimum time between retries, in seconds.
+            cacheMaxAge: request.cf?.cacheTtl || $time.yearInSeconds, // Cache expiration, in seconds.
             cacheMaxRetries: 5, // After `cacheMinTtl` expires.
             fetch: options?.fetch
                 ? options.fetch.length >= 2 //
@@ -201,7 +201,7 @@ export const kvFetch = async (rcData: $type.$cfw.RequestContextData, requestInfo
     if (!$http.requestTypeIsCacheable(request) || !kv.isAvailable(rcData)) {
         return opts.fetch(request); // Not cacheable or KV unavailable.
     }
-    const cacheKey = fnSlug + ':cache:response:' + (await $http.requestHash(request));
+    const cacheKey = slug + ':cache:response:' + (await $http.requestHash(request));
 
     const {
         value: cacheꓺvalue, //
@@ -215,7 +215,7 @@ export const kvFetch = async (rcData: $type.$cfw.RequestContextData, requestInfo
 
     if (
         $is.object(cache) && // and any of the following are true.
-        ($time.stamp() - cacheLastModifiedTime <= opts.cacheMinTtl || // Still within min TTL.
+        ($time.stamp() - cacheLastModifiedTime <= opts.cacheMinAge || // Still within min TTL.
             cache.init.status < 400 || // Cached response status code is not in an HTTP error status range.
             (cacheRetryAttempts >= opts.cacheMaxRetries && ![404].includes(cache.init.status))) // Max retries.
     ) {
@@ -233,14 +233,14 @@ export const kvFetch = async (rcData: $type.$cfw.RequestContextData, requestInfo
             status: 500, // Internal server error.
             statusText: $http.responseStatusText(500) + ($is.error(thrown) ? '; ' + thrown.message : ''),
         });
-        error ??= Error('Fetch error' + ($is.error(thrown) ? '; ' + thrown.message : '') + '.', { cause: fnSlug + ':try:catch' });
+        error ??= Error('Fetch error' + ($is.error(thrown) ? '; ' + thrown.message : '') + '.', { cause: slug + ':try-catch' });
     }
     if (!$is.nul(response.body)) {
         const responseContentType = response.headers.get('content-type') || '',
             responseCleanContentType = $mime.typeClean(responseContentType);
 
         if (!['text/plain', 'application/json', 'application/ld+json', 'application/xml', 'image/svg+xml', 'text/xml'].includes(responseCleanContentType)) {
-            error ??= Error('Uncacheable HTTP response type: ' + responseCleanContentType + '.', { cause: fnSlug + ':response:type' });
+            error ??= Error('Uncacheable HTTP response type: ' + responseCleanContentType + '.', { cause: slug + ':response-type' });
         } else {
             responseBody = await response.text(); // Textual response body.
         }
@@ -260,7 +260,7 @@ export const kvFetch = async (rcData: $type.$cfw.RequestContextData, requestInfo
             ...(error ? { error: { message: error.message, cause: String(error.cause) } } : {}),
         }),
         {
-            expirationTtl: opts.cacheTtl,
+            expirationTtl: opts.cacheMaxAge,
             metadata: {
                 lastModifiedTime: $time.stamp(),
                 retryAttempts: error ? cacheRetryAttempts + 1 : 0,
