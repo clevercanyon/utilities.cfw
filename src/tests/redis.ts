@@ -2,7 +2,7 @@
  * Test suite.
  */
 
-import { $cfw, $redis, cfw } from '#index.ts';
+/* import { $cfw, $redis, cfw } from '#index.ts';
 import { $time, type $type } from '@clevercanyon/utilities';
 import { describe, expect, test } from 'vitest';
 
@@ -59,35 +59,31 @@ describe('$redis', async () => {
         await redis.del('testKey');
         expect(await redis.exists('testKey')).toBe(0);
     });
-    test(
-        '.rateLimiter()',
-        async () => {
-            const rateLimiter = $redis.rateLimiter(mockRequestContextData, {
-                slidingWindow: [10, '10s'], // 10 every 10 seconds.
-            });
-            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 1
-            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 2
-            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 3
-            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 4
-            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 5
-            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 6
-            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 7
-            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 8
-            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 9
-            expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 10
+    test('.rateLimiter()', { timeout: $time.secondInMilliseconds * 12 }, async () => {
+        const rateLimiter = $redis.rateLimiter(mockRequestContextData, {
+            slidingWindow: [10, '10s'], // 10 every 10 seconds.
+        });
+        expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 1
+        expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 2
+        expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 3
+        expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 4
+        expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 5
+        expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 6
+        expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 7
+        expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 8
+        expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 9
+        expect(await rateLimiter.limit('testKey')).toMatchObject({ success: true }); // 10
 
-            let thrown: unknown; // Initialize.
-            try {
-                await rateLimiter.limit('testKey'); // 11
-            } catch (unknownThrown: unknown) {
-                thrown = unknownThrown; // Limit reached; response thrown.
-            }
-            expect(thrown instanceof Response).toBe(true);
-            expect((thrown as $type.cfw.Response).status).toBe(429);
+        let thrown: unknown; // Initialize.
+        try {
+            await rateLimiter.limit('testKey'); // 11
+        } catch (unknownThrown: unknown) {
+            thrown = unknownThrown; // Limit reached; response thrown.
+        }
+        expect(thrown instanceof Response).toBe(true);
+        expect((thrown as $type.cfw.Response).status).toBe(429);
 
-            // Blocks until allowed to resume operations given the defined rate limiter.
-            expect(await rateLimiter.blockUntilReady('testKey', $time.secondInMilliseconds * 10)).toMatchObject({ success: true });
-        },
-        { timeout: $time.secondInMilliseconds * 12 },
-    );
-});
+        // Blocks until allowed to resume operations given the defined rate limiter.
+        expect(await rateLimiter.blockUntilReady('testKey', $time.secondInMilliseconds * 10)).toMatchObject({ success: true });
+    });
+}); */

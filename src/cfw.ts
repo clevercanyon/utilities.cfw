@@ -6,11 +6,6 @@ import '#@initialize.ts';
 
 import { $app, $bytes, $class, $crypto, $env, $error, $http, $is, $mm, $obj, $to, $url, $user, type $type } from '@clevercanyon/utilities';
 
-// @ts-ignore -- Broken types.
-import { Ai as AiClass } from '@cloudflare/ai';
-import type { Ai as AiInstance } from '@cloudflare/ai/dist/ai.d.ts';
-import type { SessionOptions as AiSessionOptions } from '@cloudflare/ai/dist/session.d.ts';
-
 /**
  * Defines types.
  */
@@ -160,20 +155,6 @@ export const handleFetchEvent = async (ircData: InitialRequestContextData): Prom
  * Defines Cloudflare worker global scope.
  */
 export const cfw = globalThis as unknown as $type.cfw.ServiceWorkerGlobalScope;
-
-/**
- * Defines Cloudflare worker AI class.
- */
-export const Ai = AiClass as new (
-    binding: $type.$cfw.Environment['AI'],
-    options?: {
-        debug?: boolean;
-        apiGateway?: boolean;
-        apiAccount?: string;
-        apiToken?: string;
-        sessionOptions?: AiSessionOptions;
-    },
-) => AiInstance;
 
 /**
  * Prepares request context data.

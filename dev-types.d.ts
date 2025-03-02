@@ -13,7 +13,7 @@
  */
 declare namespace globalThis {
     /**
-     * Imports utility types.
+     * Imports utilities.
      */
     import { $type } from '@clevercanyon/utilities';
 
@@ -42,7 +42,7 @@ declare namespace globalThis {
     var pwaInstallEvent: Event & { prompt: () => void };
 
     /**
-     * Defines `c10n` on Request.
+     * Defines `c10n` on Request, etc.
      */
     // If request changes, please review {$http.requestHash()}.
     // If request changes, please review {$http.requestTypeIsCacheable()}.
@@ -85,16 +85,147 @@ declare namespace globalThis {
  * Declares virtual brand config module.
  */
 declare module 'virtual:brand/config' {
+    /**
+     * Imports utilities.
+     */
     import { $type } from '@clevercanyon/utilities';
+
+    /**
+     * Exports brand config.
+     */
     export default {} as Partial<$type.BrandRawProps>;
 }
 
 /**
- * Declares Cloudflare runtime modules.
+ * Declares extracted Cloudflare runtime modules.
+ *
+ * @lastExtractedFrom `@cloudflare/workers-types/experimental@4.20250224.0`
+ *
+ * These are exact copies from `@cloudflare/workers-types/experimental`. We extract because there is simply no other
+ * way to get at them, short of including the full set of Cloudflare types globally and polluting global TypeScript types.
+ * The only changes from originals are related to whitespace formatting, and that internal types referenced by these modules
+ * are prefixed with `cfw.` for proper scoping, as they are pulled from `@cloudflare/workers-types` — see import atop this file.
+ *
+ * In addition to these ambient module declarations, we also have `@cloudflare/vitest-pool-workers` in our TypeScript config,
+ * which provides an ambient module declaration for `cloudflare:test`, so we merely augment the existing declaration here.
+ *
+ * There are some others, such as `cloudflare:ai`, `cloudflare:br`, `cloudflare:vectorize`, for which we do not yet have types,
+ * or that have since been deprecated by Cloudflare. Please review these when performing any future updates.
  */
+declare module 'cloudflare:email' {
+    /**
+     * Imports Cloudflare types.
+     */
+    import * as cfw from '@cloudflare/workers-types/experimental';
+
+    /**
+     * Exports Cloudflare types.
+     */
+    export const EmailMessage: {
+        prototype: cfw.EmailMessage;
+        new (from: string, to: string, raw: cfw.ReadableStream | string): cfw.EmailMessage;
+    };
+}
 declare module 'cloudflare:sockets' {
+    /**
+     * Imports Cloudflare types.
+     */
+    import * as cfw from '@cloudflare/workers-types/experimental';
+
+    /**
+     * Exports Cloudflare types.
+     */
+    export function connect(address: string | cfw.SocketAddress, options?: cfw.SocketOptions): cfw.Socket;
+}
+declare module 'cloudflare:workers' {
+    /**
+     * Imports Cloudflare types.
+     */
+    import * as cfw from '@cloudflare/workers-types/experimental';
+
+    /**
+     * Exports Cloudflare types.
+     */
+    export type RpcStub<T extends cfw.Rpc.Stubable> = cfw.Rpc.Stub<T>;
+    export const RpcStub: {
+        new <T extends cfw.Rpc.Stubable>(value: T): cfw.Rpc.Stub<T>;
+    };
+    export abstract class RpcTarget implements cfw.Rpc.RpcTargetBranded {
+        [cfw.Rpc.__RPC_TARGET_BRAND]: never;
+    }
+    export abstract class WorkerEntrypoint<Env = unknown> implements cfw.Rpc.WorkerEntrypointBranded {
+        [cfw.Rpc.__WORKER_ENTRYPOINT_BRAND]: never;
+        protected ctx: cfw.ExecutionContext;
+        protected env: Env;
+        constructor(ctx: cfw.ExecutionContext, env: Env);
+        fetch?(request: cfw.Request): cfw.Response | Promise<cfw.Response>;
+        tail?(events: cfw.TraceItem[]): void | Promise<void>;
+        trace?(traces: cfw.TraceItem[]): void | Promise<void>;
+        scheduled?(controller: cfw.ScheduledController): void | Promise<void>;
+        queue?(batch: cfw.MessageBatch<unknown>): void | Promise<void>;
+        test?(controller: cfw.TestController): void | Promise<void>;
+    }
+    export abstract class DurableObject<Env = unknown> implements cfw.Rpc.DurableObjectBranded {
+        [cfw.Rpc.__DURABLE_OBJECT_BRAND]: never;
+        protected ctx: cfw.DurableObjectState;
+        protected env: Env;
+        constructor(ctx: cfw.DurableObjectState, env: Env);
+        fetch?(request: cfw.Request): cfw.Response | Promise<cfw.Response>;
+        alarm?(alarmInfo?: cfw.AlarmInvocationInfo): void | Promise<void>;
+        webSocketMessage?(ws: cfw.WebSocket, message: string | ArrayBuffer): void | Promise<void>;
+        webSocketClose?(ws: cfw.WebSocket, code: number, reason: string, wasClean: boolean): void | Promise<void>;
+        webSocketError?(ws: cfw.WebSocket, error: unknown): void | Promise<void>;
+    }
+    export type WorkflowDurationLabel = 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
+    export type WorkflowSleepDuration = `${number} ${WorkflowDurationLabel}${'s' | ''}` | number;
+    export type WorkflowDelayDuration = WorkflowSleepDuration;
+    export type WorkflowTimeoutDuration = WorkflowSleepDuration;
+    export type WorkflowBackoff = 'constant' | 'linear' | 'exponential';
+    export type WorkflowStepConfig = {
+        retries?: {
+            limit: number;
+            delay: WorkflowDelayDuration | number;
+            backoff?: WorkflowBackoff;
+        };
+        timeout?: WorkflowTimeoutDuration | number;
+    };
+    export type WorkflowEvent<T> = {
+        payload: Readonly<T>;
+        timestamp: Date;
+        instanceId: string;
+    };
+    export abstract class WorkflowStep {
+        do<T extends cfw.Rpc.Serializable<T>>(name: string, callback: () => Promise<T>): Promise<T>;
+        do<T extends cfw.Rpc.Serializable<T>>(name: string, config: WorkflowStepConfig, callback: () => Promise<T>): Promise<T>;
+        sleep: (name: string, duration: WorkflowSleepDuration) => Promise<void>;
+        sleepUntil: (name: string, timestamp: Date | number) => Promise<void>;
+    }
+    export abstract class WorkflowEntrypoint<Env = unknown, T extends cfw.Rpc.Serializable<T> | unknown = unknown> implements cfw.Rpc.WorkflowEntrypointBranded {
+        [cfw.Rpc.__WORKFLOW_ENTRYPOINT_BRAND]: never;
+        protected ctx: cfw.ExecutionContext;
+        protected env: Env;
+        constructor(ctx: cfw.ExecutionContext, env: Env);
+        run(event: Readonly<WorkflowEvent<T>>, step: WorkflowStep): Promise<unknown>;
+    }
+}
+declare module 'cloudflare:workflows' {
+    /**
+     * Exports Cloudflare types.
+     */
+    export class NonRetryableError extends Error {
+        public constructor(message: string, name?: string);
+    }
+}
+declare module 'cloudflare:test' {
+    /**
+     * Imports utilities.
+     */
     import { $type } from '@clevercanyon/utilities';
-    export function connect(address: string | $type.cfw.SocketAddress, options?: $type.cfw.SocketOptions): $type.cfw.Socket;
+
+    /**
+     * Extends env provided by `@cloudflare/vitest-pool-workers`.
+     */
+    interface ProvidedEnv extends $type.$cfw.Environment {}
 }
 
 /*

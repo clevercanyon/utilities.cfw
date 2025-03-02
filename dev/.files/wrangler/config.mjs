@@ -59,6 +59,10 @@ export default async () => {
         compatibility_date: settings.compatibilityDate,
         compatibility_flags: settings.compatibilityFlags,
 
+        // Dev env, for any tests run locally.
+
+        env: { dev: {} }, // It just needs to exist.
+
         // The rest of these settings are applied conditionally.
 
         ...(['cma', 'spa', 'mpa'].includes(appType) && ['cfw', 'cfp'].includes(targetEnv)
@@ -115,7 +119,6 @@ export default async () => {
                                         zone_name: settings.defaultLocalHostname,
                                         pattern: settings.defaultLocalHostname + '/' + settings.defaultWorkerShortName + '/*',
                                     },
-                                    vars: settings.miniflareEnvVarAsObject,
                                     build: {
                                         cwd: './' + path.relative(projDir, './'),
                                         watch_dir: './' + path.relative(projDir, './src'),

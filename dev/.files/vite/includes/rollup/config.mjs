@@ -42,7 +42,8 @@ export default async ({ projDir, srcDir, distDir, a16sDir, appType, appEntries, 
         },
         external: [
             /^(?:node:|cloudflare:).*$/iu,
-            ...(['lib'].includes(appType) ? [/^(?![./~#]|file:|data:|virtual:).*$/iu] : []),
+            // eslint-disable-next-line no-control-regex -- Allows `\x00` NULL byte.
+            ...(['lib'].includes(appType) ? [/^(?![./~#\x00]|file:|data:|virtual:).*$/iu] : []),
             ...peerDepKeys.map((pkgName) => new RegExp('^' + $str.escRegExp(pkgName) + '(?:$|[/?])', 'u')),
         ],
         output: {

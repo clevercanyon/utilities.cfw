@@ -220,7 +220,6 @@ export default async () => {
                                             : settings.compatibilityFlags.map((f) => ['--compatibility-flag', f]).flat()
                                         : []),
                                     ...('dev' === args._?.[1] ? (args.logLevel ? [] : ['--log-level', settings.defaultDevLogLevel]) : []),
-                                    ...('dev' === args._?.[1] ? ['--binding', settings.miniflareEnvVarAsString] : []), // Always on for `dev`. Note: `--binding` can be passed multiple times.
 
                                     // Default `deploy|publish` command args.
                                     ...(['deploy', 'publish'].includes(args._?.[1]) ? (args._?.[2] ? [] : [distDir]) : []),

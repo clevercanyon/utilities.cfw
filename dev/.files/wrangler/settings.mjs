@@ -43,20 +43,18 @@ export default async () => {
         brandSupportsLogpush = false; // Requires paid plan.
     }
     return {
+        compatibilityDate: '2025-02-14',
+        // ^ Most recent, as of 2025-03-01.
+        compatibilityFlags: ['nodejs_compat'],
+
         defaultAccountId: brandAccountId,
         defaultLogpush: brandSupportsLogpush,
-
-        compatibilityDate: '2024-09-23',
-        compatibilityFlags: [],
+        defaultDevLogLevel: 'error',
 
         defaultLocalIP: '0.0.0.0',
         defaultLocalHostname: 'localhost',
         defaultLocalProtocol: 'https',
         defaultLocalPort: '443',
-
-        defaultDevLogLevel: 'error',
-        miniflareEnvVarAsString: 'MINIFLARE=true',
-        miniflareEnvVarAsObject: { MINIFLARE: 'true' },
 
         defaultPagesZoneName: brandHostname,
         defaultPagesDevZoneName: 'pages.dev',
@@ -87,5 +85,8 @@ export default async () => {
 
         customSSLKeyFile: path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-key.pem'),
         customSSLCertFile: path.resolve(projDir, './dev/.files/bin/ssl-certs/i10e-ca-crt.pem'),
+
+        runtimeModules: ['cloudflare:email', 'cloudflare:sockets', 'cloudflare:workers', 'cloudflare:workflows'],
+        virtualModules: ['cloudflare:test'], // It is loaded by `@cloudflare/vitest-pool-workers`.
     };
 };

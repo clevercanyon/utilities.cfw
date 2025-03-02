@@ -74,7 +74,7 @@ service.isAvailable = (rcData: $type.$cfw.RequestContextData): boolean => {
  *
  * @returns        Root AI binding.
  */
-export const ai = (rcData: $type.$cfw.RequestContextData): $type.cfw.Fetcher => {
+export const ai = (rcData: $type.$cfw.RequestContextData): $type.cfw.Ai => {
     const { env } = rcData,
         ai = env.RT_AI || (isRoot() && env.AI);
 

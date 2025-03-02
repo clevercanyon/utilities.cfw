@@ -7,7 +7,7 @@
  * @note This entire file will be updated automatically.
  * @note Instead of editing here, please review `./tsconfig.mjs`.
  *
- * Last generated using `./tsconfig.mjs` Feb 26, 2025 11:13 AM UTC.
+ * Last generated using `./tsconfig.mjs` Mar 2, 2025 4:55 PM UTC.
  */
 {
     "include": ["./src/**/*", "./dev-types.d.ts"],
@@ -110,8 +110,9 @@
         "lib": ["es2022", "webworker"],
         "types": [
             "vite/client",
-            "@types/mdx",
+            "@cloudflare/vitest-pool-workers",
             "unplugin-icons/types/preact",
+            "@types/mdx",
             "dayjs/plugin/advancedFormat",
             "dayjs/plugin/customParseFormat",
             "dayjs/plugin/localizedFormat",
