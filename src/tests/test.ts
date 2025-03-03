@@ -2,7 +2,7 @@
  * Test suite.
  */
 
-import { $test } from '#index.ts';
+import * as $test from '#test.ts';
 import { describe, expect, test } from 'vitest';
 
 describe('$test', async () => {
