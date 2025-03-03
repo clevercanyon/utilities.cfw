@@ -100,17 +100,12 @@ declare module 'virtual:brand/config' {
  * Declares extracted Cloudflare runtime modules.
  *
  * @lastExtractedFrom `@cloudflare/workers-types/experimental@4.20250224.0`
+ * @lastExtractedFrom `@cloudflare/vitest-pool-workers@0.7.4`
  *
- * These are exact copies from `@cloudflare/workers-types/experimental`. We extract because there is simply no other
- * way to get at them, short of including the full set of Cloudflare types globally and polluting global TypeScript types.
- * The only changes from originals are related to whitespace formatting, and that internal types referenced by these modules
- * are prefixed with `cfw.` for proper scoping, as they are pulled from `@cloudflare/workers-types` — see import atop this file.
- *
- * In addition to these ambient module declarations, we also have `@cloudflare/vitest-pool-workers` in our TypeScript config,
- * which provides an ambient module declaration for `cloudflare:test`, so we merely augment the existing declaration here.
- *
- * There are some others, such as `cloudflare:ai`, `cloudflare:br`, `cloudflare:vectorize`, for which we do not yet have types,
- * or that have since been deprecated by Cloudflare. Please review these when performing any future updates.
+ * These are exact copies of ambient module types in `@cloudflare/workers-types/experimental` and `@cloudflare/vitest-pool-workers`.
+ * We extract them here because there is simply no other way to get at these, short of including the full set of Cloudflare types
+ * globally and polluting global project types. The only changes from originals are related to whitespace formatting and also
+ * that internal types referenced by these modules are prefixed with `cfw.` for proper scoping.
  */
 declare module 'cloudflare:email' {
     /**
@@ -210,6 +205,11 @@ declare module 'cloudflare:workers' {
 }
 declare module 'cloudflare:workflows' {
     /**
+     * Imports Cloudflare types.
+     */
+    // import * as cfw from '@cloudflare/workers-types/experimental';
+
+    /**
      * Exports Cloudflare types.
      */
     export class NonRetryableError extends Error {
@@ -218,14 +218,141 @@ declare module 'cloudflare:workflows' {
 }
 declare module 'cloudflare:test' {
     /**
+     * Imports Cloudflare types.
+     */
+    import * as cfw from '@cloudflare/workers-types/experimental';
+
+    /**
+     * Imports Cloudflare worker utilities.
+     */
+    import * as Rpc from 'cloudflare:workers';
+
+    /**
      * Imports utilities.
      */
     import { $type } from '@clevercanyon/utilities';
 
     /**
-     * Extends env provided by `@cloudflare/vitest-pool-workers`.
+     * Exports Cloudflare types.
      */
+    export const env: ProvidedEnv;
+    export const SELF: cfw.Fetcher;
+    export const fetchMock: MockAgent;
+
     interface ProvidedEnv extends $type.$cfw.Environment {}
+
+    export function runInDurableObject<O extends cfw.DurableObject | Rpc.DurableObject, R>(
+        stub: cfw.DurableObjectStub<O>,
+        callback: (instance: O, state: cfw.DurableObjectState) => R | Promise<R>,
+    ): Promise<R>;
+
+    export function runDurableObjectAlarm(stub: cfw.DurableObjectStub): Promise<boolean /* ran */>;
+    export function listDurableObjectIds(namespace: cfw.DurableObjectNamespace): Promise<cfw.DurableObjectId[]>;
+
+    export function createExecutionContext(): cfw.ExecutionContext;
+    export function createPagesEventContext<F extends cfw.PagesFunction<ProvidedEnv, string, unknown>>(init: EventContextInit<Parameters<F>[0]>): Parameters<F>[0];
+    export function waitOnExecutionContext(ctx: cfw.ExecutionContext | cfw.EventContext<ProvidedEnv, string, unknown>): Promise<void>;
+
+    export function createScheduledController(options?: cfw.FetcherScheduledOptions): cfw.ScheduledController;
+    export function createMessageBatch<Body = unknown>(queueName: string, messages: cfw.ServiceBindingQueueMessage<Body>[]): cfw.MessageBatch<Body>;
+    export function getQueueResult(batch: cfw.MessageBatch, ctx: cfw.ExecutionContext): Promise<cfw.FetcherQueueResult>;
+
+    export interface D1Migration {
+        name: string;
+        queries: string[];
+    }
+    export function applyD1Migrations(db: cfw.D1Database, migrations: D1Migration[], migrationsTableName?: string): Promise<void>;
+
+    interface EventContextInitBase {
+        request: cfw.Request<unknown, cfw.IncomingRequestCfProperties>;
+        functionPath?: string;
+        next?(request: cfw.Request): cfw.Response | Promise<cfw.Response>;
+    }
+    type EventContextInitParams<Params extends string> = [Params] extends [never] ? { params?: Record<string, never> } : { params: Record<Params, string | string[]> };
+    type EventContextInitData<Data> = Data extends Record<string, never> ? { data?: Data } : { data: Data };
+    type EventContextInit<E extends cfw.EventContext<unknown, unknown, unknown>> = E extends cfw.EventContext<unknown, infer Params, infer Data>
+        ? EventContextInitBase & EventContextInitParams<Params> & EventContextInitData<Data>
+        : never;
+
+    type Buffer = Uint8Array;
+    type IncomingHttpHeaders = Record<string, string | string[] | undefined>;
+
+    abstract class MockScope<TData extends object = object> {
+        delay(waitInMs: number): MockScope<TData>;
+        persist(): MockScope<TData>;
+        times(repeatTimes: number): MockScope<TData>;
+    }
+    abstract class MockInterceptor {
+        reply<TData extends object = object>(replyOptionsCallback: MockInterceptor.MockReplyOptionsCallback<TData>): MockScope<TData>;
+        reply<TData extends object = object>(
+            statusCode: number,
+            data?: TData | Buffer | string | MockInterceptor.MockResponseDataHandler<TData>,
+            responseOptions?: MockInterceptor.MockResponseOptions,
+        ): MockScope<TData>;
+        replyWithError<TError extends Error = Error>(error: TError): MockScope;
+        defaultReplyHeaders(headers: IncomingHttpHeaders): MockInterceptor;
+        defaultReplyTrailers(trailers: Record<string, string>): MockInterceptor;
+        replyContentLength(): MockInterceptor;
+    }
+    namespace MockInterceptor {
+        export interface Options {
+            path: string | RegExp | ((path: string) => boolean);
+            method?: string | RegExp | ((method: string) => boolean);
+            body?: string | RegExp | ((body: string) => boolean);
+            headers?: Record<string, string | RegExp | ((body: string) => boolean)> | ((headers: Record<string, string>) => boolean);
+            query?: Record<string, unknown>;
+        }
+        export interface MockDispatch<TData extends object = object, TError extends Error = Error> extends Options {
+            times: number | null;
+            persist: boolean;
+            consumed: boolean;
+            data: MockDispatchData<TData, TError>;
+        }
+        export interface MockDispatchData<TData extends object = object, TError extends Error = Error> extends MockResponseOptions {
+            error: TError | null;
+            statusCode?: number;
+            data?: TData | string;
+        }
+        export interface MockResponseOptions {
+            headers?: IncomingHttpHeaders;
+            trailers?: Record<string, string>;
+        }
+        export interface MockResponseCallbackOptions {
+            path: string;
+            origin: string;
+            method: string;
+            body?: cfw.BodyInit;
+            headers: Headers | Record<string, string>;
+            maxRedirections: number;
+        }
+        export type MockResponseDataHandler<TData extends object = object> = (opts: MockResponseCallbackOptions) => TData | Buffer | string;
+        export type MockReplyOptionsCallback<TData extends object = object> = (opts: MockResponseCallbackOptions) => {
+            statusCode: number;
+            data?: TData | Buffer | string;
+            responseOptions?: MockResponseOptions;
+        };
+    }
+    interface Interceptable {
+        intercept(options: MockInterceptor.Options): MockInterceptor;
+    }
+    interface PendingInterceptor extends MockInterceptor.MockDispatch {
+        origin: string;
+    }
+    interface PendingInterceptorsFormatter {
+        format(pendingInterceptors: readonly PendingInterceptor[]): string;
+    }
+    abstract class MockAgent {
+        get(origin: string | RegExp | ((origin: string) => boolean)): Interceptable;
+
+        deactivate(): void;
+        activate(): void;
+
+        enableNetConnect(host?: string | RegExp | ((host: string) => boolean)): void;
+        disableNetConnect(): void;
+
+        pendingInterceptors(): PendingInterceptor[];
+        assertNoPendingInterceptors(options?: { pendingInterceptorsFormatter?: PendingInterceptorsFormatter }): void;
+    }
 }
 
 /*

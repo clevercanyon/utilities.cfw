@@ -93,7 +93,6 @@ export default async () => {
             lib: [esVersion.lcnYear],
             types: [
                 'vite/client', // Ambient modules provided by Vite build system.
-                '@cloudflare/vitest-pool-workers', // Ambient `cloudflare:test` module.
                 'unplugin-icons/types/preact', // Ambient modules for preact icons.
                 '@types/mdx', // Ambient modules for MDX imports.
 

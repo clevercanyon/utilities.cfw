@@ -3,7 +3,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "1.0.342",
+    "version": "1.0.343",
     "license": "GPL-3.0-or-later",
     "name": "@clevercanyon/utilities.cfw",
     "description": "Utilities for JavaScript apps running in a Cloudflare Worker environment.",
@@ -60,6 +60,11 @@
             "import": "./dist/smtp.js",
             "default": "./dist/smtp.js"
         },
+        "./test": {
+            "types": "./dist/types/test.d.ts",
+            "import": "./dist/test.js",
+            "default": "./dist/test.js"
+        },
         "./turnstile": {
             "types": "./dist/types/turnstile.d.ts",
             "import": "./dist/turnstile.js",
@@ -79,7 +84,7 @@
     },
     "dependencies": {},
     "peerDependencies": {
-        "@clevercanyon/utilities": "^1.0.1005",
+        "@clevercanyon/utilities": "^1.0.1006",
         "@upstash/ratelimit": "1.1.1",
         "@upstash/redis": "1.34.3"
     },
@@ -87,7 +92,7 @@
     "optionalDependencies": {},
     "bundleDependencies": [],
     "devDependencies": {
-        "@clevercanyon/dev-deps": "^1.0.395"
+        "@clevercanyon/dev-deps": "^1.0.396"
     },
     "overrides": {},
     "cpu": ["x64", "arm64"],
