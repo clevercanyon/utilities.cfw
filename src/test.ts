@@ -5,7 +5,7 @@
 import '#@initialize.ts';
 
 import { $cfw, cfw } from '#index.ts';
-import { $app, $http, type $type } from '@clevercanyon/utilities';
+import { $app, $http, $json, type $type } from '@clevercanyon/utilities';
 import { createExecutionContext, env, waitOnExecutionContext } from 'cloudflare:test';
 
 /**
@@ -18,8 +18,9 @@ export const rc = async (fn: (rcData: $cfw.RequestContextData) => Promise<void>)
         worker = {
             env: env,
             ctx: createExecutionContext(),
-            request: new Request($app.hasBaseURL() ? $app.baseURL() : 'https://x.tld/'),
-            //
+            request: new Request($app.hasBaseURL() ? $app.baseURL() : 'https://x.tld/', {
+                cf: { httpProtocol: 'HTTP/1.0' }, // An "incoming" request type.
+            }),
             fetch: async (request: $type.cfw.Request, env: $cfw.Environment, ctx: $cfw.ExecutionContext): Promise<$type.cfw.Response> => {
                 return $cfw.handleFetchEvent({
                     request,
@@ -36,8 +37,11 @@ export const rc = async (fn: (rcData: $cfw.RequestContextData) => Promise<void>)
                                         enableCORs: false,
                                         cacheVersion: 'none',
                                         varyOn: [],
+
                                         status: 200,
                                         maxAge: 0,
+                                        headers: { 'content-type': $json.contentType() },
+                                        body: $json.stringify({ ok: true }),
                                     }),
                                 ) as Promise<$type.cfw.Response>;
                             },

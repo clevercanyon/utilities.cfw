@@ -99,10 +99,10 @@ declare module 'virtual:brand/config' {
 /**
  * Declares extracted Cloudflare runtime modules.
  *
- * @lastExtractedFrom `@cloudflare/workers-types/experimental@4.20250224.0`
+ * @lastExtractedFrom `@cloudflare/workers-types/experimental/index.ts@4.20250224.0`
  * @lastExtractedFrom `@cloudflare/vitest-pool-workers@0.7.4`
  *
- * These are exact copies of ambient module types in `@cloudflare/workers-types/experimental` and `@cloudflare/vitest-pool-workers`.
+ * These are exact copies of ambient module types in `@cloudflare/workers-types/experimental/index.ts` and `@cloudflare/vitest-pool-workers`.
  * We extract them here because there is simply no other way to get at these, short of including the full set of Cloudflare types
  * globally and polluting global project types. The only changes from originals are related to whitespace formatting and also
  * that internal types referenced by these modules are prefixed with `cfw.` for proper scoping.
@@ -111,7 +111,7 @@ declare module 'cloudflare:email' {
     /**
      * Imports Cloudflare types.
      */
-    import * as cfw from '@cloudflare/workers-types/experimental';
+    import * as cfw from '@cloudflare/workers-types/experimental/index.ts';
 
     /**
      * Exports Cloudflare types.
@@ -125,7 +125,7 @@ declare module 'cloudflare:sockets' {
     /**
      * Imports Cloudflare types.
      */
-    import * as cfw from '@cloudflare/workers-types/experimental';
+    import * as cfw from '@cloudflare/workers-types/experimental/index.ts';
 
     /**
      * Exports Cloudflare types.
@@ -136,7 +136,7 @@ declare module 'cloudflare:workers' {
     /**
      * Imports Cloudflare types.
      */
-    import * as cfw from '@cloudflare/workers-types/experimental';
+    import * as cfw from '@cloudflare/workers-types/experimental/index.ts';
 
     /**
      * Exports Cloudflare types.
@@ -207,7 +207,7 @@ declare module 'cloudflare:workflows' {
     /**
      * Imports Cloudflare types.
      */
-    // import * as cfw from '@cloudflare/workers-types/experimental';
+    // import * as cfw from '@cloudflare/workers-types/experimental/index.ts';
 
     /**
      * Exports Cloudflare types.
@@ -220,7 +220,7 @@ declare module 'cloudflare:test' {
     /**
      * Imports Cloudflare types.
      */
-    import * as cfw from '@cloudflare/workers-types/experimental';
+    import * as cfw from '@cloudflare/workers-types/experimental/index.ts';
 
     /**
      * Imports Cloudflare worker utilities.

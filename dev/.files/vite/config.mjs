@@ -30,12 +30,12 @@ import viteC10nNoModulePreloadConfig from './includes/c10n/no-module-preload.mjs
 import viteC10nPostProcessingConfig from './includes/c10n/post-processing.mjs';
 import viteC10nPreProcessingConfig from './includes/c10n/pre-processing.mjs';
 import viteC10nSideEffectsConfig from './includes/c10n/side-effects.mjs';
+import viteDepsConfig from './includes/deps/config.mjs';
 import viteDTSConfig from './includes/dts/config.mjs';
 import viteEJSConfig from './includes/ejs/config.mjs';
 import viteESBuildConfig from './includes/esbuild/config.mjs';
 import viteIconsConfig from './includes/icons/config.mjs';
 import viteMDXConfig from './includes/mdx/config.mjs';
-import viteMDXESBuildConfig from './includes/mdx/esbuild.mjs';
 import viteMinifyConfig from './includes/minify/config.mjs';
 import vitePkgUpdates from './includes/package/updates.mjs';
 import vitePrefreshConfig from './includes/prefresh/config.mjs';
@@ -245,14 +245,19 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     ];
 
     /**
-     * Configures esbuild for Vite.
-     */
-    const esbuildConfig = await viteESBuildConfig({}); // Minimal config. No props at this time.
-
-    /**
      * Configures terser for Vite.
      */
-    const terserConfig = await viteTerserConfig({}); // Minimal config. No props passed at this time.
+    const terserConfig = await viteTerserConfig({});
+
+    /**
+     * Configures esbuild for Vite.
+     */
+    const esbuildConfig = await viteESBuildConfig({});
+
+    /**
+     * Configures dependency optimizer for Vite.
+     */
+    const depsConfig = await viteDepsConfig({ projDir, pkg, wranglerSettings, prefreshEnable });
 
     /**
      * Configures rollup for Vite.
@@ -262,7 +267,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     /**
      * Configures tests for Vite.
      */
-    const vitestConfig = await viteVitestConfig({ mode, projDir, srcDir, logsDir, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig });
+    const vitestConfig = await viteVitestConfig({ mode, projDir, srcDir, logsDir, pkg, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig, depsConfig });
 
     /**
      * Configures imported workers.
@@ -334,16 +339,8 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
             target: targetEnvIsServer && ['cfw'].includes(targetEnv) ? 'webworker' : 'node',
             ...(targetEnvIsServer && ['cfw'].includes(targetEnv) ? { noExternal: true } : {}),
         },
-        optimizeDeps: {
-            force: true, // Don’t use cache for optimized deps; recreate.
-            esbuildOptions: {
-                external: [...wranglerSettings.runtimeModules],
-                plugins: [await viteMDXESBuildConfig({ projDir })],
-            },
-            // Preact is required by prefresh plugin; {@see https://o5p.me/WmuefH}.
-            ...(prefreshEnable ? { include: ['preact', 'preact/jsx-runtime', 'preact/hooks', 'preact/compat', '@preact/signals'] } : {}),
-        },
         esbuild: esbuildConfig, // esBuild config options.
+        optimizeDeps: depsConfig, // Deps config options.
 
         build: /* <https://vitejs.dev/config/build-options.html> */ {
             target: esVersion.lcnYear, // Matches TypeScript config.
