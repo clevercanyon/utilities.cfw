@@ -10,17 +10,27 @@ import { $arr, $crypto, $env, $gzip, $http, $is, $str, $time, $url, type $type }
 /**
  * Defines types.
  */
-type FetchOptions = {
+export type FetchOptions = {
     method?: 'OPTIONS' | 'HEAD' | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    redirect?: 'follow' | 'manual';
     headers?: $type.cfw.HeadersInit;
     body?: string | null | undefined;
-    redirect?: 'follow' | 'manual';
-} & $type.RequestC10nProps['proxyOptions'];
-
-type RequiredFetchOptions = Required<FetchOptions> & {
-    proxy: Required<FetchOptions['proxy']>;
-    headers: $type.cfw.Headers;
+    c10n?: Pick<$type.RequestC10nProps, 'proxyOptions'>;
 };
+type InternalFetchOptions = Required<Omit<FetchOptions, 'headers' | 'c10n'>> &
+    Required<$type.RequestC10nProps['proxyOptions']> & {
+        headers: $type.cfw.Headers;
+        proxy: Required<Required<Required<$type.RequestC10nProps>['proxyOptions']>['proxy']>;
+    };
+
+/**
+ * Defines deprecated types.
+ *
+ * @deprecated Use `requestInfo`, `requestInit`. The preferred method of passing options is via
+ *   `(requestInfo|requestInit).c10n.proxyOptions`. Others, such as `method`, `headers`, `body`, `redirect` should be
+ *   passed via `requestInfo|requestInit`.
+ */
+export type DeprecatedFetchOptions = Pick<FetchOptions, 'method' | 'redirect' | 'headers' | 'body'> & $type.RequestC10nProps['proxyOptions'];
 
 /**
  * Performs an HTTP fetch using a proxy.
@@ -33,15 +43,15 @@ type RequiredFetchOptions = Required<FetchOptions> & {
  *
  * @returns             Promise of HTTP response.
  *
- * @todo: Remove type ` | ($type.cfw.RequestInit & FetchOptions)` from `requestInit`.
- *        It exists only for backwards compatibility with a deprecated `FetchOptions` param.
+ * @todo: Remove type ` | ($type.cfw.RequestInit & DeprecatedFetchOptions)`.
+ *        It exists only for backwards compatibility with `DeprecatedFetchOptions`.
  *        The preferred method of passing options is via `(requestInfo|requestInit).c10n.proxyOptions`.
- *        Others, such as `method`, `headers`, `body`, `redirect` should be passed via (requestInfo|requestInit).
+ *        Others, such as `method`, `headers`, `body`, `redirect` should be passed via `requestInfo|requestInit`.
  */
 export const fetch = async (
     rcData: $type.$cfw.RequestContextData,
     requestInfo: $type.cfw.RequestInfo,
-    requestInit?: $type.cfw.RequestInit | ($type.cfw.RequestInit & FetchOptions),
+    requestInit?: $type.cfw.RequestInit | ($type.cfw.RequestInit & DeprecatedFetchOptions),
 ): Promise<$type.cfw.Response> => {
     //
     const { Request, Response } = cfw,
@@ -54,70 +64,69 @@ export const fetch = async (
             request?.method ||
             'GET', // Default value.
 
-        headers:
+        redirect:
+            requestInit?.redirect || //
+            request?.redirect ||
+            'follow', // Default value.
+
+        headers: $http.parseHeaders(
             requestInit?.headers || //
-            request?.headers ||
-            {}, // Default value.
+                request?.headers ||
+                {}, // Default value.
+        ) as $type.cfw.Headers,
 
         body:
             ($is.string(requestInit?.body) ? requestInit.body : '') || //
             (request?.body && !request.bodyUsed ? await request.text() : '') ||
             null, // Default value.
 
-        redirect:
-            requestInit?.redirect || //
-            request?.redirect ||
-            'follow', // Default value.
-
         proxy: {
             host:
                 requestInit?.c10n?.proxyOptions?.proxy?.host || //
-                (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.host ||
+                (requestInit as $type.cfw.RequestInit & DeprecatedFetchOptions)?.proxy?.host ||
                 request?.c10n?.proxyOptions?.proxy?.host ||
                 $env.get('APP_ROTATING_PROXY_HOST', { type: 'string' }) ||
                 '', // Default value.
 
             port:
                 requestInit?.c10n?.proxyOptions?.proxy?.port || //
-                (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.port ||
+                (requestInit as $type.cfw.RequestInit & DeprecatedFetchOptions)?.proxy?.port ||
                 request?.c10n?.proxyOptions?.proxy?.port ||
                 $env.get('APP_ROTATING_PROXY_PORT', { type: 'number' }) ||
                 80, // Default value.
 
             username:
                 requestInit?.c10n?.proxyOptions?.proxy?.username || //
-                (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.username ||
+                (requestInit as $type.cfw.RequestInit & DeprecatedFetchOptions)?.proxy?.username ||
                 request?.c10n?.proxyOptions?.proxy?.username ||
                 $env.get('APP_ROTATING_PROXY_USERNAME', { type: 'string' }) ||
                 '', // Default value.
 
             password:
                 requestInit?.c10n?.proxyOptions?.proxy?.password || //
-                (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.password ||
+                (requestInit as $type.cfw.RequestInit & DeprecatedFetchOptions)?.proxy?.password ||
                 request?.c10n?.proxyOptions?.proxy?.password ||
                 $env.get('APP_ROTATING_PROXY_PASSWORD', { type: 'string' }) ||
                 '', // Default value.
         },
         uaBotAppend:
             requestInit?.c10n?.proxyOptions?.uaBotAppend || //
-            (requestInit as $type.cfw.RequestInit & FetchOptions)?.uaBotAppend ||
+            (requestInit as $type.cfw.RequestInit & DeprecatedFetchOptions)?.uaBotAppend ||
             request?.c10n?.proxyOptions?.uaBotAppend ||
             '', // Default value.
 
         maxRedirects:
             requestInit?.c10n?.proxyOptions?.maxRedirects || //
-            (requestInit as $type.cfw.RequestInit & FetchOptions)?.maxRedirects ||
+            (requestInit as $type.cfw.RequestInit & DeprecatedFetchOptions)?.maxRedirects ||
             request?.c10n?.proxyOptions?.maxRedirects ||
             20, // Default value.
 
         timeout:
             requestInit?.c10n?.proxyOptions?.timeout || //
-            (requestInit as $type.cfw.RequestInit & FetchOptions)?.timeout ||
+            (requestInit as $type.cfw.RequestInit & DeprecatedFetchOptions)?.timeout ||
             request?.c10n?.proxyOptions?.timeout ||
             $time.secondInMilliseconds * 15, // Default value.
-    } as RequiredFetchOptions;
-
-    opts.headers = $http.parseHeaders(opts.headers) as $type.cfw.Headers;
+    } as InternalFetchOptions;
 
     if (!opts.headers.has('user-agent'))
         for (const [name, value] of Object.entries($http.browserUAHeaders())) {
@@ -173,11 +182,11 @@ export const worker = async (rcData: $type.$cfw.RequestContextData, requestInfo:
  * Creates a timeout promise.
  *
  * @param   rcData  Request context data.
- * @param   options Required; {@see RequiredFetchOptions}.
+ * @param   options Required; {@see InternalFetchOptions}.
  *
  * @returns         Promise of a {@see $type.cfw.Response} suitable for a race.
  */
-const fetchꓺwaitTimeout = async (rcData: $type.$cfw.RequestContextData, opts: RequiredFetchOptions): Promise<$type.cfw.Response> => {
+const fetchꓺwaitTimeout = async (rcData: $type.$cfw.RequestContextData, opts: InternalFetchOptions): Promise<$type.cfw.Response> => {
     const { Response } = cfw;
 
     return new Promise((resolve): void => {
@@ -197,12 +206,12 @@ const fetchꓺwaitTimeout = async (rcData: $type.$cfw.RequestContextData, opts: 
  *
  * @param   rcData    Request context data.
  * @param   url       Parseable URL; i.e., string or URL instance.
- * @param   options   Required; {@see RequiredFetchOptions}.
+ * @param   options   Required; {@see InternalFetchOptions}.
  * @param   redirects Do not pass. Internal use only.
  *
  * @returns           Promise of HTTP response.
  */
-const fetchꓺviaSocket = async (rcData: $type.$cfw.RequestContextData, url: $type.cfw.URL, opts: RequiredFetchOptions, redirects: number = 0): Promise<$type.cfw.Response> => {
+const fetchꓺviaSocket = async (rcData: $type.$cfw.RequestContextData, url: $type.cfw.URL, opts: InternalFetchOptions, redirects: number = 0): Promise<$type.cfw.Response> => {
     const { Blob, Headers, Response } = cfw,
         { auditLogger, subrequestCounter } = rcData,
         sockets = await import('cloudflare:sockets');
