@@ -16,11 +16,13 @@ import { createExecutionContext, env, waitOnExecutionContext } from 'cloudflare:
 export const rc = async (fn: (rcData: $cfw.RequestContextData) => Promise<unknown>) => {
     const { Request } = cfw,
         worker = {
-            env: env,
+            env, // Imported above.
             ctx: createExecutionContext(),
+
             request: new Request($app.baseURL(), {
-                cf: { httpProtocol: 'HTTP/1.0' }, // An "incoming" request type.
-            }),
+                cf: { httpProtocol: 'HTTP/2' }, // An "incoming" request type.
+            }) as $type.cfw.Request<unknown, $type.cfw.IncomingRequestCfProperties>,
+
             fetch: async (request: $type.cfw.Request, env: $cfw.Environment, ctx: $cfw.ExecutionContext): Promise<$type.cfw.Response> => {
                 return $cfw.handleFetchEvent({
                     request,

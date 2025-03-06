@@ -294,12 +294,8 @@ export default async ({ mode, projDir, srcDir, logsDir, pkg, targetEnv, vitestSa
                                         include: [
                                             '@clevercanyon/utilities', //
                                             '@clevercanyon/utilities.web',
-
                                             '@clevercanyon/utilities.cfw',
-                                            '@clevercanyon/utilities.cfw/test',
-
                                             '@clevercanyon/utilities.cfp',
-                                            '@clevercanyon/utilities.cfp/build',
                                         ].filter((name) => name !== pkg.name && !name.startsWith(pkg.name + '/')),
                                     },
                                 }),

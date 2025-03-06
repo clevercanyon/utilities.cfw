@@ -59,9 +59,20 @@ export default async () => {
         compatibility_date: settings.compatibilityDate,
         compatibility_flags: settings.compatibilityFlags,
 
-        // Dev env, for any tests run locally.
+        // Dev env, for automated or local testing.
 
-        env: { dev: {} }, // It just needs to exist.
+        env: {
+            dev: {
+                ...(['cfp'].includes(targetEnv)
+                    ? {
+                          assets: {
+                              binding: 'ASSETS', // For `cloudflare:test`.
+                              directory: './' + path.relative(projDir, './dist'),
+                          },
+                      }
+                    : {}),
+            }, // A `dev` key must exist, even if it's an empty object value.
+        },
 
         // The rest of these settings are applied conditionally.
 
