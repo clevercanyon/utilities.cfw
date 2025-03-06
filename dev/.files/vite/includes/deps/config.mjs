@@ -21,6 +21,7 @@ import viteMDXESBuildConfig from '../mdx/esbuild.mjs';
  */
 export default async ({ projDir, pkg, wranglerSettings, prefreshEnable }) => ({
     force: true, // Force recreation; i.e., don’t cache.
+    disabled: 'build', // {@see https://o5p.me/4hLcCB}.
 
     include: [
         ...(prefreshEnable
@@ -32,7 +33,7 @@ export default async ({ projDir, pkg, wranglerSettings, prefreshEnable }) => ({
                   '@preact/signals',
               ]
             : []),
-    ].filter((name) => name !== pkg.name),
+    ].filter((name) => name !== pkg.name && !name.startsWith(pkg.name + '/')),
 
     exclude: [
         ...wranglerSettings.runtimeModules, //

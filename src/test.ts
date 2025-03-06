@@ -13,12 +13,12 @@ import { createExecutionContext, env, waitOnExecutionContext } from 'cloudflare:
  *
  * @param fn Test function.
  */
-export const rc = async (fn: (rcData: $cfw.RequestContextData) => Promise<void>) => {
+export const rc = async (fn: (rcData: $cfw.RequestContextData) => Promise<unknown>) => {
     const { Request } = cfw,
         worker = {
             env: env,
             ctx: createExecutionContext(),
-            request: new Request($app.hasBaseURL() ? $app.baseURL() : 'https://x.tld/', {
+            request: new Request($app.baseURL(), {
                 cf: { httpProtocol: 'HTTP/1.0' }, // An "incoming" request type.
             }),
             fetch: async (request: $type.cfw.Request, env: $cfw.Environment, ctx: $cfw.ExecutionContext): Promise<$type.cfw.Response> => {
@@ -28,9 +28,7 @@ export const rc = async (fn: (rcData: $cfw.RequestContextData) => Promise<void>)
                     ctx,
                     routes: {
                         subpathGlobs: {
-                            '*': async (rcData: $cfw.RequestContextData): Promise<$type.cfw.Response> => {
-                                await fn(rcData);
-
+                            '**': async (rcData: $cfw.RequestContextData): Promise<$type.cfw.Response> => {
                                 return $http.prepareResponse(
                                     rcData.request,
                                     await $http.responseConfig({
@@ -41,7 +39,7 @@ export const rc = async (fn: (rcData: $cfw.RequestContextData) => Promise<void>)
                                         status: 200,
                                         maxAge: 0,
                                         headers: { 'content-type': $json.contentType() },
-                                        body: $json.stringify({ ok: true }),
+                                        body: $json.stringify((await fn(rcData)) || {}),
                                     }),
                                 ) as Promise<$type.cfw.Response>;
                             },
@@ -50,6 +48,7 @@ export const rc = async (fn: (rcData: $cfw.RequestContextData) => Promise<void>)
                 });
             },
         };
-    await worker.fetch(worker.request, worker.env, worker.ctx);
-    await waitOnExecutionContext(worker.ctx);
+    const response = await worker.fetch(worker.request, worker.env, worker.ctx);
+    await waitOnExecutionContext(worker.ctx); // i.e., .waitUntil() calls.
+    return response.json(); // Reads the response body.
 };

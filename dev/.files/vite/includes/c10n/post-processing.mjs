@@ -11,7 +11,7 @@
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
-import { $build as $cfpꓺbuild } from '../../../../../node_modules/@clevercanyon/utilities.cfp/dist/index.js';
+import * as $cfpꓺbuild from '../../../../../node_modules/@clevercanyon/utilities.cfp/dist/build.js';
 import { $chalk, $fs, $glob, $prettier } from '../../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 import { $crypto, $json, $mm, $obp, $preact, $str } from '../../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import { StandAlone as StandAlone404 } from '../../../../../node_modules/@clevercanyon/utilities/dist/preact/components/404.js';

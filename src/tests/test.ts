@@ -7,8 +7,11 @@ import { describe, expect, test } from 'vitest';
 
 describe('$test', async () => {
     test('.rc()', async () => {
-        await $test.rc(async () => {
-            expect(true).toBe(true);
+        const data = await $test.rc(async () => {
+            const data = { ok: true };
+            expect(data).toStrictEqual({ ok: true });
+            return data;
         });
+        expect(data).toStrictEqual({ ok: true });
     });
 });
