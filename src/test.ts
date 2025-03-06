@@ -48,7 +48,10 @@ export const rc = async (fn: (rcData: $cfw.RequestContextData) => Promise<unknow
                 });
             },
         };
-    const response = await worker.fetch(worker.request, worker.env, worker.ctx);
+    const response = await worker.fetch(worker.request, worker.env, worker.ctx),
+        responseData = response.json(); // Reads response body.
+
     await waitOnExecutionContext(worker.ctx); // i.e., .waitUntil() calls.
-    return response.json(); // Reads the response body.
+
+    return responseData;
 };
