@@ -20,7 +20,7 @@ export const verify = async (rcData: $type.$cfw.RequestContextData, turnstile: s
         { request, fetch, auditLogger } = rcData,
         formData = new FormData();
 
-    formData.append('secret', $env.get('SSR_APP_TURNSTILE_SECRET_KEY', { type: 'string' }) || $env.get('APP_TURNSTILE_SECRET_KEY', { type: 'string' }));
+    formData.append('secret', $env.get('APP_TURNSTILE_SECRET_KEY', { type: 'string' }));
     formData.append('remoteip', await $user.ip(request));
     formData.append('response', turnstile);
 

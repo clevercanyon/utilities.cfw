@@ -74,7 +74,6 @@ export const fetch = async (
                 requestInit?.c10n?.proxyOptions?.proxy?.host || //
                 (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.host ||
                 request?.c10n?.proxyOptions?.proxy?.host ||
-                $env.get('SSR_APP_ROTATING_PROXY_HOST', { type: 'string' }) ||
                 $env.get('APP_ROTATING_PROXY_HOST', { type: 'string' }) ||
                 '', // Default value.
 
@@ -82,7 +81,6 @@ export const fetch = async (
                 requestInit?.c10n?.proxyOptions?.proxy?.port || //
                 (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.port ||
                 request?.c10n?.proxyOptions?.proxy?.port ||
-                $env.get('SSR_APP_ROTATING_PROXY_PORT', { type: 'number' }) ||
                 $env.get('APP_ROTATING_PROXY_PORT', { type: 'number' }) ||
                 80, // Default value.
 
@@ -90,7 +88,6 @@ export const fetch = async (
                 requestInit?.c10n?.proxyOptions?.proxy?.username || //
                 (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.username ||
                 request?.c10n?.proxyOptions?.proxy?.username ||
-                $env.get('SSR_APP_ROTATING_PROXY_USERNAME', { type: 'string' }) ||
                 $env.get('APP_ROTATING_PROXY_USERNAME', { type: 'string' }) ||
                 '', // Default value.
 
@@ -98,7 +95,6 @@ export const fetch = async (
                 requestInit?.c10n?.proxyOptions?.proxy?.password || //
                 (requestInit as $type.cfw.RequestInit & FetchOptions)?.proxy?.password ||
                 request?.c10n?.proxyOptions?.proxy?.password ||
-                $env.get('SSR_APP_ROTATING_PROXY_PASSWORD', { type: 'string' }) ||
                 $env.get('APP_ROTATING_PROXY_PASSWORD', { type: 'string' }) ||
                 '', // Default value.
         },
