@@ -25,14 +25,15 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const projDir = path.resolve(__dirname, '../../..');
 const distDir = path.resolve(__dirname, '../../../dist');
 
-const nodeIncludeFile = path.resolve(__dirname, './includes/node.cjs');
 const nodeEnvVars = {
     NODE_OPTIONS: $cmd.quote(
-        [
-            // `--disable-warning ExperimentalWarning`, // v21.3.0+; {@see https://o5p.me/ZKO1Cq}.
-            ...($version.compare(process.versions.node, '>=', '21.3.0') ? ['--disable-warning ExperimentalWarning'] : []),
-            `--require ${$cmd.esc(nodeIncludeFile)}`, // Currently empty, but for future use.
-        ].join(' '),
+        $cmd
+            .escAll([
+                // `--disable-warning ExperimentalWarning`, // v21.3.0+; {@see https://o5p.me/ZKO1Cq}.
+                ...($version.compare(process.versions.node, '>=', '21.3.0') ? ['--disable-warning', 'ExperimentalWarning'] : []),
+                ...['--require', path.resolve(__dirname, './includes/node.cjs')],
+            ])
+            .join(' '),
     ),
 };
 const cloudflareEnvVars = { CLOUDFLARE_API_TOKEN: process.env.USER_CLOUDFLARE_TOKEN || '' };
@@ -143,12 +144,12 @@ export default async () => {
             return {
                 env: { ...nodeEnvVars, ...cloudflareEnvVars },
                 opts: { ...('pages' === args._?.[0] ? { cwd: distDir } : {}) },
-                // Setting `cwd` is a bug workaround; see: <https://o5p.me/k9Fqml>.
                 cmds: [
-                    // `$ madrun wrangler dev|pages`.
-                    ...('dev' === args._?.[0] || 'pages' === args._?.[0]
+                    // `$ madrun wrangler dev`, `$ madrun wrangler pages *`.
+                    ...(('dev' === args._?.[0] || 'pages' === args._?.[0]) && !args.help
                         ? [
                               async () => {
+                                  // OS directory must exist already.
                                   if (!(await fs.existsSync(settings.osDir))) return;
 
                                   // Ensure `~/.wrangler/local-cert` directory exists.
@@ -164,89 +165,74 @@ export default async () => {
                               },
                           ]
                         : []),
+                    // `$ madrun wrangler dev`, `$ madrun wrangler pages dev`.
+                    ...(('dev' === args._?.[0] || ('pages' === args._?.[0] && 'dev' === args._?.[1])) && !args.help
+                        ? [
+                              {
+                                  opts: { cwd: projDir },
+                                  env: { ...nodeEnvVars, ...cloudflareEnvVars, VITE_WRANGLER_MODE: 'dev' },
+                                  cmd: ['npx', 'vite', 'build', '--mode', 'dev'],
+                              },
+                          ]
+                        : []),
+                    // `$ madrun wrangler deploy`, `$ madrun wrangler pages deploy`.
+                    ...(('deploy' === args._?.[0] || ('pages' === args._?.[0] && 'deploy' === args._?.[1])) && !args.help
+                        ? [
+                              {
+                                  opts: { cwd: projDir },
+                                  env: { ...nodeEnvVars, ...cloudflareEnvVars, VITE_WRANGLER_MODE: 'pages' === args._?.[0] && args.branch && args.branch !== settings.defaultPagesProductionBranch ? 'stage' : 'prod' }, // prettier-ignore
+                                  cmd: ['npx', 'vite', 'build', '--mode', 'pages' === args._?.[0] && args.branch && args.branch !== settings.defaultPagesProductionBranch ? 'stage' : 'prod'], // prettier-ignore
+                              },
+                          ]
+                        : []),
+                    // `$ madrun wrangler dev` command args.
                     ...('dev' === args._?.[0]
-                        ? // `$ madrun wrangler dev`.
-                          // Config pulled from `./wrangler.toml` in this case.
-                          [['npx', 'wrangler', '{{@}}', ...(args.env ? [] : ['--env', 'dev'])]]
-                        : //
-                          // `$ madrun wrangler pages`.
-                          // Config is not pulled from `./wrangler.toml` in this case.
-                          // Therefore, we must configure everything at command line.
-                          'pages' === args._?.[0]
-                          ? [
-                                // `$ madrun wrangler pages dev`.
-                                ...('dev' === args._?.[1] && !args.help
-                                    ? [
-                                          {
-                                              opts: { cwd: projDir },
-                                              env: { VITE_WRANGLER_MODE: 'dev', ...nodeEnvVars, ...cloudflareEnvVars },
-                                              cmd: ['npx', 'vite', 'build', '--mode', 'dev'],
-                                          },
-                                      ]
-                                    : []),
-                                // `$ madrun wrangler pages deploy|publish`.
-                                ...(['deploy', 'publish'].includes(args._?.[1]) && !args.help
-                                    ? [
-                                          {
-                                              opts: { cwd: projDir },
-                                              cmd: ['npx', 'vite', 'build', '--mode', // Mode can only be `prod` or `stage` when deploying remotely.
-                                                args.branch && args.branch !== settings.defaultPagesProductionBranch ? 'stage' : 'prod'], // prettier-ignore
-                                          },
-                                      ]
-                                    : []),
-                                // `$ madrun wrangler pages *`.
-                                [
-                                    'npx',
-                                    'wrangler',
-                                    '{{@}}',
+                        ? [
+                              [
+                                  // Base `$ madrun wrangler dev` command args.
+                                  ...['npx', 'wrangler', '{{@}}'],
 
-                                    // Default `project` command args.
-                                    ...('project' === args._?.[1] && 'create' === args._?.[2] ? (args._?.[3] ? [] : [settings.defaultPagesProjectName]) : []),
-                                    ...('project' === args._?.[1] && 'create' === args._?.[2]
-                                        ? args.productionBranch
-                                            ? [] // This is the production branch on the Cloudflare side.
-                                            : ['--production-branch', settings.defaultPagesProductionBranch]
-                                        : []),
+                                  // `$ madrun wrangler dev` command args.
+                                  ...(args.env ? [] : ['--env', 'dev']),
+                                  ...(args.logLevel ? [] : ['--log-level', settings.defaultDevLogLevel]),
+                              ],
+                          ]
+                        : []),
+                    // `$ madrun wrangler pages` command args.
+                    ...('pages' === args._?.[0]
+                        ? [
+                              [
+                                  // Base `$ madrun wrangler pages` command args.
+                                  ...['npx', 'wrangler', '{{@}}'],
 
-                                    // Default `dev` command args.
-                                    ...('dev' === args._?.[1] ? (args._?.[2] ? [] : [distDir]) : []),
-                                    ...('dev' === args._?.[1] ? (args.ip ? [] : ['--ip', settings.defaultLocalIP]) : []),
-                                    ...('dev' === args._?.[1] ? (args.port ? [] : ['--port', settings.defaultLocalPort]) : []),
-                                    ...('dev' === args._?.[1] ? (args.localProtocol ? [] : ['--local-protocol', settings.defaultLocalProtocol]) : []),
-                                    ...('dev' === args._?.[1] ? (args.compatibilityDate ? [] : ['--compatibility-date', settings.compatibilityDate]) : []),
-                                    ...('dev' === args._?.[1]
-                                        ? args.compatibilityFlag || args.compatibilityFlags
-                                            ? [] // `--compatibility-flag` is an alias of `--compatibility-flags`.
-                                            : settings.compatibilityFlags.map((f) => ['--compatibility-flag', f]).flat()
-                                        : []),
-                                    ...('dev' === args._?.[1] ? (args.logLevel ? [] : ['--log-level', settings.defaultDevLogLevel]) : []),
+                                  // Default `$ madrun wrangler pages dev` command args.
+                                  ...('dev' === args._?.[1] ? (args.logLevel ? [] : ['--log-level', settings.defaultDevLogLevel]) : []),
 
-                                    // Default `deploy|publish` command args.
-                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args._?.[2] ? [] : [distDir]) : []),
-                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.projectName ? [] : ['--project-name', settings.defaultPagesProjectName]) : []),
-                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.branch ? [] : ['--branch', settings.defaultPagesProductionBranch]) : []),
-                                    ...(['deploy', 'publish'].includes(args._?.[1]) ? (args.commitDirty ? [] : ['--commit-dirty', 'true']) : []), // Let’s not nag ourselves.
+                                  // Default `$ madrun wrangler pages deploy` command args.
+                                  ...('deploy' === args._?.[1] ? (args._?.[2] ? [] : [distDir]) : []),
+                                  ...('deploy' === args._?.[1] ? (args.projectName ? [] : ['--project-name', settings.defaultPagesProjectName]) : []),
+                                  ...('deploy' === args._?.[1] ? (args.branch ? [] : ['--branch', settings.defaultPagesProductionBranch]) : []),
+                                  ...('deploy' === args._?.[1] ? (args.commitDirty ? [] : ['--commit-dirty', 'true']) : []),
 
-                                    // Default `deployment` command args.
-                                    ...('deployment' === args._?.[1] && 'list' === args._?.[2]
-                                        ? args.projectName
-                                            ? []
-                                            : ['--project-name', settings.defaultPagesProjectName]
-                                        : []),
-                                    ...('deployment' === args._?.[1] && 'tail' === args._?.[2]
-                                        ? args.projectName
-                                            ? []
-                                            : ['--project-name', settings.defaultPagesProjectName]
-                                        : []),
-                                    ...('deployment' === args._?.[1] && 'tail' === args._?.[2]
-                                        ? args.environment
-                                            ? []
-                                            : ['--environment', settings.defaultPagesProductionEnvironment]
-                                        : []),
-                                ],
-                            ]
-                          : // `$ madrun wrangler *`.
-                            [['npx', 'wrangler', '{{@}}']]),
+                                  // Default `$ madrun wrangler pages project` command args.
+                                  ...('project' === args._?.[1] && 'create' === args._?.[2] ? (args._?.[3] ? [] : [settings.defaultPagesProjectName]) : []),
+                                  ...('project' === args._?.[1] && 'create' === args._?.[2] ? args.productionBranch ? []  : ['--production-branch', settings.defaultPagesProductionBranch] : []), // prettier-ignore
+
+                                  // Default `$ madrun wrangler pages deployment` command args.
+                                  ...('deployment' === args._?.[1] && 'list' === args._?.[2] ? args.projectName ? [] : ['--project-name', settings.defaultPagesProjectName] : []), // prettier-ignore
+                                  ...('deployment' === args._?.[1] && 'tail' === args._?.[2] ? args.projectName ? [] : ['--project-name', settings.defaultPagesProjectName] : []), // prettier-ignore
+                                  ...('deployment' === args._?.[1] && 'tail' === args._?.[2] ? args.environment ? [] : ['--environment', settings.defaultPagesProductionEnvironment] : []), // prettier-ignore
+                              ],
+                          ]
+                        : []),
+                    // `$ madrun wrangler *` command args !== `$ madrun wrangler dev` or `$ madrun wrangler pages`.
+                    ...('dev' !== args._?.[0] && 'pages' !== args._?.[0]
+                        ? [
+                              [
+                                  ...['npx', 'wrangler', '{{@}}'], // Nothing more at this time.
+                              ],
+                          ]
+                        : []),
                 ],
             };
         },
