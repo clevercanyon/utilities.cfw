@@ -13,6 +13,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 import { $app, $brand, $time } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import extensions from '../bin/includes/extensions.mjs';
 import u from '../bin/includes/utilities.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
@@ -81,7 +82,84 @@ export default async () => {
         defaultWorkerStageShortName: 'stage.' + pkgSlug.replace(/^workers-(?:o5p-(?:org|me)|hop-gdn)-/iu, ''),
 
         defaultWorkerMainEntryFile: path.resolve(distDir, './index.js'),
+        // Bundling rules; {@see <https://o5p.me/JRHxfC>}.
+        defaultWorkerRules: [
+            {
+                type: 'ESModule',
+                globs: extensions.asNoBraceGlobstars([
+                    ...extensions.byDevGroup.sJavaScript, //
+                    ...extensions.byDevGroup.sJavaScriptReact,
 
+                    ...extensions.byDevGroup.mJavaScript,
+                    ...extensions.byDevGroup.mJavaScriptReact,
+                ]),
+                fallthrough: false,
+            },
+            {
+                type: 'CommonJS',
+                globs: extensions.asNoBraceGlobstars([
+                    ...extensions.byDevGroup.cJavaScript, //
+                    ...extensions.byDevGroup.cJavaScriptReact,
+                ]),
+                fallthrough: false,
+            },
+            {
+                type: 'CompiledWasm', //
+                globs: extensions.asNoBraceGlobstars([
+                    ...extensions.byCanonical.wasm, //
+                ]),
+                fallthrough: false,
+            },
+            {
+                type: 'Text',
+                globs: extensions.asNoBraceGlobstars(
+                    [...extensions.byVSCodeLang.codeTextual].filter(
+                        (ext) =>
+                            ![
+                                ...extensions.byDevGroup.sJavaScript, //
+                                ...extensions.byDevGroup.sJavaScriptReact,
+
+                                ...extensions.byDevGroup.mJavaScript,
+                                ...extensions.byDevGroup.mJavaScriptReact,
+
+                                ...extensions.byDevGroup.cJavaScript,
+                                ...extensions.byDevGroup.cJavaScriptReact,
+
+                                ...extensions.byCanonical.wasm,
+
+                                ...extensions.byDevGroup.allTypeScript,
+                                // Omit TypeScript also, because it causes Wrangler to choke. Apparently, Wrangler’s build system incorporates TypeScript middleware files.
+                                // Therefore, we omit all TypeScript such that Wrangler’s build system can add TS files without them inadvertently being classified as text by our rules.
+                                // We don’t expect TypeScript to be present in our `./dist` anyway, so this is harmless, and probably a good idea in general to omit TypeScript here.
+                            ].includes(ext),
+                    ),
+                ),
+                fallthrough: false,
+            },
+            {
+                type: 'Data',
+                globs: extensions.asNoBraceGlobstars(
+                    [...extensions.byVSCodeLang.codeTextBinary].filter(
+                        (ext) =>
+                            ![
+                                ...extensions.byDevGroup.sJavaScript, //
+                                ...extensions.byDevGroup.sJavaScriptReact,
+
+                                ...extensions.byDevGroup.mJavaScript,
+                                ...extensions.byDevGroup.mJavaScriptReact,
+
+                                ...extensions.byDevGroup.cJavaScript,
+                                ...extensions.byDevGroup.cJavaScriptReact,
+
+                                ...extensions.byCanonical.wasm,
+
+                                ...extensions.byDevGroup.allTypeScript,
+                            ].includes(ext),
+                    ),
+                ),
+                fallthrough: false,
+            },
+        ],
         // Pages.
 
         defaultPagesZoneName: brandHostname,
@@ -95,8 +173,9 @@ export default async () => {
         defaultPagesProjectStageBranchName: 'stage',
         defaultPagesProductionEnvironment: 'production',
 
-        defaultPagesStaticDir: distDir,
+        defaultPagesAssetsDir: distDir,
         defaultPagesBuildOutputDir: distDir,
+        defaultPagesUploadSourceMaps: true,
 
         // Other.
 

@@ -23,7 +23,7 @@ import extensions from '../../../bin/includes/extensions.mjs';
  *
  * @returns       Vitest configuration.
  */
-export default async ({ mode, projDir, srcDir, logsDir, pkg, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig, depsConfig }) => {
+export default async ({ mode, projDir, srcDir, logsDir, pkg, appType, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig, depsConfig }) => {
     const vitestExcludes = [
         ...new Set([
             ...exclusions.localIgnores,
@@ -253,10 +253,14 @@ export default async ({ mode, projDir, srcDir, logsDir, pkg, targetEnv, vitestSa
             workers: {
                 wrangler: {
                     configPath: path.resolve(projDir, './wrangler.toml'), // {@see https://o5p.me/vUsocE}.
-                    environment: 'dev', // Uses `dev` environment variables/bindings.
+
+                    // For pages projects, an explicit `dev` environment is not supported by `$ madrun wrangler pages deploy`.
+                    // The only valid environment keys are `production` and `preview`. So instead of `dev`, top-level keys are `dev` keys.
+                    // Remember, miniflare writes to local storage anyway, so having a separate `dev` environment is not 100% necessary.
+                    // What is necessary is that miniflare knows the names of the bindings we need, so it can populate those for tests.
+                    ...(['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv) ? {} : { environment: 'dev' }),
                 },
-                miniflare: {}, // Nothing at this time.
-                // Miniflare config takes precedence over wrangler config.
+                miniflare: {}, // An optional miniflare config takes precedence over wrangler config.
             },
         },
         deps: {

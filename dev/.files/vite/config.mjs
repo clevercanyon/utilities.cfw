@@ -88,6 +88,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     const distDir = path.resolve(__dirname, '../../../dist');
     const envsDir = path.resolve(__dirname, '../../../dev/.envs');
     const logsDir = path.resolve(__dirname, '../../../dev/.logs');
+    const cacheDir = path.resolve(__dirname, '../../../node_modules/.cache/vite');
     const a16sDir = await viteA16sDir({ isSSRBuild, distDir });
 
     /**
@@ -267,7 +268,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     /**
      * Configures tests for Vite.
      */
-    const vitestConfig = await viteVitestConfig({ mode, projDir, srcDir, logsDir, pkg, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig, depsConfig });
+    const vitestConfig = await viteVitestConfig({ mode, projDir, srcDir, logsDir, pkg, appType, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig, depsConfig });
 
     /**
      * Configures imported workers.
@@ -303,6 +304,8 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
         define: $obj.map(staticDefs, (v) => $json.stringify(v)),
 
         root: srcDir, // Absolute path where entry indexes live.
+        cacheDir: cacheDir, // Where Vite stores cache files.
+
         publicDir: isSSRBuild ? false : path.relative(srcDir, cargoDir),
         base: appBaseURLResolvedNTS ? $url.toPath(appBaseURLResolvedNTS) : '/',
 
