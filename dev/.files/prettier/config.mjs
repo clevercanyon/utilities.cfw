@@ -12,7 +12,6 @@
  * @see https://prettier.io/docs/en/configuration.html
  */
 
-import fs from 'node:fs';
 import path from 'node:path';
 import { sql as sqlDialect } from 'sql-formatter';
 import { $fs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
@@ -22,7 +21,6 @@ import tailwindSettings from '../tailwind/settings.mjs';
 
 const __dirname = $fs.imuDirname(import.meta.url);
 const projDir = path.resolve(__dirname, '../../..');
-const srcDir = path.resolve(__dirname, '../../../src');
 
 /**
  * Defines Prettier configuration.
@@ -293,9 +291,12 @@ export default async () => {
                     tailwindAttributes: tailwindSettings.classAttributes,
 
                     tailwindConfig: path.resolve(projDir, './tailwind.config.mjs'),
-                    ...(fs.existsSync(path.resolve(srcDir, './index.css')) //
-                        ? { tailwindStylesheet: path.resolve(srcDir, './index.css') }
-                        : {}),
+                    // As of 2025-03-13, Tailwind v4 is indeed supported by this plugin.
+                    // Therefore, we could also set a v4 CSS entry, in addition to a v3 config.
+
+                    // ...(fs.existsSync(path.resolve(srcDir, './index.css')) //
+                    //   ? { tailwindStylesheet: path.resolve(srcDir, './index.css') }
+                    //    : {}), // It would be nice if this supported globs.
                 },
             },
             {

@@ -248,7 +248,10 @@ export default async () => {
                     tailwindcss: {
                         callees: tailwindSettings.classFunctions,
                         classRegex: tailwindSettings.classAttributesRegExpStr,
+
                         config: path.resolve(projDir, './tailwind.config.mjs'),
+                        // As of 2025-03-13, Tailwind v4 is not supported by this plugin.
+                        // Therefore, there is no v4 CSS entry given here. Only a v3 config.
 
                         cssFiles: ['!**/*'], // Choosing not to use CSS file scans, for now.
                         // As of 2023-09-29, this only impacts the `no-custom-classname` rule, which we don’t use.
