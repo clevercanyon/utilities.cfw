@@ -295,8 +295,8 @@ export default async () => {
         'eslint.runtime': 'node',
         'eslint.useESLintClass': true,
 
+        'eslint.useFlatConfig': true,
         'eslint.codeActionsOnSave.mode': 'all',
-        'eslint.experimental.useFlatConfig': true,
         'eslint.workingDirectories': [{ 'mode': 'auto' }],
 
         'eslint.probe': [
@@ -391,11 +391,6 @@ export default async () => {
         // By default, prettier ignores everything in `.gitignore` also,
         // which we don’t want, so explicitly listed here; {@see https://o5p.me/nfS7UF}.
         'prettier.ignorePath': '.prettierignore',
-
-        /**
-         * TOML formatting options.
-         */
-        'evenBetterToml.formatter.indentString': ' '.repeat(prettierConfig.tabWidth),
 
         /**
          * Documents.
@@ -591,7 +586,7 @@ export default async () => {
             'editor.codeActionsOnSave': {
                 'source.fixAll': 'explicit',
             },
-            'editor.defaultFormatter': 'tamasfe.even-better-toml',
+            'editor.defaultFormatter': 'esbenp.prettier-vscode',
         },
         '[yaml]': {
             'editor.tabSize': prettierConfig.tabWidth,

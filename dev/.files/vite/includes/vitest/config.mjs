@@ -10,7 +10,7 @@
  * @see https://vitest.dev/config/
  */
 
-import { defineWorkersProject } from '@cloudflare/vitest-pool-workers/config';
+import { buildPagesASSETSBinding, defineWorkersProject } from '@cloudflare/vitest-pool-workers/config';
 import path from 'node:path';
 import { $obj } from '../../../../../node_modules/@clevercanyon/utilities/dist/index.js';
 import exclusions from '../../../bin/includes/exclusions.mjs';
@@ -23,7 +23,7 @@ import extensions from '../../../bin/includes/extensions.mjs';
  *
  * @returns       Vitest configuration.
  */
-export default async ({ mode, projDir, srcDir, logsDir, pkg, appType, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig, depsConfig }) => {
+export default async ({ mode, projDir, srcDir, logsDir, pkg, appType, targetEnv, wranglerSettings, vitestSandboxEnable, vitestExamplesEnable, rollupConfig, depsConfig }) => {
     const vitestExcludes = [
         ...new Set([
             ...exclusions.localIgnores,
@@ -204,7 +204,7 @@ export default async ({ mode, projDir, srcDir, logsDir, pkg, appType, targetEnv,
         forceRerunTriggers: [], // Disable; we’ll perform our own full re-runs when necessary.
         // One of the reasons for disabling this is because it doesn’t support negated `!` patterns.
 
-        reporters: ['verbose'], // Verbose reporting.
+        reporters: ['verbose', 'hanging-process'], // Verbose reporting.
         // {@see https://o5p.me/p0f9j5} for further details.
 
         // Unprefixed vars we want added to `import.meta.env`.
@@ -251,16 +251,30 @@ export default async ({ mode, projDir, srcDir, logsDir, pkg, appType, targetEnv,
         },
         poolOptions: {
             workers: {
+                singleWorker: true,
                 wrangler: {
                     configPath: path.resolve(projDir, './wrangler.toml'), // {@see https://o5p.me/vUsocE}.
-
                     // For pages projects, an explicit `dev` environment is not supported by `$ madrun wrangler pages deploy`.
                     // The only valid environment keys are `production` and `preview`. So instead of `dev`, top-level keys are `dev` keys.
                     // Remember, miniflare writes to local storage anyway, so having a separate `dev` environment is not 100% necessary.
                     // What is necessary is that miniflare knows the names of the bindings we need, so it can populate those for tests.
                     ...(['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv) ? {} : { environment: 'dev' }),
                 },
-                miniflare: {}, // An optional miniflare config takes precedence over wrangler config.
+                // Miniflare config takes precedence over wrangler config.
+                miniflare: {
+                    ...(['cfp', 'any'].includes(targetEnv) // For example, utilities or another library potentially targeting `cfp`.
+                        ? // Explicitly defining an assets binding for `createPagesEventContext()` in `@clevercanyon/utilities.cfp/test`.
+                          {
+                              serviceBindings: {
+                                  ASSETS:
+                                      // eslint-disable-next-line no-constant-condition -- @review Can we start using `buildPagesASSETSBinding()`?
+                                      'use:buildPagesASSETSBinding()' === true // Buggy; {@see https://github.com/cloudflare/workers-sdk/issues/6582}.
+                                          ? await buildPagesASSETSBinding(wranglerSettings.defaultPagesAssetsDir)
+                                          : async () => new Response(null, { status: 404 }),
+                              },
+                          }
+                        : {}),
+                },
             },
         },
         deps: {

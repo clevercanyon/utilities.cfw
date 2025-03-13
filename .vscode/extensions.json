@@ -34,6 +34,12 @@
         "unifiedjs.vscode-mdx",
 
         /*
+         * TypeScript.
+         */
+        "MylesMurphy.prettify-ts",
+        "mxsdev.typescript-explorer",
+
+        /*
          * EJS templates.
          */
         "leonzalion.vscode-ejs",

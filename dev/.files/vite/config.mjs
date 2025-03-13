@@ -268,7 +268,7 @@ export default async ({ mode, command, isSsrBuild: isSSRBuild }) => {
     /**
      * Configures tests for Vite.
      */
-    const vitestConfig = await viteVitestConfig({ mode, projDir, srcDir, logsDir, pkg, appType, targetEnv, vitestSandboxEnable, vitestExamplesEnable, rollupConfig, depsConfig });
+    const vitestConfig = await viteVitestConfig({ mode, projDir, srcDir, logsDir, pkg, appType, targetEnv, wranglerSettings, vitestSandboxEnable, vitestExamplesEnable, rollupConfig, depsConfig }); // prettier-ignore
 
     /**
      * Configures imported workers.

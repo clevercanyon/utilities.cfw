@@ -284,7 +284,7 @@ export default async () => {
                         requireConfigFile: true,
                         ecmaFeatures: { globalReturn: false },
                         tsconfigRootDir: path.resolve(projDir),
-                        project: ['./tsconfig.json'],
+                        projectService: true,
                     },
                 },
             }, // Specifically for MD/MDX fenced code-blocks.
@@ -320,7 +320,7 @@ export default async () => {
                 ],
                 rules: {
                     ...pluginTypeScript.configs.recommended.rules,
-                    ...pluginTypeScript.configs['recommended-requiring-type-checking'].rules,
+                    ...pluginTypeScript.configs['recommended-type-checked'].rules,
                 },
             },
 
@@ -443,6 +443,7 @@ export default async () => {
                     '@typescript-eslint/no-redeclare': ['warn'],
                     '@typescript-eslint/require-await': ['off'],
                     '@typescript-eslint/no-empty-interface': ['off'],
+                    '@typescript-eslint/no-empty-object-type': ['off'],
                     '@typescript-eslint/no-inferrable-types': ['off'],
                     '@typescript-eslint/ban-ts-comment': [
                         'warn',
@@ -451,16 +452,6 @@ export default async () => {
                             'ts-nocheck': 'allow-with-description',
                             'ts-expect-error': 'allow-with-description',
                             'ts-ignore': 'allow-with-description',
-                        },
-                    ],
-                    '@typescript-eslint/ban-types': [
-                        'warn',
-                        {
-                            'extendDefaults': true,
-                            // We want to use `{}` instead of `object` in some cases.
-                            // e.g., `$preact.Props<{}>` is cleaner than `$preact.Props<object>`.
-                            // {@see https://o5p.me/LDY2YY} {@see https://o5p.me/Cl4qSW}.
-                            'types': { '{}': false },
                         },
                     ],
                     '@typescript-eslint/triple-slash-reference': [

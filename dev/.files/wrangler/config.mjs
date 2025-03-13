@@ -181,23 +181,11 @@ export default async () => {
      * Defines non-pages project test config.
      */
     const nonPagesProjectTestConfig = {
-        // For non-pages projects, an `{ env: { dev: {} } }` key must exist for vitest `poolOptions.workers.wrangler.environment`.
-        // An empty object is OK, so long as the key exists; i.e., so miniflare can find the environment we test with, which is `dev`.
         ...(!(['spa', 'mpa'].includes(appType) && ['cfp'].includes(targetEnv))
             ? {
-                  env: {
-                      dev: {
-                          ...(['cfp', 'any'].includes(targetEnv) // For example, utilities or a library potentially targeting `cfp`.
-                              ? // For non-pages projects, we need to explicitly define an assets binding for `@clevercanyon/utilities.cfp/test`.
-                                {
-                                    assets: {
-                                        binding: 'ASSETS', // For `@clevercanyon/utilities.cfp/test`.
-                                        directory: './' + path.relative(projDir, settings.defaultPagesAssetsDir),
-                                    },
-                                }
-                              : {}),
-                      },
-                  },
+                  // For non-pages projects, an `{ env: { dev: {} } }` key must exist for vitest `poolOptions.workers.wrangler.environment`.
+                  // An empty object is OK, so long as the key exists; i.e., so miniflare can find the environment we test with, which is `dev`.
+                  env: { dev: {} }, // Nothing else to merge at this time.
               }
             : {}),
     };

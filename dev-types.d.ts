@@ -195,7 +195,7 @@ declare module 'cloudflare:workers' {
         sleep: (name: string, duration: WorkflowSleepDuration) => Promise<void>;
         sleepUntil: (name: string, timestamp: Date | number) => Promise<void>;
     }
-    export abstract class WorkflowEntrypoint<Env = unknown, T extends cfw.Rpc.Serializable<T> | unknown = unknown> implements cfw.Rpc.WorkflowEntrypointBranded {
+    export abstract class WorkflowEntrypoint<Env = unknown, T = unknown> implements cfw.Rpc.WorkflowEntrypointBranded {
         [cfw.Rpc.__WORKFLOW_ENTRYPOINT_BRAND]: never;
         protected ctx: cfw.ExecutionContext;
         protected env: Env;
