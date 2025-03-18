@@ -13,8 +13,8 @@ cd "$(dirname "${BASH_SOURCE[0]}")" || { echo 'CD failure.' >&2 && exit 1; }
 # Configuration of SSL certs.
 # A few variables for CLI args below.
 
-output_dir=. # Current directory.
-days=395     # {@see https://o5p.me/Fz1NWM}.
+output_dir=../../assets/ssl-certs # Output directory.
+days=395                          # {@see https://o5p.me/Fz1NWM}.
 
 key_usages=$(
     tr -d '\n' <<- 'ooo'

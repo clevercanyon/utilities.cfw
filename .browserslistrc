@@ -17,10 +17,10 @@
 # Generated data.
 # <generated:start>
 
-# Last generated Mar 13, 2025 7:30 PM UTC.
+# Last generated Mar 18, 2025 8:14 AM UTC.
 
 [production]
-node >= 20.9.0
+node >= 21.6.2
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
@@ -44,7 +44,7 @@ unreleased firefox versions
 not dead
 
 [development]
-node >= 20.9.0
+node >= 21.6.2
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
@@ -68,7 +68,7 @@ unreleased firefox versions
 not dead
 
 [any]
-node >= 20.9.0
+node >= 21.6.2
 and_chr >= 92
 chrome >= 92
 and_ff >= 90
@@ -92,7 +92,7 @@ unreleased firefox versions
 not dead
 
 [node]
-node >= 20.9.0
+node >= 21.6.2
 not dead
 
 [cfw]

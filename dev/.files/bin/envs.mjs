@@ -10,11 +10,8 @@
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
-import { $chalk, $fs, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import u from './includes/utilities.mjs';
-
-const __dirname = $fs.imuDirname(import.meta.url);
-const projDir = path.resolve(__dirname, '../../..');
+import { $chalk, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import u from '../resources/utilities.mjs';
 
 /**
  * Install command.
@@ -32,9 +29,9 @@ class Install {
      */
     async run() {
         if (this.args['new']) {
-            await this.installNew();
+            await this.#installNew();
         } else {
-            await this.install();
+            await this.#install();
         }
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -44,7 +41,7 @@ class Install {
     /**
      * Runs new install.
      */
-    async installNew() {
+    async #installNew() {
         /**
          * Displays preamble.
          */
@@ -57,8 +54,8 @@ class Install {
 
         u.log($chalk.gray('Deleting any existing `./.env.me`, `./.env.vault` files.'));
         if (!this.args.dryRun) {
-            await fsp.rm(path.resolve(projDir, './.env.me'), { force: true });
-            await fsp.rm(path.resolve(projDir, './.env.vault'), { force: true });
+            await fsp.rm(path.resolve(u.projDir, './.env.me'), { force: true });
+            await fsp.rm(path.resolve(u.projDir, './.env.vault'), { force: true });
         }
 
         /**
@@ -96,7 +93,7 @@ class Install {
     /**
      * Runs install.
      */
-    async install() {
+    async #install() {
         /**
          * Displays preamble.
          */
@@ -115,7 +112,7 @@ class Install {
          * Ensures current user is logged into Dotenv Vault.
          */
 
-        if (!fs.existsSync(path.resolve(projDir, './.env.me'))) {
+        if (!fs.existsSync(path.resolve(u.projDir, './.env.me'))) {
             u.log($chalk.gray('Installing all Dotenv Vault envs, which requires login.'));
             if (!this.args.dryRun) {
                 await u.spawn('npx', ['dotenv-vault', 'login', '--yes']);
@@ -158,7 +155,7 @@ class Push {
      * Runs CMD.
      */
     async run() {
-        await this.push();
+        await this.#push();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -168,7 +165,7 @@ class Push {
     /**
      * Runs push.
      */
-    async push() {
+    async #push() {
         /**
          * Displays preamble.
          */
@@ -212,7 +209,7 @@ class Pull {
      * Runs CMD.
      */
     async run() {
-        await this.pull();
+        await this.#pull();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -222,7 +219,7 @@ class Pull {
     /**
      * Runs pull.
      */
-    async pull() {
+    async #pull() {
         /**
          * Displays preamble.
          */
@@ -266,7 +263,7 @@ class Keys {
      * Runs CMD.
      */
     async run() {
-        await this.keys();
+        await this.#keys();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -276,7 +273,7 @@ class Keys {
     /**
      * Runs keys.
      */
-    async keys() {
+    async #keys() {
         /**
          * Displays preamble.
          */
@@ -320,7 +317,7 @@ class Encrypt {
      * Runs CMD.
      */
     async run() {
-        await this.encrypt();
+        await this.#encrypt();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -330,7 +327,7 @@ class Encrypt {
     /**
      * Runs encrypt.
      */
-    async encrypt() {
+    async #encrypt() {
         /**
          * Displays preamble.
          */
@@ -374,7 +371,7 @@ class Decrypt {
      * Runs CMD.
      */
     async run() {
-        await this.decrypt();
+        await this.#decrypt();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -384,7 +381,7 @@ class Decrypt {
     /**
      * Runs decrypt.
      */
-    async decrypt() {
+    async #decrypt() {
         /**
          * Displays preamble.
          */
@@ -421,7 +418,7 @@ await (async () => {
     await (
         await $yargs.cli({
             scriptName: 'madrun envs',
-            version: (await u.pkg()).version,
+            version: u.pkgVersion,
         })
     )
         .command({

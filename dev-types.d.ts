@@ -270,9 +270,8 @@ declare module 'cloudflare:test' {
     }
     type EventContextInitParams<Params extends string> = [Params] extends [never] ? { params?: Record<string, never> } : { params: Record<Params, string | string[]> };
     type EventContextInitData<Data> = Data extends Record<string, never> ? { data?: Data } : { data: Data };
-    type EventContextInit<E extends cfw.EventContext<unknown, unknown, unknown>> = E extends cfw.EventContext<unknown, infer Params, infer Data>
-        ? EventContextInitBase & EventContextInitParams<Params> & EventContextInitData<Data>
-        : never;
+    type EventContextInit<E extends cfw.EventContext<unknown, unknown, unknown>> =
+        E extends cfw.EventContext<unknown, infer Params, infer Data> ? EventContextInitBase & EventContextInitParams<Params> & EventContextInitData<Data> : never;
 
     type Buffer = Uint8Array;
     type IncomingHttpHeaders = Record<string, string | string[] | undefined>;

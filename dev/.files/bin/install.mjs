@@ -9,11 +9,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { $chalk, $fs, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import u from './includes/utilities.mjs';
-
-const __dirname = $fs.imuDirname(import.meta.url);
-const projDir = path.resolve(__dirname, '../../..');
+import { $chalk, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import u from '../resources/utilities.mjs';
 
 /**
  * Project command.
@@ -30,7 +27,7 @@ class Project {
      * Runs CMD.
      */
     async run() {
-        await this.install();
+        await this.#install();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -40,7 +37,7 @@ class Project {
     /**
      * Runs install.
      */
-    async install() {
+    async #install() {
         /**
          * Checks if git repo is dirty.
          */
@@ -48,7 +45,7 @@ class Project {
         if ((await u.isGitRepo()) && (await u.isGitRepoDirty())) {
             // We will allow a single `package-lock.json` change to exist as the only difference.
             // e.g., In case of `npm install` having been run vs. `npm ci`, which does better.
-            if ('M package-lock.json' !== u.gitStatus({ short: true })) {
+            if ('M ' + path.relative(u.projDir, u.pkgLockFile) !== u.gitStatus({ short: true })) {
                 throw new Error('Git repo is dirty.');
             }
         }
@@ -57,7 +54,7 @@ class Project {
          * Installs NPM packages; populating `./node_modules`.
          */
 
-        if (fs.existsSync(path.resolve(projDir, './package-lock.json'))) {
+        if (fs.existsSync(u.pkgLockFile)) {
             u.log($chalk.green('Running a clean install of NPM packages.'));
             if (!this.args.dryRun) {
                 await u.npmCleanInstall();
@@ -107,7 +104,7 @@ await (async () => {
     await (
         await $yargs.cli({
             scriptName: 'madrun install',
-            version: (await u.pkg()).version,
+            version: u.pkgVersion,
         })
     )
         .command({

@@ -9,16 +9,10 @@
 
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
-import { $chalk, $cmd, $fs, $glob, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $chalk, $cmd, $glob, $yargs } from '../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
 import { $mm } from '../../../node_modules/@clevercanyon/utilities/dist/index.js';
-import coreProjects from './includes/core-projects.mjs';
-import u from './includes/utilities.mjs';
-
-const __dirname = $fs.imuDirname(import.meta.url);
-const projDir = path.resolve(__dirname, '../../..');
-const projsDir = path.resolve(__dirname, '../../../..');
+import u from '../resources/utilities.mjs';
 
 /**
  * VS Code command.
@@ -35,7 +29,7 @@ class VSCode {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -45,14 +39,14 @@ class VSCode {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Recompiles `./.vscode/settings.json` file.
          */
 
         u.log($chalk.green('Updating `./.vscode`.'));
         if (!this.args.dryRun) {
-            await (await import(path.resolve(projDir, './dev/.files/bin/vscode/index.mjs'))).default({ projDir });
+            await (await import('./updater/resources/updaters/vscode/index.mjs')).default({ projDir: u.projDir });
         }
 
         /**
@@ -78,7 +72,7 @@ class GitAttributes {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -88,14 +82,14 @@ class GitAttributes {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Recompiles `./.gitattributes` file.
          */
 
         u.log($chalk.green('Updating `./.gitattributes`.'));
         if (!this.args.dryRun) {
-            await (await import(path.resolve(projDir, './dev/.files/bin/gitattributes/index.mjs'))).default({ projDir });
+            await (await import('./updater/resources/updaters/gitattributes/index.mjs')).default({ projDir: u.projDir });
         }
 
         /**
@@ -121,7 +115,7 @@ class GitIgnore {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -131,14 +125,14 @@ class GitIgnore {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Recompiles `./.gitignore` file.
          */
 
         u.log($chalk.green('Updating `./.gitignore`.'));
         if (!this.args.dryRun) {
-            await (await import(path.resolve(projDir, './dev/.files/bin/gitignore/index.mjs'))).default({ projDir });
+            await (await import('./updater/resources/updaters/gitignore/index.mjs')).default({ projDir: u.projDir });
         }
 
         /**
@@ -164,7 +158,7 @@ class NPMIgnore {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -174,14 +168,14 @@ class NPMIgnore {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Recompiles `./.npmignore` file.
          */
 
         u.log($chalk.green('Updating `./.npmignore`.'));
         if (!this.args.dryRun) {
-            await (await import(path.resolve(projDir, './dev/.files/bin/npmignore/index.mjs'))).default({ projDir });
+            await (await import('./updater/resources/updaters/npmignore/index.mjs')).default({ projDir: u.projDir });
         }
 
         /**
@@ -207,7 +201,7 @@ class DockerIgnore {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -217,14 +211,14 @@ class DockerIgnore {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Recompiles `./.dockerignore` file.
          */
 
         u.log($chalk.green('Updating `./.dockerignore`.'));
         if (!this.args.dryRun) {
-            await (await import(path.resolve(projDir, './dev/.files/bin/dockerignore/index.mjs'))).default({ projDir });
+            await (await import('./updater/resources/updaters/dockerignore/index.mjs')).default({ projDir: u.projDir });
         }
 
         /**
@@ -250,7 +244,7 @@ class VSCodeIgnore {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -260,14 +254,14 @@ class VSCodeIgnore {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Recompiles `./.vscodeignore` file.
          */
 
         u.log($chalk.green('Updating `./.vscodeignore`.'));
         if (!this.args.dryRun) {
-            await (await import(path.resolve(projDir, './dev/.files/bin/vscodeignore/index.mjs'))).default({ projDir });
+            await (await import('./updater/resources/updaters/vscodeignore/index.mjs')).default({ projDir: u.projDir });
         }
 
         /**
@@ -293,7 +287,7 @@ class PrettierIgnore {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -303,14 +297,14 @@ class PrettierIgnore {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Recompiles `./.prettierignore` file.
          */
 
         u.log($chalk.green('Updating `./.prettierignore`.'));
         if (!this.args.dryRun) {
-            await (await import(path.resolve(projDir, './dev/.files/bin/prettierignore/index.mjs'))).default({ projDir });
+            await (await import('./updater/resources/updaters/prettierignore/index.mjs')).default({ projDir: u.projDir });
         }
 
         /**
@@ -336,7 +330,7 @@ class Browserslist {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -346,14 +340,14 @@ class Browserslist {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Recompiles `./.browserslistrc` file.
          */
 
         u.log($chalk.green('Updating `./.browserslistrc`.'));
         if (!this.args.dryRun) {
-            await (await import(path.resolve(projDir, './dev/.files/bin/browserslist/index.mjs'))).default({ projDir });
+            await (await import('./updater/resources/updaters/browserslist/index.mjs')).default({ projDir: u.projDir });
         }
 
         /**
@@ -379,7 +373,7 @@ class TSConfig {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -389,14 +383,14 @@ class TSConfig {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Recompiles `./tsconfig.json` file.
          */
 
         u.log($chalk.green('Updating `./tsconfig.json`.'));
         if (!this.args.dryRun) {
-            await (await import(path.resolve(projDir, './dev/.files/bin/tsconfig/index.mjs'))).default({ projDir });
+            await (await import('./updater/resources/updaters/tsconfig/index.mjs')).default({ projDir: u.projDir });
         }
 
         /**
@@ -422,7 +416,7 @@ class Wrangler {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -432,14 +426,14 @@ class Wrangler {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Recompiles `./wrangler.toml` file.
          */
 
         u.log($chalk.green('Updating `./wrangler.toml`.'));
         if (!this.args.dryRun) {
-            await (await import(path.resolve(projDir, './dev/.files/bin/wrangler/index.mjs'))).default({ projDir });
+            await (await import('./updater/resources/updaters/wrangler/index.mjs')).default({ projDir: u.projDir });
         }
 
         /**
@@ -465,7 +459,7 @@ class Dotfiles {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -475,40 +469,40 @@ class Dotfiles {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Skeleton.
          */
 
-        let skeletonBranch = 'main';
+        let branch = 'main'; // Default branch.
 
-        if (await u.isPkgName('@clevercanyon/skeleton')) {
+        if (await u.isPkgName(u.projects.skeleton.pkgName)) {
             if (!(await u.isGitRepo())) {
-                throw new Error('`clevercanyon/skeleton` is not a git repo.');
+                throw new Error('`' + u.projects.skeleton.pkgName + '` is not a git repo.');
             }
-            skeletonBranch = await u.gitCurrentBranch();
-            // In a self-update scenario, always use the current skeleton branch.
+            branch = await u.gitCurrentBranch();
+            // In a self-update scenario, always use the current branch.
             // Otherwise, the current branch would be wiped out by files from a different branch.
             // i.e., So we can work on a different branch and still have the ability to run a self-update.
         }
-        const skeletonRepoURL = coreProjects.skeleton.repoURL; // From core projects.
-        const skeletonRepoDir = path.resolve(os.tmpdir(), './clevercanyon/7fbdd94a-544e-4914-8955-22ab82bc6b29/' + skeletonBranch);
+        const repoURL = u.projects.skeleton.repoURL; // From core projects.
+        const repoDir = path.resolve(u.projects.skeleton.tmpDir, './' + branch);
+        const repoDfBinDir = path.resolve(repoDir, u.projects.paths.relDfBinDir);
 
         /**
-         * Saves any pending skeleton changes; else checks state.
+         * Saves any pending changes; else checks state.
          */
 
-        if ((await u.isPkgName('@clevercanyon/skeleton')) && (await u.isGitRepoDirty())) {
-            u.log($chalk.green('Updating `clevercanyon/skeleton` git repo; `' + skeletonBranch + '` branch.'));
-            u.log('    ' + $chalk.green('i.e., saving latest skeleton changes before self-update.'));
+        if ((await u.isPkgName(u.projects.skeleton.pkgName)) && (await u.isGitRepoDirty())) {
+            u.log($chalk.green('Updating `' + u.projects.skeleton.pkgName + '` git repo; `' + branch + '` branch.'));
+            u.log('    ' + $chalk.green('i.e., saving latest ' + u.projects.skeleton.pkgName + ' changes before self-update.'));
 
             if (!this.args.dryRun) {
                 await u.gitAddCommitPush((this.args.message + ' [d]').trim());
             }
-        } else if (await u.isPkgName('@clevercanyon/skeleton')) {
-            // Don't perform a self-update if the remote isn't in sync with our local copy.
-            if ((await u.gitLocalRepoSHA(projDir, skeletonBranch)) !== (await u.gitRemoteRepoSHA(skeletonRepoURL, skeletonBranch))) {
-                throw new Error('`clevercanyon/skeleton` is out of sync with git remote origin; `' + skeletonBranch + '` branch.');
+        } else if (await u.isPkgName(u.projects.skeleton.pkgName)) {
+            if ((await u.gitLocalRepoSHA(u.projDir, branch)) !== (await u.gitRemoteRepoSHA(repoURL, branch))) {
+                throw new Error('`' + u.projects.skeleton.pkgName + '` is out of sync with git remote origin; `' + branch + '` branch.');
             }
         }
 
@@ -516,18 +510,18 @@ class Dotfiles {
          * Prepares latest skeleton.
          */
 
-        if (fs.existsSync(skeletonRepoDir) && (await u.gitLocalRepoSHA(skeletonRepoDir, skeletonBranch)) === (await u.gitRemoteRepoSHA(skeletonRepoURL, skeletonBranch))) {
-            u.log($chalk.green('Using latest `clevercanyon/skeleton` from cache; `' + skeletonBranch + '` branch.'));
+        if (fs.existsSync(repoDir) && (await u.gitLocalRepoSHA(repoDir, branch)) === (await u.gitRemoteRepoSHA(repoURL, branch))) {
+            u.log($chalk.green('Using latest `' + u.projects.skeleton.pkgName + '` from cache; `' + branch + '` branch.'));
         } else {
-            u.log($chalk.green('Git-cloning, and caching, latest `clevercanyon/skeleton`; `' + skeletonBranch + '` branch.'));
+            u.log($chalk.green('Git-cloning, and caching, latest `' + u.projects.skeleton.pkgName + '`; `' + branch + '` branch.'));
             if (!this.args.dryRun) {
-                await fsp.rm(skeletonRepoDir, { recursive: true, force: true });
-                await fsp.mkdir(skeletonRepoDir, { recursive: true }); // Starts fresh.
-                await u.spawn('git', ['clone', skeletonRepoURL, skeletonRepoDir, '--branch', skeletonBranch, '--depth=1'], { cwd: skeletonRepoDir });
+                await fsp.rm(repoDir, { recursive: true, force: true });
+                await fsp.mkdir(repoDir, { recursive: true }); // Starts fresh.
+                await u.spawn('git', ['clone', repoURL, repoDir, '--branch', branch, '--depth=1'], { cwd: repoDir });
             }
-            u.log($chalk.green('Installing `clevercanyon/skeleton`’s NPM dependencies; `' + skeletonBranch + '` branch.'));
+            u.log($chalk.green('Installing `' + u.projects.skeleton.pkgName + '`’s NPM dependencies; `' + branch + '` branch.'));
             if (!this.args.dryRun) {
-                await u.spawn('npm', ['ci'], { cwd: skeletonRepoDir });
+                await u.spawn('npm', ['ci'], { cwd: repoDir });
             }
         }
 
@@ -535,9 +529,9 @@ class Dotfiles {
          * Runs updater using files from latest skeleton.
          */
 
-        u.log($chalk.green('Running updater using latest `clevercanyon/skeleton`; `' + skeletonBranch + '` branch.'));
+        u.log($chalk.green('Running updater using latest `' + u.projects.skeleton.pkgName + '`; `' + branch + '` branch.'));
         if (!this.args.dryRun) {
-            await (await import(path.resolve(skeletonRepoDir, './dev/.files/bin/updater/index.mjs'))).default({ projDir });
+            await (await import(path.resolve(repoDfBinDir, './updater/index.mjs'))).default({ projDir: u.projDir });
         }
 
         /**
@@ -563,7 +557,7 @@ class Project {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -573,7 +567,7 @@ class Project {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Updates NPM packages.
          */
@@ -628,12 +622,6 @@ class Project {
 
         if (this.args.repos) {
             /**
-             * Parses current `./package.json`.
-             */
-
-            const pkg = await u.pkg(); // Potentially incremented version.
-
-            /**
              * Publishes a new version of NPM package(s).
              */
 
@@ -662,9 +650,9 @@ class Project {
                     }
                 }
                 if (this.args.pkgs && (await u.isNPMPkgPublishable({ mode: this.args.mode }))) {
-                    u.log($chalk.green('Creating git repo tag; `' + (await u.gitCurrentBranch()) + '` branch; `v' + pkg.version + '` tag.'));
+                    u.log($chalk.green('Creating git repo tag; `' + (await u.gitCurrentBranch()) + '` branch; `v' + u.pkgVersion + '` tag.'));
                     if (!this.args.dryRun) {
-                        await u.gitTag((this.args.message + ' [p][v' + pkg.version + ']').trim());
+                        await u.gitTag((this.args.message + ' [p][v' + u.pkgVersion + ']').trim());
                     }
                 }
                 u.log($chalk.green('Pushing to git repo; `' + (await u.gitCurrentBranch()) + '` branch.'));
@@ -672,7 +660,7 @@ class Project {
                     await u.gitPush(); // Also pushes any tags.
                 }
                 if ((await u.isGitRepoOriginGitHub()) && this.args.pkgs && (await u.isNPMPkgPublishable({ mode: this.args.mode }))) {
-                    u.log($chalk.green('Generating GitHub release; `v' + pkg.version + '` tag.'));
+                    u.log($chalk.green('Generating GitHub release; `v' + u.pkgVersion + '` tag.'));
                     if (!this.args.dryRun) {
                         await u.githubReleaseTag();
                     }
@@ -705,7 +693,7 @@ class Projects {
      * Runs CMD.
      */
     async run() {
-        await this.update();
+        await this.#update();
 
         if (this.args.dryRun) {
             u.log($chalk.cyanBright('Dry run. This was all a simulation.'));
@@ -715,7 +703,7 @@ class Projects {
     /**
      * Runs update.
      */
-    async update() {
+    async #update() {
         /**
          * Initializes vars.
          */
@@ -728,26 +716,27 @@ class Projects {
          * Does git ignore setup.
          */
 
-        await this.doGitIgnoreSetup(); // `.~gitignore` file.
+        await this.#doGitIgnoreSetup(); // `.~gitignore` file.
 
         /**
          * Acquires unordered glob results.
          */
 
         const unorderedResults = await $glob.promise(this.args.globs, {
-            cwd: projsDir,
-            onlyDirectories: true,
+            cwd: u.projsDir,
             absolute: false,
+            onlyDirectories: true,
+
             gitignore: true,
             ignoreFiles: ['.~gitignore'],
-            ignore: coreProjects.updates.ignore.concat(this.args.ignores),
+            ignore: u.projects.updates.ignore.concat(this.args.ignores),
         });
 
         /**
          * Produces an ordered set of glob results.
          */
 
-        for (const projDirSubpathGlob of coreProjects.updates.order.concat(this.args.order)) {
+        for (const projDirSubpathGlob of u.projects.updates.order.concat(this.args.order)) {
             for (const projDirSubpath of $mm.match(unorderedResults, projDirSubpathGlob)) {
                 if (-1 === (i = unorderedResults.indexOf(projDirSubpath))) {
                     continue; // Not applicable.
@@ -765,28 +754,32 @@ class Projects {
             /**
              * Initializes vars.
              */
-            const projDir = path.resolve(projsDir, projDirSubpath);
-            const projDisplayDir = path.basename(projsDir) + '/' + projDirSubpath;
 
-            const devFilesDir = path.resolve(projDir, './dev/.files');
-            const pkgFile = path.resolve(projDir, './package.json');
-            const madrunFile = path.resolve(projDir, './madrun.config.mjs');
+            const projDir = path.resolve(u.projsDir, projDirSubpath);
+            const dfDir = path.resolve(projDir, u.projects.paths.relDfDir);
+            const pkgFile = path.resolve(projDir, u.projects.paths.relPkgFile);
+            const madrunFile = path.resolve(projDir, u.projects.paths.relMadrunFile);
+
+            const relName = path.basename(u.projsDir) + '/' + projDirSubpath;
+            const relDfDir = './' + path.relative(projDir, dfDir);
+            const relPkgFile = './' + path.relative(projDir, pkgFile);
+            const relMadrunFile = './' + path.relative(projDir, madrunFile);
 
             /**
              * Validates the current glob result.
              */
 
-            if (hasAllGlob && !fs.existsSync(devFilesDir)) {
-                u.log($chalk.gray('Has glob `*`. No `./dev/.files` in `' + projDisplayDir + '`. Bypassing.'));
-                continue; // No `./dev/.files` directory.
+            if (hasAllGlob && !fs.existsSync(dfDir)) {
+                u.log($chalk.gray('Has glob `*`. No `' + relDfDir + '` in `' + relName + '`. Bypassing.'));
+                continue; // Missing important core project directory.
             }
             if (hasAllGlob && !fs.existsSync(pkgFile)) {
-                u.log($chalk.gray('Has glob `*`. No `./package.json` in `' + projDisplayDir + '`. Bypassing.'));
-                continue; // No `./package.json` file.
+                u.log($chalk.gray('Has glob `*`. No `' + relPkgFile + '` in `' + relName + '`. Bypassing.'));
+                continue; // Missing important core project file.
             }
             if (hasAllGlob && !fs.existsSync(madrunFile)) {
-                u.log($chalk.gray('Has glob `*`. No `./madrun.config.mjs` in `' + projDisplayDir + '`. Bypassing.'));
-                continue; // No `./madrun.config.mjs` file.
+                u.log($chalk.gray('Has glob `*`. No `' + relMadrunFile + '` in `' + relName + '`. Bypassing.'));
+                continue; // Missing important core project file.
             }
 
             /**
@@ -801,7 +794,7 @@ class Projects {
                         const quotedCMD = $cmd.quote(split.cmd); // Used only in output logging.
                         const quotedArgs = $cmd.quoteAll(split.args); // Only in output logging.
 
-                        u.log($chalk.green('Running `' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + $chalk.yellow(projDisplayDir));
+                        u.log($chalk.green('Running `' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + $chalk.yellow(relName));
                         if (!this.args.dryRun) {
                             await u.spawn(split.cmd, split.args, { cwd: projDir, stdio: 'inherit' });
                         }
@@ -821,7 +814,7 @@ class Projects {
                         const quotedCMD = $cmd.quote(split.cmd); // Used only in output logging.
                         const quotedArgs = $cmd.quoteAll(split.args); // Only in output logging.
 
-                        u.log($chalk.green('Running `madrun ' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + $chalk.yellow(projDisplayDir));
+                        u.log($chalk.green('Running `madrun ' + quotedCMD + (quotedArgs.length ? ' ' + quotedArgs.join(' ') : '') + '` in:') + ' ' + $chalk.yellow(relName));
                         if (!this.args.dryRun) {
                             await u.spawn('npx', ['@clevercanyon/madrun', split.cmd, ...split.args], { cwd: projDir, stdio: 'inherit' });
                         }
@@ -840,10 +833,10 @@ class Projects {
     /**
      * Does git ignore setup.
      */
-    async doGitIgnoreSetup() {
-        if (fs.existsSync(path.resolve(projDir, './.gitignore'))) {
-            const gitIgnoreFile = path.resolve(projsDir, './.~gitignore');
-            await fsp.copyFile(path.resolve(projDir, './.gitignore'), gitIgnoreFile);
+    async #doGitIgnoreSetup() {
+        if (fs.existsSync(path.resolve(u.projDir, './.gitignore'))) {
+            const gitIgnoreFile = path.resolve(u.projsDir, './.~gitignore');
+            await fsp.copyFile(path.resolve(u.projDir, './.gitignore'), gitIgnoreFile);
         }
     }
 }
@@ -856,7 +849,7 @@ await (async () => {
     await (
         await $yargs.cli({
             scriptName: 'madrun update',
-            version: (await u.pkg()).version,
+            version: u.pkgVersion,
         })
     )
         .command({
@@ -1226,7 +1219,7 @@ await (async () => {
                             demandOption: false,
                             default: ['*', '.github'],
                             description:  // prettier-ignore
-								'Glob matching is relative to `' + projsDir + '` and finds directories only.' +
+								'Glob matching is relative to `' + u.projsDir + '` and finds directories only.' +
 								' Note: Globstars `**` are not allowed given the nature of this command and will therefore throw an error.' +
 								' Please be more specific. Wildcards `*` are fine, but globstars `**` are prohibited in this option.',
                             alias: ['globs[]', 'globs[', 'glob', 'glob[]', 'glob['],
@@ -1235,9 +1228,9 @@ await (async () => {
                             type: 'array',
                             requiresArg: true,
                             demandOption: false,
-                            default: coreProjects.updates.ignore,
+                            default: u.projects.updates.ignore,
                             description: // prettier-ignore
-								'Glob matching is relative to `' + projsDir + '`. This effectively excludes directories otherwise found by the `glob` option.' +
+								'Glob matching is relative to `' + u.projsDir + '`. This effectively excludes directories otherwise found by the `glob` option.' +
 								' Note: The default ignore patterns are always in effect and cannot be overridden, only appended with this option.' +
 								' Additionally, patterns in this project’s `.gitignore` file, and those within each matched project directory, are also always in effect.',
                             alias: ['ignores[]', 'ignores[', 'ignore', 'ignore[]', 'ignore['],
@@ -1246,7 +1239,7 @@ await (async () => {
                             type: 'array',
                             requiresArg: true,
                             demandOption: false,
-                            default: coreProjects.updates.order,
+                            default: u.projects.updates.order,
                             description: // prettier-ignore
 								'Project subpaths to prioritize, in order. Also, globbing is supported in this option, for loose ordering.' +
 								' Note: It’s not necessary to list every single project directory, only those you need to prioritize, in a specific order.' +

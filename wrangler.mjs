@@ -13,7 +13,7 @@
  * @note Only `<custom:start.../custom:end>` will be preserved below.
  */
 
-import baseConfig from './dev/.files/wrangler/config.mjs';
+import baseConfig from './dev/.files/configs/wrangler/config.mjs';
 import { $obj } from './node_modules/@clevercanyon/utilities/dist/index.js';
 
 /*

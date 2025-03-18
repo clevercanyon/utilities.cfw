@@ -9,113 +9,48 @@
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
-import { $chalk, $fs, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
-import { $is, $json, $obj, $obp } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
-import nodeVersion from '../includes/node-version.mjs';
-import customRegExp from './data/custom-regexp.mjs';
+import { $chalk, $prettier } from '../../../../node_modules/@clevercanyon/utilities.node/dist/index.js';
+import { $is, $json, $obj } from '../../../../node_modules/@clevercanyon/utilities/dist/index.js';
+import u from '../../resources/utilities.mjs';
+import customRegExp from './resources/custom-regexp.mjs';
 
+/**
+ * Updates dotfiles.
+ *
+ * WARNING: In this file, don't use anything from our `u` (utilities) package that resolves relative directory paths
+ * and/or derives information from relative directory paths, without first calling `u.switchProjDir()` to properly
+ * prepare utilities. When this file is called upon, it is passed a `projDir` explicitly. This file should only operate
+ * on that project directory. Also, don't forget to `u.restoreProjDir()`, to restore the previous project directory.
+ */
 export default async ({ projDir }) => {
     /**
-     * Initializes vars.
+     * Switches to `projDir`.
      */
-    const { log } = console;
-    const __dirname = $fs.imuDirname(import.meta.url);
-    const skeletonDir = path.resolve(__dirname, '../../../..');
+    await u.switchProjDir(projDir);
 
     /**
-     * Gets current `./package.json`.
-     *
-     * @returns {object} Parsed `./package.json`.
+     * Deletes outdated paths no longer in use.
      */
-    const getPkg = async () => {
-        const pkgFile = path.resolve(projDir, './package.json');
-
-        if (!fs.existsSync(pkgFile)) {
-            throw new Error('updater.getPkg: Missing `./package.json`.');
-        }
-        const pkg = $json.parse(fs.readFileSync(pkgFile).toString());
-
-        if (!$is.plainObject(pkg)) {
-            throw new Error('updater.getPkg: Unable to parse `./package.json`.');
-        }
-        return pkg;
-    };
-
-    /**
-     * Gets properties from `./package.json` file.
-     */
-    const { pkgName, pkgDotfileLocks } = await (async () => {
-        const pkg = await getPkg();
-        const pkgName = pkg.name || '';
-
-        let pkgDotfileLocks = $obp.get(pkg, 'config.c10n.&.dotfiles.lock', []);
-        pkgDotfileLocks = pkgDotfileLocks.map((relPath) => path.resolve(projDir, relPath));
-
-        return { pkgName, pkgDotfileLocks };
-    })();
-
-    /**
-     * Tests `pkgName` against current package.
-     *
-     * @param   {string}  name A fully qualified package name.
-     *
-     * @returns {boolean}      True if is current package name.
-     */
-    const isPkgName = async (name) => name === pkgName; // True if is current package name.
-
-    /**
-     * Tests `pkgName` to see if it’s a fork.
-     *
-     * @returns {boolean} True if current package is a fork.
-     */
-    const isPkgFork = async () => pkgName.endsWith('.fork'); // True if current package is a fork.
-
-    /**
-     * Checks dotfile locks.
-     *
-     * @param   {string}  relPath Relative dotfile path.
-     *
-     * @returns {boolean}         True if relative path is locked by `./package.json`.
-     */
-    const isLocked = async (relPath) => {
-        // Compares absolute paths to each other.
-        const absPath = path.resolve(projDir, relPath);
-
-        for (let i = 0; i < pkgDotfileLocks.length; i++) {
-            if (absPath === pkgDotfileLocks[i]) {
-                return true; // Locked 🔒.
-            }
-        }
-        return false;
-    };
-
-    /**
-     * Deletes outdated dotfiles no longer in use.
-     */
-    for (const relPath of [
-        './dev/.envs/.~comp', //
-        './.vscode/mdx-layout.mjsx',
-        './.madrun.mjs',
-        './ts-types.d.ts',
-        './tsconfig.d.ts',
-    ]) {
-        if (await isLocked(relPath)) {
+    for (const relPath of []) {
+        if (await u.isPkgDotfileLocked(relPath)) {
             continue; // Locked 🔒.
         }
-        await fsp.rm(path.resolve(projDir, relPath), { recursive: true, force: true });
+        await fsp.rm(path.resolve(u.projDir, relPath), { recursive: true, force: true });
     }
 
     /**
      * Updates immutable directories.
      */
     for (const relPath of ['./dev/.files']) {
-        await fsp.rm(path.resolve(projDir, relPath), { recursive: true, force: true });
-        await fsp.mkdir(path.resolve(projDir, relPath), { recursive: true });
-        await fsp.cp(path.resolve(skeletonDir, relPath), path.resolve(projDir, relPath), { recursive: true });
+        await fsp.rm(path.resolve(u.projDir, relPath), { recursive: true, force: true });
+        await fsp.mkdir(path.resolve(u.projDir, relPath), { recursive: true });
+        await fsp.cp(path.resolve(u.__projDir, relPath), path.resolve(u.projDir, relPath), { recursive: true });
     }
-    await fsp.chmod(path.resolve(projDir, './dev/.files/bin/envs.mjs'), 0o700);
-    await fsp.chmod(path.resolve(projDir, './dev/.files/bin/install.mjs'), 0o700);
-    await fsp.chmod(path.resolve(projDir, './dev/.files/bin/update.mjs'), 0o700);
+    await fsp.chmod(path.resolve(u.dfBinDir, './envs.mjs'), 0o700);
+    await fsp.chmod(path.resolve(u.dfBinDir, './install.mjs'), 0o700);
+    await fsp.chmod(path.resolve(u.dfBinDir, './update.mjs'), 0o700);
+    await fsp.chmod(path.resolve(u.dfBinDir, './ssl-certs/generate.bash'), 0o700);
+    await fsp.chmod(path.resolve(u.dfBinDir, './ssl-certs/macos/update/keychain.bash'), 0o700);
 
     /**
      * Updates semi-immutable dotfiles.
@@ -166,111 +101,88 @@ export default async ({ projDir }) => {
         './brand.config.mjs',
         './madrun.config.mjs',
     ]) {
-        if (await isLocked(relPath)) {
+        if (await u.isPkgDotfileLocked(relPath)) {
             continue; // Locked 🔒.
         }
         let newFileContents = ''; // Initialize.
 
-        if (fs.existsSync(path.resolve(projDir, relPath))) {
-            const oldFileContents = (await fsp.readFile(path.resolve(projDir, relPath))).toString();
-            const oldFileMatches = customRegExp.exec(oldFileContents); // See: `./data/custom-regexp.js`.
-            const oldFileCustomCode = oldFileMatches ? oldFileMatches[2] : ''; // We'll preserve any custom code.
-            newFileContents = (await fsp.readFile(path.resolve(skeletonDir, relPath))).toString().replace(customRegExp, ($_, $1, $2, $3) => $1 + oldFileCustomCode + $3);
+        if (fs.existsSync(path.resolve(u.projDir, relPath))) {
+            const oldFileContents = (await fsp.readFile(path.resolve(u.projDir, relPath))).toString();
+            const oldFileMatches = customRegExp.exec(oldFileContents); // See `customRegExp` for details.
+            const oldFileCustomCode = oldFileMatches ? oldFileMatches[2] : ''; // Preserves any custom code.
+
+            newFileContents = (await fsp.readFile(path.resolve(u.__projDir, relPath))).toString()
+                .replace(customRegExp, ($_, $1, $2, $3) => $1 + oldFileCustomCode + $3); // prettier-ignore
         } else {
-            newFileContents = (await fsp.readFile(path.resolve(skeletonDir, relPath))).toString();
+            newFileContents = (await fsp.readFile(path.resolve(u.__projDir, relPath))).toString();
         }
-        await fsp.mkdir(path.dirname(path.resolve(projDir, relPath)), { recursive: true });
-        await fsp.writeFile(path.resolve(projDir, relPath), newFileContents);
+        await fsp.mkdir(path.dirname(path.resolve(u.projDir, relPath)), { recursive: true });
+        await fsp.writeFile(path.resolve(u.projDir, relPath), newFileContents);
     }
 
     /**
      * Adds up-to-date copies of missing mutable files.
      */
-    for (const relPath of [
-        './LICENSE.txt', //
-        './README.md',
-    ]) {
-        if (await isLocked(relPath)) {
+    for (const relPath of ['./LICENSE.txt', './README.md']) {
+        if (await u.isPkgDotfileLocked(relPath)) {
             continue; // Locked 🔒.
         }
-        if (!fs.existsSync(path.resolve(projDir, relPath))) {
-            await fsp.cp(path.resolve(skeletonDir, relPath), path.resolve(projDir, relPath));
+        if (!fs.existsSync(path.resolve(u.projDir, relPath))) {
+            await fsp.cp(path.resolve(u.__projDir, relPath), path.resolve(u.projDir, relPath));
         }
     }
 
     /**
      * Adds and/or updates updateable JSON files.
      */
-    for (const relPath of [
-        './package.json', //
-    ]) {
-        if (await isLocked(relPath)) {
+    for (const relPath of ['./package.json']) {
+        if (await u.isPkgDotfileLocked(relPath)) {
             continue; // Locked 🔒.
         }
-        if (!fs.existsSync(path.resolve(projDir, relPath))) {
-            await fsp.cp(path.resolve(skeletonDir, relPath), path.resolve(projDir, relPath));
+        if (!fs.existsSync(path.resolve(u.projDir, relPath))) {
+            await fsp.cp(path.resolve(u.__projDir, relPath), path.resolve(u.projDir, relPath));
         }
-        let json = $json.parse((await fsp.readFile(path.resolve(projDir, relPath))).toString());
-        const updatesRelPath = relPath.replace(/(^|\/)([^/]+\.[^.]+)$/u, '$1_$2'); // Leading underscore in basename.
-        const updatesFile = path.resolve(skeletonDir, './dev/.files/bin/updater/data', updatesRelPath, './updates.json');
+        if ('./package.json' === relPath) {
+            await u.updatePkg(); // Leverages existing highly-specific utility.
+        } else {
+            const updatesRelPath = relPath.replace(/(^|\/)([^/]+\.[^.]+)$/u, '$1_$2'); // Leading `_` in basename.
+            const updatesFile = path.resolve(u.__dfBinDir, './updater/resources/data', updatesRelPath, './updates.json');
 
-        if (!$is.plainObject(json)) {
-            throw new Error('updater: Unable to parse `' + relPath + '`.');
-        }
-        if (fs.existsSync(updatesFile)) {
-            const updates = $json.parse((await fsp.readFile(updatesFile)).toString());
+            if (fs.existsSync(updatesFile)) {
+                const json = $json.parse((await fsp.readFile(path.resolve(u.projDir, relPath))).toString());
+                const updates = $json.parse((await fsp.readFile(updatesFile)).toString());
 
-            if (!$is.plainObject(updates)) {
-                throw new Error('updater: Unable to parse `' + updatesFile + '`.');
-            }
-            if (await isPkgFork()) {
-                if (updates.$ꓺdefaults?.imports) updates.$ꓺdefaults.imports = {};
-            }
-            if ('./package.json' === relPath) {
-                if (Object.hasOwn(updates.$ꓺset?.engines || {}, 'node')) {
-                    updates.$ꓺset.engines.node = []; // Initialize.
-                    if (nodeVersion.previous) updates.$ꓺset.engines.node.push(nodeVersion.previous);
-                    if (nodeVersion.current) updates.$ꓺset.engines.node.push(nodeVersion.current);
-                    if (nodeVersion.forwardCompat.length) updates.$ꓺset.engines.node = updates.$ꓺset.engines.node.concat(nodeVersion.forwardCompat);
-                    updates.$ꓺset.engines.node = (updates.$ꓺset.engines.node.length ? '^' : '') + updates.$ꓺset.engines.node.join(' || ^');
+                if (!$is.plainObject(json)) {
+                    throw new Error('updater: Unable to parse `' + relPath + '`.');
                 }
-                if (Object.hasOwn(updates.$ꓺset?.engines || {}, 'npm')) {
-                    updates.$ꓺset.engines.npm = []; // Initialize.
-                    if (nodeVersion.npm.previous) updates.$ꓺset.engines.npm.push(nodeVersion.npm.previous);
-                    if (nodeVersion.npm.current) updates.$ꓺset.engines.npm.push(nodeVersion.npm.current);
-                    if (nodeVersion.npm.forwardCompat.length) updates.$ꓺset.engines.npm = updates.$ꓺset.engines.npm.concat(nodeVersion.npm.forwardCompat);
-                    updates.$ꓺset.engines.npm = (updates.$ꓺset.engines.npm.length ? '^' : '') + updates.$ꓺset.engines.npm.join(' || ^');
+                if (!$is.plainObject(updates)) {
+                    throw new Error('updater: Unable to parse `' + updatesFile + '`.');
                 }
+                $obj.patchDeep(json, updates); // Updates potentially contain declarative ops.
+                const prettierConfig = { ...(await $prettier.resolveConfig(path.resolve(u.projDir, relPath))), parser: 'json' };
+                await fsp.writeFile(path.resolve(u.projDir, relPath), await $prettier.format($json.stringify(json, { pretty: true }), prettierConfig));
             }
-            if ('./package.json' === relPath && (await isPkgName('@clevercanyon/dev-deps'))) {
-                if (updates.$ꓺdefaults?.['devDependenciesꓺ@clevercanyon/dev-deps']) {
-                    delete updates.$ꓺdefaults['devDependenciesꓺ@clevercanyon/dev-deps'];
-                }
-                if ($is.array(updates.$ꓺunset)) {
-                    updates.$ꓺunset.push('devDependenciesꓺ@clevercanyon/dev-deps');
-                } else {
-                    updates.$ꓺunset = ['devDependenciesꓺ@clevercanyon/dev-deps'];
-                }
-            }
-            $obj.patchDeep(json, updates); // Potentially declarative ops.
-            const prettierConfig = { ...(await $prettier.resolveConfig(path.resolve(projDir, relPath))), parser: 'json' };
-            await fsp.writeFile(path.resolve(projDir, relPath), await $prettier.format($json.stringify(json, { pretty: true }), prettierConfig));
         }
     }
 
     /**
-     * Recompiles static configurations using latest dotfiles.
+     * Recompiles static configurations.
      */
-    log($chalk.green('Recompiling static configurations using latest dotfiles.'));
+    u.log($chalk.green('Recompiling static configurations.'));
 
-    await (await import(path.resolve(projDir, './dev/.files/bin/vscode/index.mjs'))).default({ projDir });
-    await (await import(path.resolve(projDir, './dev/.files/bin/gitattributes/index.mjs'))).default({ projDir });
-    await (await import(path.resolve(projDir, './dev/.files/bin/gitignore/index.mjs'))).default({ projDir });
-    await (await import(path.resolve(projDir, './dev/.files/bin/npmignore/index.mjs'))).default({ projDir });
-    await (await import(path.resolve(projDir, './dev/.files/bin/dockerignore/index.mjs'))).default({ projDir });
-    await (await import(path.resolve(projDir, './dev/.files/bin/vscodeignore/index.mjs'))).default({ projDir });
-    await (await import(path.resolve(projDir, './dev/.files/bin/prettierignore/index.mjs'))).default({ projDir });
-    await (await import(path.resolve(projDir, './dev/.files/bin/browserslist/index.mjs'))).default({ projDir });
-    await (await import(path.resolve(projDir, './dev/.files/bin/tsconfig/index.mjs'))).default({ projDir });
-    await (await import(path.resolve(projDir, './dev/.files/bin/wrangler/index.mjs'))).default({ projDir });
+    await (await import('./resources/updaters/vscode/index.mjs')).default({ projDir: u.projDir });
+    await (await import('./resources/updaters/gitattributes/index.mjs')).default({ projDir: u.projDir });
+    await (await import('./resources/updaters/gitignore/index.mjs')).default({ projDir: u.projDir });
+    await (await import('./resources/updaters/npmignore/index.mjs')).default({ projDir: u.projDir });
+    await (await import('./resources/updaters/dockerignore/index.mjs')).default({ projDir: u.projDir });
+    await (await import('./resources/updaters/vscodeignore/index.mjs')).default({ projDir: u.projDir });
+    await (await import('./resources/updaters/prettierignore/index.mjs')).default({ projDir: u.projDir });
+    await (await import('./resources/updaters/browserslist/index.mjs')).default({ projDir: u.projDir });
+    await (await import('./resources/updaters/tsconfig/index.mjs')).default({ projDir: u.projDir });
+    await (await import('./resources/updaters/wrangler/index.mjs')).default({ projDir: u.projDir });
+
+    /**
+     * Restores previous project directory.
+     */
+    await u.restoreProjDir();
 };
